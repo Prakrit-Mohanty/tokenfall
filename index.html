@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uplink — Pune Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game"></canvas>
+
+    <button id="companion-btn" title="Ask your companion (C)" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="#fff4e6" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/></g></svg>
+      <span class="key">C</span>
+    </button>
+
+    <section id="companion" hidden>
+      <div class="c-head">
+        <span>COMPANION</span><span class="c-sub">scripted v1</span>
+        <button id="c-close" title="Close (Esc)">X</button>
+      </div>
+      <div id="c-log"></div>
+      <div id="c-chips"></div>
+      <form id="c-form" autocomplete="off">
+        <input id="c-input" placeholder="Ask anything… e.g. where do I go next?">
+        <button type="submit">ASK</button>
+      </form>
+    </section>
+  </div>
+
+  <script src="js/core.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/content.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/dialog.js"></script>
+  <script src="js/minigames.js"></script>
+  <script src="js/companion.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

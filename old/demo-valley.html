@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TokenFall Valley</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; height: 100%; background: #0a1430; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; font-family: 'VT323', monospace; }
+    #stage { position: relative; width: min(100vw, 177.78vh); aspect-ratio: 16 / 9; }
+    #game { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: pointer; }
+
+    /* Stardew-style hotbar: dark outline, orange frame, tan slots with pixel icons */
+    #bar {
+      position: absolute; left: 50%; bottom: 1.5%; height: 9%; transform: translateX(-50%);
+      display: flex; gap: .4%; padding: .5%;
+      background: #e0903a; border: 3px solid #5a2e14; box-shadow: inset 0 0 0 2px #f8c070, inset 0 -4px 0 2px #b8642a;
+    }
+    .slot {
+      position: relative; height: 100%; aspect-ratio: 1; padding: 0; cursor: pointer;
+      background: #f8d8a0; border: 2px solid #b8642a; box-shadow: inset 2px 2px 0 #e8b878;
+    }
+    .slot:hover, .slot.sel { border-color: #d02a2a; }
+    .slot img { width: 76%; height: 76%; image-rendering: pixelated; display: block; margin: auto; }
+    .slot i {
+      position: absolute; left: 3px; top: 1px; font: normal min(1.3vw, 2.3vh) 'VT323', monospace; color: #5a2e14;
+    }
+    #say {
+      position: absolute; left: 1.5%; bottom: 12%; width: 28%; height: 5.5%;
+      padding: 0 .6em; outline: none; box-sizing: border-box;
+      font: min(1.9vw, 3.4vh) 'VT323', monospace; color: #fff3d6;
+      background: rgba(40, 22, 10, .6); border: 2px solid #5a2e14;
+    }
+    #say::placeholder { color: rgba(255, 243, 214, .6); }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game" width="960" height="540"></canvas>
+    <input id="say" maxlength="60" placeholder="Press Enter to chat…">
+    <div id="bar"></div>
+  </div>
+
+  <script src="js/sprite.js"></script>
+  <script src="js/aditya-data.js"></script>
+  <script>
+  (function () {
+    // World is 720x480; the camera shows 480x270 of it. The frame buffer is full-res with a 2x transform,
+    // so world art lands on 2x2 blocks while characters get every device pixel and stay sharp.
+    const WW = 720, WH = 480, BW = 480, BH = 270, K = 2;
+    const view = document.getElementById('game'), vctx = view.getContext('2d');
+    const buf = document.createElement('canvas'); buf.width = BW * K; buf.height = BH * K;
+    const b = buf.getContext('2d');
+    b.imageSmoothingEnabled = false;
+    const bg = document.createElement('canvas'); bg.width = WW; bg.height = WH;
+
+    // Characters are 38x40 world px (1/5 of the 190x200 cells), drawn from a 2/5-size sheet (76x80 cells).
+    const S = 0.2, CW = 38, CH = 40, AX = 19, AY = 39, SCW = CW * K, SCH = CH * K;
+    const DATA = window.ADITYA;
+
+    const OUT = '#2a160c';
+    const mkRng = s => () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+    const rnd = mkRng(23);
+    const pick = a => a[Math.floor(Math.random() * a.length)];
+
+    function P(ctx, c, x, y, w = 1, h = 1) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+    function circ(ctx, cx, cy, r, c) { for (let dy = -r; dy <= r; dy++) { const hw = Math.floor(Math.sqrt(r * r - dy * dy)); P(ctx, c, cx - hw, cy + dy, hw * 2 + 1, 1); } }
+    function oval(ctx, cx, cy, rx, ry, c) { for (let dy = -ry; dy <= ry; dy++) { const hw = Math.round(rx * Math.sqrt(1 - (dy / ry) ** 2)); P(ctx, c, cx - hw, cy + dy, hw * 2 + 1, 1); } }
+    const inRect = (x, y, r) => x >= r[0] && x <= r[0] + r[2] && y >= r[1] && y <= r[1] + r[3];
+    const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+
+    // Crisp bitmap text: rasterise the 8px pixel font, threshold it, then stamp each pixel at `scale`.
+    const glyphCache = {};
+    function pixelText(ctx, str, x, y, scale, color) {
+      let g = glyphCache[str];
+      if (!g) {
+        const t = document.createElement('canvas'); t.width = str.length * 8; t.height = 8;
+        const c = t.getContext('2d');
+        c.font = '8px "Press Start 2P", monospace'; c.textBaseline = 'top'; c.fillText(str, 0, 0);
+        g = glyphCache[str] = { w: t.width, d: c.getImageData(0, 0, t.width, 8).data };
+      }
+      const ox = Math.round(x - (g.w * scale) / 2);
+      ctx.fillStyle = color;
+      for (let j = 0; j < 8; j++) for (let i = 0; i < g.w; i++)
+        if (g.d[(j * g.w + i) * 4 + 3] > 110) ctx.fillRect(ox + i * scale, y + j * scale, scale, scale);
+    }
+    function board(g, x, y, w, h, text) {
+      P(g, OUT, x - 1, y - 1, w + 2, h + 2); P(g, '#b8642a', x, y, w, h); P(g, '#f0c880', x + 1, y + 1, w - 2, h - 2);
+      P(g, '#d8a060', x + 1, y + h - 2, w - 2, 1);
+      pixelText(g, text, x + w / 2, y + Math.floor((h - 8) / 2), 1, OUT);
+    }
+
+    // ---------- map shape ----------
+    // Mountains along the top (cliff face below `ridge`), sea along the bottom (beach above `shore`),
+    // and a river from a waterfall in the cliff winding down to the sea, splitting town (west) from farm (east).
+    const CLIFF = 14, SAND = 34;
+    const ridge = x => Math.round(64 + 6 * Math.sin(x * 0.035) + 4 * Math.sin(x * 0.09 + 2));
+    const shore = x => 428 + 7 * Math.sin(x * 0.02) + 4 * Math.sin(x * 0.05 + 1);
+    const riverX = y => 460 + 40 * Math.sin((y - 60) / 90) - (y - 60) * 0.25;
+    const riverW = y => y < 70 ? 8 : 13 + (y - 70) * 0.02;
+    const riverAt = (x, y) => Math.abs(x - riverX(y)) < riverW(y) && y < shore(x) + 4;
+    const waterAt = (x, y) => y > shore(x) || riverAt(x, y);
+    const sandAt = (x, y) => y > shore(x) - SAND + 3 * Math.sin(x * 0.13);
+    const groundAt = (x, y) => !waterAt(x, y) && y > ridge(x) + CLIFF + 2;
+
+    const PLAZA = [150, 168, 184, 112];
+    const FIELDS = [[500, 200, 96, 52], [608, 200, 96, 52]];
+    const PEN = [520, 288, 110, 56];
+    const BRIDGES = [[448, 144, 46, 12], [370, 324, 56, 12], [324, 394, 56, 12]];
+    const PIER = [186, 400, 16, 72];
+    const PATHS = [
+      [[334, 214], [384, 186], [436, 152], [500, 150], [560, 162], [610, 184]],
+      [[356, 158], [350, 190], [334, 214]],
+      [[58, 162], [100, 200], [150, 222]],
+      [[240, 282], [242, 340], [226, 384], [196, 404]],
+      [[300, 280], [350, 322], [430, 330], [500, 326], [560, 292]],
+      [[150, 240], [110, 268], [60, 304]],
+      [[300, 400], [380, 400], [440, 392], [520, 360], [560, 346]],
+      [[540, 196], [560, 196]],
+    ];
+    function distToPath(x, y) {
+      let best = 1e9;
+      PATHS.forEach(line => {
+        for (let i = 0; i < line.length - 1; i++) {
+          const [ax, ay] = line[i], [bx, by] = line[i + 1];
+          const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+          best = Math.min(best, Math.hypot(x - ax - t * dx, y - ay - t * dy));
+        }
+      });
+      return best;
+    }
+    // footprints kept clear of grass/bushes/forage
+    const BUILT = [[24, 50, 128, 118], [168, 40, 156, 140], [330, 74, 112, 94], [28, 220, 96, 92], [552, 88, 150, 100],
+      [636, 280, 60, 46], [528, 172, 28, 24], [166, 160, 28, 30], PLAZA, ...FIELDS, PEN];
+    const busy = (x, y, pad = 8) => BUILT.some(r => inRect(x, y, [r[0] - pad, r[1] - pad, r[2] + pad * 2, r[3] + pad * 2])) || distToPath(x, y) < 12;
+
+    // ---------- static background ----------
+    function drawBackground() {
+      const g = bg.getContext('2d');
+      const id = g.createImageData(WW, WH), d = id.data;
+      const C = {
+        foam: hex('#e8f4ff'), shallow: hex('#5aa8e8'), sea: hex('#3a88d8'), deep: hex('#2a6ac0'),
+        river: hex('#3a80d0'), bank: hex('#7a5a30'), bankL: hex('#a8844a'), foam2: hex('#9cc8ff'),
+        rim: hex('#f0b860'), c1: hex('#d48a3a'), c2: hex('#b0602a'), streak: hex('#8a4418'), c3: hex('#6a3414'),
+        g0: hex('#4f9a32'), g1: hex('#448a2a'), g2: hex('#5aaa3a'), dirtRim: hex('#8a6a3a'),
+        mount: hex('#2c6420'), lip: hex('#5aaa35'),
+        sand: hex('#f0d8a0'), sand2: hex('#e0c088'), sand3: hex('#fff0c8'), wet: hex('#d8b878'),
+        path: hex('#c8a46a'), path2: hex('#b8945a'), pathEdge: hex('#a8844a'),
+      };
+      const set = (x, y, c) => { const i = (y * WW + x) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255; };
+      const cliffColor = (k, x) => k === 1 ? C.rim : k <= 3 ? C.c1 : k <= 10 ? ((x * 37) % 7 === 0 ? C.streak : C.c2) : C.c3;
+      for (let y = 0; y < WH; y++) for (let x = 0; x < WW; x++) {
+        const sh = shore(x), rg = ridge(x), r = rnd();
+        let c;
+        if (y > sh) { const dd = y - sh; c = dd < 2 ? C.foam : dd < 6 ? C.shallow : dd < 16 ? C.sea : C.deep; }
+        else if (riverAt(x, y)) {
+          let k = 0;
+          for (let i = 1; i <= 4; i++) if (!riverAt(x, y - i)) { k = i; break; }
+          c = y < rg + CLIFF ? C.river : k === 1 ? C.bankL : k && k <= 3 ? C.bank : k === 4 ? C.foam2 : C.river;
+        }
+        else if (y < rg - 2) c = C.mount;
+        else if (y < rg) c = C.lip;
+        else if (y < rg + CLIFF) c = cliffColor(y - rg + 1, x);
+        else if (sandAt(x, y) || (sandAt(x, y + 2) && r < 0.5)) c = y > sh - 5 ? C.wet : r < 0.1 ? C.sand2 : r < 0.15 ? C.sand3 : C.sand;
+        else {
+          const dp = distToPath(x, y);
+          if (dp < 4) c = r < 0.15 ? C.path2 : C.path;
+          else if (dp < 6) c = r < 0.6 ? C.pathEdge : C.g1;
+          else if (riverAt(x - 2, y) || riverAt(x + 2, y)) c = C.dirtRim;
+          else c = r < 0.08 ? C.g1 : r < 0.12 ? C.g2 : C.g0;
+        }
+        set(x, y, c);
+      }
+      g.putImageData(id, 0, 0);
+
+      // water texture
+      for (let i = 0; i < 700; i++) {
+        const x = rnd() * WW, y = rnd() * WH;
+        if (waterAt(x, y) && y > ridge(x) + CLIFF) P(g, rnd() < 0.7 ? '#5a9ae0' : '#2a62b0', x, y, 3 + rnd() * 4, 1);
+      }
+
+      // mountain top: forest canopy, pines and boulders (kept off the stream)
+      for (let x = -6; x < WW + 10; x += 12) {
+        if (Math.abs(x - 460) < 16) continue;
+        const y = 10 + rnd() * (ridge(x) - 26), rr = 10 + Math.floor(rnd() * 5), v = rnd();
+        const [o, d1, m1, l1] = v < 0.15 ? ['#0c2a22', '#1a4a3a', '#2a6a4a', '#4a9a6a'] : v < 0.3 ? ['#123a10', '#2f7a26', '#47a838', '#7ac84a'] : ['#10300f', '#21581f', '#348a2c', '#5fb83a'];
+        circ(g, x, y, rr + 1, o); circ(g, x, y, rr, d1); circ(g, x - 3, y - 3, rr - 4, m1); P(g, l1, x - 6, y - 7, 3, 2); P(g, l1, x - 2, y - 9, 2, 1);
+      }
+      [[40, 46, 51], [120, 40, 49], [220, 44, 53], [330, 48, 57], [560, 46, 59], [650, 42, 61]].forEach(([x, y, sd]) => pine(g, x, y, sd));
+      [[150, 52], [400, 50], [612, 54]].forEach(([x, y]) => { oval(g, x, y, 9, 6, OUT); oval(g, x, y, 8, 5, '#7a7a8a'); oval(g, x - 2, y - 2, 4, 2, '#a0a0b0'); });
+
+      // old mine entrance cut into the cliff
+      const mx = 696, mr = ridge(mx);
+      P(g, OUT, mx - 18, mr - 22, 36, CLIFF + 23); P(g, '#6a6a7a', mx - 17, mr - 21, 34, CLIFF + 21);
+      for (let i = 0; i < 40; i++) P(g, rnd() < 0.5 ? '#8a8a9a' : '#4a4a58', mx - 16 + rnd() * 32, mr - 20 + rnd() * 32, 2, 1);
+      P(g, '#3a7a2a', mx - 18, mr - 23, 36, 2);
+      P(g, '#120a08', mx - 10, mr - 12, 20, CLIFF + 12); P(g, '#120a08', mx - 8, mr - 14, 16, 2);
+      P(g, OUT, mx - 13, mr - 17, 26, 5); P(g, '#8a5a32', mx - 12, mr - 16, 24, 3);
+      [mx - 13, mx + 10].forEach(x => { P(g, OUT, x, mr - 14, 4, CLIFF + 14); P(g, '#8a5a32', x + 1, mr - 13, 2, CLIFF + 13); });
+      [mr - 6, mr + 3].forEach(y => { P(g, OUT, mx - 11, y - 1, 22, 5); P(g, '#a8703a', mx - 10, y, 20, 3); P(g, '#5a3218', mx - 8, y + 1, 1, 1); P(g, '#5a3218', mx + 7, y + 1, 1, 1); });
+      P(g, OUT, mx + 17, mr - 8, 7, 9); P(g, '#ffd27a', mx + 18, mr - 7, 5, 7);
+
+      // cobblestone town square
+      const stone = (sx, sy) => {
+        const shade = rnd() < 0.5 ? '#b8a07a' : '#a08a68';
+        P(g, '#5a4630', sx - 1, sy, 7, 5); P(g, '#5a4630', sx, sy - 1, 5, 7);
+        P(g, shade, sx, sy, 5, 5); P(g, '#d8c49a', sx, sy, 4, 1); P(g, '#7a6448', sx + 1, sy + 4, 4, 1);
+        if (rnd() < 0.12) P(g, '#5a8a3a', sx + 3, sy + 2, 2, 1);
+      };
+      const [qx, qy, qw, qh] = PLAZA, inPlaza = (x, y) => {
+        if (!inRect(x, y, PLAZA)) return false;
+        const r = 14, cx = Math.max(qx + r, Math.min(qx + qw - r, x)), cy = Math.max(qy + r, Math.min(qy + qh - r, y));
+        return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+      };
+      for (let y = qy - 2; y < qy + qh + 3; y++) for (let x = qx - 2; x < qx + qw + 3; x++) if (!inPlaza(x, y) && (inPlaza(x + 2, y) || inPlaza(x - 2, y) || inPlaza(x, y - 2) || inPlaza(x, y + 2))) P(g, '#5a4630', x, y);
+      for (let y = qy; y <= qy + qh; y++) for (let x = qx; x <= qx + qw; x++) if (inPlaza(x, y)) P(g, '#7a6448', x, y);
+      for (let row = 0, y = qy + 1; y < qy + qh - 3; y += 6, row++)
+        for (let x = qx + (row % 2 ? 4 : 1); x < qx + qw - 5; x += 7) if (inPlaza(x, y) && inPlaza(x + 5, y + 5)) stone(x + (rnd() * 2 - 1), y);
+
+      // flower beds around the square
+      [[150, 162, 20], [316, 162, 20], [140, 286, 30], [316, 286, 30]].forEach(([x, y, w]) => {
+        for (let i = 0; i < w; i++) {
+          const fx = x + rnd() * w, fy = y + rnd() * 6;
+          P(g, '#2f7a26', fx, fy + 1, 1, 2); P(g, ['#e0505a', '#ffd23f', '#f08ac0', '#ffffff', '#9a7ae0'][Math.floor(rnd() * 5)], fx - 1, fy, 3, 1);
+        }
+      });
+
+      // farm fields: tilled rows of crops
+      const CROPS = [
+        (x, y) => { oval(g, x, y - 2, 4, 2, '#348a2c'); circ(g, x, y - 4, 3, OUT); circ(g, x, y - 4, 2, '#f4f0e0'); P(g, '#ffffff', x - 1, y - 6, 1, 1); },
+        (x, y) => { P(g, '#348a2c', x - 5, y - 1, 10, 1); oval(g, x, y - 3, 5, 3, OUT); oval(g, x, y - 3, 4, 2, '#e07a20'); P(g, '#b85a10', x - 1, y - 5, 1, 4); P(g, '#5a3218', x, y - 7, 1, 2); },
+        (x, y) => { P(g, '#5fb83a', x - 1, y - 7, 1, 6); P(g, '#5fb83a', x + 1, y - 6, 1, 5); P(g, '#348a2c', x - 3, y - 5, 2, 1); P(g, '#f0e0a0', x - 1, y - 1, 3, 2); },
+        (x, y) => { circ(g, x, y - 4, 4, OUT); circ(g, x, y - 4, 3, '#21581f'); [[-1, -5], [1, -3], [-2, -2], [2, -6]].forEach(([dx, dy]) => P(g, '#5a8ae8', x + dx, y + dy, 1, 1)); },
+        (x, y) => { P(g, '#348a2c', x, y - 9, 1, 9); P(g, '#348a2c', x - 3, y - 6, 3, 1); P(g, '#348a2c', x + 1, y - 4, 3, 1); P(g, OUT, x - 2, y - 13, 5, 5); P(g, '#ffd23f', x - 1, y - 12, 3, 3); P(g, '#7a4a1a', x, y - 11, 1, 1); },
+      ];
+      FIELDS.forEach(([fx, fy, fw, fh], fi) => {
+        P(g, '#3a2414', fx - 1, fy - 1, fw + 2, fh + 2); P(g, '#5a3a22', fx, fy, fw, fh);
+        for (let y = fy + 4; y < fy + fh; y += 10) { P(g, '#4a2e1a', fx + 2, y + 5, fw - 4, 2); P(g, '#6e4a2c', fx + 2, y, fw - 4, 1); }
+        for (let i = 0; i < 40; i++) P(g, '#4a2e1a', fx + rnd() * fw, fy + rnd() * fh, 2, 1);
+        for (let row = 0; row < 4; row++) for (let x = fx + 8; x < fx + fw - (fi ? 18 : 4); x += 12) CROPS[(row + fi * 2) % CROPS.length](x, fy + 12 + row * 10);
+        [fx - 2, fx + fw - 1].forEach(x => { for (let y = fy - 2; y < fy + fh; y += 8) { P(g, OUT, x - 1, y, 4, 9); P(g, '#e8d8b0', x, y + 1, 2, 7); } });
+      });
+      // chicken pen: packed dirt with straw
+      const [px, py, pw, ph] = PEN;
+      P(g, '#9a7a48', px, py, pw, ph);
+      for (let i = 0; i < 120; i++) P(g, rnd() < 0.5 ? '#e0c060' : '#8a6a3a', px + rnd() * pw, py + rnd() * ph, 2 + rnd() * 2, 1);
+      [px - 2, px + pw - 1].forEach(x => { for (let y = py - 2; y < py + ph; y += 8) { P(g, OUT, x - 1, y, 4, 9); P(g, '#a8703a', x, y + 1, 2, 7); } });
+
+      // grass clumps and flowering bushes
+      const okDeco = (x, y) => groundAt(x, y) && groundAt(x, y - 8) && groundAt(x - 8, y) && groundAt(x + 8, y) && !sandAt(x, y + 4) && !busy(x, y);
+      for (let i = 0; i < 360; i++) {
+        const cx = rnd() * WW, cy = 80 + rnd() * 340;
+        if (!okDeco(cx, cy)) continue;
+        P(g, '#2f6a1f', cx - 7, cy, 15, 1);
+        for (let j = 0; j < 24; j++) {
+          const bx = cx + (rnd() * 2 - 1) * 7, h = 3 + Math.floor(rnd() * 5);
+          P(g, ['#3a8a2a', '#5aaa3a', '#6fc04a'][Math.floor(rnd() * 3)], bx, cy - h, 1, h);
+          if (rnd() < 0.15) P(g, '#f4a8d0', bx, cy - h - 1, 1, 1);
+        }
+      }
+      for (let i = 0; i < 90; i++) {
+        const cx = rnd() * WW, cy = 84 + rnd() * 320;
+        if (!okDeco(cx, cy) || !okDeco(cx, cy - 10)) continue;
+        const rx = 8 + Math.floor(rnd() * 5), ry = 6 + Math.floor(rnd() * 3);
+        oval(g, cx, cy - ry, rx + 1, ry + 1, '#123a14'); oval(g, cx, cy - ry, rx, ry, '#2a6a22');
+        for (let j = 0; j < 24; j++) {
+          const lx = cx + (rnd() * 2 - 1) * (rx - 2), ly = cy - ry + (rnd() * 2 - 1) * (ry - 2);
+          P(g, ly < cy - ry ? '#6fc04a' : '#3f9a32', lx, ly, 2, 2);
+        }
+        for (let j = 0; j < 4; j++) P(g, pick(['#f4a8d0', '#ffffff', '#ffd23f']), cx + (rnd() * 2 - 1) * rx * 0.7, cy - ry + (rnd() * 2 - 1) * ry * 0.7, 2, 1);
+      }
+      // stumps, weeds, twigs, pebbles and mushrooms
+      for (let i = 0, placed = 0; i < 800 && placed < 60; i++) {
+        const x = rnd() * WW, y = 84 + rnd() * 320;
+        if (!okDeco(x, y)) continue;
+        placed++;
+        if (placed % 9 === 0) { P(g, OUT, x - 6, y - 7, 12, 8); P(g, '#8a5a32', x - 5, y - 6, 10, 6); oval(g, x, y - 7, 5, 2, '#c8945a'); oval(g, x, y - 7, 2, 1, '#8a5a32'); }
+        else if (placed % 5 === 0) { P(g, OUT, x - 2, y - 5, 5, 5); P(g, '#f0e8d8', x - 1, y - 3, 3, 3); oval(g, x, y - 5, 3, 2, OUT); oval(g, x, y - 5, 2, 1, '#d03a3a'); P(g, '#ffffff', x - 1, y - 6, 1, 1); }
+        else if (placed % 3 === 1) { P(g, '#2f6a1f', x - 4, y - 1, 9, 1); [-3, -1, 1, 3].forEach((j, n) => { const h = 4 + (n % 2) * 3; P(g, OUT, x + j - 1, y - h - 1, 3, h + 1); P(g, '#3a9a2a', x + j, y - h, 1, h); }); }
+        else if (placed % 3 === 2) { P(g, OUT, x - 5, y - 3, 11, 3); P(g, '#8a5a32', x - 4, y - 2, 9, 1); P(g, OUT, x + 1, y - 5, 2, 2); P(g, '#8a5a32', x + 1, y - 4, 1, 1); }
+        else { oval(g, x, y - 2, 3, 2, OUT); oval(g, x, y - 2, 2, 1, '#8a8a9a'); P(g, '#b0b0c0', x - 1, y - 3, 1, 1); }
+      }
+
+      // beach bits: shells, driftwood, towel, sandcastle, tide-pool rocks with a starfish
+      for (let i = 0; i < 30; i++) {
+        const x = rnd() * WW, y = shore(x) - 4 - rnd() * 24;
+        if (!sandAt(x, y) || waterAt(x, y) || busy(x, y, 2)) continue;
+        if (i % 3) { P(g, '#f8e8e0', x, y, 2, 1); P(g, '#e8a8a0', x, y + 1, 2, 1); } else { P(g, '#c8a878', x - 1, y, 3, 1); }
+      }
+      [[560, 404, 18], [650, 410, 14]].forEach(([x, y, w]) => { P(g, OUT, x - 1, y - 1, w + 2, 4); P(g, '#a8845a', x, y, w, 2); P(g, '#c8a478', x, y, w, 1); });
+      P(g, OUT, 95, 412, 30, 12); for (let i = 0; i < 28; i += 4) P(g, i % 8 ? '#ffffff' : '#3a88d8', 96 + i, 413, 4, 10);
+      P(g, OUT, 433, 405, 18, 13); P(g, '#e0c088', 434, 406, 16, 12); P(g, '#c8a070', 434, 412, 16, 1);
+      [436, 446].forEach(x => { P(g, OUT, x - 1, 399, 6, 7); P(g, '#e0c088', x, 400, 4, 6); P(g, '#e0303a', x + 1, 395, 1, 5); P(g, '#e0303a', x + 2, 395, 2, 2); });
+      [[600, 448], [636, 458], [668, 446], [700, 456]].forEach(([x, y]) => { oval(g, x, y + 2, 9, 2, '#bfe0ff'); oval(g, x, y, 7, 4, OUT); oval(g, x, y - 1, 6, 3, '#7a7a8a'); oval(g, x - 1, y - 2, 3, 1, '#a0a0b0'); });
+      [[648, 452]].forEach(([x, y]) => { P(g, '#f08040', x - 1, y - 3, 3, 7); P(g, '#f08040', x - 3, y - 1, 7, 3); P(g, '#ffb070', x, y, 1, 1); });
+
+      // bridges across the river
+      BRIDGES.forEach(([bx, by, bw, bh]) => {
+        for (let x = bx + 6; x < bx + bw; x += 16) P(g, '#4a2410', x, by + bh + 4, 3, 7);
+        P(g, OUT, bx, by - 3, bw, bh + 8);
+        for (let x = bx + 1; x < bx + bw - 1; x += 4) { P(g, '#c0642c', x, by - 2, 3, bh + 4); P(g, '#d8803c', x, by - 2, 1, bh + 4); }
+        P(g, '#8a3a18', bx + 1, by + bh + 2, bw - 2, 3);
+        [by - 7, by + bh + 1].forEach(ry => {
+          for (let x = bx + 2; x < bx + bw; x += 12) { P(g, OUT, x - 1, ry - 4, 4, 9); P(g, '#8a5a32', x, ry - 3, 2, 7); }
+          P(g, OUT, bx, ry - 4, bw, 3); P(g, '#a8642a', bx + 1, ry - 3, bw - 2, 1);
+        });
+      });
+      // pier out into the sea, with a rowboat tied up
+      const [ix, iy, iw, ih] = PIER;
+      P(g, OUT, ix - 1, iy, iw + 2, ih);
+      for (let y = iy; y < iy + ih; y += 4) { P(g, '#c0642c', ix, y, iw, 3); P(g, '#d8803c', ix, y, iw, 1); P(g, '#7a3418', ix, y + 3, iw, 1); }
+      [[ix - 3, iy + 30], [ix + iw, iy + 30], [ix - 3, iy + 60], [ix + iw, iy + 60]].forEach(([x, y]) => { P(g, OUT, x - 1, y - 1, 6, 12); P(g, '#7a4a2a', x, y, 4, 10); oval(g, x + 2, y, 2, 1, '#a8703a'); });
+      oval(g, 220, 452, 15, 6, OUT); oval(g, 220, 452, 14, 5, '#8a4a22'); oval(g, 220, 451, 11, 3, '#5a2e14'); P(g, '#a8642a', 218, 448, 4, 7);
+      P(g, '#d8c8a0', 203, 446, 6, 1);
+    }
+
+    // ---------- prerendered props (y-sorted with characters) ----------
+    function makeSprite(bx, by, w, h, fn) {
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const g = c.getContext('2d'); g.translate(-bx, -by); fn(g);
+      return { c, bx, by };
+    }
+    function shadow(g, x, y, rx) { oval(g, x, y - 1, rx, 2, 'rgba(10,20,10,.35)'); }
+
+    const GREEN = ['#0e2e10', '#21581f', '#348a2c', '#5fb83a'], BLUE = ['#0c1a50', '#1f3f9f', '#3a6ad8', '#8ab4f4'], AUTUMN = ['#3a1a08', '#a8481a', '#d87a2a', '#f8b84a'];
+    function leafy(g, x, y, pal, s) {
+      const r = mkRng(s);
+      shadow(g, x, y, 18);
+      P(g, OUT, x - 4, y - 26, 9, 26); P(g, '#8a5a32', x - 3, y - 26, 7, 25); P(g, '#5a3218', x + 1, y - 26, 3, 25); P(g, '#a8703a', x - 2, y - 26, 1, 25);
+      P(g, OUT, x - 7, y - 3, 15, 3); P(g, '#8a5a32', x - 6, y - 3, 13, 2);
+      const cx = x, cy = y - 44, rx = 23, ry = 21;
+      oval(g, cx, cy, rx + 2, ry + 2, pal[0]); oval(g, cx, cy, rx, ry, pal[1]);
+      // leaf clusters, painted top to bottom so lower ones overlap upper ones; lit from the top-left
+      const clusters = [];
+      for (let i = 0; i < 46; i++) { const a = r() * Math.PI * 2, dd = Math.sqrt(r()); clusters.push([cx + Math.cos(a) * dd * (rx - 5), cy + Math.sin(a) * dd * (ry - 5)]); }
+      clusters.sort((p, q) => p[1] - q[1]).forEach(([lx, ly]) => {
+        const t = (ly - (cy - ry)) / (2 * ry) + (lx - cx) / (rx * 3);
+        const c = t < 0.4 ? pal[3] : t < 0.75 ? pal[2] : pal[1];
+        circ(g, lx + 1, ly + 1, 4, pal[0]); circ(g, lx, ly, 4, c);
+        P(g, t < 0.4 ? '#ffffff55' : pal[3], lx - 2, ly - 2, 2, 1);
+        P(g, pal[0], lx - 1, ly + 2, 3, 1);
+      });
+    }
+    function pine(g, x, y, s) {
+      const r = mkRng(s);
+      shadow(g, x, y, 12);
+      P(g, OUT, x - 3, y - 10, 7, 10); P(g, '#6a4226', x - 2, y - 10, 5, 9);
+      for (let i = 0; i < 5; i++) {
+        const tb = y - 8 - i * 10, half = 17 - i * 3;
+        for (let row = 0; row < 13; row++) {
+          const hw = Math.round(half * (row + 1) / 13), yy = tb - 13 + row;
+          P(g, OUT, x - hw - 1, yy, hw * 2 + 3, 1);
+          P(g, '#1f5a3a', x - hw, yy, hw * 2 + 1, 1);
+          P(g, '#2f7a4a', x - hw, yy, Math.max(0, hw - 1), 1);
+          if (r() < 0.5) P(g, '#4a9a5a', x - hw + Math.floor(r() * hw * 2), yy, 2, 1);
+        }
+      }
+    }
+
+    // building parts
+    function shingles(g, x, y, w, h, [base, dark, light]) {
+      P(g, OUT, x - 1, y - 1, w + 2, h + 2); P(g, base, x, y, w, h);
+      for (let r = 0; r < h; r += 5) {
+        P(g, light, x, y + r, w, 1); P(g, dark, x, y + r + 4, w, 1);
+        for (let xx = x + ((r / 5) % 2 ? 3 : 0); xx < x + w; xx += 6) P(g, dark, xx, y + r + 1, 1, 3);
+      }
+      P(g, OUT, x - 2, y - 3, w + 4, 4); P(g, dark, x - 1, y - 2, w + 2, 2);
+    }
+    function planks(g, x, y, w, h, base, line) {
+      P(g, OUT, x - 1, y, w + 2, h); P(g, base, x, y, w, h);
+      for (let yy = y + 3; yy < y + h; yy += 4) P(g, line, x, yy, w, 1);
+      P(g, 'rgba(0,0,0,.18)', x, y, w, 3);
+    }
+    function stoneWall(g, x, y, w, h, seed) {
+      const r = mkRng(seed);
+      P(g, OUT, x - 1, y, w + 2, h); P(g, '#4a4a58', x, y, w, h);
+      for (let yy = y + 2, row = 0; yy < y + h; yy += 5, row++) for (let xx = x + (row % 2 ? -4 : 0); xx < x + w; ) {
+        const sw = 6 + Math.floor(r() * 5), x1 = Math.max(x, xx), ww = Math.min(x + w, xx + sw) - x1;
+        if (ww > 2) { P(g, '#2e2e3a', x1, yy, ww, 5); P(g, ['#7a7a8c', '#6a6a7c', '#8a8a9a'][Math.floor(r() * 3)], x1, yy, ww - 1, 4); P(g, '#a0a0b0', x1, yy, ww - 2, 1); }
+        xx += sw;
+      }
+    }
+    function win(g, x, y, w, h, box) {
+      P(g, OUT, x - 2, y - 2, w + 4, h + 4); P(g, '#7a4a2a', x - 1, y - 1, w + 2, h + 2); P(g, '#ffd27a', x, y, w, h); P(g, '#fff0b8', x + 1, y + 1, 3, 2);
+      P(g, '#7a4a2a', x + Math.floor(w / 2) - 1, y, 2, h); P(g, '#7a4a2a', x, y + Math.floor(h / 2), w, 1);
+      if (box) {
+        P(g, OUT, x - 2, y + h + 1, w + 4, 4); P(g, '#a8582a', x - 1, y + h + 2, w + 2, 2);
+        for (let i = 0; i < w / 3; i++) { P(g, '#348a2c', x + i * 3, y + h - 1, 2, 2); P(g, ['#e0303a', '#f4a8d0', '#ffd23f'][i % 3], x + i * 3, y + h - 2, 1, 1); }
+      }
+    }
+    function door(g, x, y, w, h, c = '#7a3a1e') {
+      P(g, OUT, x - 2, y - 2, w + 4, h + 2); P(g, c, x, y, w, h);
+      for (let i = 4; i < w; i += 4) P(g, 'rgba(0,0,0,.25)', x + i, y, 1, h);
+      P(g, '#ffd23f', x + w - 4, y + Math.floor(h / 2), 2, 2);
+    }
+    function step(g, x, y, w) { P(g, OUT, x - 1, y, w + 2, 4); P(g, '#a8a090', x, y, w, 3); }
+    function chimney(g, x, y, h) {
+      P(g, OUT, x - 1, y, 14, h); P(g, '#a8503a', x, y + 1, 12, h - 1);
+      for (let yy = y + 3; yy < y + h; yy += 4) P(g, '#8a3a2a', x, yy, 12, 1);
+      P(g, OUT, x - 3, y - 2, 18, 4); P(g, '#7a6a60', x - 2, y - 1, 16, 2);
+    }
+
+    function chaiCafe(g) {
+      const x0 = 30, w = 108, base = 158;
+      shadow(g, x0 + w / 2, base + 2, w / 2 + 4);
+      chimney(g, x0 + 78, 52, 26);
+      shingles(g, x0 - 5, 72, w + 10, 38, ['#b5473a', '#8a3328', '#cf6450']);
+      planks(g, x0, 110, w, base - 110, '#c98a4b', '#9a6230');
+      P(g, '#7a4524', x0, 110, 3, base - 110); P(g, '#7a4524', x0 + w - 3, 110, 3, base - 110);
+      board(g, x0 + 6, 114, 40, 14, 'CHAI');
+      P(g, '#ffffff', x0 + 6, 132, 8, 5); P(g, '#ffffff', x0 + 14, 133, 2, 2); P(g, '#c07a3a', x0 + 7, 133, 6, 1);
+      for (let i = 0; i < 52; i += 4) P(g, (i / 4) % 2 ? '#fff3d6' : '#d03a3a', x0 + 54 + i, 118, 4, 7);
+      for (let i = 0; i < 52; i += 4) P(g, OUT, x0 + 55 + i, 125, 2, 1);
+      win(g, x0 + 60, 132, 16, 12, true); win(g, x0 + 84, 132, 16, 12, true);
+      door(g, x0 + 24, 132, 16, base - 132);
+      step(g, x0 + 20, base, 24);
+    }
+    function tokenClub(g) {
+      const cx = 245, x0 = 182, w = 126, top = 106, base = 166;
+      shadow(g, cx, base + 8, 70);
+      stoneWall(g, x0, top, w, base - top, 5);
+      for (let y = 44; y < top + 2; y++) {
+        const hw = Math.min(72, 6 + (y - 44) * 1.3);
+        P(g, OUT, cx - hw - 1, y, hw * 2 + 3, 1);
+        P(g, (y - 44) % 5 === 4 ? '#3a1a3a' : '#5a2a5a', cx - hw, y, hw * 2 + 1, 1);
+        P(g, '#7a3a72', cx - hw, y, Math.round(hw * 0.5), 1);
+        if ((y - 44) % 5 !== 4) for (let xx = cx - hw + ((Math.floor((y - 44) / 5) % 2) ? 3 : 0); xx < cx + hw; xx += 6) P(g, '#3a1a3a', xx, y, 1, 1);
+        P(g, '#c07a3a', cx - hw + 1, y, 2, 1); P(g, '#c07a3a', cx + hw - 2, y, 2, 1);
+      }
+      P(g, '#c07a3a', cx - 3, 41, 7, 4); P(g, OUT, cx - 4, 40, 9, 1);
+      circ(g, cx, 60, 6, OUT); circ(g, cx, 60, 5, '#5a3218'); circ(g, cx, 60, 4, '#ffd27a'); P(g, '#5a3218', cx, 56, 1, 9); P(g, '#5a3218', cx - 4, 60, 9, 1);
+      P(g, OUT, cx - 46, 73, 92, 17); P(g, '#ffcc33', cx - 45, 74, 90, 15); P(g, '#2a1a10', cx - 43, 76, 86, 11);
+      pixelText(g, 'TOKEN CLUB', cx + 1, 78, 1, '#7a4a00'); pixelText(g, 'TOKEN CLUB', cx, 77, 1, '#ffd23f');
+      win(g, cx - 54, top + 14, 18, 14, true); win(g, cx + 36, top + 14, 18, 14, true);
+      P(g, OUT, cx - 13, top + 10, 26, base - top - 10); P(g, '#ffd27a', cx - 11, top + 12, 22, base - top - 12);
+      P(g, OUT, cx - 11, top + 22, 10, 18); P(g, '#a8642a', cx - 10, top + 23, 8, 16); P(g, OUT, cx + 1, top + 22, 10, 18); P(g, '#a8642a', cx + 2, top + 23, 8, 16);
+      P(g, OUT, cx - 22, base, 44, 9); P(g, '#c0642c', cx - 21, base, 42, 3); P(g, '#a8582a', cx - 21, base + 4, 42, 4); P(g, '#7a3418', cx - 21, base + 3, 42, 1);
+      [cx - 20, cx + 17].forEach(x => { P(g, OUT, x - 1, top + 14, 7, 9); P(g, '#ffd27a', x, top + 15, 5, 7); });
+    }
+    function threadsShop(g) {
+      const x0 = 340, w = 92, base = 154;
+      shadow(g, x0 + w / 2, base + 2, w / 2 + 4);
+      shingles(g, x0 - 5, 82, w + 10, 32, ['#4a6fa8', '#34508a', '#6a8fc8']);
+      P(g, OUT, x0 - 1, 114, w + 2, base - 114); P(g, '#ead8b4', x0, 114, w, base - 114);
+      P(g, '#7a4524', x0, 114, w, 3); P(g, '#7a4524', x0, 114, 3, base - 114); P(g, '#7a4524', x0 + w - 3, 114, 3, base - 114);
+      board(g, x0 + 26, 117, 64, 12, 'THREADS');
+      P(g, OUT, x0 + 29, 131, 60, 8);
+      for (let i = 0; i < 58; i += 6) P(g, (i / 6) % 2 ? '#fff3d6' : '#3a8a4a', x0 + 30 + i, 132, Math.min(6, 58 - i), 6);
+      P(g, OUT, x0 + 32, 139, 54, base - 140); P(g, '#9fd6e8', x0 + 34, 141, 50, base - 143);
+      [[x0 + 44, '#e0303a'], [x0 + 59, '#ffd23f'], [x0 + 74, '#9a5ae0']].forEach(([x, c]) => { P(g, OUT, x - 5, 143, 11, 9); P(g, c, x - 4, 144, 9, 7); P(g, OUT, x - 1, 144, 3, 1); });
+      door(g, x0 + 9, 130, 15, base - 130, '#8a5228'); P(g, '#9fd6e8', x0 + 11, 133, 11, 7);
+      step(g, x0 + 6, base, 22);
+    }
+    function homeHouse(g) {
+      const x0 = 36, w = 76, base = 300;
+      shadow(g, x0 + w / 2, base + 2, w / 2 + 4);
+      chimney(g, x0 + 54, 226, 18);
+      shingles(g, x0 - 5, 238, w + 10, 30, ['#4a8a6a', '#34684e', '#6aaa88']);
+      planks(g, x0, 268, w, base - 268, '#d8a868', '#a87a42');
+      P(g, '#8a5a32', x0, 268, 3, base - 268); P(g, '#8a5a32', x0 + w - 3, 268, 3, base - 268);
+      win(g, x0 + 44, 276, 18, 12, true);
+      door(g, x0 + 14, 276, 16, base - 276, '#a8582a');
+      step(g, x0 + 11, base, 22);
+    }
+    function barn(g) {
+      const x0 = 562, w = 96, base = 180, cx = 610;
+      shadow(g, cx, base + 2, 54);
+      for (let y = 90; y < 130; y++) {
+        const hw = y < 106 ? 16 + (y - 90) * 2.3 : 54;
+        P(g, OUT, cx - hw - 1, y, hw * 2 + 3, 1);
+        P(g, (y - 90) % 4 === 3 ? '#4a1a12' : '#6a2a1e', cx - hw, y, hw * 2 + 1, 1);
+        P(g, '#8a3a28', cx - hw, y, Math.round(hw * 0.4), 1);
+      }
+      P(g, OUT, cx - 9, 104, 18, 14); P(g, '#f0e8d8', cx - 8, 105, 16, 12); P(g, '#2a1a10', cx - 6, 107, 12, 8); P(g, '#e0c060', cx - 6, 111, 12, 4);
+      P(g, OUT, x0 - 1, 130, w + 2, base - 130); P(g, '#b83a2a', x0, 130, w, base - 130);
+      for (let x = x0 + 5; x < x0 + w; x += 6) P(g, '#8a2a1e', x, 130, 1, base - 130);
+      P(g, '#f0e8d8', x0, 130, w, 2); P(g, '#f0e8d8', x0, 130, 2, base - 130); P(g, '#f0e8d8', x0 + w - 2, 130, 2, base - 130);
+      P(g, OUT, cx - 20, 142, 40, base - 142); P(g, '#f0e8d8', cx - 19, 143, 38, base - 143);
+      [cx - 17, cx + 1].forEach(x => {
+        P(g, '#9a3022', x, 145, 16, base - 145);
+        for (let i = 0; i < 16; i++) { P(g, '#f0e8d8', x + i, 145 + i * (base - 145) / 16, 1, 2); P(g, '#f0e8d8', x + 15 - i, 145 + i * (base - 145) / 16, 1, 2); }
+      });
+      P(g, OUT, cx + 24, 146, 7, 9); P(g, '#ffd27a', cx + 25, 147, 5, 7);
+    }
+    function silo(g) {
+      shadow(g, 682, 182, 15);
+      P(g, OUT, 667, 112, 30, 70); P(g, '#a8a8b8', 668, 112, 28, 69); P(g, '#c8c8d8', 670, 112, 5, 69); P(g, '#8a8a9a', 690, 112, 5, 69);
+      for (let y = 118; y < 180; y += 7) P(g, '#7a7a8a', 668, y, 28, 1);
+      oval(g, 682, 112, 16, 9, OUT); oval(g, 682, 112, 15, 8, '#9a3a2a'); oval(g, 678, 109, 6, 3, '#b85a3a');
+    }
+    function coop(g) {
+      const x0 = 646, w = 40, base = 322;
+      shadow(g, x0 + w / 2, base + 2, 24);
+      for (let y = 286; y < 300; y++) { const hw = 6 + (y - 286) * 1.2; P(g, OUT, x0 + w / 2 - hw - 1, y, hw * 2 + 3, 1); P(g, y % 3 ? '#8a5a32' : '#6a3a1a', x0 + w / 2 - hw, y, hw * 2 + 1, 1); }
+      planks(g, x0, 300, w, base - 300, '#e8d8b0', '#c0a878');
+      P(g, OUT, x0 + 14, 308, 12, base - 308); P(g, '#2a1a10', x0 + 15, 309, 10, base - 309);
+      P(g, OUT, x0 + 12, base, 16, 3); P(g, '#a8703a', x0 + 13, base, 14, 2);
+    }
+    function shipBin(g) {
+      shadow(g, 540, 186, 13);
+      P(g, OUT, 528, 172, 24, 14); P(g, '#a8642a', 529, 174, 22, 11); for (let x = 533; x < 551; x += 5) P(g, '#7a3a18', x, 174, 1, 11);
+      P(g, OUT, 527, 168, 26, 6); P(g, '#d8904a', 528, 169, 24, 4); P(g, '#f0b060', 528, 169, 24, 1);
+      P(g, '#5a2e14', 532, 175, 16, 2);
+    }
+    function noticeBoard(g) {
+      const x = 180, y = 182;
+      shadow(g, x, y, 14);
+      [x - 14, x + 11].forEach(px => { P(g, OUT, px, y - 26, 4, 26); P(g, '#8a5a32', px + 1, y - 26, 2, 25); });
+      P(g, OUT, x - 16, y - 30, 32, 20); P(g, '#a86a3a', x - 15, y - 29, 30, 18);
+      [[x - 12, y - 27, '#fff3d6'], [x - 2, y - 26, '#ffe08a'], [x + 6, y - 27, '#f4c8d8'], [x - 9, y - 19, '#d8f0ff']].forEach(([nx, ny, c]) => { P(g, c, nx, ny, 7, 6); P(g, '#c03a3a', nx + 3, ny, 1, 1); P(g, '#8a7a6a', nx + 1, ny + 3, 5, 1); });
+      P(g, OUT, x - 18, y - 33, 36, 4); P(g, '#6a321e', x - 17, y - 32, 34, 2);
+    }
+    function lampPost(g, x, y) {
+      shadow(g, x, y, 5);
+      P(g, OUT, x - 3, y - 3, 7, 3); P(g, OUT, x - 2, y - 30, 5, 28); P(g, '#2a2a3a', x - 1, y - 30, 3, 28);
+      P(g, OUT, x - 5, y - 40, 11, 11); P(g, '#ffd27a', x - 4, y - 38, 9, 8); P(g, '#fff0b8', x - 3, y - 37, 2, 3);
+      P(g, OUT, x - 6, y - 42, 13, 3); P(g, OUT, x, y - 45, 1, 3);
+    }
+    function bench(g, x, y) {
+      shadow(g, x, y, 14);
+      P(g, OUT, x - 13, y - 8, 3, 8); P(g, OUT, x + 10, y - 8, 3, 8);
+      P(g, OUT, x - 15, y - 11, 30, 5); P(g, '#c98a4b', x - 14, y - 10, 28, 3); P(g, '#e0a868', x - 14, y - 10, 28, 1);
+      P(g, OUT, x - 15, y - 18, 30, 4); P(g, '#9a6230', x - 14, y - 17, 28, 2);
+    }
+    function picket(g, x1, x2, y) {
+      P(g, OUT, x1, y - 8, x2 - x1, 3); P(g, '#e8d8b0', x1 + 1, y - 7, x2 - x1 - 2, 1);
+      for (let x = x1; x < x2; x += 8) { P(g, OUT, x - 1, y - 12, 4, 12); P(g, '#e8d8b0', x, y - 11, 2, 10); P(g, OUT, x, y - 13, 2, 1); }
+    }
+    function rail(g, x1, x2, y) {
+      P(g, OUT, x1, y - 9, x2 - x1, 3); P(g, '#a8703a', x1 + 1, y - 8, x2 - x1 - 2, 1);
+      for (let x = x1; x < x2; x += 10) { P(g, OUT, x - 1, y - 13, 5, 13); P(g, '#a8703a', x, y - 12, 3, 12); }
+    }
+    function scarecrow(g, x, y) {
+      shadow(g, x, y, 6);
+      P(g, OUT, x - 1, y - 26, 3, 26); P(g, '#8a5a32', x, y - 26, 1, 25);
+      P(g, OUT, x - 9, y - 21, 19, 3); P(g, '#8a5a32', x - 8, y - 20, 17, 1);
+      P(g, OUT, x - 5, y - 22, 11, 11); P(g, '#3a6ad8', x - 4, y - 21, 9, 9); P(g, '#e8d8b0', x - 4, y - 18, 9, 1); P(g, '#e8d8b0', x - 1, y - 21, 1, 9);
+      circ(g, x, y - 27, 4, OUT); circ(g, x, y - 27, 3, '#e0c890'); P(g, OUT, x - 2, y - 28, 1, 1); P(g, OUT, x + 1, y - 28, 1, 1);
+      P(g, OUT, x - 8, y - 31, 17, 2); P(g, '#e0b040', x - 7, y - 31, 15, 1); P(g, OUT, x - 4, y - 35, 9, 4); P(g, '#e0b040', x - 3, y - 34, 7, 3);
+    }
+    function mailbox(g, x, y) {
+      shadow(g, x, y, 5);
+      P(g, OUT, x - 1, y - 14, 3, 14); P(g, '#8a5a32', x, y - 14, 1, 13);
+      P(g, OUT, x - 5, y - 21, 11, 8); P(g, '#3a6ad8', x - 4, y - 20, 9, 6); P(g, '#5a8ae8', x - 4, y - 20, 9, 1);
+      P(g, OUT, x + 5, y - 24, 2, 6); P(g, '#e0303a', x + 6, y - 24, 3, 2);
+    }
+    function rack(g, x, y) {
+      shadow(g, x, y, 14);
+      P(g, OUT, x - 14, y - 26, 28, 2); P(g, OUT, x - 14, y - 26, 2, 26); P(g, OUT, x + 12, y - 26, 2, 26);
+      ['#e0303a', '#5fb83a', '#3a6ad8', '#ffd23f'].forEach((c, i) => { P(g, OUT, x - 12 + i * 6, y - 24, 6, 12); P(g, c, x - 11 + i * 6, y - 23, 4, 10); });
+    }
+    function umbrella(g, x, y) {
+      P(g, OUT, x - 1, y - 30, 3, 30); P(g, '#e8e8f0', x, y - 30, 1, 29);
+      for (let r = 0; r < 9; r++) {
+        const hw = 4 + r * 2;
+        P(g, OUT, x - hw - 1, y - 40 + r, hw * 2 + 3, 1);
+        for (let xx = -hw; xx <= hw; xx++) P(g, Math.floor((xx + 30) / 6) % 2 ? '#ffffff' : '#e0303a', x + xx, y - 40 + r, 1, 1);
+      }
+      P(g, OUT, x - 1, y - 42, 3, 2);
+    }
+    function tableSet(g, x, y) {
+      shadow(g, x, y, 14);
+      [[x - 16, '#e07ab0'], [x + 12, '#e07ab0']].forEach(([cx, c]) => { P(g, OUT, cx - 1, y - 16, 6, 16); P(g, '#a8582a', cx, y - 15, 4, 15); P(g, OUT, cx - 2, y - 9, 8, 4); P(g, c, cx - 1, y - 8, 6, 2); });
+      P(g, OUT, x - 1, y - 9, 3, 9);
+      oval(g, x, y - 12, 12, 5, OUT); oval(g, x, y - 12, 11, 4, '#b8582a'); oval(g, x, y - 13, 8, 2, '#d8803c');
+      P(g, '#ffffff', x - 3, y - 15, 3, 2); P(g, '#ffffff', x + 2, y - 14, 3, 2);
+    }
+
+    const props = [];
+    function addSprite(y, box, bx, by, w, h, fn) { const s = makeSprite(bx, by, w, h, fn); props.push({ y, box, draw: () => b.drawImage(s.c, s.bx, s.by) }); }
+    const LAMPS = [[156, 172], [330, 172], [156, 284], [330, 284], [440, 162], [366, 320], [180, 400], [520, 186]];
+    function buildProps() {
+      addSprite(158, [30, 110, 108, 48], 16, 40, 136, 124, chaiCafe);
+      addSprite(166, [182, 106, 126, 60], 168, 34, 156, 146, tokenClub);
+      addSprite(154, [340, 114, 92, 40], 328, 72, 116, 86, threadsShop);
+      addSprite(300, [36, 268, 76, 32], 26, 220, 96, 84, homeHouse);
+      addSprite(180, [562, 130, 96, 50], 550, 86, 120, 98, barn);
+      addSprite(180, [667, 140, 30, 42], 664, 100, 36, 86, silo);
+      addSprite(322, [646, 300, 40, 22], 636, 282, 60, 44, coop);
+      addSprite(186, [527, 176, 26, 10], 524, 164, 32, 26, shipBin);
+      addSprite(182, [164, 176, 32, 6], 160, 146, 40, 40, noticeBoard);
+      LAMPS.forEach(([x, y]) => addSprite(y, [x - 3, y - 3, 7, 4], x - 8, y - 48, 16, 50, g => lampPost(g, x, y)));
+      [[202, 274], [282, 274]].forEach(([x, y]) => addSprite(y, [x - 15, y - 6, 30, 6], x - 16, y - 22, 32, 26, g => bench(g, x, y)));
+      addSprite(176, [92, 172, 36, 8], 86, 158, 48, 24, g => tableSet(g, 110, 178));
+      addSprite(170, [406, 166, 28, 5], 404, 140, 32, 32, g => rack(g, 420, 170));
+      addSprite(306, [91, 302, 4, 4], 84, 280, 20, 28, g => mailbox(g, 92, 306));
+      addSprite(414, [108, 410, 4, 4], 86, 370, 48, 46, g => umbrella(g, 110, 414));
+      FIELDS.forEach(([fx, fy, fw, fh]) => {
+        addSprite(fy + 1, null, fx - 4, fy - 14, fw + 8, 16, g => picket(g, fx - 2, fx + fw + 2, fy + 1));
+        addSprite(fy + fh + 2, null, fx - 4, fy + fh - 11, fw + 8, 16, g => picket(g, fx - 2, fx + fw + 2, fy + fh + 2));
+        props.push({ y: -1, box: [fx - 4, fy - 4, fw + 8, fh + 8], draw() {} });
+      });
+      addSprite(242, null, 680, 206, 20, 40, g => scarecrow(g, 690, 242));
+      const [px, py, pw, ph] = PEN;
+      addSprite(py + 1, null, px - 4, py - 14, pw + 8, 16, g => rail(g, px - 2, px + pw + 2, py + 1));
+      addSprite(py + ph + 2, null, px - 4, py + ph - 12, pw + 8, 16, g => rail(g, px - 2, px + pw + 2, py + ph + 2));
+      props.push({ y: -1, box: [px - 4, py - 4, pw + 8, ph + 8], draw() {} });
+      [[156, 124, GREEN, 3], [326, 116, GREEN, 7], [16, 200, GREEN, 9], [18, 330, AUTUMN, 13], [132, 352, GREEN, 17], [300, 362, GREEN, 21],
+        [408, 238, GREEN, 25], [140, 316, AUTUMN, 27], [500, 112, GREEN, 29], [704, 300, GREEN, 33], [700, 382, AUTUMN, 35], [600, 380, GREEN, 37]].forEach(([x, y, pal, s]) =>
+        addSprite(y, [x - 6, y - 5, 12, 6], x - 27, y - 70, 54, 72, g => leafy(g, x, y, pal, s)));
+      addSprite(372, [56, 367, 12, 6], 33, 302, 54, 72, g => leafy(g, 60, 372, BLUE, 31));
+      [[24, 106, 41], [470, 110, 43]].forEach(([x, y, sd]) => addSprite(y, [x - 4, y - 4, 9, 5], x - 20, y - 70, 40, 72, g => pine(g, x, y, sd)));
+    }
+
+    // live-drawn props: fountain, campfire
+    let tNow = 0;
+    const FOUNTAIN = [242, 232], CAMPFIRE = [270, 414];
+    function fountain(x, y) {
+      oval(b, x, y - 7, 24, 9, OUT); oval(b, x, y - 7, 23, 8, '#9a9aaa'); oval(b, x, y - 8, 20, 6, '#c4c4d0');
+      oval(b, x, y - 8, 18, 5, '#3f8fc8'); oval(b, x - 3, y - 9, 12, 3, '#5fb0e0');
+      P(b, OUT, x - 4, y - 30, 8, 22); P(b, '#c4c4d0', x - 3, y - 30, 6, 22); P(b, '#e8e8f0', x - 3, y - 30, 2, 22);
+      oval(b, x, y - 30, 9, 3, OUT); oval(b, x, y - 30, 8, 2, '#5fb0e0');
+      for (let i = 0; i < 10; i++) {
+        const p = ((tNow / 900) + i / 10) % 1, side = i % 2 ? 1 : -1;
+        P(b, p < 0.5 ? '#d6f0f8' : '#9fd6e8', x + side * (3 + p * 13), y - 30 - 6 * Math.sin(p * Math.PI) + p * 22, 2, 2);
+      }
+      const ring = (tNow / 600) % 1;
+      oval(b, x, y - 8, Math.round(6 + ring * 10), Math.max(1, Math.round(1 + ring * 3)), `rgba(255,255,255,${0.5 - ring * 0.5})`);
+    }
+    function campfire(x, y) {
+      shadow(b, x, y, 10);
+      [[-8, 0], [8, 0]].forEach(([dx]) => { P(b, OUT, x + dx - 6, y - 4, 12, 4); P(b, '#8a5a32', x + dx - 5, y - 3, 10, 2); });
+      P(b, OUT, x - 6, y - 5, 12, 5); P(b, '#6a3a1a', x - 5, y - 4, 10, 3);
+      for (let i = 0; i < 5; i++) {
+        const fx = x - 4 + i * 2, h = 4 + (Math.sin(tNow / 90 + i * 1.7) + 1) * 3 + (i === 2 ? 4 : 0);
+        P(b, '#d0301a', fx, y - 5 - h, 2, h); P(b, '#ffa020', fx, y - 5 - h * 0.65, 2, h * 0.65); P(b, '#fff0a0', fx, y - 5 - h * 0.3, 1, h * 0.3);
+      }
+      if (Math.sin(tNow / 130) > 0.6) P(b, '#ffd060', x - 2 + Math.sin(tNow / 50) * 4, y - 18 - (tNow / 20 % 8), 1, 1);
+    }
+    props.push({ y: FOUNTAIN[1], box: [218, 220, 48, 14], draw: () => fountain(...FOUNTAIN) });
+    props.push({ y: CAMPFIRE[1], box: [258, 408, 24, 8], draw: () => campfire(...CAMPFIRE) });
+
+    let gold = 6902;
+    const PRICES = { 'Leek': 60, 'Daffodil': 30, 'Dandelion': 40, 'Spring Onion': 8, 'Salmonberry': 5, 'Mushroom': 40, 'Seashell': 20, 'Coral': 80, 'Clam': 50 };
+    function ship() {
+      const items = Object.entries(bag).filter(([, n]) => n > 0);
+      if (!items.length) { openDialog('The shipping bin is empty. Forage something and bring it here to sell!'); return; }
+      let total = 0, count = 0;
+      items.forEach(([name, n]) => { total += PRICES[name] * n; count += n; bag[name] = 0; });
+      gold += total;
+      openDialog(`You shipped ${count} item${count > 1 ? 's' : ''} for ${total}g. The money will be... well, it's already in your wallet!`);
+    }
+
+    const interacts = [
+      { name: 'CHAI', x: 58, y: 166, text: "CHAI: 'Fresh masala chai, all day!' The door's locked... the owner must be out wandering." },
+      { name: 'TOKEN CLUB', x: 245, y: 180, text: 'TOKEN CLUB opens at midnight. You can hear music through the door...' },
+      { name: 'THREADS', x: 356, y: 162, text: 'THREADS: handmade shirts! Fitting room coming soon.' },
+      { name: 'HOME', x: 58, y: 308, text: "Home sweet home. You'll be able to go inside soon." },
+      { name: 'BOARD', x: 180, y: 192, text: 'HELP WANTED: mintleaf needs leeks for soup. Forage some and drop them in the shipping bin by the barn!' },
+      { name: 'FOUNTAIN', x: 242, y: 246, text: 'You toss a token into the fountain and make a wish. (-1g)', act: () => { gold -= 1; } },
+      { name: 'BARN', x: 610, y: 190, text: 'The barn smells of fresh hay. Animals coming soon!' },
+      { name: 'SHIPPING BIN', x: 540, y: 196, act: ship },
+      { name: 'MINE', x: 696, y: ridge(696) + CLIFF + 12, text: 'The old mine is boarded up... something glitters inside.' },
+      { name: 'FISH', x: 194, y: 466, text: 'You cast a line off the pier. Nothing bites... yet.' },
+      { name: 'COOP', x: 666, y: 330, text: 'The chickens look happy. Eggs coming soon!' },
+    ];
+
+    function walkable(x, y) {
+      if (x < 6 || x > WW - 6) return false;
+      if (inRect(x, y, PIER) || BRIDGES.some(r => inRect(x, y, r))) return true;
+      return groundAt(x, y) && groundAt(x - 5, y) && groundAt(x + 5, y) && groundAt(x, y + 3);
+    }
+    function blocked(x, y) {
+      if (!walkable(x, y)) return true;
+      return props.some(p => { if (!p.box) return false; const [bx, by, bw, bh] = p.box; return x + 4 > bx && x - 4 < bx + bw && y > by && y - 3 < by + bh; });
+    }
+    function randomSpot() {
+      for (let i = 0; i < 300; i++) { const x = 20 + Math.random() * 680, y = 90 + Math.random() * 340; if (!blocked(x, y)) return { x, y }; }
+      return { x: 242, y: 262 };
+    }
+
+    // ---------- characters ----------
+    const img = new Image();
+    img.src = 'assets/aditya.png';
+    let sheet = null;
+
+    function makeChar(name, x, y, hat) {
+      const c = new SpriteCharacter(DATA, null, { x, y, speed: 52, scale: 1 });
+      c.name = name; c.hat = hat; c.bubble = null; c.target = null;
+      return c;
+    }
+    const hero = makeChar('aditya', 242, 262, null);
+    hero.isHero = true;
+
+    // Until there are more sprite sheets, NPCs reuse Aditya and get a coloured beanie each.
+    const HATS = [['#e0505a', '#ff9aa0'], ['#4a6fa8', '#9fc0f0'], ['#5a9a4a', '#a8e08a'], ['#d8893a', '#ffd27a'], ['#9a5ae0', '#d6b0ff'], ['#e07ab0', '#ffd6ec']];
+    const NPC_NAMES = ['rosa_j', 'chaiwala', 'bobby5', 'mintleaf', 'pixelpriya', 'tokenman'];
+    const LINES = ['what a day', 'heading to the beach', 'chai stall opens soon', 'club opens at midnight', 'nice hat :)',
+      'anyone fishing later?', 'the chickens are so cute', 'THREADS has new shirts', 'hi everyone!', 'brb', 'race you to the bridge', 'zzz'];
+    const TALK = {
+      rosa_j: ['The beach is my favourite spot. Have you tried fishing off the pier?', 'I found a coral on the sand this morning! The tide brings in all sorts.', 'If you find salmonberries, they make great jam.'],
+      chaiwala: ["Chai's not ready yet... the kettle needs a few more minutes.", "Cardamom, ginger, and a little patience. That's the secret!", "Come by the cafe later. First cup's on me."],
+      bobby5: ['Have you seen the old mine up on the cliff? I swear I heard something in there.', 'Race you to the barn! ...Okay, maybe later.', 'Birds keep flying off whenever I get close. Rude.'],
+      mintleaf: ["I'm growing pumpkins on the farm across the river.", 'If you find leeks, ship them in the bin by the barn. I need them for soup!', 'I love the sound of the waterfall at night.'],
+      pixelpriya: ["I'm designing shirts for THREADS. Want one?", 'Did you make a wish at the fountain yet?', 'The sunsets over the sea here are unreal.'],
+      tokenman: ['Tokens, tokens, tokens. The club opens at midnight!', 'Flip a token and see what fate says.', "Rumour is there's treasure deep in the mine."],
+    };
+    let npcs = [], chars = [];
+
+    function say(c, text) { c.bubble = { text, until: performance.now() + 5000 }; }
+
+    function steer(c) {
+      if (!c.target) return;
+      const dx = c.target.x - c.x, dy = c.target.y - c.y;
+      const ax = Math.abs(dx) > 1.5, ay = Math.abs(dy) > 1.5;
+      c.setInput({ left: ax && dx < 0, right: ax && dx > 0, up: ay && dy < 0, down: ay && dy > 0 });
+      if (!ax && !ay) c.target = null;
+    }
+
+    function move(c, dt) {
+      const ox = c.x, oy = c.y;
+      c.update(dt);
+      const nx = c.x, ny = c.y;
+      c.x = ox; c.y = oy;
+      if (!blocked(nx, oy)) c.x = nx;
+      if (!blocked(c.x, ny)) c.y = ny;
+      return c.x !== ox || c.y !== oy;
+    }
+
+    function updateNpc(c, dt) {
+      if (dialog && dialog.npc === c) { c.setInput({ left: false, right: false, up: false, down: false }); move(c, dt); return; }
+      if (c.target) {
+        steer(c);
+        const moved = move(c, dt);
+        c.stuck = moved ? 0 : c.stuck + dt;
+        if (c.stuck > 600) { c.target = null; c.stuck = 0; }
+        if (!c.target) {
+          c.setInput({ left: false, right: false, up: false, down: false });
+          c.wait = 1500 + Math.random() * 4500;
+          const r = Math.random();
+          if (r < 0.2) say(c, pick(LINES));
+          else if (r < 0.5) emote(c, pick(['note', 'happy', 'dots', 'heart', 'excl', 'q']));
+          else if (r < 0.6) c.trigger(pick(['emote', 'jump', 'shoot']));
+        }
+      } else {
+        move(c, dt);
+        c.wait -= dt;
+        if (c.wait <= 0) { const s = randomSpot(); c.target = { x: c.x + (s.x - c.x) * 0.5, y: c.y + (s.y - c.y) * 0.5 }; }
+      }
+    }
+
+    function drawChar(c) {
+      const f = c.frame(), lift = Math.round(f.lift * S), x = Math.round(c.x), y = Math.round(c.y);
+      oval(b, x, y - 1, lift > 4 ? 5 : 7, 2, 'rgba(10,20,10,.35)');
+      if (!sheet) return;
+      b.drawImage(sheet, f.col * SCW, f.row * SCH, SCW, SCH, x - AX, y - AY - lift, CW, CH);
+      if (c.hat && !['crouch', 'sneak', 'faint'].includes(c.anim)) {
+        const top = y - 36 - lift, [dark, light] = c.hat;
+        P(b, dark, x - 6, top, 13, 2); P(b, dark, x - 7, top + 2, 15, 3); P(b, light, x - 8, top + 5, 17, 2);
+        P(b, '#ffffff', x - 1, top - 2, 3, 2);
+      }
+    }
+
+    // ---------- Stardew-style emote bubbles ----------
+    const EMOTE_ICONS = {
+      heart: [['.RR.RR.', 'RRRRRRR', 'RRRRRRR', '.RRRRR.', '..RRR..', '...R...'], { R: '#e0303a' }],
+      note: [['..BBBB', '..B..B', '..B..B', 'BBB.BB', 'BBB.BB'], { B: '#2a2a48' }],
+      dots: [['B.B.B'], { B: '#2a2a48' }],
+      excl: [['R', 'R', 'R', '.', 'R'], { R: '#e0303a' }],
+      happy: [['Y...Y', '.....', 'Y...Y', '.YYY.'], { Y: '#c07a10' }],
+      q: [['.BB.', 'B..B', '..B.', '....', '..B.'], { B: '#3a6ad8' }],
+    };
+    function pattern(g, x, y, rows, pal) { rows.forEach((r, j) => [...r].forEach((ch, i) => { if (pal[ch]) P(g, pal[ch], x + i, y + j, 1, 1); })); }
+    function emote(c, type) { c.emote = { type, t: 0 }; }
+    function drawEmote(c, dt) {
+      if (!c.emote) return;
+      const e = c.emote; e.t += dt;
+      if (e.t > 2400) { c.emote = null; return; }
+      const [rows, pal] = EMOTE_ICONS[e.type], w = 13, h = 11;
+      const pop = e.t < 160 ? Math.round((1 - e.t / 160) * 4) : 0;
+      const x = Math.round(c.x) - 6, y = Math.round(c.y) - AY - 17 - pop;
+      P(b, OUT, x + 1, y, w - 2, h); P(b, OUT, x, y + 1, w, h - 2); P(b, '#ffffff', x + 1, y + 1, w - 2, h - 2);
+      P(b, OUT, x + 5, y + h - 1, 3, 3); P(b, '#ffffff', x + 6, y + h - 1, 1, 2);
+      pattern(b, x + Math.floor((w - rows[0].length) / 2), y + Math.floor((h - rows.length) / 2), rows, pal);
+    }
+
+    // ---------- forage: wild things to pick up (land items in the grass, shells on the beach) ----------
+    const FORAGE = {
+      'Leek': (g, x, y) => { P(g, OUT, x - 2, y - 6, 5, 6); P(g, '#f0f4e0', x - 1, y - 5, 3, 5); P(g, '#5fb83a', x - 1, y - 12, 1, 7); P(g, '#5fb83a', x + 1, y - 11, 1, 6); P(g, '#348a2c', x - 3, y - 10, 2, 1); P(g, '#348a2c', x + 2, y - 9, 2, 1); },
+      'Daffodil': (g, x, y) => { P(g, '#348a2c', x, y - 7, 1, 7); P(g, '#348a2c', x - 2, y - 3, 2, 1); P(g, OUT, x - 3, y - 12, 7, 6); P(g, '#ffe04a', x - 2, y - 11, 5, 4); P(g, '#ffe04a', x - 1, y - 12, 3, 6); P(g, '#f08a20', x, y - 10, 1, 2); },
+      'Dandelion': (g, x, y) => { P(g, '#348a2c', x, y - 6, 1, 6); circ(g, x, y - 9, 3, '#b8b8c8'); circ(g, x, y - 9, 2, '#ffffff'); P(g, '#f8f0a0', x, y - 9, 1, 1); },
+      'Spring Onion': (g, x, y) => { P(g, '#5fb83a', x - 2, y - 10, 1, 7); P(g, '#5fb83a', x, y - 11, 1, 8); P(g, '#5fb83a', x + 2, y - 9, 1, 6); P(g, OUT, x - 2, y - 4, 5, 4); P(g, '#f8f0f0', x - 1, y - 3, 3, 3); },
+      'Salmonberry': (g, x, y) => { circ(g, x, y - 5, 4, OUT); circ(g, x, y - 5, 3, '#2f7a26'); [[-2, -6], [1, -4], [2, -7], [-1, -3]].forEach(([dx, dy]) => P(g, '#f06a8a', x + dx, y + dy, 2, 2)); },
+      'Mushroom': (g, x, y) => { P(g, OUT, x - 2, y - 5, 5, 5); P(g, '#f0e8d8', x - 1, y - 4, 3, 4); oval(g, x, y - 6, 5, 2, OUT); oval(g, x, y - 6, 4, 1, '#a86a3a'); P(g, '#e8c8a0', x - 2, y - 7, 1, 1); P(g, '#e8c8a0', x + 2, y - 6, 1, 1); },
+      'Seashell': (g, x, y) => { oval(g, x, y - 3, 5, 3, OUT); oval(g, x, y - 3, 4, 2, '#f8d8d0'); [-2, 0, 2].forEach(dx => P(g, '#e0a0a0', x + dx, y - 5, 1, 3)); P(g, OUT, x - 1, y - 1, 3, 1); },
+      'Coral': (g, x, y) => { [[-3, 7], [0, 10], [3, 6]].forEach(([dx, h]) => { P(g, OUT, x + dx - 1, y - h - 1, 3, h + 1); P(g, '#f0605a', x + dx, y - h, 1, h); P(g, '#ff9a8a', x + dx, y - h, 1, 1); }); P(g, '#f0605a', x - 3, y - 4, 6, 1); },
+      'Clam': (g, x, y) => { oval(g, x, y - 3, 5, 3, OUT); oval(g, x, y - 3, 4, 2, '#c8b8a8'); P(g, '#a89888', x - 4, y - 3, 9, 1); P(g, '#e8d8c8', x - 2, y - 5, 4, 1); },
+    };
+    const LAND_ITEMS = ['Leek', 'Daffodil', 'Dandelion', 'Spring Onion', 'Salmonberry', 'Mushroom'], BEACH_ITEMS = ['Seashell', 'Coral', 'Clam'];
+    const forageIcons = {};
+    Object.keys(FORAGE).forEach(n => { const c = document.createElement('canvas'); c.width = 14; c.height = 14; FORAGE[n](c.getContext('2d'), 7, 13); forageIcons[n] = c; });
+    let forage = [];
+    const bag = {}, notices = [], floaters = [];
+    function spawnForage() {
+      for (let i = 0; i < 300; i++) {
+        const x = 20 + Math.random() * 680, y = 90 + Math.random() * 340;
+        if (blocked(x, y) || busy(x, y, 4) || inRect(x, y, PIER) || BRIDGES.some(r => inRect(x, y, r))) continue;
+        if (forage.some(f => Math.hypot(f.x - x, f.y - y) < 30)) continue;
+        forage.push({ x: Math.round(x), y: Math.round(y), name: pick(sandAt(x, y) ? BEACH_ITEMS : LAND_ITEMS), p: Math.random() * 10 });
+        return;
+      }
+    }
+    function drawForage(f) {
+      oval(b, f.x, f.y - 1, 4, 1, 'rgba(10,20,10,.3)');
+      FORAGE[f.name](b, f.x, f.y);
+      if (Math.sin(tNow / 500 + f.p) > 0.93) { P(b, '#ffffff', f.x + 4, f.y - 15, 1, 3); P(b, '#ffffff', f.x + 3, f.y - 14, 3, 1); }
+    }
+    function nearForage() { return forage.find(f => Math.hypot(hero.x - f.x, hero.y - f.y) < 16); }
+    function pickUp(f) {
+      forage = forage.filter(o => o !== f);
+      bag[f.name] = (bag[f.name] || 0) + 1;
+      const n = notices.find(o => o.name === f.name);
+      if (n) n.t = 0; else notices.unshift({ name: f.name, t: 0 });
+      floaters.push({ x: f.x, y: f.y - 16, text: '+1 ' + f.name, t: 0 });
+      hero.trigger('crouch'); setTimeout(() => { if (hero.pose === 'crouch') hero.pose = null; }, 350);
+      setTimeout(spawnForage, 15000 + Math.random() * 10000);
+    }
+
+    // ---------- birds hop about and flee when someone gets close; gulls on the beach ----------
+    let birds = [];
+    function newBird(fromSky) {
+      const s = randomSpot();
+      return { x: s.x, y: s.y, z: fromSky ? 90 : 0, state: fromSky ? 'land' : 'idle', t: Math.random() * 1500, face: Math.random() < 0.5 ? -1 : 1, peck: 0, hop: 0,
+        col: sandAt(s.x, s.y) ? ['#f0f0f4', '#b8b8c8'] : pick([['#2a2a38', '#4a4a5a'], ['#7a4a2a', '#c08a5a'], ['#3a5aa8', '#8ab0e8']]) };
+    }
+    function updateBirds(dt) {
+      birds.forEach((bd, i) => {
+        if (bd.state === 'idle') {
+          bd.t -= dt; bd.peck = Math.max(0, bd.peck - dt); bd.hop = Math.max(0, bd.hop - dt);
+          if (bd.t < 0) {
+            bd.t = 500 + Math.random() * 1800;
+            if (Math.random() < 0.5) bd.peck = 300;
+            else {
+              const nx = bd.x + (Math.random() * 2 - 1) * 8, ny = bd.y + (Math.random() * 2 - 1) * 4;
+              if (!blocked(nx, ny)) { bd.face = nx > bd.x ? 1 : -1; bd.x = nx; bd.y = ny; bd.hop = 180; }
+            }
+          }
+          const near = chars.find(c => Math.hypot(c.x - bd.x, c.y - bd.y) < 30);
+          if (near) { bd.state = 'fly'; bd.vx = (bd.x > near.x ? 1 : -1) * 0.08; bd.face = bd.vx > 0 ? 1 : -1; }
+        } else if (bd.state === 'fly') {
+          bd.x += bd.vx * dt; bd.y -= 0.02 * dt; bd.z += 0.06 * dt;
+          if (bd.z > 160) { bd.state = 'gone'; setTimeout(() => { birds[i] = newBird(true); }, 4000 + Math.random() * 6000); }
+        } else if (bd.state === 'land') {
+          bd.z -= 0.05 * dt;
+          if (bd.z <= 0) { bd.z = 0; bd.state = 'idle'; }
+        }
+      });
+    }
+    function drawBird(bd) {
+      if (bd.state === 'gone') return;
+      const x = Math.round(bd.x), y = Math.round(bd.y - bd.z) - (bd.hop ? 2 : 0), f = bd.face, [body, wing] = bd.col;
+      if (bd.z < 100) oval(b, x, Math.round(bd.y) - 1, 3, 1, 'rgba(10,20,10,.3)');
+      const flying = bd.state !== 'idle', flap = Math.floor(tNow / 90) % 2;
+      P(b, OUT, x - 3, y - 6, 7, 5); P(b, body, x - 2, y - 5, 5, 3);
+      const hx = x + f * 3, hy = y - (bd.peck ? 5 : 8);
+      P(b, OUT, hx - 1, hy, 4, 4); P(b, body, hx, hy + 1, 2, 2); P(b, '#e0a020', hx + (f > 0 ? 3 : -2), hy + 2, 1, 1); P(b, '#ffffff', hx + (f > 0 ? 1 : 0), hy + 1, 1, 1);
+      P(b, OUT, x - f * 4 - 1, y - 5, 2, 2);
+      if (flying) { P(b, OUT, x - 4, y - (flap ? 10 : 4), 9, 3); P(b, wing, x - 3, y - (flap ? 9 : 3), 7, 1); }
+      else { P(b, wing, x - 1, y - 4, 3, 1); P(b, OUT, x - 1, y - 1, 1, 1); P(b, OUT, x + 1, y - 1, 1, 1); }
+    }
+
+    // ---------- chickens potter around their pen ----------
+    let chickens = [];
+    function newChicken() {
+      const [px, py, pw, ph] = PEN;
+      return { x: px + 10 + Math.random() * (pw - 20), y: py + 14 + Math.random() * (ph - 18), t: Math.random() * 1000, face: 1, peck: 0, tx: null, ty: 0, col: pick(['#ffffff', '#ffffff', '#d8884a']) };
+    }
+    function updateChickens(dt) {
+      const [px, py, pw, ph] = PEN;
+      chickens.forEach(ch => {
+        ch.peck = Math.max(0, ch.peck - dt);
+        if (ch.tx !== null) {
+          const dx = ch.tx - ch.x, dy = ch.ty - ch.y, dd = Math.hypot(dx, dy);
+          if (dd < 1) ch.tx = null; else { ch.x += dx / dd * dt * 0.02; ch.y += dy / dd * dt * 0.02; ch.face = dx > 0 ? 1 : -1; }
+        } else if ((ch.t -= dt) < 0) {
+          ch.t = 600 + Math.random() * 2000;
+          if (Math.random() < 0.5) ch.peck = 350;
+          else { ch.tx = px + 8 + Math.random() * (pw - 16); ch.ty = py + 14 + Math.random() * (ph - 18); }
+        }
+      });
+    }
+    function drawChicken(ch) {
+      const x = Math.round(ch.x), y = Math.round(ch.y), f = ch.face, stepping = ch.tx !== null && Math.floor(tNow / 120) % 2;
+      oval(b, x, y - 1, 4, 1, 'rgba(10,20,10,.3)');
+      P(b, '#e0a020', x - 2, y - 2, 1, stepping ? 1 : 2); P(b, '#e0a020', x + 1, y - 2, 1, stepping ? 2 : 1);
+      oval(b, x, y - 5, 5, 3, OUT); oval(b, x, y - 5, 4, 2, ch.col);
+      P(b, OUT, x - f * 5 - 1, y - 9, 3, 4); P(b, ch.col, x - f * 5, y - 8, 1, 2);
+      const hx = x + f * 3, hy = y - (ch.peck ? 6 : 10);
+      P(b, OUT, hx - 2, hy - 1, 5, 5); P(b, ch.col, hx - 1, hy, 3, 3); P(b, '#e0303a', hx - 1, hy - 2, 2, 1);
+      P(b, '#e0a020', hx + (f > 0 ? 3 : -3), hy + 1, 1, 1); P(b, OUT, hx + (f > 0 ? 1 : -1), hy, 1, 1);
+    }
+
+    // butterflies in the daytime (fireflies take over at night)
+    const butterflies = Array.from({ length: 8 }, (_, i) => ({ x: 60 + Math.random() * 600, y: 110 + Math.random() * 240, p: Math.random() * 10, c: ['#ffffff', '#ffd23f', '#f08ac0', '#9fd6e8', '#ffa040', '#c8a0ff', '#ffffff', '#ffd23f'][i] }));
+    function drawButterflies(dt) {
+      const a = 1 - darkness();
+      if (a <= 0) return;
+      b.globalAlpha = a;
+      butterflies.forEach(f => {
+        f.p += dt / 1000;
+        const x = f.x + Math.sin(f.p * 0.7) * 40, y = f.y + Math.sin(f.p * 1.3) * 16 - 10, up = Math.floor(tNow / 120 + f.p) % 2;
+        P(b, OUT, x, y, 1, 2);
+        if (up) { P(b, f.c, x - 2, y - 2, 2, 2); P(b, f.c, x + 1, y - 2, 2, 2); } else { P(b, f.c, x - 2, y, 2, 1); P(b, f.c, x + 1, y, 2, 1); }
+      });
+      b.globalAlpha = 1;
+    }
+
+    // ---------- ambient: water, waterfall, smoke, lights, fireflies ----------
+    const shimmer = [];
+    const smoke = [];
+    const CHIMNEYS = [[114, 48], [96, 222]];
+    let smokeClock = 0;
+    const flies = Array.from({ length: 22 }, () => ({ x: 40 + Math.random() * 640, y: 100 + Math.random() * 290, p: Math.random() * 10, s: 0.5 + Math.random() }));
+    const LIGHTS = [
+      ...LAMPS.map(([x, y]) => ({ x, y: y - 36, r: 40, c: '255,200,110', a: 0.4 })),
+      { x: CAMPFIRE[0], y: CAMPFIRE[1] - 8, r: 50, c: '255,140,50', a: 0.5, f: 1 },
+      { x: 98, y: 138, r: 22, c: '255,200,110', a: 0.35 }, { x: 122, y: 138, r: 22, c: '255,200,110', a: 0.35 },
+      { x: 200, y: 127, r: 26, c: '255,200,110', a: 0.35 }, { x: 290, y: 127, r: 26, c: '255,200,110', a: 0.35 }, { x: 245, y: 140, r: 30, c: '255,200,110', a: 0.35 },
+      { x: 389, y: 147, r: 26, c: '255,200,110', a: 0.3 }, { x: 89, y: 282, r: 22, c: '255,200,110', a: 0.35 },
+      { x: 637, y: 150, r: 22, c: '255,200,110', a: 0.35 }, { x: 716, y: ridge(696) - 4, r: 24, c: '255,200,110', a: 0.4 },
+    ];
+
+    function drawWater(dt) {
+      // waterfall pouring out of the cliff into the river
+      const fx = Math.round(riverX(ridge(460))), top = ridge(460) - 18, bottom = ridge(460) + CLIFF + 2;
+      for (let x = fx - 9; x <= fx + 9; x++) {
+        const edge = Math.abs(x - fx) > 7;
+        for (let y = top; y < bottom; y += 2) {
+          const ph = ((y - tNow * 0.09 + ((x * 13) % 17)) % 16 + 16) % 16;
+          P(b, edge ? '#3a6ad0' : ph < 3 ? '#e0f0ff' : x % 5 === 0 ? '#7aa8f0' : '#5a8ae0', x, y, 1, 2);
+        }
+      }
+      for (let i = 0; i < 6; i++) {
+        const k = ((tNow / 700 + i / 6) % 1), x = fx - 8 + i * 3;
+        circ(b, x, bottom - k * 3, Math.round(2 + k * 3), `rgba(235,245,255,${0.7 * (1 - k)})`);
+      }
+      // waves lapping along the shore
+      for (let x = 0; x < WW; x += 2) {
+        const w = Math.sin(tNow / 700 + x * 0.06);
+        if (w > 0) P(b, `rgba(255,255,255,${0.7 * w})`, x, shore(x) + 1 + Math.round(w * 3), 2, 1);
+      }
+      // glints drifting across the water
+      shimmer.forEach(s => { if (Math.sin(tNow / 600 + s.p) > 0.4) P(b, '#a8ccff', s.x + Math.sin(tNow / 900 + s.p) * 3, s.y, s.w, 1); });
+    }
+
+    function drawSmoke(dt) {
+      smokeClock += dt;
+      if (smokeClock > 550) { smokeClock = 0; CHIMNEYS.forEach(([x, y]) => smoke.push({ x, y, age: 0 })); }
+      for (let i = smoke.length - 1; i >= 0; i--) {
+        const s = smoke[i]; s.age += dt; s.y -= dt * 0.01; s.x += dt * 0.004;
+        const k = s.age / 3200;
+        circ(b, s.x + Math.sin(s.age / 500) * 2, s.y, Math.round(2 + k * 5), `rgba(220,222,235,${0.6 * (1 - k)})`);
+        if (k >= 1) smoke.splice(i, 1);
+      }
+    }
+
+    function lerpColor(a, c, t) { const A = hex(a), B = hex(c); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`; }
+    // 0 = full day, 1 = full night. Follows the clock like Stardew: dusk from 5:30pm, dark by 8pm.
+    function darkness() {
+      const h = (gameMin / 60) % 24;
+      if (h >= 6 && h < 17.5) return 0;
+      if (h >= 17.5 && h < 20) return (h - 17.5) / 2.5;
+      if (h >= 5 && h < 6) return 6 - h;
+      return 1;
+    }
+    function drawNight(camX, camY) {
+      const t = darkness();
+      if (t <= 0) return;
+      b.save();
+      b.globalCompositeOperation = 'multiply';
+      b.fillStyle = t < 0.5 ? lerpColor('#ffffff', '#f4b88a', t * 2) : lerpColor('#f4b88a', '#7f8cd0', (t - 0.5) * 2);
+      b.fillRect(camX, camY, BW, BH);
+      b.globalCompositeOperation = 'lighter';
+      const lt = Math.min(1, Math.max(0, (t - 0.3) / 0.5));
+      if (lt > 0) LIGHTS.forEach(l => {
+        const a = lt * l.a * (l.f ? 0.85 + Math.sin(tNow / 80 + l.x) * 0.1 + Math.sin(tNow / 37) * 0.05 : 1);
+        const gr = b.createRadialGradient(l.x, l.y, 0, l.x, l.y, l.r);
+        gr.addColorStop(0, `rgba(${l.c},${a})`); gr.addColorStop(1, `rgba(${l.c},0)`);
+        b.fillStyle = gr; b.fillRect(l.x - l.r, l.y - l.r, l.r * 2, l.r * 2);
+      });
+      flies.forEach(f => {
+        f.p += 0.016 * f.s;
+        const x = f.x + Math.sin(f.p * 0.7) * 24, y = f.y + Math.sin(f.p * 1.3) * 10, glow = (Math.sin(f.p * 3) + 1) / 2 * lt;
+        if (glow < 0.2) return;
+        const gr = b.createRadialGradient(x, y, 0, x, y, 6);
+        gr.addColorStop(0, `rgba(220,255,120,${0.5 * glow})`); gr.addColorStop(1, 'rgba(220,255,120,0)');
+        b.fillStyle = gr; b.fillRect(x - 6, y - 6, 12, 12);
+        P(b, `rgba(240,255,170,${glow})`, x, y, 1, 1);
+      });
+      b.restore();
+    }
+
+    // ---------- UI ----------
+    function frameBox(x, y, w, h, inner) {
+      P(b, OUT, x + 1, y, w - 2, h); P(b, OUT, x, y + 1, w, h - 2);
+      P(b, '#b8642a', x + 1, y + 1, w - 2, h - 2); P(b, '#e0903a', x + 2, y + 2, w - 4, h - 4);
+      P(b, '#f8c070', x + 2, y + 2, w - 4, 1);
+      P(b, inner || '#f8e0b0', x + 4, y + 4, w - 8, h - 8);
+    }
+    function drawHud() {
+      const dk = darkness(), sky = dk < 0.5 ? lerpColor('#8fd0f8', '#f09a5a', dk * 2) : lerpColor('#f09a5a', '#2a3a8a', (dk - 0.5) * 2);
+      circ(b, 398, 26, 20, OUT); circ(b, 398, 26, 19, '#e0903a'); circ(b, 398, 26, 16, '#b8642a'); circ(b, 398, 26, 15, sky);
+      if (dk > 0.6) {
+        for (let i = 0; i < 6; i++) P(b, '#fff3d6', 388 + (i * 7) % 18, 16 + (i * 5) % 14, 1, 1);
+        circ(b, 394, 24, 5, '#fff3b0'); circ(b, 396, 22, 4, sky);
+      } else {
+        const sy = 25 + Math.round(dk * 10);
+        circ(b, 394, sy, 5, '#ffb020'); circ(b, 394, sy, 4, '#ffd23f'); circ(b, 393, sy - 1, 2, '#fff3a0');
+        P(b, '#ffffff', 400, 31, 7, 2); P(b, '#ffffff', 402, 29, 4, 2);
+      }
+      P(b, '#ffd23f', 398 + Math.cos(tNow / 4000) * 2, 6, 2, 10);
+      frameBox(412, 4, 64, 46);
+      P(b, '#e8c890', 416, 18, 56, 1); P(b, '#e8c890', 416, 32, 56, 1);
+      if (dk > 0.6) { circ(b, 432, 25, 3, '#fff3b0'); circ(b, 433, 24, 3, '#f8e0b0'); } else { circ(b, 432, 25, 3, '#ffb020'); circ(b, 432, 25, 2, '#ffd23f'); }
+      P(b, '#5a9ad8', 444, 22, 8, 6); P(b, '#ffffff', 445, 23, 6, 1);
+      P(b, '#e07ab0', 458, 22, 7, 6); P(b, '#ffd23f', 460, 23, 3, 3);
+      frameBox(404, 52, 72, 16, '#3a1a0a');
+      frameBox(458, 140, 18, 96, '#3a1a0a');
+      P(b, '#3ad04a', 462, 152, 10, 80); P(b, '#8af08a', 462, 152, 3, 80); P(b, '#2a9a3a', 469, 152, 3, 80);
+      frameBox(458, 128, 18, 16);
+    }
+
+    function wrap(ctx, text, max) {
+      const words = text.split(' '), lines = [];
+      let line = '';
+      words.forEach(w => { const tryL = line ? line + ' ' + w : w; if (ctx.measureText(tryL).width > max && line) { lines.push(line); line = w; } else line = tryL; });
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    function drawBubble(c, now, camX, camY) {
+      if (!c.bubble) return;
+      if (now > c.bubble.until) { c.bubble = null; return; }
+      vctx.font = '22px VT323';
+      const lines = wrap(vctx, c.bubble.text, 190);
+      const w = Math.max(...lines.map(l => vctx.measureText(l).width)) + 24, h = lines.length * 20 + 14;
+      const cx = Math.round((c.x - camX) * K), bottom = (c.y - camY - AY - 4) * K;
+      const x = Math.round(Math.min(view.width - w - 4, Math.max(4, cx - w / 2))), y = Math.round(bottom - h - 10);
+      vctx.fillStyle = '#5a2e14';
+      vctx.fillRect(x + 4, y, w - 8, h); vctx.fillRect(x, y + 4, w, h - 8); vctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+      vctx.fillRect(cx - 8, y + h - 2, 16, 6); vctx.fillRect(cx - 6, y + h + 2, 12, 6); vctx.fillRect(cx - 4, y + h + 6, 8, 6);
+      vctx.fillStyle = '#fff3d6';
+      vctx.fillRect(x + 4, y + 2, w - 8, h - 4); vctx.fillRect(x + 2, y + 4, w - 4, h - 8);
+      vctx.fillRect(cx - 6, y + h - 2, 12, 4); vctx.fillRect(cx - 4, y + h + 2, 8, 4); vctx.fillRect(cx - 2, y + h + 6, 4, 2);
+      vctx.fillStyle = '#5a2e14'; vctx.textAlign = 'center';
+      lines.forEach((l, i) => vctx.fillText(l, x + w / 2, y + 22 + i * 20));
+    }
+
+    function label(text, x, y, color, size = 20) {
+      vctx.font = `${size}px VT323`; vctx.textAlign = 'center';
+      vctx.lineWidth = 4; vctx.strokeStyle = 'rgba(20,12,6,.8)'; vctx.strokeText(text, x, y);
+      vctx.fillStyle = color; vctx.fillText(text, x, y);
+    }
+    function uiText(text, x, y, size, align = 'center', color = '#5a2e14') {
+      vctx.font = `${size}px VT323`; vctx.textAlign = align; vctx.fillStyle = color; vctx.fillText(text, x, y);
+    }
+
+    // Clock: 10 in-game minutes every 7 real seconds. Starts late afternoon so you see the sunset roll in.
+    let gameMin = 16 * 60 + 30;
+    function clockText() {
+      const m = Math.floor(gameMin / 10) * 10 % (24 * 60), h = Math.floor(m / 60), mm = String(m % 60).padStart(2, '0');
+      return `${(h + 11) % 12 + 1}:${mm} ${h < 12 ? 'am' : 'pm'}`;
+    }
+
+    let dialog = null;
+    function nearSpot() { return interacts.find(d => Math.abs(hero.x - d.x) < 16 && Math.abs(hero.y - d.y) < 14); }
+    function nearNpc() { return npcs.find(c => Math.hypot(hero.x - c.x, hero.y - c.y) < 24); }
+    function faceToward(c, o) { const dx = o.x - c.x, dy = o.y - c.y; c.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); }
+    function openDialog(text, npc) {
+      dialog = { text, shown: 0, npc };
+      bar.style.visibility = sayEl.style.visibility = 'hidden';
+      hero.setInput({ up: false, down: false, left: false, right: false });
+      hero.target = null;
+      if (npc) { npc.target = null; npc.wait = 2500; faceToward(npc, hero); faceToward(hero, npc); }
+    }
+    function closeDialog() {
+      if (dialog.npc) emote(dialog.npc, 'heart');
+      dialog = null; bar.style.visibility = sayEl.style.visibility = '';
+    }
+    function advanceDialog() { if (dialog.shown < dialog.text.length) dialog.shown = dialog.text.length; else closeDialog(); }
+    function talk(c) { c.lineIdx = ((c.lineIdx ?? -1) + 1) % TALK[c.name].length; openDialog(TALK[c.name][c.lineIdx], c); }
+
+    // Stardew-style frame on the full-res canvas, drawn in 2px steps
+    function vFrame(x, y, w, h) {
+      const f = (c, a, d, e, g) => { vctx.fillStyle = c; vctx.fillRect(a, d, e, g); };
+      f(OUT, x + 4, y, w - 8, h); f(OUT, x, y + 4, w, h - 8); f(OUT, x + 2, y + 2, w - 4, h - 4);
+      f('#b8642a', x + 4, y + 2, w - 8, h - 4); f('#b8642a', x + 2, y + 4, w - 4, h - 8);
+      f('#e0903a', x + 6, y + 6, w - 12, h - 12); f('#f8c070', x + 6, y + 6, w - 12, 2);
+      f('#b8642a', x + 10, y + 10, w - 20, h - 20); f('#f8e0b0', x + 12, y + 12, w - 24, h - 24);
+    }
+    function drawDialog(dt) {
+      dialog.shown = Math.min(dialog.text.length, dialog.shown + dt * 0.04);
+      const npc = dialog.npc, x = 24, y = 336, w = npc ? 680 : 912, h = 192;
+      vFrame(x, y, w, h);
+      vctx.font = '30px VT323'; vctx.fillStyle = '#5a2e14'; vctx.textAlign = 'left';
+      let left = Math.floor(dialog.shown);
+      wrap(vctx, dialog.text, w - 70).forEach((l, i) => { if (left > 0) vctx.fillText(l.slice(0, left), x + 34, y + 54 + i * 32); left -= l.length + 1; });
+      if (dialog.shown >= dialog.text.length) {
+        const ay = y + h - 36 + Math.round(Math.sin(tNow / 150) * 3);
+        vctx.fillStyle = '#b8323a';
+        [[0, 0, 14], [2, 2, 10], [4, 4, 6], [6, 6, 2]].forEach(([dx, dy, ww]) => vctx.fillRect(x + w - 52 + dx, ay + dy, ww, 2));
+      }
+      if (npc) {
+        const px = 716, pw = 220, fx = px + 46, fy = y + 18, fs = 128;
+        vFrame(px, y, pw, h);
+        vctx.fillStyle = '#b8642a'; vctx.fillRect(fx - 4, fy - 4, fs + 8, fs + 8);
+        vctx.fillStyle = '#d8b880'; vctx.fillRect(fx, fy, fs, fs);
+        vctx.save(); vctx.beginPath(); vctx.rect(fx, fy, fs, fs); vctx.clip();
+        vctx.imageSmoothingEnabled = false;
+        // portrait: the head of the idle-facing-down frame from the full-size sheet
+        vctx.drawImage(img, 45, DATA.animations.idle_down.row * 200 + 5, 100, 100, fx, fy, fs, fs);
+        if (npc.hat) {
+          const sc = fs / 100, [dark, light] = npc.hat;
+          const hr = (dx, dy, ww, hh, c) => { vctx.fillStyle = c; vctx.fillRect(fx + (95 + dx * 5 - 45) * sc, fy + ((dy + 39) * 5 - 5) * sc, ww * 5 * sc, hh * 5 * sc); };
+          hr(-6, -36, 13, 2, dark); hr(-7, -34, 15, 3, dark); hr(-8, -31, 17, 2, light); hr(-1, -38, 3, 2, '#ffffff');
+        }
+        vctx.restore();
+        uiText(npc.name, px + pw / 2, y + h - 22, 30);
+      }
+    }
+
+    function drawNotices(dt) {
+      for (let i = notices.length - 1; i >= 0; i--) { notices[i].t += dt; if (notices[i].t > 3500) notices.splice(i, 1); }
+      notices.slice(0, 4).forEach((n, i) => {
+        const x = 20 - (n.t > 3200 ? (n.t - 3200) * 1.2 : 0), y = 376 - i * 62;
+        vFrame(x, y, 250, 58);
+        vctx.imageSmoothingEnabled = false;
+        vctx.drawImage(forageIcons[n.name], x + 14, y + 8, 42, 42);
+        uiText(n.name, x + 66, y + 37, 26, 'left');
+        uiText('x' + bag[n.name], x + 232, y + 37, 26, 'right', '#b8642a');
+      });
+    }
+    function drawFloaters(dt) {
+      for (let i = floaters.length - 1; i >= 0; i--) {
+        const f = floaters[i]; f.t += dt;
+        if (f.t > 1200) { floaters.splice(i, 1); continue; }
+        vctx.globalAlpha = 1 - f.t / 1200;
+        label(f.text, (f.x - camX) * K, (f.y - camY - f.t * 0.02) * K, '#a8f070', 24);
+        vctx.globalAlpha = 1;
+      }
+    }
+
+    // ---------- hotbar ----------
+    function icon(fn) { const c = document.createElement('canvas'); c.width = c.height = 16; fn(c.getContext('2d')); return c.toDataURL(); }
+    const ICONS = {
+      jump: g => { P(g, OUT, 4, 3, 6, 9); P(g, OUT, 4, 10, 10, 4); P(g, '#8a4a22', 5, 4, 4, 8); P(g, '#8a4a22', 5, 11, 8, 2); P(g, '#c07a3a', 5, 4, 1, 7); P(g, '#5a2e14', 5, 12, 9, 1); },
+      emote: g => { P(g, OUT, 3, 5, 10, 9); P(g, OUT, 4, 1, 2, 5); P(g, OUT, 7, 0, 2, 6); P(g, OUT, 10, 1, 2, 5); P(g, '#e8b088', 4, 6, 8, 7); [4, 7, 10].forEach(x => P(g, '#e8b088', x, 2, 1, 4)); P(g, '#c88a68', 4, 12, 8, 1); },
+      shoot: g => { P(g, OUT, 1, 4, 14, 10); P(g, '#5a5a6a', 2, 5, 12, 8); P(g, OUT, 4, 2, 5, 3); P(g, '#8a8a9a', 5, 3, 3, 1); circ(g, 8, 9, 3, OUT); circ(g, 8, 9, 2, '#3a6ad8'); P(g, '#ffffff', 7, 8, 1, 1); P(g, '#ffd23f', 12, 6, 1, 1); },
+      crouch: g => { P(g, OUT, 3, 1, 3, 14); P(g, OUT, 3, 8, 11, 3); P(g, OUT, 12, 8, 2, 7); P(g, '#c07a3a', 4, 2, 1, 12); P(g, '#c07a3a', 4, 9, 9, 1); P(g, '#c07a3a', 12, 10, 1, 4); },
+      tea: g => { P(g, OUT, 2, 6, 10, 8); P(g, '#ffffff', 3, 7, 8, 6); P(g, '#c07a3a', 3, 7, 8, 2); P(g, OUT, 12, 8, 2, 4); P(g, OUT, 1, 14, 14, 1); P(g, '#c8c8d8', 6, 2, 1, 3); P(g, '#c8c8d8', 8, 1, 1, 3); },
+      coin: g => { circ(g, 8, 8, 6, OUT); circ(g, 8, 8, 5, '#e0a020'); circ(g, 8, 8, 3, '#ffd23f'); P(g, '#fff3a0', 6, 5, 2, 1); P(g, '#a86a10', 8, 6, 1, 5); },
+    };
+    const SLOTS = [['jump', 'Jump'], ['emote', 'Wave'], ['shoot', 'Snap'], ['crouch', 'Sit'], ['tea', 'Sip chai'], ['coin', 'Flip a token']];
+    const bar = document.getElementById('bar');
+    function useSlot(i) {
+      const [act] = SLOTS[i];
+      bar.querySelectorAll('.slot').forEach((s, j) => s.classList.toggle('sel', j === i));
+      if (act === 'tea') { say(hero, '*sips chai* ahh'); hero.trigger('emote'); }
+      else if (act === 'coin') { const h = Math.random() < 0.5; say(hero, h ? 'heads!' : 'tails!'); gold += h ? 1 : -1; hero.trigger('jump'); }
+      else hero.trigger(act);
+    }
+    SLOTS.forEach(([act, title], i) => {
+      const btn = document.createElement('button');
+      btn.className = 'slot'; btn.title = `${title} (${i + 1})`;
+      btn.innerHTML = `<img alt="" src="${icon(ICONS[act])}"><i>${i + 1}</i>`;
+      btn.addEventListener('click', () => { useSlot(i); btn.blur(); });
+      bar.appendChild(btn);
+    });
+
+    // Stardew-ish pixel cursor
+    (function () {
+      const rows = ['X........', 'XX.......', 'XyX......', 'XyoX.....', 'XyooX....', 'XyoooX...', 'XyooooX..', 'XyoooooX.', 'XyooooooX', 'XyooXXXXX', 'XyoX.....', 'XoX......', 'XX.......'];
+      const pal = { X: '#5a2e14', o: '#e0903a', y: '#f8d080' };
+      const c = document.createElement('canvas'); c.width = 27; c.height = 39;
+      const g = c.getContext('2d');
+      rows.forEach((r, j) => [...r].forEach((ch, i) => { if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(i * 3, j * 3, 3, 3); } }));
+      const cur = `url(${c.toDataURL()}) 1 1, auto`;
+      [view, bar, ...bar.querySelectorAll('.slot')].forEach(el => { el.style.cursor = cur; });
+    })();
+
+    // ---------- input ----------
+    const MOVE = { arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right' };
+    const KEYS = { f: 'shoot', e: 'emote', c: 'crouch', x: 'faint' };
+    const sayEl = document.getElementById('say');
+    let camX = 0, camY = 0;
+
+    window.addEventListener('keydown', e => {
+      if (e.target === sayEl) {
+        if (e.key === 'Enter') { const t = sayEl.value.trim(); if (t) say(hero, t); sayEl.value = ''; sayEl.blur(); }
+        if (e.key === 'Escape') sayEl.blur();
+        return;
+      }
+      const k = e.key.toLowerCase();
+      if (k === 'enter' || k === 't') { e.preventDefault(); sayEl.focus(); return; }
+      if (k === 'shift') { hero.input.run = true; return; }
+      if (k === 'escape' && dialog) { closeDialog(); return; }
+      if (MOVE[k]) { e.preventDefault(); if (dialog) return; hero.target = null; hero.pending = null; hero.input[MOVE[k]] = true; return; }
+      if (e.repeat) return;
+      if (k >= '1' && k <= String(SLOTS.length)) { useSlot(+k - 1); return; }
+      if (k === ' ') {
+        e.preventDefault();
+        if (dialog) { advanceDialog(); return; }
+        const f = nearForage(), npc = nearNpc(), d = nearSpot();
+        if (f) pickUp(f);
+        else if (npc) talk(npc);
+        else if (d) { if (d.text) openDialog(d.text); if (d.act) d.act(); }
+        else hero.trigger('jump');
+      } else if (KEYS[k]) hero.trigger(KEYS[k]);
+    });
+    window.addEventListener('keyup', e => {
+      const k = e.key.toLowerCase();
+      if (k === 'shift') hero.input.run = false;
+      if (MOVE[k]) hero.input[MOVE[k]] = false;
+    });
+    window.addEventListener('blur', () => hero.setInput({ up: false, down: false, left: false, right: false, run: false }));
+
+    view.addEventListener('click', e => {
+      if (dialog) { advanceDialog(); return; }
+      const r = view.getBoundingClientRect();
+      const wx = camX + (e.clientX - r.left) / r.width * BW, wy = camY + (e.clientY - r.top) / r.height * BH;
+      // clicking an item or a person walks over and picks it up / starts talking
+      const f = forage.find(o => Math.abs(o.x - wx) < 8 && wy > o.y - 15 && wy < o.y + 3);
+      const npc = !f && npcs.find(c => Math.abs(c.x - wx) < 10 && wy > c.y - 38 && wy < c.y + 2);
+      const goal = f || npc;
+      hero.pending = goal ? (f ? { forage: f } : { npc }) : null;
+      hero.target = goal ? { x: goal.x + (hero.x < goal.x ? -10 : 10), y: goal.y + 2 } : { x: wx, y: wy };
+      sayEl.blur();
+    });
+
+    // ---------- loop ----------
+    let last = 0;
+    function frame(now) {
+      const dt = last ? Math.min(50, now - last) : 16; last = now; tNow = now;
+      gameMin += dt / 700;
+
+      if (hero.target) { steer(hero); if (!move(hero, dt) && hero.moving) hero.target = null; if (!hero.target) hero.setInput({ left: false, right: false, up: false, down: false }); }
+      else move(hero, dt);
+      npcs.forEach(c => updateNpc(c, dt));
+      updateBirds(dt);
+      updateChickens(dt);
+      if (hero.pending && !dialog) {
+        const pd = hero.pending, o = pd.forage || pd.npc;
+        if (Math.hypot(hero.x - o.x, hero.y - o.y) < (pd.forage ? 16 : 26)) {
+          hero.pending = null; hero.target = null; hero.setInput({ left: false, right: false, up: false, down: false });
+          if (pd.forage) { if (forage.includes(o)) pickUp(o); } else talk(o);
+        } else if (!hero.target) hero.pending = null;
+      }
+
+      camX = Math.max(0, Math.min(WW - BW, Math.round(hero.x - BW / 2)));
+      camY = Math.max(0, Math.min(WH - BH, Math.round(hero.y - BH / 2)));
+
+      b.setTransform(K, 0, 0, K, -camX * K, -camY * K);
+      b.drawImage(bg, 0, 0);
+      drawWater(dt);
+      [...props, ...forage.map(f => ({ y: f.y, draw: () => drawForage(f) })), ...birds.map(bd => ({ y: bd.y, draw: () => drawBird(bd) })),
+        ...chickens.map(ch => ({ y: ch.y, draw: () => drawChicken(ch) })),
+        ...chars.map(c => ({ y: c.y, draw: () => drawChar(c) }))].sort((p, q) => p.y - q.y).forEach(p => p.draw());
+      drawButterflies(dt);
+      drawSmoke(dt);
+      drawNight(camX, camY);
+      chars.forEach(c => drawEmote(c, dt));
+
+      b.setTransform(K, 0, 0, K, 0, 0);
+      drawHud();
+
+      vctx.imageSmoothingEnabled = false;
+      vctx.drawImage(buf, 0, 0);
+
+      const underHud = (x, y) => x > 380 && y < 74;
+      chars.forEach(c => { if (!underHud(c.x - camX, c.y - camY)) label(c.name, (c.x - camX) * K, (c.y - camY + 9) * K, c.isHero ? '#ffd23f' : '#fff3d6'); });
+      if (!dialog) {
+        const f = nearForage(), np = !f && nearNpc(), d = !f && !np && nearSpot();
+        if (f) label('[Space] Pick up', (f.x - camX) * K, (f.y - camY - 18) * K, '#a8f070', 22);
+        else if (np) label('[Space] Talk', (np.x - camX) * K, (np.y - camY - 46) * K, '#ffd27a', 22);
+        else if (d) label('[Space] ' + d.name, (d.x - camX) * K, (d.y - camY - 44) * K, '#ffd27a', 24);
+      }
+      chars.forEach(c => drawBubble(c, now, camX, camY));
+
+      uiText('Fri. 5', 444 * K, 16 * K, 26);
+      uiText(clockText(), 444 * K, 45 * K, 24, 'center', '#b8323a');
+      uiText('G  ' + String(gold).padStart(8, ' '), 470 * K, 64 * K, 24, 'right', '#ffe8a0');
+      uiText('E', 467 * K, 140 * K, 22);
+      drawFloaters(dt);
+      drawNotices(dt);
+      if (dialog) drawDialog(dt);
+      requestAnimationFrame(frame);
+    }
+
+    function start() {
+      // Downscale the sheet in two steps for a cleaner 2/5 result.
+      const mid = document.createElement('canvas'); mid.width = img.width / 2; mid.height = img.height / 2;
+      const m = mid.getContext('2d'); m.imageSmoothingQuality = 'high'; m.drawImage(img, 0, 0, mid.width, mid.height);
+      sheet = document.createElement('canvas'); sheet.width = Math.round(img.width * S * K); sheet.height = Math.round(img.height * S * K);
+      const s = sheet.getContext('2d'); s.imageSmoothingQuality = 'high'; s.drawImage(mid, 0, 0, sheet.width, sheet.height);
+      // Snap alpha to fully on/off so outlines are hard edges instead of a soft halo.
+      const px = s.getImageData(0, 0, sheet.width, sheet.height), d = px.data;
+      for (let i = 3; i < d.length; i += 4) d[i] = d[i] > 110 ? 255 : 0;
+      s.putImageData(px, 0, 0);
+    }
+    img.onload = start;
+
+    const fontReady = document.fonts ? Promise.race([document.fonts.load('8px "Press Start 2P"'), new Promise(r => setTimeout(r, 1500))]) : Promise.resolve();
+    fontReady.then(() => {
+      drawBackground();
+      buildProps();
+      for (let i = 0; i < 120; i++) {
+        const x = Math.random() * WW, y = Math.random() * WH;
+        if (waterAt(x, y) && waterAt(x, y - 4) && y > 80) shimmer.push({ x, y, w: 2 + Math.floor(Math.random() * 4), p: Math.random() * 10 });
+      }
+      npcs = NPC_NAMES.map((n, i) => {
+        const s = randomSpot(), c = makeChar(n, s.x, s.y, HATS[i]);
+        c.wait = Math.random() * 3000; c.stuck = 0;
+        return c;
+      });
+      chars = [hero, ...npcs];
+      for (let i = 0; i < 12; i++) spawnForage();
+      birds = Array.from({ length: 7 }, () => newBird(false));
+      chickens = Array.from({ length: 5 }, newChicken);
+      say(npcs[0], 'what a nice afternoon!');
+      requestAnimationFrame(frame);
+    });
+  })();
+  </script>
+</body>
+</html>
