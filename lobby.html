@@ -1040,9 +1040,9 @@
     officeMaterials();
     const { cx, cz } = a, X = x => cx + x, Z = z => cz + z;
     plane(110, 110, MAT.darkGrass, cx, -.01, Z(-9), 2);
-    plane(27.6, 42.3, MAT.oFloor, X(.9), .012, Z(-7.65), 5);
+    plane(19.25, 42.3, MAT.oFloor, X(-3.275), .012, Z(-7.65), 5); plane(8.35, 11.8, MAT.oFloor, X(10.525), .012, Z(-22.8), 5); plane(2.25, 16.9, MAT.oFloor, X(7.475), .012, Z(-8.45), 5);
     box(30, .5, 1.6, MAT.concrete, cx, -.49, Z(14.4), { cast: false });
-    WALK.push([X(-12.4), Z(-28.2), X(14.2), Z(13.3)]);
+    WALK.push([X(-12.4), Z(-28.2), X(6), Z(13.3)], [X(4.8), Z(-17.4), X(8.1), Z(-.3)], [X(4.8), Z(-28.2), X(14.2), Z(-17.3)]);
 
     // outer walls: windows on the north, west and east
     const windowRun = (x0, z0, x1, z1) => {
@@ -1053,7 +1053,8 @@
     };
     windowRun(X(-12.9), Z(-28.7), X(14.7), Z(-28.7));
     windowRun(X(-12.9), Z(-28.7), X(-12.9), Z(2));
-    windowRun(X(14.7), Z(-28.7), X(14.7), Z(13.4));
+    windowRun(X(14.7), Z(-28.7), X(14.7), Z(-16.9)); windowRun(X(8.6), Z(-16.9), X(8.6), Z(0));
+    box(6.1, 1.1, .3, MAT.plaster, X(11.65), 0, Z(-16.9));   // outer wall behind the corner desks, cut low so the camera sees in
     box(.3, 3.4, 11.4, MAT.plaster, X(-12.9), 0, Z(7.7));
     for (let i = 0; i < 16; i++) tree(X(rr(-24, 24)), Z(rr(-40, -32)), rr(1, 1.5), [MAT.leafA, MAT.leafB, MAT.leafC][rnd() * 3 | 0], false);
     for (let i = 0; i < 14; i++) { const s = rnd() < .5 ? -1 : 1; tree(X(s * rr(17, 24)), Z(rr(-28, 8)), rr(1, 1.4), MAT.leafB, false); }
@@ -1086,19 +1087,18 @@
     signBoard('TOILET →', X(-3.8), 2.75, Z(-7), 1.3, .36, 0, { size: 20, bg: '#1d2b4a', edge: '#0e1628', color: '#ffffff', w: 160, h: 44 });
 
     // meeting rooms on the right, doors facing the corridor
-    room(X(-2.4), Z(-4.6), X(9.6), Z(1.5), 'w', 'Prompt Lab', ['The Prompt Lab.', 'A prompt is just the instructions you give a model. Clear context in, better answers out.', 'Sessions start here soon!']);
-    room(X(-2.4), Z(-10.8), X(9.6), Z(-4.6), 'w', 'Token Room', ['The Token Room.', 'Models read text as tokens, small chunks of words. More tokens means more to read (and pay for).']);
-    room(X(-2.4), Z(-17), X(9.6), Z(-10.8), 'w', 'Context Corner', ['Context Corner.', 'A model only knows what\'s in its context window. Anything you didn\'t tell it, it has to guess.']);
+    room(X(-2.4), Z(-4.6), X(4.6), Z(1.5), 'w', 'Prompt Lab', ['The Prompt Lab.', 'A prompt is just the instructions you give a model. Clear context in, better answers out.', 'Sessions start here soon!']);
+    room(X(-2.4), Z(-10.8), X(4.6), Z(-4.6), 'w', 'Token Room', ['The Token Room.', 'Models read text as tokens, small chunks of words. More tokens means more to read (and pay for).']);
+    room(X(-2.4), Z(-17), X(4.6), Z(-10.8), 'w', 'Context Corner', ['Context Corner.', 'A model only knows what\'s in its context window. Anything you didn\'t tell it, it has to guess.']);
 
     // desks on the left, along the west windows; more desks east of the meeting rooms
     // rows run across from the windows toward the corridor, like in the photos
     // one connected table per row, two computers on each side of the divider
     for (const z of [-3.9, -8.1, -12.3, -16.5]) { deskCluster(X(-8.7), Z(z), 3, false); baffles(X(-8.7), Z(z), 5, false); }
-    deskCluster(X(10.2), Z(6.6), 3, false); baffles(X(10.2), Z(6.6), 5, false);
 
     // behind the meeting rooms: no desks, just the galley pantry along the east windows.
     // Wooden base cabinets with a white top, black glass wall cabinets, green diamond tiles, tea/coffee urns, black fridge.
-    const PX = X(9.75);                                            // east face of the meeting-room wall
+    const PX = X(4.75);                                            // east face of the meeting-room wall
     box(.6, .9, 9.6, MAT.walnut, PX + .3, 0, Z(-8.6)); box(.64, .05, 9.6, MAT.white, PX + .32, .9, Z(-8.6));
     box(.02, .7, 9.6, MAT.greenTile, PX + .01, .95, Z(-8.6), { s: 0 });
     box(.38, .75, 9.2, MAT.cabinet, PX + .19, 1.7, Z(-8.6));
@@ -1108,29 +1108,30 @@
     for (let i = 0; i < 4; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.04, .035, .09, 8), MAT.white)); c.position.set(PX + .4, 1, Z(-8.3 + i * .1)); }
     box(.75, 1.95, .75, MAT.charcoal, PX + .38, 0, Z(-14)); box(.03, .9, .04, MAT.chrome, PX + .77, .9, Z(-13.8));
     // galley end wall (leaves a gap by the rooms so you can walk through to the corner desks)
-    const ew = grp(); box(3, 3.4, .25, MAT.plaster, X(13.2), 0, Z(-.1), { p: ew }); box(1, .3, .25, MAT.white, X(13.2), 2.4, Z(-.35), { p: ew });
-    makeFader(compact(ew), () => hero.zone === 'lab' && hero.x > X(10.5) && hero.y < Z(-.1) && hero.y > Z(-9)); colBox(X(11.7), Z(-.3), X(14.7), Z(.1)); stool(X(14), Z(-1));
+    const ew = grp(); box(3.85, 3.4, .25, MAT.plaster, X(6.675), 0, Z(-.1), { p: ew }); box(1, .3, .25, MAT.white, X(7.4), 2.4, Z(-.35), { p: ew });
+    makeFader(compact(ew), () => hero.zone === 'lab' && hero.x > X(4.6) && hero.y < Z(-.1) && hero.y > Z(-9)); colBox(X(4.7), Z(-.3), X(8.6), Z(.1)); stool(X(7.9), Z(-1));
     // water jugs and the two waste bins at the open (north) end
     const jug = new THREE.MeshStandardMaterial({ color: 0x48c2d4, transparent: true, opacity: .75, roughness: .2 });
-    for (let i = 0; i < 3; i++) { const j = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .48, 12), jug); j.position.set(X(10.1 + i * .05), .24, Z(-15.2 - i * .4)); scene.add(j); }
+    for (let i = 0; i < 3; i++) { const j = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .48, 12), jug); j.position.set(X(5.1 + i * .05), .24, Z(-15.2 - i * .4)); scene.add(j); }
     for (const [z, lid] of [[-15.6, 0x2f7de0], [-16.4, 0x2aa05a]]) {
-      const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .2, .7, 14), MAT.chrome)); b.position.set(X(14.1), .35, Z(z));
-      const l = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .03, 14), new THREE.MeshStandardMaterial({ color: lid }))); l.position.set(X(14.1), .71, Z(z));
+      const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .2, .7, 14), MAT.chrome)); b.position.set(X(8.1), .35, Z(z));
+      const l = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .03, 14), new THREE.MeshStandardMaterial({ color: lid }))); l.position.set(X(8.1), .71, Z(z));
     }
-    colBox(PX, Z(-14.4), PX + .8, Z(-3.8)); colBox(X(9.8), Z(-16.4), X(10.5), Z(-14.9)); colCirc(X(14.1), Z(-16), .6);
+    colBox(PX, Z(-14.4), PX + .8, Z(-3.8)); colBox(X(4.8), Z(-16.4), X(5.5), Z(-14.9)); colCirc(X(8.1), Z(-16), .6);
     const diya = new THREE.MeshStandardMaterial({ color: 0xd8a640, metalness: .6, roughness: .35, emissive: 0x4a3000 });
     for (let i = 0; i < 9; i++) { const dd = add(new THREE.Mesh(new THREE.ConeGeometry(.06, .1, 6), diya), null, false); dd.position.set(PX + .02, 2.9 - i * .2, Z(-15.4)); }
-    pointLight('lab', 0xffd6a0, 1, 7, X(12), 2.6, Z(-8.6));
-    INTER.push({ x: X(11), z: Z(-8.6), r: 1.6, label: 'Pantry', verb: 'Look', act: () => talk('Pantry', ['Filter coffee, masala chai, and a sign: “Everyone has to use this kitchen. Let\'s keep it nice.”', 'Wet waste and dry waste bins are by the window. Please sort your trash.']) });
+    pointLight('lab', 0xffd6a0, 1, 7, X(6.8), 2.6, Z(-8.6));
+    INTER.push({ x: X(6.6), z: Z(-8.6), r: 1.6, label: 'Pantry', verb: 'Look', act: () => talk('Pantry', ['Filter coffee, masala chai, and a sign: “Everyone has to use this kitchen. Let\'s keep it nice.”', 'Wet waste and dry waste bins are by the window. Please sort your trash.']) });
 
-    // south-east corner: wall-facing desks along the pantry's end wall, a two-sided desk, bins and an extinguisher by the window
-    box(2.7, .05, .7, MAT.walnut, X(13.1), .72, Z(.45)); for (const x of [11.8, 14.4]) box(.05, .72, .6, MAT.white, X(x), 0, Z(.45));
-    box(2.6, .4, .04, MAT.fabric, X(13.1), .77, Z(.12));
-    for (const x of [12.4, 13.8]) { box(.6, .36, .04, MAT.charcoal, X(x), .9, Z(.2)); box(.56, .32, .02, MAT.monitor, X(x), .92, Z(.23)); chair(X(x), Z(1.3), 1); }
-    colBox(X(11.7), Z(.1), X(14.5), Z(.9));
-    for (const z of [10.6, 11.4]) { const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .2, .7, 14), MAT.chrome)); b.position.set(X(14.1), .35, Z(z)); }
-    const ext = add(new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .5, 10), new THREE.MeshStandardMaterial({ color: 0xc0281c }))); ext.position.set(X(14.2), .25, Z(9.6));
-    colBox(X(13.8), Z(9.4), X(14.5), Z(11.7));
+    // top-right corner: desks facing the back wall, a two-sided desk, bins and an extinguisher by the windows
+    box(5, .05, .7, MAT.walnut, X(11.7), .72, Z(-17.45)); for (const x of [9.2, 11.7, 14.2]) box(.05, .72, .6, MAT.white, X(x), 0, Z(-17.45));
+    box(4.9, .4, .04, MAT.fabric, X(11.7), .77, Z(-17.14));
+    for (const x of [10, 11.7, 13.4]) { box(.6, .36, .04, MAT.charcoal, X(x), .9, Z(-17.22)); box(.56, .32, .02, MAT.monitor, X(x), .92, Z(-17.25)); chair(X(x), Z(-18.35), -1); }
+    colBox(X(9.1), Z(-17.8), X(14.3), Z(-16.9));
+    deskCluster(X(11.6), Z(-22), 3, false); baffles(X(11.6), Z(-22), 5, false);
+    for (const z of [-26.4, -27.2]) { const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .2, .7, 14), MAT.chrome)); b.position.set(X(14.1), .35, Z(z)); }
+    const ext = add(new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .5, 10), new THREE.MeshStandardMaterial({ color: 0xc0281c }))); ext.position.set(X(14.2), .25, Z(-25.6));
+    colBox(X(13.8), Z(-27.6), X(14.5), Z(-25.4));
 
     // ---- lounge at the north end: sofa, tub chairs, carrom, window bar ----
     box(15, .06, .5, MAT.walnut, X(2.5), 1.05, Z(-28.2)); for (let x = -4.8; x < 10.2; x += 2) box(.05, 1.05, .05, MAT.white, X(x), 0, Z(-28.2));
@@ -1148,7 +1149,7 @@
     room(X(-12.7), Z(-28.5), X(-6), Z(-18.6), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”'], { along: true });
     box(.9, 3.4, .9, MAT.tile, X(6.6), 0, Z(-19.2)); colBox(X(6.1), Z(-19.7), X(7.1), Z(-18.7));
     chandelier(X(2.2), Z(-23.6), 3.15);
-    bigPlant(X(7.6), Z(-25.4)); bigPlant(X(13.6), Z(-27.6)); bigPlant(X(-11.9), Z(-17.9)); bigPlant(X(-11.9), Z(.5)); 
+    bigPlant(X(7.6), Z(-25.4));  bigPlant(X(-11.9), Z(-17.9)); bigPlant(X(-11.9), Z(.5)); 
     ledSign(['FIRE EXIT →'], '#7dff9a', X(-3.8), 2.75, Z(-17.6), 1.3, .3);
 
     // the lift you arrive by
