@@ -733,7 +733,7 @@
 
   // ================= the three areas (placeholders until the real maps arrive) =================
   const AREAS = {
-    lab: { cx: 0, cz: -300, name: 'HQ Office', sub: 'TokenFall HQ · Floor 1', color: 0x5cd6ff, ret: [0, -7.4], spawn: [1, 9.4] },
+    lab: { cx: 0, cz: -300, name: 'HQ Office', sub: 'TokenFall HQ · Floor 2', color: 0x5cd6ff, ret: [0, -7.4], spawn: [1, 9.4] },
     archive: { cx: -300, cz: 0, name: 'Data Archive', sub: 'Where models learn from', color: 0xffb347, ret: [-15, 0] },
     garden: { cx: 300, cz: 0, name: 'Model Garden', sub: 'Watch ideas grow', color: 0x7dff8a, ret: [15, 0] },
   };
@@ -1044,7 +1044,13 @@
   function buildOffice(a) {
     officeMaterials();
     const { cx, cz } = a, X = x => cx + x, Z = z => cz + z;
-    plane(110, 110, MAT.darkGrass, cx, -.08, Z(-9), 2);
+    // this is the second floor: the ground sits a storey below, with the floor below's glass facade under us
+    const GROUND = -4.6;
+    plane(130, 130, MAT.darkGrass, cx, GROUND, Z(-9), 2);
+    plane(150, 6, MAT.concrete, cx, GROUND + .01, Z(19), 1.5); plane(150, 3, MAT.paver, cx, GROUND + .02, Z(15.4), 3);   // road and pavement
+    for (const x of [-30, -14, 2, 18, 34]) box(4.2, .12, .5, MAT.white, X(x), GROUND + .01, Z(19), { cast: false });
+    faceBox(21.9, -GROUND - .05, 42.6, [MAT.glass, MAT.glass, MAT.concrete, MAT.concrete, MAT.glass, MAT.glass], X(-2.15), GROUND, Z(-7.6));
+    box(22.3, .3, 43, MAT.concrete, X(-2.15), -.32, Z(-7.6));   // slab edge between floors
     plane(19.25, 42.3, MAT.oFloor, X(-3.275), .012, Z(-7.65), 5); plane(2.25, 11.8, MAT.oFloor, X(7.475), .012, Z(-22.8), 5); plane(2.25, 16.9, MAT.oFloor, X(7.475), .012, Z(-8.45), 5);
     box(30, .5, 1.6, MAT.concrete, cx, -.49, Z(14.4), { cast: false });
     WALK.push([X(-12.4), Z(-28.2), X(6), Z(13.3)], [X(4.8), Z(-17.4), X(8.1), Z(-.3)], [X(4.8), Z(-28.2), X(8.1), Z(-17.3)]);
@@ -1060,8 +1066,8 @@
     windowRun(X(-12.9), Z(-28.7), X(-12.9), Z(2));
     windowRun(X(8.6), Z(-28.7), X(8.6), Z(0));
     box(.3, 3.4, 11.4, MAT.plaster, X(-12.9), 0, Z(7.7));
-    for (let i = 0; i < 16; i++) tree(X(rr(-24, 24)), Z(rr(-40, -32)), rr(1, 1.5), [MAT.leafA, MAT.leafB, MAT.leafC][rnd() * 3 | 0], false);
-    for (let i = 0; i < 14; i++) { const s = rnd() < .5 ? -1 : 1; tree(X(s * rr(17, 24)), Z(rr(-28, 8)), rr(1, 1.4), MAT.leafB, false); }
+    for (let i = 0; i < 16; i++) tree(X(rr(-24, 24)), Z(rr(-40, -32)), rr(1.2, 1.7), [MAT.leafA, MAT.leafB, MAT.leafC][rnd() * 3 | 0], false).position.y = GROUND;
+    for (let i = 0; i < 14; i++) { const s = rnd() < .5 ? -1 : 1; tree(X(s * rr(15, 24)), Z(rr(-28, 8)), rr(1.2, 1.6), MAT.leafB, false).position.y = GROUND; }
     pointLight('lab', 0xd6e8ff, 1.3, 16, X(-8), 2.4, Z(-26.5)); pointLight('lab', 0xd6e8ff, 1.3, 16, X(8), 2.4, Z(-26.5)); pointLight('lab', 0xd6e8ff, 1.1, 14, X(-10.8), 2.4, Z(-9));
 
     // ---- arrival foyer ----
