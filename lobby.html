@@ -991,7 +991,7 @@
     // inside: round table, four chairs, a TV on the wall facing the door
     const tx = (x0 + x1) / 2, tz = czr;
     const W = x1 - x0, D = z1 - z0;
-    if (Math.max(W, D) > 7 && Math.min(W, D) > 4.4) {
+    if (!o.small && Math.max(W, D) > 7 && Math.min(W, D) > 4.4) {
       // conference room: long table down the long side of the room, chairs on both sides
       const along = o.along ?? W >= D, L = (along ? W : D) * (along === (W >= D) ? .58 : .75), n = Math.floor(L / .9);
       along ? box(L, .06, 1.4, MAT.walnut, tx, .72, tz, { p: g }) : box(1.4, .06, L, MAT.walnut, tx, .72, tz, { p: g });
@@ -1084,7 +1084,7 @@
     // bottom left: a big conference room and a small one
     // walking in, the big room comes first (table running east-west), then the small one, both opening onto the passage
     room(X(-12.7), Z(3), X(-5.2), Z(7.9), 'e', 'Board Room', ['The Board Room.', 'Big decisions happen here. Soon: big lessons about how AI models make decisions.']);
-    room(X(-9.6), Z(-1.6), X(-5.2), Z(3), 'e', 'Huddle Room', ['The Huddle Room.', 'Small room, quick chats. Perfect for a five-minute lesson on what a model can and can\'t know.']);
+    room(X(-12.7), Z(-1.6), X(-5.2), Z(3), 'e', 'Huddle Room', ['The Huddle Room.', 'Small room, quick chats. Perfect for a five-minute lesson on what a model can and can\'t know.'], { small: true });
 
     // ---- main corridor running north, with chandeliers ----
     for (const z of [-3, -11.5, -20]) chandelier(X(-3.8), Z(z));
@@ -1150,7 +1150,7 @@
     // top left: big conference room with a TV on the wall
     room(X(-12.7), Z(-28.5), X(-6), Z(-18.6), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”'], { along: true });
     chandelier(X(-.8), Z(-22.8), 3.15);
-    bigPlant(X(-11.9), Z(-17.9)); bigPlant(X(-11.9), Z(.5)); 
+    bigPlant(X(-11.9), Z(-17.9)); 
     ledSign(['FIRE EXIT →'], '#7dff9a', X(-3.8), 2.75, Z(-17.6), 1.3, .3);
 
     // the lift you arrive by
