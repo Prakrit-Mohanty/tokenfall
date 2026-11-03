@@ -1039,7 +1039,7 @@
   function buildOffice(a) {
     officeMaterials();
     const { cx, cz } = a, X = x => cx + x, Z = z => cz + z;
-    plane(110, 110, MAT.darkGrass, cx, -.01, Z(-9), 2);
+    plane(110, 110, MAT.darkGrass, cx, -.08, Z(-9), 2);
     plane(19.25, 42.3, MAT.oFloor, X(-3.275), .012, Z(-7.65), 5); plane(2.25, 11.8, MAT.oFloor, X(7.475), .012, Z(-22.8), 5); plane(2.25, 16.9, MAT.oFloor, X(7.475), .012, Z(-8.45), 5);
     box(30, .5, 1.6, MAT.concrete, cx, -.49, Z(14.4), { cast: false });
     WALK.push([X(-12.4), Z(-28.2), X(6), Z(13.3)], [X(4.8), Z(-17.4), X(8.1), Z(-.3)], [X(4.8), Z(-28.2), X(8.1), Z(-17.3)]);
@@ -1122,29 +1122,29 @@
     INTER.push({ x: X(6.6), z: Z(-8.6), r: 1.6, label: 'Pantry', verb: 'Look', act: () => talk('Pantry', ['Filter coffee, masala chai, and a sign: “Everyone has to use this kitchen. Let\'s keep it nice.”', 'Wet waste and dry waste bins are by the window. Please sort your trash.']) });
 
     // north-east corner: tile feature wall in front of the windows, a desk facing it, two shared desk rows in front
-    box(5.4, 3.4, .3, MAT.tile, X(5.75), 0, Z(-28.25)); colBox(X(3), Z(-28.5), X(8.6), Z(-28));
-    box(4.2, .05, .7, MAT.walnut, X(5.9), .72, Z(-27.65)); for (const x of [3.85, 5.9, 7.95]) box(.05, .72, .6, MAT.white, X(x), 0, Z(-27.65));
-    box(4.1, .4, .04, MAT.fabric, X(5.9), .77, Z(-27.95));
-    for (const x of [4.9, 6.9]) { box(.6, .36, .04, MAT.charcoal, X(x), .9, Z(-27.85)); box(.56, .32, .02, MAT.monitor, X(x), .92, Z(-27.82)); chair(X(x), Z(-26.75), 1); }
-    colBox(X(3.7), Z(-28), X(8.1), Z(-27.25));
-    for (const z of [-20.6, -23.9]) { deskCluster(X(6), Z(z), 3, false); baffles(X(6), Z(z), 5, false); }
-    bigPlant(X(2.6), Z(-27.5));
+    box(5.4, 3.4, .3, MAT.tile, X(5.75), 0, Z(-26.45)); colBox(X(3), Z(-26.7), X(8.6), Z(-26.2));
+    box(4.2, .05, .7, MAT.walnut, X(5.9), .72, Z(-25.85)); for (const x of [3.85, 5.9, 7.95]) box(.05, .72, .6, MAT.white, X(x), 0, Z(-25.85));
+    box(4.1, .4, .04, MAT.fabric, X(5.9), .77, Z(-26.15));
+    for (const x of [4.9, 6.9]) { box(.6, .36, .04, MAT.charcoal, X(x), .9, Z(-26.05)); box(.56, .32, .02, MAT.monitor, X(x), .92, Z(-26.02)); chair(X(x), Z(-24.95), 1); }
+    colBox(X(3.7), Z(-26.2), X(8.1), Z(-25.45));
+    for (const z of [-18.9, -22.1]) { deskCluster(X(6), Z(z), 3, false); baffles(X(6), Z(z), 5, false); }
+    bigPlant(X(2.6), Z(-25.7));
 
     // ---- lounge at the north end: sofa, tub chairs, carrom, window bar ----
     box(6.8, .06, .5, MAT.walnut, X(-1.6), 1.05, Z(-28.2)); for (let x = -4.8; x < 2; x += 2) box(.05, 1.05, .05, MAT.white, X(x), 0, Z(-28.2));
     for (let x = -4.2; x < 1.6; x += 1.5) stool(X(x), Z(-27.3));
     colBox(X(-5.1), Z(-28.5), X(1.9), Z(-27));
-    sofa(X(.6), Z(-19.6), Math.PI); sofa(X(1), Z(-26.1), 0);
-    for (const [dx, dz] of [[-1.35, 0], [1.35, 0], [0, -1.35], [-.95, 1.05], [1, 1.05]]) tubChair(X(1 + dx), Z(-23.6 + dz));
-    for (const [dx, dz] of [[-.5, -.5], [.5, -.5], [-.5, .5], [.5, .5]]) box(.06, .6, .06, MAT.charcoal, X(1 + dx), 0, Z(-23.6 + dz));
-    box(1.15, .07, 1.15, MAT.carrom, X(1), .6, Z(-23.6), { s: 0 }); colCirc(X(1), Z(-23.6), .75);
-    for (let i = 0; i < 9; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .015, 8), i % 3 ? (i % 2 ? MAT.charcoal : MAT.white) : MAT.pink)); c.position.set(X(1 + rr(-.35, .35)), .68, Z(-23.6 + rr(-.35, .35))); }
-    INTER.push({ x: X(1), z: Z(-21.7), r: 1.5, label: 'Carrom Board', verb: 'Play', act: () => talk('Carrom Board', ['Someone left a game half finished. The queen is still on the board.', 'Carrom tournaments: coming soon to TokenFall!']) });
-    const side = add(new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .5, 14), MAT.white)); side.position.set(X(-2.4), .25, Z(-20.2)); colCirc(X(-2.4), Z(-20.2), .35);
-    for (let i = 0; i < 5; i++) { const f = add(new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 4), MAT.white)); f.position.set(X(-2.4 + rr(-.12, .12)), .65 + rr(0, .2), Z(-20.2 + rr(-.12, .12))); }
+    sofa(X(-1.4), Z(-18.8), Math.PI); sofa(X(-.8), Z(-25.3), 0);
+    for (const [dx, dz] of [[-1.35, 0], [1.35, 0], [0, -1.35], [-.95, 1.05], [1, 1.05]]) tubChair(X(-.8 + dx), Z(-22.8 + dz));
+    for (const [dx, dz] of [[-.5, -.5], [.5, -.5], [-.5, .5], [.5, .5]]) box(.06, .6, .06, MAT.charcoal, X(-.8 + dx), 0, Z(-22.8 + dz));
+    box(1.15, .07, 1.15, MAT.carrom, X(-.8), .6, Z(-22.8), { s: 0 }); colCirc(X(-.8), Z(-22.8), .75);
+    for (let i = 0; i < 9; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .015, 8), i % 3 ? (i % 2 ? MAT.charcoal : MAT.white) : MAT.pink)); c.position.set(X(-.8 + rr(-.35, .35)), .68, Z(-22.8 + rr(-.35, .35))); }
+    INTER.push({ x: X(-.8), z: Z(-20.9), r: 1.5, label: 'Carrom Board', verb: 'Play', act: () => talk('Carrom Board', ['Someone left a game half finished. The queen is still on the board.', 'Carrom tournaments: coming soon to TokenFall!']) });
+    const side = add(new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .5, 14), MAT.white)); side.position.set(X(-4.2), .25, Z(-19.4)); colCirc(X(-4.2), Z(-19.4), .35);
+    for (let i = 0; i < 5; i++) { const f = add(new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 4), MAT.white)); f.position.set(X(-4.2 + rr(-.12, .12)), .65 + rr(0, .2), Z(-19.4 + rr(-.12, .12))); }
     // top left: big conference room with a TV on the wall
     room(X(-12.7), Z(-28.5), X(-6), Z(-18.6), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”'], { along: true });
-    chandelier(X(1), Z(-23.6), 3.15);
+    chandelier(X(-.8), Z(-22.8), 3.15);
     bigPlant(X(-11.9), Z(-17.9)); bigPlant(X(-11.9), Z(.5)); 
     ledSign(['FIRE EXIT →'], '#7dff9a', X(-3.8), 2.75, Z(-17.6), 1.3, .3);
 
@@ -1448,7 +1448,7 @@
   }
   const rtOpts = { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
   const rtScene = new THREE.WebGLRenderTarget(4, 4, rtOpts);
-  rtScene.depthTexture = new THREE.DepthTexture(4, 4);
+  rtScene.depthTexture = new THREE.DepthTexture(4, 4, THREE.UnsignedIntType);   // 16-bit depth z-fights the floor at a distance
   const rtA = new THREE.WebGLRenderTarget(4, 4, rtOpts), rtB = new THREE.WebGLRenderTarget(4, 4, rtOpts);
   const bright = fsPass(`uniform sampler2D t; uniform vec2 px; varying vec2 vUv;
     void main(){ vec3 c=vec3(0.); for(int i=0;i<4;i++){ vec2 o=vec2(float(i-(i/2)*2)-.5,float(i/2)-.5)*px*1.5; c+=texture2D(t,vUv+o).rgb; } c*=.25;
