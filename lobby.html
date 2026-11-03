@@ -246,10 +246,12 @@
     TX.coin = canvasTex(64, 64, (g, W, H) => {
       g.fillStyle = '#b8862c'; g.fillRect(0, 0, W, H);
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const d = Math.hypot(x - 31.5, y - 31.5); if (d > 26 && d < 29) P(g, x, y, [140, 96, 30]); else if (d <= 26) P(g, x, y, [232, 186, 84], 1 - (x + y) / 400); }
-      // a bold "C" for Calfus, opening to the right
+      // the Calfus "C": a heavy black C whose top end finishes in a teal dot
+      const dotX = 31.5 + 12.75 * Math.cos(-.6), dotY = 31.5 + 12.75 * Math.sin(-.6);
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const dx = x - 31.5, dy = y - 31.5, d = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
-        if (d > 7.5 && d < 17.5 && Math.abs(a) > .7) P(g, x, y, d > 16.4 || (dy < 0 && d < 8.6) ? [255, 236, 170] : [96, 58, 14]);
+        if (d > 8 && d < 17.5 && (a < -1.02 || a > .55)) P(g, x, y, [22, 20, 18]);
+        if (Math.hypot(x - dotX, y - dotY) < 5.1) P(g, x, y, [95, 192, 176]);
       }
     }, { nearest: true });
     TX.coin.center.set(.5, .5); TX.coin.rotation = Math.PI / 2;
