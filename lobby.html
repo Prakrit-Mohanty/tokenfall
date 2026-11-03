@@ -1089,7 +1089,7 @@
     // meeting rooms on the right, doors facing the corridor
     room(X(-2.4), Z(-4.6), X(4.6), Z(1.5), 'w', 'Prompt Lab', ['The Prompt Lab.', 'A prompt is just the instructions you give a model. Clear context in, better answers out.', 'Sessions start here soon!']);
     room(X(-2.4), Z(-10.8), X(4.6), Z(-4.6), 'w', 'Token Room', ['The Token Room.', 'Models read text as tokens, small chunks of words. More tokens means more to read (and pay for).']);
-    room(X(-2.4), Z(-17), X(4.6), Z(-10.8), 'w', 'Context Corner', ['Context Corner.', 'A model only knows what\'s in its context window. Anything you didn\'t tell it, it has to guess.']);
+    box(.25, 3.4, 6.2, MAT.plaster, X(4.62), 0, Z(-13.9)); colBox(X(4.45), Z(-17), X(4.8), Z(-10.8));   // galley wall where the third room was
 
     // desks on the left, along the west windows; more desks east of the meeting rooms
     // rows run across from the windows toward the corridor, like in the photos
@@ -1128,7 +1128,9 @@
     box(4.9, .4, .04, MAT.fabric, X(11.7), .77, Z(-17.14));
     for (const x of [10, 11.7, 13.4]) { box(.6, .36, .04, MAT.charcoal, X(x), .9, Z(-17.22)); box(.56, .32, .02, MAT.monitor, X(x), .92, Z(-17.25)); chair(X(x), Z(-18.35), -1); }
     colBox(X(9.1), Z(-17.8), X(14.3), Z(-16.9));
-    deskCluster(X(11.6), Z(-22), 3, false); baffles(X(11.6), Z(-22), 5, false);
+    // two desk rows beside the lounge, west of the tile column
+    for (const z of [-21.7, -24.8]) { deskCluster(X(6.4), Z(z), 3, false); baffles(X(6.4), Z(z), 5, false); }
+    bigPlant(X(12.4), Z(-18));
     for (const z of [-26.4, -27.2]) { const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .2, .7, 14), MAT.chrome)); b.position.set(X(14.1), .35, Z(z)); }
     const ext = add(new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .5, 10), new THREE.MeshStandardMaterial({ color: 0xc0281c }))); ext.position.set(X(14.2), .25, Z(-25.6));
     colBox(X(13.8), Z(-27.6), X(14.5), Z(-25.4));
