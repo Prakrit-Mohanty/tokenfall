@@ -77,6 +77,14 @@
 <script src="js/sprite.js"></script>
 <script src="js/aditya-data.js"></script>
 <script src="js/aditya-sheet.js"></script>
+<script src="js/bridge-content.js"></script>
+<script src="js/bridge-generator.js"></script>
+<script src="js/bridge-world.js"></script>
+<script src="js/bridge-play.js"></script>
+<script src="js/bridge-progress.js"></script>
+<script>
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => BridgePlay.install(TF));
+</script>
 <script>
 (() => {
   // ================= setup =================
@@ -358,7 +366,7 @@
   const WALK = [];       // walkable rects [x0,z0,x1,z1]
   const INTER = [];      // interactables {x,z,r,label,verb,act}
   const PORTALS = [];
-  const ZONE_LIGHTS = { lobby: [], lab: [], archive: [], pune: [], abz: [] };
+  const ZONE_LIGHTS = { lobby: [], lab: [], archive: [], pune: [], abz: [], bridge: [] };
   const anim = [];       // per-frame callbacks
   const FADERS = [];     // things that turn see-through when they would hide the player
   const colBox = (x0, z0, x1, z1) => COL.push({ x0, z0, x1, z1 });
@@ -845,6 +853,8 @@
     // side gates
     gate(-17.8, 0, Math.PI / 2, 'Data Archive', 0xffb347, 'lobby', 'archive');
     gate(17.8, 0, Math.PI / 2, 'Pune', 0x7dff8a, 'lobby', 'pune');
+    gate(0, 17.6, 0, 'The Glass Bridge', 0xffd27a, 'lobby', 'bridge');
+    ledSign(['▼ The Glass Bridge'], '#ffe39a', 0, 5.4, 17.6, 3.8, .55);
     for (const [sx, txt, col] of [[-14.6, '◀ Data Archive', '#ffcf7a'], [14.6, 'Pune ▶', '#9dff9f']]) {
       ledSign([txt], col, sx, 1.75, -2.6, 2.6, .5);
       box(.1, 1.5, .1, MAT.metal, sx - 1.1, 0, -2.66); box(.1, 1.5, .1, MAT.metal, sx + 1.1, 0, -2.66); colBox(sx - 1.3, -2.85, sx + 1.3, -2.45);
@@ -859,20 +869,20 @@
     const coinG = new THREE.Group(); coinG.add(coin); scene.add(coinG); coinG.userData.dyn = true;
     anim.push(t => { coinG.position.set(0, 2.2 + Math.sin(t * 1.4) * .15, -3); coinG.rotation.y = t * .7; });
     colCirc(0, -3, 1.95);
-    INTER.push({ x: 0, z: -.6, r: 1.6, label: 'The Token', verb: 'Inspect', act: () => talk('The Token', ['A giant golden token hovers over the fountain.', 'Models don\'t read words — they read tokens: small chunks of text.', '“TokenFall” might be 3 tokens. Or 2. It depends on the model!']) });
+    INTER.push({ x: 0, z: -.6, r: 1.6, label: 'The Token', verb: 'Inspect', act: () => talk('The Token', ['A giant golden token hovers over the fountain.', 'Models don\'t read words — they read tokens: small chunks of text.', '“TokenFall” might be 3 tokens. Or 2. It depends on the model!', 'Rumour: the glass bridge south of here only holds up the right answer.']) });
 
     // directory totem
     box(1.7, .2, .5, MAT.concrete, -4.6, 0, -1.6); box(.16, 2.4, .16, MAT.metal, -5.3, .2, -1.6); box(.16, 2.4, .16, MAT.metal, -3.9, .2, -1.6);
-    ledSign(['▲ HQ Office', '◀ Data Archive', 'Pune ▶'], '#d6ecff', -4.6, 1.75, -1.5, 1.6, 1.25, 0, [200, 160]);
+    ledSign(['▲ HQ Office', '◀ Data Archive', 'Pune ▶', 'Glass Bridge ▼'], '#d6ecff', -4.6, 1.75, -1.5, 1.6, 1.5, 0, [200, 192]);
     colBox(-5.5, -1.85, -3.7, -1.35);
-    INTER.push({ x: -4.6, z: -.6, r: 1.4, label: 'Directory', verb: 'Read', act: () => talk('Directory', ['Welcome to TokenFall!', 'North: the HQ office, through the front doors. West: the Data Archive. East: Pune, home of the Calfus office.', 'Walk into a glowing portal to travel.']) });
+    INTER.push({ x: -4.6, z: -.6, r: 1.4, label: 'Directory', verb: 'Read', act: () => talk('Directory', ['Welcome to TokenFall!', 'North: the HQ office, through the front doors. West: the Data Archive. East: Pune, home of the Calfus office. South: the Glass Bridge.', 'Walk into a glowing portal to travel.']) });
 
     // notice board
     box(.1, 2, .1, MAT.metal, 3.6, 0, -1.6); box(.1, 2, .1, MAT.metal, 5.6, 0, -1.6);
     const paper = std(canvasTex(32, 20, (g) => { g.fillStyle = '#b48a5a'; g.fillRect(0, 0, 32, 20); for (const [x, y, w, h, c] of [[2, 2, 9, 11, '#efe4c8'], [13, 3, 8, 7, '#f6d98a'], [23, 2, 7, 10, '#efe4c8'], [13, 11, 9, 7, '#cfe6f0']]) { g.fillStyle = c; g.fillRect(x, y, w, h); g.fillStyle = '#8a7a60'; for (let yy = y + 2; yy < y + h - 1; yy += 2) g.fillRect(x + 1, yy, w - 2, 1); g.fillStyle = '#c0392b'; g.fillRect(x + (w >> 1), y, 1, 1); } }, { nearest: true }), 0);
     const pb = add(new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, .08), [MAT.metal, MAT.metal, MAT.metal, MAT.metal, paper, MAT.metal])); pb.position.set(4.6, 1.3, -1.56);
     colBox(3.4, -1.85, 5.8, -1.35);
-    INTER.push({ x: 4.6, z: -.6, r: 1.4, label: 'Notice Board', verb: 'Read', act: () => talk('Notice Board', ['📌 Week 1 — What even is a token?', '📌 Prompt Lab opens soon: learn to talk to models clearly.', '📌 Lost: one rubber duck. Answers to “Debug”.']) });
+    INTER.push({ x: 4.6, z: -.6, r: 1.4, label: 'Notice Board', verb: 'Read', act: () => talk('Notice Board', ['📌 Week 1 — What even is a token?', '📌 Prompt Lab opens soon: learn to talk to models clearly.', '📌 New: the Glass Bridge, south of the plaza. Pick the right tile. Or don\'t.', '📌 Lost: one rubber duck. Answers to “Debug”.']) });
 
     // plaza furniture
     streetLamp(-14.2, -9.8, 'lobby'); streetLamp(14.2, -2.8, 'lobby', false); streetLamp(-14.2, 4.6, 'lobby'); streetLamp(14.2, 4.6, 'lobby');
@@ -1320,7 +1330,8 @@
     box(.8, .9, .7, MAT.white, X(-5.2), 0, Z(5.7)); colBox(X(-5.2) - .4, Z(5.7) - .35, X(-5.2) + .4, Z(5.7) + .35);   // storage
     // four desk pods along the west windows, two computers on each side
     for (const z of [-5.6, -2.6, .4, 3.5]) deskCluster(X(-5.75), Z(z), 2, false);
-    room(X(-7), Z(-10.5), X(-3.1), Z(-7.2), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”'], { table: 'long', seats: 3, along: true });
+    room(X(-7), Z(-10.5), X(-3.1), Z(-7.2), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”', 'In the corner there is a terminal for the Glass Bridge: pick the right tile, or fall.'], { table: 'long', seats: 3, along: true });
+    if (TF.officeEntrance) TF.officeEntrance({ x: X(-3.1) - .55, z: Z(-10.5) + .6, near: [X(-3.1) - .5, Z(-10.5) + 1.9] });
     box(L(2.6), .9, .4, MAT.white, X(-4.4), 0, Z(-10.5) - .35); colBox(X(-5.7), Z(-10.5) - .55, X(-3.1), Z(-10.5) - .15);   // storage
 
     // ---- main corridor running north ----
@@ -1893,7 +1904,7 @@
     const f = c.frame();
     c.tex.offset.set(f.col * CW / SHEET_W, 1 - (f.row + 1) * CH / SHEET_H);
     c.g.position.set(c.x, 0, c.y);
-    c.mesh.position.y = f.lift * .4 * SPU;
+    c.mesh.position.y = (c.noLift ? 0 : f.lift * .4 * SPU) + (c.alt || 0);
   }
 
   // ================= NPCs =================
@@ -1983,6 +1994,7 @@
     }
     if (e.key === 'Enter') { chatIn.focus(); e.preventDefault(); return; }
     if (dialog) { if (['Space', 'KeyE', 'Enter', 'Escape'].includes(e.code) && !e.repeat) advanceDialog(); e.preventDefault(); return; }
+    if (TF.onKey && TF.onKey(e)) { e.preventDefault(); return; }
     keys[e.code] = true;
     if (e.code === 'Space' && !e.repeat) { hero.trigger('jump'); e.preventDefault(); }
     if (e.code === 'KeyE' && !e.repeat && nearest) nearest.act();
@@ -2061,12 +2073,13 @@
   let zone = 'lobby', traveling = false, armed = true;
   const locName = document.getElementById('locName'), locSub = document.getElementById('locSub');
   function setZone(z) {
-    zone = z;
-    for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) l.intensity = k === z ? l.userData.base : 0;
+    const prevZone = zone; zone = z;
+    for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) { l.intensity = k === z ? l.userData.base : 0; l.visible = k === z; }
     const indoor = z === 'lab' || z === 'abz';
     scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
     sun.intensity = indoor ? .5 : 1.3; hemi.intensity = indoor ? .5 : .58;
     hemi.color.set(indoor ? 0xe8e4dc : 0xcfdcff);
+    TF.enter(prevZone, z);
     const a = AREAS[z];
     locName.textContent = a ? a.name : 'TokenFall Lobby'; locSub.textContent = a ? a.sub : 'Main Plaza';
     const here = ['aditya', ...npcs.filter(c => c.zone === z).map(c => c.name)];
@@ -2079,7 +2092,7 @@
     setTimeout(() => {
       const to = p.to;
       if (p.at) { hero.x = p.at[0]; hero.y = p.at[1]; hero.dir = 'down'; }
-      else if (to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = p.zone === 'lab' ? 'down' : p.zone === 'archive' ? 'right' : 'left'; }
+      else if (to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = AREAS[p.zone].retDir || (p.zone === 'lab' ? 'down' : p.zone === 'archive' ? 'right' : 'left'); }
       else { const a = AREAS[to], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.dir = 'up'; }
       setZone(to); hero.zone = to; armed = false;
       snapCamera();
@@ -2109,6 +2122,7 @@
       up: keys.KeyW || keys.ArrowUp, down: keys.KeyS || keys.ArrowDown, left: keys.KeyA || keys.ArrowLeft, right: keys.KeyD || keys.ArrowRight, run: keys.ShiftLeft || keys.ShiftRight,
     });
     stepChar(hero, dt);
+    if (TF.zoneTick[zone]) TF.zoneTick[zone](dt);
     // NPCs
     for (const c of npcs) {
       npcThink(c, dt);
@@ -2116,7 +2130,7 @@
       if (c.moving && Math.hypot(c.x - ox, c.y - oz) < c.speed * dt / 1000 * .4) c.stuck += dt; else c.stuck = 0;
     }
     chatterT -= dt;
-    if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone); if (here.length) { const pool = zone === 'lab' || zone === 'abz' ? CHATTER_OFFICE : CHATTER; say(here[Math.random() * here.length | 0], pool[Math.random() * pool.length | 0]); } }
+    if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone && !c.mute); if (here.length) { const pool = zone === 'lab' || zone === 'abz' ? CHATTER_OFFICE : CHATTER; say(here[Math.random() * here.length | 0], pool[Math.random() * pool.length | 0]); } }
     for (const c of chars) syncChar(c);
     // portals
     let nearPortal = false, bestP = 3.4; nearP = null;
@@ -2204,6 +2218,7 @@
     npcs = NPC_NAMES.map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2 }); c.wait = Math.random() * 3000; return c; });
     for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
     for (const [n, x, z] of [['sana.k', 7.4, 298.6], ['arjun_p', -.3, 291.6]]) { const c = makeChar(n, x, z, { speed: 2.1, zone: 'abz' }); c.wait = Math.random() * 3000; npcs.push(c); }
+    TF.boot();
     const q = new URLSearchParams(location.search);
     if (q.get('zone') && AREAS[q.get('zone')]) { const a = AREAS[q.get('zone')], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.zone = q.get('zone'); }
     if (q.get('at')) { const [ax, az] = q.get('at').split(',').map(Number); hero.x = ax; hero.y = az; }
@@ -2215,6 +2230,50 @@
     setTimeout(() => say(npcs[0], 'hi aditya! 👋'), 1800);
     requestAnimationFrame(t => { last = t; frame(t); });
   });
+  // ================= TokenFall API (Glass Bridge integration) =================
+  // Modules register with (window.TokenFallReady = window.TokenFallReady || []).push(TF => ...).
+  const TF = window.TokenFall = {
+    THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, rnd, rr, timeU, keys, post: final.u,
+    INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life,
+    canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
+    gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,
+    get hero() { return hero; }, get zone() { return zone; }, get talking() { return !!dialog; }, get traveling() { return traveling; },
+    zoneTick: {}, zoneEnv: {}, ground: {}, onKey: null, _on: { boot: [], enter: [] },
+    on(evt, fn) { this._on[evt].push(fn); return fn; },
+    boot() { this._on.boot.forEach(f => f()); },
+    // called from setZone: per-zone fog/background/sun/hemi (defaults restored for zones without an env), then listeners
+    enter(prev, z) {
+      const e = this.zoneEnv[z] || {};
+      const col = e.fog != null ? e.fog : FOG;
+      scene.fog.color.set(col); scene.background.set(col);
+      scene.fog.near = e.near != null ? e.near : 34; scene.fog.far = e.far != null ? e.far : 95;
+      if (e.sun != null) sun.intensity = e.sun;
+      if (e.hemi != null) hemi.intensity = e.hemi;
+      if (e.hemiColor != null) hemi.color.set(e.hemiColor);
+      if (prev !== z) this._on.enter.forEach(f => f(prev, z));
+    },
+    sys(text) { log('', text, true); },
+    banner(title, sub) { showBanner(title, sub); },
+    // fade to black, run cb while black, fade back; input and portals are locked meanwhile
+    fade(cb, ms = 480) { traveling = true; fadeEl.style.opacity = 1; setTimeout(() => { cb(); fadeEl.style.opacity = 0; traveling = false; }, ms); },
+    registerZone(key, o) {
+      AREAS[key] = Object.assign({ key, cx: 0, cz: 0, name: key, sub: '', color: 0xffffff, ret: [0, 0], spawn: [0, 0] }, o);
+      ZONE_LIGHTS[key] = ZONE_LIGHTS[key] || [];
+      if (o.env) this.zoneEnv[key] = o.env;
+      return AREAS[key];
+    },
+    // fn(x, z, y) -> ground height or null (a void); stored for the zone's tick to consult
+    setGroundProvider(zoneKey, fn) { this.ground[zoneKey] = fn; },
+    // a still, silent NPC (talk() on E, never wanders, never chats)
+    addNPC(name, x, z, zoneKey, lines) {
+      NPC_TALK[name] = lines; NPC_BOUNDS[zoneKey] = [x, z, x, z];
+      const c = makeChar(name, x, z, { speed: 1, zone: zoneKey });
+      c.wait = 1e12; c.mute = true; c.dir = 'down'; npcs.push(c); return c;
+    },
+  };
+  const _ready = window.TokenFallReady || [];
+  window.TokenFallReady = { push(f) { f(TF); } };
+  _ready.forEach(f => f(TF));
 })();
 </script>
 </body>
