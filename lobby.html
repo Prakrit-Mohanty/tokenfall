@@ -1454,11 +1454,31 @@
     for (const r of [[5.81, -1.46, 10.5, 5.16], [7, 6.68, 15.1, 12.63], [6.97, 13.67, 15.95, 16.8], [0, 13.67, 6.97, 16.8], [10.5, -1.46, 15.95, 1.85], [15.95, -1.46, 20, 4.95], [15.95, 10.86, 20, 16.8]]) floor(...r, carpet, .016, 1.5);
     floor(0, 5.16, 4.32, 11.48, grey, .016, 1.2); floor(4.32, -1.46, 5.81, 5.16, grey, .016, 1.2);
     floor(-4, 9.6, 0, 16, beige, .012, 1.4);
-    const [fx, fz, fw, fd] = span(-4, -1.46, 20, 16.8); plane(fw + 30, fd + 30, MAT.concrete, fx, -.02, fz, 3);
+    // this floor is the 15th: the tower's glass drops away below the slab, with the city far beneath
+    const G = -42, facade = [MAT.glass, MAT.glass, MAT.concrete, MAT.concrete, MAT.glass, MAT.glass];
+    for (const [x0, y0, x1, y1] of [[0, -1.46, 20, 16.8], [-4, 9.6, 0, 16]]) {
+      const [x, z, w, d] = span(x0, y0, x1, y1);
+      box(w + .5, .4, d + .5, MAT.concrete, x, -.4, z); faceBox(w + .3, -G - .45, d + .3, facade, x, G, z);
+    }
+    plane(420, 420, MAT.concrete, cx, G, cz, 6);
+    for (let k = -200; k <= 200; k += 34) { plane(9, 420, MAT.flag, cx + k, G + .02, cz, 4); plane(420, 9, MAT.flag, cx, G + .03, cz + k, 4); }
+    for (let i = -170; i <= 170; i += 34) for (let j = -170; j <= 170; j += 34) {
+      if (Math.abs(i) < 30 && Math.abs(j) < 30) continue;   // our own tower
+      const h = rr(4, 26), w = rr(12, 22), d = rr(12, 22);
+      if (rnd() < .2) { plane(24, 24, MAT.darkGrass, cx + i + 17, G + .04, cz + j + 17, 2); for (let t = 0; t < 4; t++) tree(cx + i + 17 + rr(-8, 8), cz + j + 17 + rr(-8, 8), rr(1.6, 2.4), MAT.leafB, false).position.y = G; continue; }
+      faceBox(w, h, d, [MAT.glass, MAT.glass, MAT.roofFlat, MAT.concrete, MAT.glass, MAT.glass], cx + i + 17, G, cz + j + 17);
+    }
     WALK.push([X(0) + .2, Z(-1.46) + .2, X(20) - .2, Z(16.8) - .2], [X(-4) + .2, Z(9.6) + .2, X(0) + .6, Z(16) - .2]);
 
     // outer walls: full height north, east and west; low along the south so the camera can see in
-    solid(-.12, -1.58, 20.12, -1.46, H, wallM); solid(20, -1.46, 20.12, 16.8, H, wallM);
+    solid(-.12, -1.58, 20.12, -1.46, H, wallM);
+    // the back (plan east) wall is one long window from end to end
+    {
+      const zc = (Z(-1.46) + Z(16.8)) / 2, len = Z(16.8) - Z(-1.46), wx = X(20.06);
+      box(.3, .55, len, MAT.plaster, wx, 0, zc); box(.12, H - .85, len, MAT.window, wx, .55, zc); box(.3, .3, len, MAT.plaster, wx, H - .3, zc);
+      for (let t = 0; t <= len + .01; t += len / 7) box(.32, H, .14, MAT.charcoal, wx, 0, Z(-1.46) + t);
+      colBox(X(20), Z(-1.46), X(20.12), Z(16.8));
+    }
     // the wall between the lobby and the office (south once turned): door with garlands, the Calfus logo on the lobby side
     const lobbyWall = solidF(-.12, -1.46, 0, 11.95, H, wallM, g => {
       box(.14, H, Z(16.8) - Z(13.25), wallM, X(-.06), 0, (Z(13.25) + Z(16.8)) / 2, { p: g });
@@ -2044,6 +2064,7 @@
     zone = z;
     for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) l.intensity = k === z ? l.userData.base : 0;
     const indoor = z === 'lab' || z === 'abz';
+    scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
     sun.intensity = indoor ? .5 : 1.3; hemi.intensity = indoor ? .5 : .58;
     hemi.color.set(indoor ? 0xe8e4dc : 0xcfdcff);
     const a = AREAS[z];
