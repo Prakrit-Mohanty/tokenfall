@@ -66,7 +66,7 @@
   <div id="loc" class="panel"><div class="gem"></div><div><span id="locName">TokenFall Lobby</span><small id="locSub">Main Plaza</small></div></div>
   <div id="party" class="panel"><h4><span>LOBBY</span><span id="count">5 / 20</span></h4><div id="plist"></div></div>
   <div id="chat"><div id="log" class="panel"></div><input id="chatIn" maxlength="80" placeholder="Press Enter to chat"></div>
-  <div id="help"><kbd>WASD</kbd> move &nbsp;<kbd>Shift</kbd> run &nbsp;<kbd>Space</kbd> jump<br><kbd>E</kbd> interact &nbsp;<kbd>Enter</kbd> chat</div>
+  <div id="help"><kbd>WASD</kbd> move &nbsp;<kbd>Shift</kbd> run &nbsp;<kbd>Space</kbd> jump<br><kbd>E</kbd> interact &nbsp;<kbd>V</kbd> view &nbsp;<kbd>Enter</kbd> chat</div>
   <div id="dialog" class="panel"><div class="name"></div><div class="text"></div><div class="next">▼</div></div>
   <div id="banner"><div class="line"></div><div class="t"></div><div class="s"></div><div class="line"></div></div>
   <div id="fade"></div>
@@ -99,8 +99,11 @@
   const FOG = 0xcdbf9f;
   scene.background = new THREE.Color(FOG);
   scene.fog = new THREE.Fog(FOG, 34, 95);
-  const camera = new THREE.PerspectiveCamera(26, 16 / 9, 1, 220);
-  const CAM_OFF = new THREE.Vector3(0, 10.5, 24.5);
+  // two camera views, V switches: a low over-the-shoulder third person (default) and the original high overview
+  const CAM_VIEWS = [{ off: new THREE.Vector3(0, 3.6, 7), fov: 48, y: 1.4 }, { off: new THREE.Vector3(0, 10.5, 24.5), fov: 26, y: .9 }];
+  let camView = 0;
+  const camera = new THREE.PerspectiveCamera(CAM_VIEWS[0].fov, 16 / 9, .5, 220);
+  const CAM_OFF = CAM_VIEWS[0].off.clone();
 
   let seed = 1337;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -1998,6 +2001,7 @@
     keys[e.code] = true;
     if (e.code === 'Space' && !e.repeat) { hero.trigger('jump'); e.preventDefault(); }
     if (e.code === 'KeyE' && !e.repeat && nearest) nearest.act();
+    if (e.code === 'KeyV' && !e.repeat) { camView ^= 1; const v = CAM_VIEWS[camView]; CAM_OFF.copy(v.off); camera.fov = v.fov; camera.updateProjectionMatrix(); }
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
@@ -2105,7 +2109,7 @@
 
   // ================= camera =================
   const camTarget = new THREE.Vector3(), tmp = new THREE.Vector3();
-  function snapCamera() { camTarget.set(hero.x, .9, hero.y); camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget); }
+  function snapCamera() { camTarget.set(hero.x, CAM_VIEWS[camView].y, hero.y); camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget); }
 
   // ================= main loop =================
   let hero, nearest = null, nearP = null, last = performance.now(), T = 0, chatterT = 4000;
@@ -2150,7 +2154,7 @@
       if (d < 1.5 && d < best) { best = d; nearest = { x: c.x, z: c.y, label: c.name, verb: 'Talk', act: () => { c.wait = 4000; c.setInput({}); c.dir = Math.abs(hero.x - c.x) > Math.abs(hero.y - c.y) ? (hero.x > c.x ? 'right' : 'left') : (hero.y > c.y ? 'down' : 'up'); talk(c.name, NPC_TALK[c.name]); } }; }
     }
     // camera follows with a little lag
-    camTarget.lerp(tmp.set(hero.x, .9, hero.y), 1 - Math.pow(.004, dt / 1000));
+    camTarget.lerp(tmp.set(hero.x, CAM_VIEWS[camView].y, hero.y), 1 - Math.pow(.004, dt / 1000));
     camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget);
     sun.position.copy(camTarget).add(SUN_DIR); sun.target.position.copy(camTarget);
     final.u.focus.value = tmp.copy(camTarget).sub(camera.position).dot(camera.getWorldDirection(new THREE.Vector3()));
