@@ -358,7 +358,7 @@
   const WALK = [];       // walkable rects [x0,z0,x1,z1]
   const INTER = [];      // interactables {x,z,r,label,verb,act}
   const PORTALS = [];
-  const ZONE_LIGHTS = { lobby: [], lab: [], archive: [], garden: [] };
+  const ZONE_LIGHTS = { lobby: [], lab: [], archive: [], pune: [] };
   const anim = [];       // per-frame callbacks
   const FADERS = [];     // things that turn see-through when they would hide the player
   const colBox = (x0, z0, x1, z1) => COL.push({ x0, z0, x1, z1 });
@@ -440,21 +440,23 @@
     const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .08), [side, side, side, side, m, m]);
     b.position.set(x, y, z); b.rotation.y = ry; return add(b);
   }
-  function ledTex(lines, color, w = 256, h = 64) {
+  // font: CSS family; the pixel font's capital C reads like an O on small signs, so those use a plain one
+  function ledTex(lines, color, w = 256, h = 64, font = '"Pixelify Sans", monospace') {
     return canvasTex(w, h, g => {
       g.fillStyle = '#15171d'; g.fillRect(0, 0, w, h);
       g.fillStyle = '#2c303a'; g.fillRect(0, 0, w, 3); g.fillRect(0, h - 3, w, 3);
       const fs = Math.min(28, (h - 10) / lines.length * .78);
-      g.font = `600 ${fs}px "Pixelify Sans", monospace`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = color;
+      g.font = `600 ${fs}px ${font}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = color;
       lines.forEach((l, i) => g.fillText(l, w / 2, h / 2 + (i - (lines.length - 1) / 2) * fs * 1.2 + 1));
     });
   }
-  function ledSign(lines, color, x, y, z, w, h, ry = 0, res = [256, 64]) {
-    const t = ledTex(lines, color, res[0], res[1]);
+  function ledSign(lines, color, x, y, z, w, h, ry = 0, res = [256, 64], font) {
+    const t = ledTex(lines, color, res[0], res[1], font);
     const m = new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 1.6, roughness: .5 });
     const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .1), [MAT.metal, MAT.metal, MAT.metal, MAT.metal, m, MAT.metal]);
     b.position.set(x, y, z); b.rotation.y = ry; return add(b);
   }
+  const PLAIN = '"Trebuchet MS", Arial, sans-serif';
   function umbrellaTable(x, z, cloth) {
     const top = add(new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .06, 14), MAT.wood)); top.position.set(x, .74, z);
     box(.08, 2.3, .08, MAT.metal, x, 0, z);
@@ -494,6 +496,202 @@
     pointLight('lobby', 0xffd090, 1.2, 7, cx, 2.6, front + 2);
     for (const s of [-1, 1]) { pot(cx + s * 4.4, front + .7, 1.1); pot(cx + s * 5.4, front + .6, .9); }
     return front;
+  }
+  // the real Calfus building: a glass-fronted block with white cladding down its side, and a taller grey tower
+  // with the Calfus logo, a column of windows with little awnings, and vertical louvres on the far edge
+  function calfusHQ(cx, cz) {
+    const panel = (base, joints) => canvasTex(32, 32, (g, W, H) => {
+      noiseFill(g, W, H, base, .05);
+      g.fillStyle = rgb(base, .82); for (const [x, y, w, h] of joints) g.fillRect(x, y, w, h);
+    });
+    const curtain = std(canvasTex(32, 32, (g, W, H) => {
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const t = y / H, sheen = ((x + y) % 23 < 3) ? 26 : 0;
+        let c = [86 - t * 22 + sheen, 146 - t * 30 + sheen, 196 - t * 30 + sheen];
+        if (x % 16 === 0 || y === 0) c = [62, 70, 80]; else if (y >= 25 && y <= 26) c = [70, 96, 124];
+        P(g, x, y, c);
+      }
+    }, { nearest: true }), 2.2, { roughness: .15, metalness: .45 });
+    const white = std(panel([226, 228, 230], [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32], [16, 0, 1, 32]]), 2.2);
+    const grey = std(panel([116, 120, 126], [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32]]), 2.2);
+    // squashed in height so the whole front, logo included, fits in the game camera's narrow view
+    const F = cz, D = 7, bz = F - D / 2, HM = 4.9, HT = 6.2;
+    box(15, .3, D + 1.4, MAT.concrete, cx + .5, 0, bz + .4);
+    // glass block on the left, white cladding on its side
+    faceBox(8, HM, D, [white, white, MAT.roofFlat, white, curtain, white], cx - 2.5, .3, bz);
+    box(8.3, .4, D + .3, MAT.concrete, cx - 2.5, HM + .3, bz);
+    for (const [y, z] of [[1.8, bz - 1.2], [3.3, bz + 1.6], [2.5, bz + 2.4]]) box(.06, .9, .7, MAT.charcoal, cx - 6.53, y, z);   // the little angled side windows
+    // grey tower on the right, a little proud of the glass
+    faceBox(4.6, HT, D + .6, [grey, grey, MAT.roofFlat, grey, grey, grey], cx + 3.8, .3, bz);
+    box(2, 1.2, 2.4, grey, cx + 3, HT + .3, bz - 1.4);
+    for (let i = 0; i < 2; i++) {
+      box(1.3, 1.25, .08, curtain, cx + 4.9, 1.1 + i * 1.95, F + .34, { cast: false });
+      const aw = add(new THREE.Mesh(boxGeo(1.5, .08, .45, 0), MAT.metal)); aw.position.set(cx + 4.9, 2.42 + i * 1.95, F + .5); aw.rotation.x = .35;
+    }
+    const logo = canvasTex(160, 40, (g, W, H) => {
+      g.fillStyle = rgb([116, 120, 126]); g.fillRect(0, 0, W, H);
+      g.font = '700 30px "Helvetica Neue", Arial, sans-serif'; g.textBaseline = 'middle';
+      const tw = g.measureText('Calfus').width, x0 = (W - tw) / 2, cw = g.measureText('C').width;
+      g.fillStyle = '#ffffff'; g.fillText('Calfus', x0, H / 2 + 2);
+      g.fillStyle = '#3fc6b8'; g.beginPath(); g.arc(x0 + cw * .78, H / 2 - 7, 3.6, 0, 6.3); g.fill();
+    });
+    logo.magFilter = THREE.LinearFilter;
+    const logoM = new THREE.MeshStandardMaterial({ map: logo, emissive: 0xffffff, emissiveMap: logo, emissiveIntensity: .45, roughness: .6 });
+    const sign = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.1, .06), [grey, grey, grey, grey, logoM, grey]); sign.position.set(cx + 3.8, HT - .5, F + .34); add(sign);
+    // vertical louvres down the far edge
+    box(1.4, HT - 1, D - .4, MAT.charcoal, cx + 6.8, .3, bz - .3);
+    for (let x = cx + 6.15; x < cx + 7.5; x += .2) box(.05, HT - 1.2, .3, MAT.metal, x, .4, F - .45);
+    // entrance: lit glass doors under a canopy
+    box(2.8, 2.6, .1, MAT.glassLit, cx - 2.5, .3, F + .06, { cast: false });
+    box(4.6, .22, 2.2, MAT.concrete, cx - 2.5, 2.95, F + 1.1);
+    for (const s of [-1, 1]) { box(.14, 2.95, .14, MAT.metal, cx - 2.5 + s * 2.1, 0, F + 2.05); colCirc(cx - 2.5 + s * 2.1, F + 2.05, .15); }
+    ledSign(['Crescent Bay'], '#8ff0e4', cx - 2.5, 3.2, F + 2.22, 2.6, .4, 0, undefined, PLAIN);
+    pointLight('pune', 0xffd090, 1.3, 7, cx - 2.5, 2.6, F + 2);
+    colBox(cx - 6.8, F - D - .2, cx + 7.7, F + .45);
+    return F;
+  }
+  // the office tower across the street from Calfus: lit shops on the ground floor, a white band above them,
+  // then floors of glass behind close-set silver fins that rise past the roof as a crown with blue lights
+  function finTower(cx, cz) {
+    const W = 16, D = 11, H = 7.4, F = cz, bz = F - D / 2, x0 = cx - W / 2;
+    box(W + .6, .3, D + .6, MAT.concrete, cx, 0, bz);
+    faceBox(W, H, D, [MAT.glass, MAT.glass, MAT.roofFlat, MAT.glass, MAT.glass, MAT.glass], cx, .3, bz);
+    // ground floor shops, wrapped round the street corner
+    box(W + .08, 1.7, D + .08, MAT.glassLit, cx, .3, bz, { cast: false });
+    for (let x = x0; x <= x0 + W + .01; x += 2.66) box(.3, 1.7, .3, MAT.white, x, .3, F + .05);
+    for (let z = F; z >= F - D - .01; z -= 2.75) box(.3, 1.7, .3, MAT.white, x0 - .05, .3, z);
+    const shop = [0xffd27a, 0x8fe3ff, 0xff9ab8, 0xb6ff9a, 0xffffff];
+    for (let i = 0; i < 6; i++) box(1.2, .22, .05, glowStrip(shop[i % shop.length]), x0 + 1.33 + i * 2.66, 1.72, F + .1, { cast: false });
+    box(W + .5, .45, D + .5, MAT.white, cx, 2, bz);
+    box(W + .3, .12, D + .3, MAT.chrome, cx, 4.7, bz);
+    // fins on the street front and the side facing Calfus; every third one runs higher, with a blue light on top
+    const led = glowStrip(0x6fd4ff);
+    const fin = (x, z, i, side) => {
+      const h = H - 2.15 + (i % 3 ? .45 : 1);
+      side ? box(.32, h, .06, MAT.chrome, x, 2.45, z) : box(.06, h, .32, MAT.chrome, x, 2.45, z);
+      if (i % 3 === 0) box(.1, .22, .1, led, x, 2.45 + h - .22, z, { cast: false });
+    };
+    let i = 0;
+    for (let x = x0 + .2; x < x0 + W; x += .42) fin(x, F + .18, i++, false);
+    i = 0;
+    for (let z = F - .2; z > F - D; z -= .42) fin(x0 - .18, z, i++, true);
+    pointLight('pune', 0x9fd8ff, 1.4, 12, cx - 4, 3, F + 2.5);
+    pointLight('pune', 0xffd090, 1.1, 8, cx + 3, 1.2, F + 1.5);
+    colBox(x0 - .4, F - D - .3, x0 + W + .3, F + .4);
+    return F;
+  }
+  function palm(x, z, h = 3.4) {
+    const t = add(new THREE.Mesh(new THREE.CylinderGeometry(.12, .2, h, 7), MAT.bark)); t.position.set(x, h / 2, z); t.rotation.z = .05;
+    for (let i = 0; i < 7; i++) {
+      const a = i / 7 * 6.283, g = new THREE.Group(); g.position.set(x + .08, h, z); g.rotation.y = a; scene.add(g);
+      const f = add(new THREE.Mesh(boxGeo(1.6, .05, .42, 0), MAT.leafA), g); f.position.x = .75; f.rotation.z = -.38;
+    }
+    colCirc(x, z, .3);
+  }
+  function car(x, z, ry, color) {
+    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+    const paint = new THREE.MeshStandardMaterial({ color, roughness: .3, metalness: .5 });
+    box(1.8, .55, 4.1, paint, 0, .3, 0, { p: g }); box(1.6, .5, 2.1, paint, 0, .85, -.2, { p: g });
+    box(1.62, .38, 2.12, MAT.pane, 0, .9, -.2, { p: g, cast: false });
+    for (const sx of [-.85, .85]) for (const sz of [-1.3, 1.3]) { const w = add(new THREE.Mesh(new THREE.CylinderGeometry(.33, .33, .22, 10), MAT.charcoal), g); w.rotation.z = Math.PI / 2; w.position.set(sx, .33, sz); }
+    box(1.4, .1, .05, glowStrip(0xfff0c0), 0, .55, 2.06, { p: g, cast: false }); box(1.4, .1, .05, glowStrip(0xff3020), 0, .55, -2.06, { p: g, cast: false });
+    colCirc(x - Math.sin(ry), z - Math.cos(ry), 1); colCirc(x + Math.sin(ry), z + Math.cos(ry), 1);
+  }
+  // parked motorbikes, leaning on their side stands: 'r15' (Yamaha R15M), 'vstrom' (Suzuki V-Strom SX),
+  // 'avenger' (Bajaj Avenger), 'thruxton' (café racer). Local axes: x across the bike, z forward.
+  function bike(x, z, ry, kind) {
+    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.set(0, ry, .12); scene.add(g);
+    const paint = (c, m = .45) => new THREE.MeshStandardMaterial({ color: c, roughness: .28, metalness: m });
+    const V = (a, b, c) => new THREE.Vector3(a, b, c), UP = V(0, 1, 0);
+    const part = (w, h, d, m, px, py, pz, rx = 0) => { const me = add(new THREE.Mesh(boxGeo(w, h, d, 0), m), g); me.position.set(px, py, pz); me.rotation.x = rx; return me; };
+    const tube = (a, b, r, m) => {
+      const d = b.clone().sub(a), me = add(new THREE.Mesh(new THREE.CylinderGeometry(r, r, d.length(), 8), m), g);
+      me.position.copy(a).add(b).multiplyScalar(.5); me.quaternion.setFromUnitVectors(UP, d.normalize()); return me;
+    };
+    const blob = (r, m, px, py, pz, sx, sy, sz) => { const me = add(new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), m), g); me.position.set(px, py, pz); me.scale.set(sx, sy, sz); return me; };
+    // wheel: tyre, rim, hub, and either wire spokes or a few cast spokes; a brake disc up front
+    const wheel = (wz, r, rim, spoked, disc) => {
+      const tyre = add(new THREE.Mesh(new THREE.TorusGeometry(r - .055, .06, 8, 24), MAT.charcoal), g); tyre.rotation.y = Math.PI / 2; tyre.position.set(0, r, wz);
+      const ring = add(new THREE.Mesh(new THREE.TorusGeometry(r - .11, .018, 6, 24), rim), g); ring.rotation.y = Math.PI / 2; ring.position.set(0, r, wz);
+      const hub = add(new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .14, 10), MAT.chrome), g); hub.rotation.z = Math.PI / 2; hub.position.set(0, r, wz);
+      const n = spoked ? 12 : 5;
+      for (let i = 0; i < n; i++) { const a = i / n * 6.283, k = r - .12; tube(V(0, r, wz), V(0, r + Math.sin(a) * k, wz + Math.cos(a) * k), spoked ? .006 : .02, spoked ? MAT.chrome : rim); }
+      if (disc) { const dsk = add(new THREE.Mesh(new THREE.CylinderGeometry(r * .5, r * .5, .01, 18), MAT.steel), g); dsk.rotation.z = Math.PI / 2; dsk.position.set(-.08, r, wz); }
+    };
+    const fork = (top, axle, m) => { for (const s2 of [-1, 1]) tube(V(s2 * .09, top[0], top[1]), V(s2 * .09, axle[0], axle[1]), .03, m); };
+    const bars = (y, z2, w, m, rise = 0) => { tube(V(-w / 2, y + rise, z2 - .06), V(w / 2, y + rise, z2 - .06), .016, m); for (const s2 of [-1, 1]) part(.04, .04, .1, MAT.charcoal, s2 * (w / 2 - .02), y + rise, z2 - .06); };
+    const mirrors = (y, z2, w) => { for (const s2 of [-1, 1]) { tube(V(s2 * w / 2, y, z2), V(s2 * (w / 2 + .05), y + .18, z2 - .02), .008, MAT.charcoal); part(.1, .06, .02, MAT.charcoal, s2 * (w / 2 + .06), y + .2, z2 - .02); } };
+    const swing = (pz, ax, ay, m) => { for (const s2 of [-1, 1]) tube(V(s2 * .1, .42, pz), V(s2 * .1, ay, ax), .022, m); };
+    const lamp = (px, py, pz, r, m) => { const l = add(new THREE.Mesh(new THREE.CylinderGeometry(r, r * .85, .12, 14), m), g); l.rotation.x = Math.PI / 2; l.position.set(px, py, pz); part(r * 1.5, r * 1.5, .01, glowStrip(0xfff2d0), px, py, pz + .065); };
+    const tail = (py, pz) => part(.12, .04, .03, glowStrip(0xff2a1a), 0, py, pz);
+    tube(V(-.1, .36, -.05), V(-.3, .02, .05), .012, MAT.charcoal);   // side stand
+    if (kind === 'r15') {
+      const grey = paint(0x8a9098, .6), blue = paint(0x1f4fd8), gold = paint(0xd4a017, .7);
+      const W = .66, R = .3;
+      wheel(W, R, blue, false, true); wheel(-W, R, blue, false, false);
+      fork([.96, .4], [R, W], gold); swing(-.05, -W, R, grey);
+      part(.42, .3, .5, grey, 0, .66, .38, -.3); part(.36, .26, .36, grey, 0, .86, .52, -.45);
+      for (const s2 of [-1, 1]) part(.08, .04, .03, glowStrip(0xd8f0ff), s2 * .08, .8, .73);
+      part(.26, .16, .02, MAT.pane, 0, 1.02, .6, -.9);
+      part(.42, .22, .46, grey, 0, .9, .08, .12); part(.1, .23, .46, paint(0x16181c), 0, .91, .08, .12);
+      part(.34, .12, .3, blue, 0, .7, .1);
+      part(.3, .3, .4, MAT.charcoal, 0, .45, .02);
+      part(.28, .06, .34, MAT.charcoal, 0, .9, -.28); part(.2, .07, .22, grey, 0, .98, -.52, .2);
+      part(.18, .1, .36, grey, 0, 1.0, -.72, .35); tail(1.02, -.9);
+      tube(V(.12, .32, -.05), V(.16, .5, -.48), .055, MAT.charcoal); tube(V(.16, .5, -.48), V(.17, .53, -.52), .045, MAT.chrome);
+      bars(.92, .42, .6, MAT.charcoal); mirrors(.98, .5, .46);
+    } else if (kind === 'vstrom') {
+      const yellow = paint(0xf2b705), black = paint(0x17181b, .2);
+      const Wf = .74, Wr = -.7, Rf = .36, Rr = .33;
+      wheel(Wf, Rf, MAT.charcoal, false, true); wheel(Wr, Rr, MAT.charcoal, false, false);
+      fork([1.1, .46], [Rf, Wf], MAT.chrome); swing(-.05, Wr, Rr, black);
+      part(.26, .05, .34, yellow, 0, .8, .86, .35); part(.2, .04, .34, black, 0, .7, .8, .2);
+      part(.4, .32, .32, yellow, 0, 1.05, .58, -.25); lamp(0, 1.03, .74, .07, black);
+      part(.3, .38, .02, MAT.pane, 0, 1.34, .52, -.4);
+      part(.46, .28, .5, yellow, 0, 1.06, .14, .05); part(.5, .2, .34, black, 0, .86, .24);
+      part(.32, .34, .42, MAT.charcoal, 0, .56, 0); part(.3, .05, .36, MAT.steel, 0, .32, .06);
+      part(.3, .07, .6, black, 0, 1.06, -.36); part(.34, .04, .36, black, 0, 1.13, -.8);
+      for (const s2 of [-1, 1]) tube(V(s2 * .17, 1.1, -.6), V(s2 * .17, 1.12, -.96), .015, black);
+      tube(V(.14, .42, -.1), V(.2, .74, -.64), .07, MAT.steel); tail(1.08, -.98);
+      bars(1.18, .42, .74, MAT.charcoal, .04); for (const s2 of [-1, 1]) part(.08, .08, .12, black, s2 * .36, 1.22, .36);
+      mirrors(1.22, .4, .6);
+    } else if (kind === 'avenger') {
+      const black = paint(0x101114, .5);
+      const Wf = .82, Wr = -.72, Rf = .31, Rr = .33;
+      wheel(Wf, Rf, MAT.charcoal, false, true); wheel(Wr, Rr, MAT.charcoal, false, false);
+      const ft = add(new THREE.Mesh(new THREE.TorusGeometry(Rr - .06, .08, 8, 24), MAT.charcoal), g); ft.rotation.y = Math.PI / 2; ft.position.set(0, Rr, Wr);   // fat rear tyre
+      fork([1.02, .5], [Rf, Wf], MAT.chrome); swing(-.1, Wr, Rr, black);
+      lamp(0, .98, .72, .11, MAT.chrome);
+      part(.16, .04, .42, black, 0, .66, .86, .3);
+      blob(.2, black, 0, .86, .24, 1, .7, 1.7); part(.06, .02, .36, MAT.chrome, 0, 1.0, .24);
+      part(.3, .3, .38, MAT.chrome, 0, .5, .06); part(.26, .2, .2, MAT.charcoal, 0, .72, .1);
+      part(.36, .08, .44, MAT.charcoal, 0, .7, -.22); part(.3, .09, .3, MAT.charcoal, 0, .82, -.56); part(.22, .26, .04, MAT.chrome, 0, .95, -.74);
+      part(.2, .05, .52, black, 0, .66, -.72, -.25); tail(.72, -.98);
+      tube(V(.16, .34, .1), V(.2, .42, -.95), .045, MAT.chrome);
+      for (const s2 of [-1, 1]) tube(V(s2 * .08, 1.02, .5), V(s2 * .1, 1.2, .44), .018, MAT.chrome);
+      bars(1.16, .48, .78, MAT.chrome, .04); mirrors(1.2, .44, .66);
+    } else {   // café racer: long flat tank with knee pads, humped seat, round lamp, clip-ons, wire wheels, twin peashooters
+      const green = paint(0x1d4a33, .55);
+      const W = .7, R = .32;
+      wheel(W, R, MAT.chrome, true, true); wheel(-W, R, MAT.chrome, true, false);
+      fork([.98, .46], [R, W], MAT.chrome); swing(-.05, -W, R, MAT.charcoal);
+      lamp(0, .9, .62, .1, MAT.chrome);
+      part(.16, .04, .4, MAT.chrome, 0, .68, .74, .35);
+      blob(.2, green, 0, .92, .14, 1.05, .62, 1.9); for (const s2 of [-1, 1]) part(.02, .1, .16, MAT.charcoal, s2 * .2, .88, .02);
+      part(.3, .36, .4, MAT.chrome, 0, .52, .04); part(.22, .22, .22, MAT.charcoal, 0, .76, .02);
+      part(.26, .07, .4, paint(0x2a1d16, .1), 0, .92, -.34); part(.24, .14, .16, green, 0, .99, -.6, -.2);
+      part(.18, .05, .4, MAT.chrome, 0, .72, -.72, -.2); tail(.82, -.94);
+      for (const s2 of [-1, 1]) tube(V(s2 * .15, .36, .12), V(s2 * .2, .52, -.95), .04, MAT.chrome);
+      bars(.9, .48, .58, MAT.charcoal); mirrors(.88, .5, .6);
+    }
+    const sx = Math.sin(ry) * .55, sz = Math.cos(ry) * .55;
+    colCirc(x + sx, z + sz, .45); colCirc(x - sx, z - sz, .45);
+  }
+  function streetLight(x, z, dx, dz) {
+    box(.12, 4.2, .12, MAT.metal, x, 0, z);
+    box(dx ? 1.4 : .08, .08, dz ? 1.4 : .08, MAT.metal, x + dx * .7, 4.1, z + dz * .7);
+    box(.5, .1, .5, MAT.warmGlow, x + dx * 1.3, 4, z + dz * 1.3, { cast: false });
+    colCirc(x, z, .15);
   }
   function modernHouse(cx, cz) {
     const W = 6.4, D = 5, front = cz + D / 2;
@@ -555,7 +753,7 @@
           float s=.5+.5*sin(vUv.y*26.-t*3.+sin(vUv.x*18.85)*1.6);
           float sp=step(.985,fract(sin(dot(floor(vec2(vUv.x*40.,vUv.y*30.-t*4.)),vec2(12.9,78.2)))*43758.5));
           float a=f*(.35+.5*s)+sp*.9*(1.-vUv.y);
-          gl_FragColor=vec4(col*a*1.05,1.); }`
+          gl_FragColor=vec4(col*a*.5,1.); }`
     });
   }
   function glowDisc(color) {
@@ -563,16 +761,22 @@
       uniforms: { t: timeU, col: { value: new THREE.Color(color) } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
       vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
       fragmentShader: `uniform float t; uniform vec3 col; varying vec2 vUv;
-        void main(){ float d=length(vUv-.5)*2.; float a=smoothstep(1.,.0,d)*(.7+.3*sin(t*2.+d*8.)); gl_FragColor=vec4(col*a*.8,1.); }`
+        void main(){ float d=length(vUv-.5)*2.; float a=smoothstep(1.,.0,d)*(.7+.3*sin(t*2.+d*8.)); gl_FragColor=vec4(col*a*.45,1.); }`
     });
   }
-  function portal(x, z, color, zone, to, label) {
-    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.25, 3.2, 28, 1, true), portalMat(color));
-    cyl.position.set(x, 1.6, z); scene.add(cyl);
-    const disc = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), glowDisc(color)); disc.rotation.x = -Math.PI / 2; disc.position.set(x, .04, z); scene.add(disc);
-    const ring = add(new THREE.Mesh(new THREE.TorusGeometry(1.3, .09, 6, 28), MAT.stone), null, false); ring.rotation.x = -Math.PI / 2; ring.position.set(x, .05, z);
-    pointLight(zone, color, 1.3, 7, x, 2.6, z);
-    PORTALS.push({ x, z, to, label, zone });
+  // o.at: where you land on the far side, instead of the area's usual spawn point
+  function portal(x, z, color, zone, to, label, o = {}) {
+    // a low pad with a glowing rim, a soft short glow, and a crystal floating above so you can spot it from afar
+    const pad = add(new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.5, .12, 32), MAT.concrete), null, false); pad.position.set(x, .06, z);
+    const rim = add(new THREE.Mesh(new THREE.TorusGeometry(1.32, .05, 6, 40), glowStrip(color)), null, false); rim.rotation.x = -Math.PI / 2; rim.position.set(x, .13, z);
+    const disc = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), glowDisc(color)); disc.rotation.x = -Math.PI / 2; disc.position.set(x, .14, z); scene.add(disc);
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.25, .8, 28, 1, true), portalMat(color));
+    cyl.position.set(x, .52, z); scene.add(cyl);
+    const gem = add(new THREE.Mesh(new THREE.OctahedronGeometry(.26), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.4, roughness: .3 })), null, false);
+    gem.userData.dyn = true; const ph = x * .7 + z;
+    anim.push(t => { gem.position.set(x, 1.55 + Math.sin(t * 2 + ph) * .1, z); gem.rotation.y = t * 1.2; });
+    pointLight(zone, color, .6, 5, x, 1.6, z);
+    PORTALS.push({ x, z, to, label, zone, ...o });
   }
   // instanced crossed-quad scatter (grass tufts, flowers)
   function scatter(texture, count, size, pick) {
@@ -624,7 +828,8 @@
 
     // north side: modern house, HQ, cafe
     const hqFront = hq(0, -15.6);
-    portal(0, hqFront + 1.1, 0x5cd6ff, 'lobby', 'lab', 'HQ Office');
+    // placeholder until this building gets its own map (the office moved into the Calfus building in Pune)
+    INTER.push({ x: 0, z: hqFront + 1.4, r: 1.8, label: 'HQ Office', verb: 'Read', act: () => talk('HQ Office', ['The doors are locked. A sign says: “Coming soon.”', 'Looking for the office? It\'s in the Calfus building, through the Pune gate.']) });
     const houseFront = modernHouse(-13.4, -15);
     INTER.push({ x: -14.9, z: houseFront + 1.9, r: 1.6, label: 'Home', verb: 'Knock', act: () => talk('Home', ['Nobody\'s home right now.', 'A note on the door: “Moving in soon — your own space in TokenFall!”']) });
     const cafeFront = cafe(13.4, -14.6);
@@ -639,8 +844,8 @@
 
     // side gates
     gate(-17.8, 0, Math.PI / 2, 'Data Archive', 0xffb347, 'lobby', 'archive');
-    gate(17.8, 0, Math.PI / 2, 'Model Garden', 0x7dff8a, 'lobby', 'garden');
-    for (const [sx, txt, col] of [[-14.6, '◀ Data Archive', '#ffcf7a'], [14.6, 'Model Garden ▶', '#9dff9f']]) {
+    gate(17.8, 0, Math.PI / 2, 'Pune', 0x7dff8a, 'lobby', 'pune');
+    for (const [sx, txt, col] of [[-14.6, '◀ Data Archive', '#ffcf7a'], [14.6, 'Pune ▶', '#9dff9f']]) {
       ledSign([txt], col, sx, 1.75, -2.6, 2.6, .5);
       box(.1, 1.5, .1, MAT.metal, sx - 1.1, 0, -2.66); box(.1, 1.5, .1, MAT.metal, sx + 1.1, 0, -2.66); colBox(sx - 1.3, -2.85, sx + 1.3, -2.45);
     }
@@ -658,9 +863,9 @@
 
     // directory totem
     box(1.7, .2, .5, MAT.concrete, -4.6, 0, -1.6); box(.16, 2.4, .16, MAT.metal, -5.3, .2, -1.6); box(.16, 2.4, .16, MAT.metal, -3.9, .2, -1.6);
-    ledSign(['▲ HQ Office', '◀ Data Archive', 'Model Garden ▶'], '#d6ecff', -4.6, 1.75, -1.5, 1.6, 1.25, 0, [200, 160]);
+    ledSign(['▲ HQ Office', '◀ Data Archive', 'Pune ▶'], '#d6ecff', -4.6, 1.75, -1.5, 1.6, 1.25, 0, [200, 160]);
     colBox(-5.5, -1.85, -3.7, -1.35);
-    INTER.push({ x: -4.6, z: -.6, r: 1.4, label: 'Directory', verb: 'Read', act: () => talk('Directory', ['Welcome to TokenFall!', 'North: the HQ office, through the front doors. West: the Data Archive. East: the Model Garden.', 'Walk into a glowing portal to travel.']) });
+    INTER.push({ x: -4.6, z: -.6, r: 1.4, label: 'Directory', verb: 'Read', act: () => talk('Directory', ['Welcome to TokenFall!', 'North: the HQ office, through the front doors. West: the Data Archive. East: Pune, home of the Calfus office.', 'Walk into a glowing portal to travel.']) });
 
     // notice board
     box(.1, 2, .1, MAT.metal, 3.6, 0, -1.6); box(.1, 2, .1, MAT.metal, 5.6, 0, -1.6);
@@ -733,11 +938,11 @@
 
   // ================= the three areas (placeholders until the real maps arrive) =================
   const AREAS = {
-    lab: { cx: 0, cz: -300, name: 'HQ Office', sub: 'TokenFall HQ · Floor 2', color: 0x5cd6ff, ret: [0, -7.4], spawn: [1, 9.4] },
+    lab: { cx: 0, cz: -300, name: 'Calfus HQ', sub: 'Calfus · Floor 2', color: 0x5cd6ff, spawn: [-1.54, 10.7] },
     archive: { cx: -300, cz: 0, name: 'Data Archive', sub: 'Where models learn from', color: 0xffb347, ret: [-15, 0] },
-    garden: { cx: 300, cz: 0, name: 'Model Garden', sub: 'Watch ideas grow', color: 0x7dff8a, ret: [15, 0] },
+    pune: { cx: 300, cz: 0, name: 'Pune', sub: 'Crescent Bay · ABZ', color: 0x7dff8a, ret: [15, 0], spawn: [7, 5.7] },
   };
-  function areaShell(a, floorMat, groundMat, walls = true) {
+  function areaShell(a, floorMat, groundMat, walls = true, wip = true, home = [0, 7.2]) {
     const { cx, cz } = a;
     plane(90, 70, groundMat, cx, 0, cz, 2);
     plane(24, 17, floorMat, cx, .012, cz, floorMat.userData.s);
@@ -747,8 +952,8 @@
       for (const s of [-1, 1]) { box(.4, 3.2, 17.8, MAT.plaster, cx + s * 12.2, 0, cz); box(.7, .2, 18.2, MAT.concrete, cx + s * 12.2, 3.2, cz); }
       for (let i = -2; i <= 2; i++) box(2.6, 1.6, .1, MAT.glass, cx + i * 4.4, 1, cz - 8.48, { s: 0 });
     }
-    portal(cx, cz + 7.2, a.color, a.key, 'lobby', 'TokenFall Lobby');
-    ledSign(['Back to Lobby'], '#f6e3b4', cx, 3.9, cz + 7.2, 2.4, .45);
+    portal(cx + home[0], cz + home[1], a.color, a.key, 'lobby', 'TokenFall Lobby');
+    if (!wip) return;
     box(.14, 1.4, .14, MAT.darkWood, cx + 3.4, 0, cz + 5.5); box(.14, 1.4, .14, MAT.darkWood, cx + 5.4, 0, cz + 5.5);
     signBoard('Under construction', cx + 4.4, 1.55, cz + 5.56, 2.4, .5, 0, { color: '#ffe39a', bg: '#7a5a30' });
     colBox(cx + 3.2, cz + 5.3, cx + 5.6, cz + 5.7);
@@ -926,20 +1131,20 @@
     const l = add(new THREE.Mesh(jitterSphere(.13, 1), MAT.leafA), p); l.position.set(x, y + .24, z);
   }
   // two rows of benching desks facing each other across a fabric screen, centred on (cx, cz);
-  // ns = true turns the row to run north-south
-  function deskCluster(cx, cz, cols, ns) {
+  // ns = true turns the row to run north-south; o.pitch is the width per seat, o.tight uses real 60 cm desks
+  function deskCluster(cx, cz, cols, ns, o = {}) {
     const g = new THREE.Group(); g.position.set(cx, 0, cz); if (ns) g.rotation.y = Math.PI / 2; scene.add(g);
-    const len = cols * 1.6, x0 = -len / 2 + .8;
+    const P = o.pitch ?? 1.6, len = cols * P, x0 = -len / 2 + P / 2, dd = o.tight ? .32 : .45, cz2 = o.tight ? .9 : 1.15;
     for (const side of [-1, 1]) {
-      const dz = side * .45;
-      box(len, .05, .86, MAT.walnut, 0, .72, dz, { p: g });
-      for (let i = 0; i <= cols; i++) box(.06, .72, .8, MAT.white, x0 - .8 + i * 1.6, 0, dz, { p: g });
+      const dz = side * dd;
+      box(len, .05, o.tight ? .62 : .86, MAT.walnut, 0, .72, dz, { p: g });
+      for (let i = 0; i <= cols; i++) box(.06, .72, o.tight ? .56 : .8, MAT.white, x0 - P / 2 + i * P, 0, dz, { p: g });
       for (let i = 0; i < cols; i++) {
-        const x = x0 + i * 1.6;
+        const x = x0 + i * P;
         box(.42, .58, .5, MAT.white, x + .5, 0, dz, { p: g });
         box(.64, .4, .04, MAT.charcoal, x - .1, .9, side * .13, { p: g }); box(.6, .34, .02, MAT.monitor, x - .1, .93, side * .155, { p: g });
         box(.06, .14, .06, MAT.charcoal, x - .1, .77, side * .1, { p: g });
-        chair(x - .1, side * 1.15, side, g);
+        chair(x - .1, side * cz2, side, g);
         if (rnd() < .45) deskPlant(x + .45, .77, dz + side * .1, g);
         if (rnd() < .4) { const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .26, 8), MAT.chrome), g); b.position.set(x + .25, .9, dz - side * .05); }
         if (rnd() < .35) box(.42, .02, .3, MAT.chrome, x - .45, .77, dz + side * .1, { p: g });
@@ -947,23 +1152,11 @@
     }
     box(len, .46, .05, MAT.fabric, 0, .77, 0, { p: g });
     box(len - .1, .42, .03, MAT.white, 0, .22, 0, { p: g });   // white modesty panel under the screens
-    const hx = len / 2 + .1, hz = 1.5;
+    const hx = len / 2 + .1, hz = o.tight ? 1.2 : 1.5;
     if (ns) colBox(cx - hz, cz - hx, cx + hz, cz + hx); else colBox(cx - hx, cz - hz, cx + hx, cz + hz);
   }
-  // hanging felt baffles over a desk cluster: boards run across the desks, with paper lotus decorations
-  function baffles(cx, cz, len, ns) {
-    const g = grp(), half = len / 2;
-    // boards run along the desks, so from the camera they read as thin felt strips instead of a ceiling
-    for (const u of [-.8, 0, .8]) ns ? box(.05, .2, len - .2, MAT.felt, cx + u, 3.2 - Math.abs(u) * .1, cz, { p: g }) : box(len - .2, .2, .05, MAT.felt, cx, 3.2 - Math.abs(u) * .1, cz + u, { p: g });
-    for (let i = 0; i < 2; i++) {
-      const l = new THREE.Mesh(new THREE.PlaneGeometry(.5, .5), rnd() < .5 ? MAT.lotusR : MAT.lotusB);
-      const t = rr(-half + .6, half - .6), u = rr(-1, 1);
-      l.position.set(cx + (ns ? u : t), 2.75, cz + (ns ? t : u)); g.add(l);
-    }
-    const hx = ns ? 1.6 : half, hz = ns ? half : 1.6;
-    makeFader(compact(g), () => hero.zone === 'lab' && hero.x > cx - hx - 1 && hero.x < cx + hx + 1 && hero.y > cz - hz - 7.5 && hero.y < cz + hz - 1);
-  }
   // walnut meeting room. `front` ('n', 'e' or 'w') gets the glass, door and garlands; the south wall is cut low so you can look in
+  // o.table 'long' or 'round', o.seats per side, o.doorAt (distance of the door along the front), o.sMat for a full-height south wall
   function room(x0, z0, x1, z1, front, name, lines, o = {}) {
     const g = grp(), H = 3, czr = (z0 + z1) / 2;
     const sides = { n: [x0, z0, x1, z0], s: [x0, z1, x1, z1], w: [x0, z0, x0, z1], e: [x1, z0, x1, z1] };
@@ -976,24 +1169,24 @@
       };
       const col = (t0, t1) => horiz ? colBox(a + t0, b - .12, a + t1, b + .12) : colBox(a - .12, b + t0, a + .12, b + t1);
       if (k === front) {
-        const dm = len / 2 + .5, d0 = dm - .6, d1 = dm + .6;
-        put(0, .8, 0, H, MAT.walnut, .2); put(len - .8, len, 0, H, MAT.walnut, .2); col(0, .8); col(len - .8, len);
-        for (const [t0, t1] of [[.8, d0], [d1, len - .8]]) { put(t0, t1, .1, H - .22, MAT.pane, .05, false); put(t0, t1, 0, .1, MAT.walnut, .14); put(t0, t1, H - .12, .12, MAT.walnut, .14); col(t0, t1); }
+        const dm = o.doorAt ?? Math.min(len / 2 + .5, len - Math.min(.8, len * .15) - .65), d0 = dm - .6, d1 = dm + .6, e = Math.min(.8, len * .15, d0 - .05);
+        put(0, e, 0, H, MAT.walnut, .2); put(len - e, len, 0, H, MAT.walnut, .2); col(0, e); col(len - e, len);
+        for (const [t0, t1] of [[e, d0], [d1, len - e]]) if (t1 - t0 > .05) { put(t0, t1, .1, H - .22, MAT.pane, .05, false); put(t0, t1, 0, .1, MAT.walnut, .14); put(t0, t1, H - .12, .12, MAT.walnut, .14); col(t0, t1); }
         put(d0, d1, H - .5, .5, MAT.walnut, .2);
         const off = k === 'e' ? .14 : -.14;
-        for (const t of [.8, d0 - .08, d1 + .08, len - .8]) horiz ? garlandV(a + t, b + off, .1, H - .15) : garlandV(a + off, b + t, .1, H - .15);
+        for (const t of [e, d0 - .08, d1 + .08, len - e]) horiz ? garlandV(a + t, b + off, .1, H - .15) : garlandV(a + off, b + t, .1, H - .15);
         door = horiz ? [a + dm, b - .9] : [a + (k === 'e' ? .9 : -.9), b + dm];
         plate = horiz ? [a + dm, H - .25, b + off * .8, 0] : [a + off * .8, H - .25, b + dm, Math.PI / 2];
-      } else if (k === 's') { put(0, len, 0, 1.1, MAT.walnut, .2); col(0, len); }
+      } else if (k === 's') { put(0, len, 0, o.sMat ? H : 1.1, o.sMat || MAT.walnut, .2); col(0, len); }
       else { put(0, len, 0, H, MAT.walnut, .2); col(0, len); }
     }
     g.add(signBoard(name, plate[0], plate[1], plate[2], 1.15, .36, plate[3], { size: 17, bg: '#4a2c18', edge: '#2a180c', color: '#f6e3b4', w: 160, h: 52 }));
     // inside: round table, four chairs, a TV on the wall facing the door
     const tx = (x0 + x1) / 2, tz = czr;
     const W = x1 - x0, D = z1 - z0;
-    if (!o.small && Math.max(W, D) > 7 && Math.min(W, D) > 4.4) {
+    if (o.table ? o.table === 'long' : !o.small && Math.max(W, D) > 7 && Math.min(W, D) > 4.4) {
       // conference room: long table down the long side of the room, chairs on both sides
-      const along = o.along ?? W >= D, L = (along ? W : D) * (along === (W >= D) ? .58 : .75), n = Math.floor(L / .9);
+      const along = o.along ?? W >= D, L = (along ? W : D) * (along === (W >= D) ? .58 : .75), n = o.seats ?? Math.floor(L / .9);
       along ? box(L, .06, 1.4, MAT.walnut, tx, .72, tz, { p: g }) : box(1.4, .06, L, MAT.walnut, tx, .72, tz, { p: g });
       for (const t of [-L / 2 + .4, L / 2 - .4]) along ? box(.1, .72, 1.1, MAT.charcoal, tx + t, 0, tz, { p: g }) : box(1.1, .72, .1, MAT.charcoal, tx, 0, tz + t, { p: g });
       for (let i = 0; i < n; i++) for (const sd of [-1, 1]) {
@@ -1002,10 +1195,11 @@
       }
       along ? colBox(tx - L / 2 - .2, tz - 1.4, tx + L / 2 + .2, tz + 1.4) : colBox(tx - 1.4, tz - L / 2 - .2, tx + 1.4, tz + L / 2 + .2);
     } else {
-      const top = add(new THREE.Mesh(new THREE.CylinderGeometry(.75, .75, .05, 20), MAT.walnut), g); top.position.set(tx, .74, tz);
+      const tr = Math.min(.75, Math.min(W, D) / 2 - .65), cr = tr + .35;
+      const top = add(new THREE.Mesh(new THREE.CylinderGeometry(tr, tr, .05, 20), MAT.walnut), g); top.position.set(tx, .74, tz);
       box(.12, .72, .12, MAT.charcoal, tx, 0, tz, { p: g });
-      for (let i = 0; i < 4; i++) { const an = i * 1.57 + .6; box(.5, .5, .5, MAT.fabric, tx + Math.cos(an) * 1.15, 0, tz + Math.sin(an) * 1.15, { p: g }); }
-      colCirc(tx, tz, 1.5);
+      for (let i = 0; i < 4; i++) { const an = i * 1.57 + .6; box(.42, .45, .42, MAT.fabric, tx + Math.cos(an) * cr, 0, tz + Math.sin(an) * cr, { p: g }); }
+      colCirc(tx, tz, cr + .2);
     }
     const slide = std(ledTex([name, 'AI literacy · 101'], '#e8f0ff', 256, 128), 0);
     const tv = new THREE.Mesh(new THREE.BoxGeometry(2, 1.12, .06), [MAT.charcoal, MAT.charcoal, MAT.charcoal, MAT.charcoal, slide, MAT.charcoal]);
@@ -1014,12 +1208,12 @@
     makeFader(compact(g), () => hero.zone === 'lab' && hero.x > x0 - .6 && hero.x < x1 + .6 && hero.y < z1 && hero.y > z0 - 8);
     INTER.push({ x: door[0], z: door[1], r: 1.4, label: name, verb: 'Read', act: () => talk(name, lines) });
   }
-  function sofa(x, z, ry) {
-    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+  function sofa(x, z, ry, s = 1) {
+    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; g.scale.x = s; scene.add(g);
     box(2.6, .42, .9, MAT.navy3, 0, 0, 0, { p: g }); box(2.6, .55, .26, MAT.navy3, 0, .42, -.32, { p: g });
     for (const s of [-1, 1]) box(.26, .62, .9, MAT.navy3, s * 1.3, 0, 0, { p: g });
     for (const s of [-1, 1]) box(1.15, .12, .66, MAT.navy3, s * .6, .42, .1, { p: g });
-    const c = Math.abs(Math.sin(ry)) > .5; colBox(x - (c ? .55 : 1.5), z - (c ? 1.5 : .55), x + (c ? .55 : 1.5), z + (c ? 1.5 : .55));
+    const c = Math.abs(Math.sin(ry)) > .5; const L = 1.5 * s; colBox(x - (c ? .55 : L), z - (c ? L : .55), x + (c ? .55 : L), z + (c ? L : .55));
   }
   function tubChair(x, z) {
     const o = add(new THREE.Mesh(new THREE.CylinderGeometry(.46, .4, .62, 16, 1, true), MAT.navy2)); o.position.set(x, .31, z);
@@ -1036,146 +1230,189 @@
     const s = add(new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .07, 12), MAT.charcoal)); s.position.set(x, .8, z);
   }
 
-  // Floor plan, read from the photos (camera looks north, you arrive at the south):
-  //   foyer: tile wall + planter ahead, exit door on its east wall, Board Room on the west with glass facing in
-  //   from the foyer's north-west corner the main corridor runs north: desks on the left (west windows),
-  //   meeting rooms on the right, the lounge and window bar at the far (north) end
-  //   east of the meeting rooms: more desks and the pantry strip along the east windows
+  // Floor plan, from the building's fire escape plan (second floor). The layout follows the plan (about 27.5 m by 14.4 m),
+  // scaled up by S so there is room to walk around; furniture stays real size. Camera looks north and you arrive by the lift at the south.
+  //   west side: Board Room and Huddle Room by the lift, four desk pods along the west windows, Conference Room at the north end
+  //   middle: the Prompt Lab and Token Room, with the toilets behind them, a row of desks facing the collab area, and the collab area to the north
+  //   east side: the fire-exit stairs by the lift, the pantry along the east windows, two desk pods,
+  //   a tile wall with a desk facing it, and the calling rooms in the north-east corner
   function buildOffice(a) {
     officeMaterials();
-    const { cx, cz } = a, X = x => cx + x, Z = z => cz + z;
+    const S = 1.4, { cx, cz } = a, X = x => cx + x * S, Z = z => cz + z * S, L = v => v * S;
     // this is the second floor: the ground sits a storey below, with the floor below's glass facade under us
-    const GROUND = -4.6;
-    plane(130, 130, MAT.darkGrass, cx, GROUND, Z(-9), 2);
-    plane(150, 6, MAT.concrete, cx, GROUND + .01, Z(19), 1.5); plane(150, 3, MAT.paver, cx, GROUND + .02, Z(15.4), 3);   // road and pavement
-    for (const x of [-30, -14, 2, 18, 34]) box(4.2, .12, .5, MAT.white, X(x), GROUND + .01, Z(19), { cast: false });
-    faceBox(21.9, -GROUND - .05, 42.6, [MAT.glass, MAT.glass, MAT.concrete, MAT.concrete, MAT.glass, MAT.glass], X(-2.15), GROUND, Z(-7.6));
-    box(22.3, .3, 43, MAT.concrete, X(-2.15), -.32, Z(-7.6));   // slab edge between floors
-    plane(19.25, 42.3, MAT.oFloor, X(-3.275), .012, Z(-7.65), 5); plane(2.25, 11.8, MAT.oFloor, X(7.475), .012, Z(-22.8), 5); plane(2.25, 16.9, MAT.oFloor, X(7.475), .012, Z(-8.45), 5);
-    box(30, .5, 1.6, MAT.concrete, cx, -.49, Z(14.4), { cast: false });
-    WALK.push([X(-12.4), Z(-28.2), X(6), Z(13.3)], [X(4.8), Z(-17.4), X(8.1), Z(-.3)], [X(4.8), Z(-28.2), X(8.1), Z(-17.3)]);
+    const GROUND = -4.6, facade = [MAT.glass, MAT.glass, MAT.concrete, MAT.concrete, MAT.glass, MAT.glass], SE = Z(13.4);
+    plane(130, 130, MAT.darkGrass, cx, GROUND, Z(-4), 2);
+    plane(150, 6, MAT.concrete, cx, GROUND + .01, SE + 5.6, 1.5); plane(150, 3, MAT.paver, cx, GROUND + .02, SE + 2, 3);   // road and pavement
+    for (const x of [-30, -14, 2, 18, 34]) box(4.2, .12, .5, MAT.white, cx + x, GROUND + .01, SE + 5.6, { cast: false });
+    faceBox(L(14.4) + .3, -GROUND - .05, L(26.2) + .3, facade, X(0), GROUND, Z(.3)); faceBox(L(5.2) + .3, -GROUND - .05, L(1.3) + .3, facade, X(4.6), GROUND, Z(-13.45));
+    box(L(14.4) + .5, .3, L(26.2) + .5, MAT.concrete, X(0), -.32, Z(.3)); box(L(5.2) + .5, .3, L(1.3) + .5, MAT.concrete, X(4.6), -.32, Z(-13.45));   // slab edge between floors
+    plane(L(14.4), L(26.2), MAT.oFloor, X(0), .012, Z(.3), 5); plane(L(5.2), L(1.3), MAT.oFloor, X(4.6), .012, Z(-13.45), 5);
+    box(L(16), .5, 1.6, MAT.concrete, cx, -.49, SE + 1, { cast: false });
+    WALK.push([X(-7.2) + .2, Z(-12.8) + .2, X(7.2) - .2, SE - .2], [X(2) + .2, Z(-14.1) + .2, X(7.2) - .2, Z(-12.8) + .4]);
 
-    // outer walls: windows on the north, west and east
+    // outer walls: windows on the north, west and east. The north-east corner sticks out past the rest of the north wall
     const windowRun = (x0, z0, x1, z1) => {
       const len = Math.hypot(x1 - x0, z1 - z0), ry = x0 === x1 ? Math.PI / 2 : 0;
       const g = new THREE.Group(); g.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); g.rotation.y = ry; scene.add(g);
       box(len, .55, .3, MAT.plaster, 0, 0, 0, { p: g }); box(len, 2.55, .12, MAT.window, 0, .55, 0, { p: g }); box(len, .3, .3, MAT.plaster, 0, 3.1, 0, { p: g });
-      for (let s = 0; s <= len; s += 4) box(.14, 3.4, .32, MAT.charcoal, s - len / 2, 0, 0, { p: g });
+      for (let s = 0; s <= len; s += 3.6) box(.14, 3.4, .32, MAT.charcoal, s - len / 2, 0, 0, { p: g });
     };
-    windowRun(X(-12.9), Z(-28.7), X(8.6), Z(-28.7));
-    windowRun(X(-12.9), Z(-28.7), X(-12.9), Z(2));
-    windowRun(X(8.6), Z(-28.7), X(8.6), Z(0));
-    box(.3, 3.4, 11.4, MAT.plaster, X(-12.9), 0, Z(7.7));
-    for (let i = 0; i < 16; i++) tree(X(rr(-24, 24)), Z(rr(-40, -32)), rr(1.2, 1.7), [MAT.leafA, MAT.leafB, MAT.leafC][rnd() * 3 | 0], false).position.y = GROUND;
-    for (let i = 0; i < 14; i++) { const s = rnd() < .5 ? -1 : 1; tree(X(s * rr(15, 24)), Z(rr(-28, 8)), rr(1.2, 1.6), MAT.leafB, false).position.y = GROUND; }
-    pointLight('lab', 0xd6e8ff, 1.3, 16, X(-8), 2.4, Z(-26.5)); pointLight('lab', 0xd6e8ff, 1.3, 16, X(8), 2.4, Z(-26.5)); pointLight('lab', 0xd6e8ff, 1.1, 14, X(-10.8), 2.4, Z(-9));
+    windowRun(X(-7.2), Z(-12.8), X(2), Z(-12.8));
+    windowRun(X(2), Z(-14.1), X(7.2), Z(-14.1));
+    box(.3, 3.4, L(1.3), MAT.plaster, X(2), 0, Z(-13.45)); colBox(X(2) - .15, Z(-14.1), X(2) + .15, Z(-12.8));
+    windowRun(X(-7.2), Z(-12.8), X(-7.2), Z(6));
+    box(.3, 3.4, L(7.4), MAT.plaster, X(-7.2), 0, Z(9.7));
+    windowRun(X(7.2), Z(-14.1), X(7.2), Z(3.9));
+    for (let i = 0; i < 16; i++) tree(cx + rr(-24, 24), cz + rr(-34, -26), rr(1.2, 1.7), [MAT.leafA, MAT.leafB, MAT.leafC][rnd() * 3 | 0], false).position.y = GROUND;
+    for (let i = 0; i < 14; i++) { const s = rnd() < .5 ? -1 : 1; tree(cx + s * rr(13, 24), cz + rr(-24, 12), rr(1.2, 1.6), MAT.leafB, false).position.y = GROUND; }
+    pointLight('lab', 0xd6e8ff, 1.3, 16, X(-4), 2.4, Z(-11)); pointLight('lab', 0xd6e8ff, 1.3, 16, X(5), 2.4, Z(-12)); pointLight('lab', 0xd6e8ff, 1.1, 14, X(-5.6), 2.4, Z(-1));
 
-    // ---- arrival foyer ----
-    const fw = grp();
-    box(9.4, 3.4, .3, MAT.tile, X(1.5), 0, Z(1.8), { p: fw });
-    box(.3, 3.4, 11.6, MAT.tile, X(6.2), 0, Z(7.6), { p: fw });
-    box(.08, 2.4, 1.3, MAT.exit, X(6.01), 0, Z(5.6), { p: fw }); box(.1, .1, 1.45, MAT.charcoal, X(6), 2.4, Z(5.6), { p: fw });
-    makeFader(compact(fw), () => hero.zone === 'lab' && hero.x > X(-3.4) && hero.x < X(6.6) && hero.y < Z(1.6) && hero.y > Z(-6.5));
-    colBox(X(-3.2), Z(1.6), X(6.35), Z(2)); colBox(X(6.05), Z(1.8), X(6.35), Z(13.4));
-    box(1.1, .02, 1.8, MAT.charcoal, X(5.4), 0, Z(5.6), { cast: false });
-    INTER.push({ x: X(5.2), z: Z(5.6), r: 1.2, label: 'Emergency Exit', verb: 'Read', act: () => talk('Emergency Exit', ['PUSH BAR TO OPEN.', 'Please don\'t. It sets off the alarm, and the stairwell has no Wi-Fi.']) });
-    box(6.6, .95, .7, MAT.slat, X(1.7), 0, Z(2.35)); box(6.7, .08, .78, MAT.walnut, X(1.7), .95, Z(2.35));
-    box(6.5, .04, .04, MAT.ledStrip, X(1.7), .86, Z(2.72), { cast: false });
-    for (let x = -1.4; x <= 4.8; x += .42) { const l = add(new THREE.Mesh(jitterSphere(rr(.2, .28), 1), MAT.leafA)); l.position.set(X(x), 1.12, Z(2.35 + rr(-.12, .12))); }
-    garlandSwag(X(-1.6), X(5), Z(2.77), .9, .3, 3); garlandV(X(-3.05), Z(2), .1, 3.3);
-    colBox(X(-1.65), Z(1.95), X(5.05), Z(2.75));
-    pointLight('lab', 0xffb060, 1.1, 5, X(1.7), .5, Z(3.4));
-    chandelier(X(1.6), Z(5.6));
-    INTER.push({ x: X(1.7), z: Z(3.6), r: 1.6, label: 'Front Desk', verb: 'Read', act: () => talk('Front Desk', ['Welcome to the TokenFall office!', 'Head through the gap on the left, past the tiles: desks on your left, meeting rooms on your right, the lounge at the far end.', 'The marigolds went up for Diwali.']) });
-    // bottom left: a big conference room and a small one
-    // walking in, the big room comes first (table running east-west), then the small one, both opening onto the passage
-    room(X(-12.7), Z(3), X(-5.2), Z(7.9), 'e', 'Board Room', ['The Board Room.', 'Big decisions happen here. Soon: big lessons about how AI models make decisions.']);
-    room(X(-12.7), Z(-1.6), X(-5.2), Z(3), 'e', 'Huddle Room', ['The Huddle Room.', 'Small room, quick chats. Perfect for a five-minute lesson on what a model can and can\'t know.'], { small: true });
+    // ---- south: the lift and electrical duct, the fire-exit stairs, and the waiting area in front ----
+    box(L(14.4), 1.1, .2, MAT.plaster, X(0), 0, SE); colBox(X(-7.2), SE - .2, X(7.2), SE + .2);
+    const LX = X(-1.1), LZ = Z(9.7), EX = X(.7), lift = grp();
+    box(L(3.8), 3.4, SE - LZ, MAT.plaster, X(-.6), 0, (LZ + SE) / 2, { p: lift });
+    box(2.6, 3.4, .1, MAT.marble, LX, 0, LZ - .05, { p: lift });
+    for (const dx of [-.31, .31]) box(.6, 2.3, .06, MAT.steel, LX + dx, 0, LZ - .12, { p: lift });
+    box(.02, 2.32, .07, MAT.charcoal, LX, 0, LZ - .13, { p: lift }); box(1.5, .14, .08, MAT.steel, LX, 2.3, LZ - .12, { p: lift });
+    box(.12, .3, .04, MAT.steel, LX + .95, 1.05, LZ - .12, { p: lift });
+    box(.8, 2.2, .06, MAT.slat, EX, 0, LZ - .03, { p: lift }); box(.7, .28, .07, MAT.elecSign, EX, 1.75, LZ - .06, { p: lift, s: 0 });
+    makeFader(compact(lift), () => hero.zone === 'lab' && hero.x > X(-3.4) && hero.x < X(2.2) && hero.y < LZ + .1 && hero.y > Z(1));
+    colBox(X(-2.5), LZ - .1, X(1.3), SE);
+    box(1.6, .02, .9, MAT.charcoal, LX, 0, LZ - .6, { cast: false });
+    garlandV(LX - .85, LZ - .16, .9, 2.5, true); garlandV(LX + .85, LZ - .16, .9, 2.5, true);
+    ledSign(['LIFT · Ground'], '#f6e3b4', LX, 3.75, LZ - .05, 1.8, .34);
+    const g = AREAS.pune;   // the lift takes you back down, out of the Calfus building's front doors
+    portal(LX, LZ - 1.3, a.color, 'lab', 'pune', 'Ground Floor', { at: [g.cx - 2.5, g.cz - 1.7] });
+    INTER.push({ x: EX, z: LZ - .7, r: 1, label: 'Electrical Duct', verb: 'Read', act: () => talk('Electrical Duct', ['AUTHORISED PERSONNEL ONLY.', 'Behind this door: the cables that keep every model in this office running.']) });
+    // the fire-exit stairs, a closed block east of the lift with its door onto the waiting area
+    const core = grp(), WX = X(1.44);
+    box(L(4.26), 3.4, L(7.44), MAT.concrete, X(3.57), 0, Z(9.68), { p: core });
+    box(.08, 2.4, 1.3, MAT.exit, WX - .04, 0, Z(7.05), { p: core }); box(.1, .1, 1.45, MAT.charcoal, WX - .05, 2.4, Z(7.05), { p: core });
+    // toilets: the women's toilet behind the Token Room, two men's toilets behind the Prompt Lab, a short lobby between them
+    box(L(3.86), 3.4, L(2.9), MAT.plaster, X(3.37), 0, Z(4.51), { p: core });
+    for (const x of [2.4, 4.3]) box(.9, 2.2, .06, MAT.slat, X(x), 0, Z(3.05) - .03, { p: core });
+    box(.3, 3.4, L(9.5), MAT.plaster, X(7.2), 0, Z(8.65), { p: core });   // east outer wall past the pantry
+    makeFader(compact(core), () => hero.zone === 'lab' && hero.x > X(.8) && hero.y < Z(5.9) && hero.y > Z(-9));
+    colBox(WX, Z(3.05), X(5.7), SE); colBox(X(5.7), Z(3.9), X(7.2), SE);
+    const herWc = grp();
+    box(L(3.86), 3.4, L(2.8), MAT.plaster, X(3.37), 0, Z(.2), { p: herWc });
+    box(.9, 2.2, .06, MAT.slat, X(3.4), 0, Z(1.6) + .03, { p: herWc });
+    makeFader(compact(herWc), () => hero.zone === 'lab' && hero.x > X(.8) && hero.x < X(5.8) && hero.y < Z(1.6) && hero.y > Z(-9));
+    colBox(WX, Z(-1.2), X(5.3), Z(1.6));
+    signBoard('TOILETS', WX - .12, 2.55, Z(2.33), 1.1, .3, Math.PI / 2, { size: 18, bg: '#1d2b4a', edge: '#0e1628', color: '#ffffff', w: 150, h: 40 });
+    INTER.push({ x: WX - .4, z: Z(2.33), r: 1.2, label: 'Toilets', verb: 'Read', act: () => talk('Toilets', ['Women\'s on the left, men\'s on the right.', 'Wash your hands. The models are not the only thing that can catch a bug.']) });
+    // waiting area: tile wall and planter ahead of the lift, plants by the stairs
+    const PZ = Z(5.25) + .35, PW = L(3.3), PC = X(-.5);
+    box(PW, .95, .6, MAT.slat, PC, 0, PZ); box(PW + .1, .08, .68, MAT.walnut, PC, .95, PZ);
+    box(PW - .1, .04, .04, MAT.ledStrip, PC, .86, PZ + .32, { cast: false });
+    for (let x = -PW / 2 + .25; x <= PW / 2 - .2; x += .42) { const l = add(new THREE.Mesh(jitterSphere(rr(.2, .28), 1), MAT.leafA)); l.position.set(PC + x, 1.12, PZ + rr(-.1, .1)); }
+    garlandSwag(PC - PW / 2 + .1, PC + PW / 2 - .1, PZ + .35, .9, .3, 3);
+    colBox(PC - PW / 2, Z(5.25), PC + PW / 2, PZ + .35);
+    bigPlant(WX - .45, Z(6.2)); bigPlant(WX - .45, Z(7.9));
+    pointLight('lab', 0xffb060, 1.1, 6, PC, .5, Z(6.6));
+    chandelier(X(-.6), Z(7.6));
+    INTER.push({ x: PC, z: PZ + .8, r: 1.6, label: 'Front Desk', verb: 'Read', act: () => talk('Front Desk', ['Welcome to the TokenFall office!', 'Desks are down the left, meeting rooms in the middle, and the collab area is at the far end.', 'The marigolds went up for Diwali.']) });
+    INTER.push({ x: WX - .6, z: Z(7.05), r: 1.1, label: 'Emergency Exit', verb: 'Read', act: () => talk('Emergency Exit', ['FIRE EXIT · STAIRCASE.', 'Please don\'t. It sets off the alarm, and the stairwell has no Wi-Fi.']) });
 
-    // ---- main corridor running north, with chandeliers ----
-    for (const z of [-3, -11.5, -20]) chandelier(X(-3.8), Z(z));
-    signBoard('TOILET →', X(-3.8), 2.75, Z(-7), 1.3, .36, 0, { size: 20, bg: '#1d2b4a', edge: '#0e1628', color: '#ffffff', w: 160, h: 44 });
+    // ---- west side, from the lift going north ----
+    room(X(-7), Z(8.7), X(-2.8), SE - .2, 'e', 'Board Room', ['The Board Room.', 'Big decisions happen here. Soon: big lessons about how AI models make decisions.'], { table: 'long', seats: 3, along: true, doorAt: .75 });
+    room(X(-7), Z(6.1), X(-3.5), Z(8.55), 'e', 'Huddle Room', ['The Huddle Room.', 'Small room, quick chats. Perfect for a five-minute lesson on what a model can and can\'t know.'], { table: 'round' });
+    box(.8, .9, .7, MAT.white, X(-5.2), 0, Z(5.7)); colBox(X(-5.2) - .4, Z(5.7) - .35, X(-5.2) + .4, Z(5.7) + .35);   // storage
+    // four desk pods along the west windows, two computers on each side
+    for (const z of [-5.6, -2.6, .4, 3.5]) deskCluster(X(-5.75), Z(z), 2, false);
+    room(X(-7), Z(-10.5), X(-3.1), Z(-7.2), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”'], { table: 'long', seats: 3, along: true });
+    box(L(2.6), .9, .4, MAT.white, X(-4.4), 0, Z(-10.5) - .35); colBox(X(-5.7), Z(-10.5) - .55, X(-3.1), Z(-10.5) - .15);   // storage
 
-    // meeting rooms on the right, doors facing the corridor
-    room(X(-2.4), Z(-4.6), X(4.6), Z(1.5), 'w', 'Prompt Lab', ['The Prompt Lab.', 'A prompt is just the instructions you give a model. Clear context in, better answers out.', 'Sessions start here soon!']);
-    room(X(-2.4), Z(-10.8), X(4.6), Z(-4.6), 'w', 'Token Room', ['The Token Room.', 'Models read text as tokens, small chunks of words. More tokens means more to read (and pay for).']);
+    // ---- main corridor running north ----
+    for (const z of [-4, 2.5]) chandelier(X(-2.8), Z(z));
+    ledSign(['FIRE EXIT'], '#7dff9a', X(-2.8), 2.75, Z(-1.5), 1.1, .3);
 
-    // desks on the left, along the west windows; more desks east of the meeting rooms
-    // rows run across from the windows toward the corridor, like in the photos
-    // one connected table per row, two computers on each side of the divider
-    for (const z of [-3.9, -8.1, -12.3, -16.5]) { deskCluster(X(-8.7), Z(z), 3, false); baffles(X(-8.7), Z(z), 5, false); }
+    // ---- middle block: the Prompt Lab and Token Room facing the corridor, a row of desks on its north face ----
+    room(X(-2.25), Z(3.2), X(1.3), Z(5.25), 'w', 'Prompt Lab', ['The Prompt Lab.', 'A prompt is just the instructions you give a model. Clear context in, better answers out.', 'Sessions start here soon!'], { table: 'round', sMat: MAT.tile });
+    room(X(-2.25), Z(-1.2), X(1.44), Z(1.6), 'w', 'Token Room', ['The Token Room.', 'Models read text as tokens, small chunks of words. More tokens means more to read (and pay for).'], { table: 'long', seats: 2, along: true });
+    const DZ = Z(-1.2) - .45, DX = X(1.7);
+    box(6.9, .05, .6, MAT.walnut, DX, .72, DZ); for (const dx of [-3.4, -1.15, 1.15, 3.4]) box(.05, .72, .55, MAT.white, DX + dx, 0, DZ);
+    box(6.8, .4, .04, MAT.fabric, DX, .77, DZ + .27);
+    for (const dx of [-2.6, -.87, .87, 2.6]) { box(.6, .36, .04, MAT.charcoal, DX + dx, .9, DZ + .17); box(.56, .32, .02, MAT.monitor, DX + dx, .92, DZ + .14); chair(DX + dx, DZ - .75, -1); }
+    colBox(DX - 3.5, DZ - .3, DX + 3.5, Z(-1.2));
 
-    // behind the meeting rooms: no desks, just the galley pantry along the east windows.
-    // Wooden base cabinets with a white top, black glass wall cabinets, green diamond tiles, tea/coffee urns, black fridge.
-    const PX = X(4.75);                                            // east face of the meeting-room wall
-    box(.6, .9, 9.6, MAT.walnut, PX + .3, 0, Z(-8.6)); box(.64, .05, 9.6, MAT.white, PX + .32, .9, Z(-8.6));
-    box(.02, .7, 9.6, MAT.greenTile, PX + .01, .95, Z(-8.6), { s: 0 });
-    box(.38, .75, 9.2, MAT.cabinet, PX + .19, 1.7, Z(-8.6));
-    for (let z = -12.9; z <= -4.3; z += .95) box(.4, .75, .03, MAT.charcoal, PX + .2, 1.7, Z(z));
-    for (const [z, h] of [[-6.2, .5], [-6.8, .42], [-10.4, .55]]) { const u = add(new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, h, 12), MAT.steel)); u.position.set(PX + .3, .95 + h / 2, Z(z)); }
-    box(.04, .45, .32, MAT.yellowBoard, PX + .2, .95, Z(-7.5));
-    for (let i = 0; i < 4; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.04, .035, .09, 8), MAT.white)); c.position.set(PX + .4, 1, Z(-8.3 + i * .1)); }
-    box(.75, 1.95, .75, MAT.charcoal, PX + .38, 0, Z(-14)); box(.03, .9, .04, MAT.chrome, PX + .77, .9, Z(-13.8));
-    // galley end wall (leaves a gap by the rooms so you can walk through to the corner desks)
-    const ew = grp(); box(3.85, 3.4, .25, MAT.plaster, X(6.675), 0, Z(-.1), { p: ew }); box(1, .3, .25, MAT.white, X(7.4), 2.4, Z(-.35), { p: ew });
-    makeFader(compact(ew), () => hero.zone === 'lab' && hero.x > X(4.6) && hero.y < Z(-.1) && hero.y > Z(-9)); colBox(X(4.7), Z(-.3), X(8.6), Z(.1)); stool(X(7.9), Z(-1));
-    // water jugs and the two waste bins at the open (north) end
+    // ---- pantry: a galley along the east windows, open to the north ----
+    // wooden base cabinets with a white top, black glass wall cabinets, green diamond tiles, tea/coffee urns, black fridge
+    const PX = X(5.45), EW = X(7.2) - .15, CZ = Z(1.1), PS = Z(3.9);
+    box(.15, 3.4, L(5.25), MAT.plaster, PX - .075, 0, Z(1.27)); box(EW - PX, 3.4, .25, MAT.plaster, (PX + EW) / 2, 0, PS - .12);
+    colBox(PX - .3, Z(-1.35), PX, PS); colBox(PX, PS - .25, EW, PS);
+    box(.6, .9, 4.4, MAT.walnut, PX + .3, 0, CZ); box(.64, .05, 4.4, MAT.white, PX + .32, .9, CZ);
+    box(.02, .7, 4.4, MAT.greenTile, PX + .01, .95, CZ, { s: 0 });
+    box(.38, .75, 4.2, MAT.cabinet, PX + .19, 1.7, CZ);
+    for (let z = -2; z <= 2.1; z += .75) box(.4, .75, .03, MAT.charcoal, PX + .2, 1.7, CZ + z);
+    for (const [z, h] of [[-.9, .5], [-.4, .42], [1.1, .55]]) { const u = add(new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, h, 12), MAT.steel)); u.position.set(PX + .3, .95 + h / 2, CZ + z); }
+    box(.04, .45, .32, MAT.yellowBoard, PX + .2, .95, CZ + .3);
+    for (let i = 0; i < 4; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.04, .035, .09, 8), MAT.white)); c.position.set(PX + .4, 1, CZ + .5 + i * .1); }
+    const FZ = PS - .7;
+    box(.75, 1.95, .75, MAT.charcoal, PX + .38, 0, FZ); box(.03, .9, .04, MAT.chrome, PX + .77, .9, FZ - .2); box(.25, .3, 1, MAT.white, EW - .1, 2.4, CZ);
+    colBox(PX, CZ - 2.2, PX + .8, PS - .25);
+    // water jugs and the wet and dry waste bins by the window
     const jug = new THREE.MeshStandardMaterial({ color: 0x48c2d4, transparent: true, opacity: .75, roughness: .2 });
-    for (let i = 0; i < 3; i++) { const j = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .48, 12), jug); j.position.set(X(5.1 + i * .05), .24, Z(-15.2 - i * .4)); scene.add(j); }
-    for (const [z, lid] of [[-15.6, 0x2f7de0], [-16.4, 0x2aa05a]]) {
-      const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .2, .7, 14), MAT.chrome)); b.position.set(X(8.1), .35, Z(z));
-      const l = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .03, 14), new THREE.MeshStandardMaterial({ color: lid }))); l.position.set(X(8.1), .71, Z(z));
+    for (let i = 0; i < 3; i++) { const j = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .48, 12), jug); j.position.set(EW - .3 - i * .05, .24, CZ + 1.2 + i * .4); scene.add(j); }
+    const BZ = Z(-1.35) + .7;
+    for (const [z, lid] of [[0, 0x2f7de0], [.7, 0x2aa05a]]) {
+      const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.2, .18, .7, 14), MAT.chrome)); b.position.set(EW - .3, .35, BZ + z);
+      const l = add(new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .03, 14), new THREE.MeshStandardMaterial({ color: lid }))); l.position.set(EW - .3, .71, BZ + z);
     }
-    colBox(PX, Z(-14.4), PX + .8, Z(-3.8)); colBox(X(4.8), Z(-16.4), X(5.5), Z(-14.9)); colCirc(X(8.1), Z(-16), .6);
+    colBox(EW - .6, BZ - .3, EW, BZ + 1); colBox(EW - .6, CZ + 1, EW, CZ + 2.2);
     const diya = new THREE.MeshStandardMaterial({ color: 0xd8a640, metalness: .6, roughness: .35, emissive: 0x4a3000 });
-    for (let i = 0; i < 9; i++) { const dd = add(new THREE.Mesh(new THREE.ConeGeometry(.06, .1, 6), diya), null, false); dd.position.set(PX + .02, 2.9 - i * .2, Z(-15.4)); }
-    pointLight('lab', 0xffd6a0, 1, 7, X(6.8), 2.6, Z(-8.6));
-    INTER.push({ x: X(6.6), z: Z(-8.6), r: 1.6, label: 'Pantry', verb: 'Look', act: () => talk('Pantry', ['Filter coffee, masala chai, and a sign: “Everyone has to use this kitchen. Let\'s keep it nice.”', 'Wet waste and dry waste bins are by the window. Please sort your trash.']) });
+    for (let i = 0; i < 9; i++) { const dd = add(new THREE.Mesh(new THREE.ConeGeometry(.06, .1, 6), diya), null, false); dd.position.set(PX + .02, 2.9 - i * .2, Z(-1.35) + .6); }
+    pointLight('lab', 0xffd6a0, 1, 7, (PX + EW) / 2, 2.6, CZ);
+    INTER.push({ x: (PX + EW) / 2, z: CZ, r: 1.5, label: 'Pantry', verb: 'Look', act: () => talk('Pantry', ['Filter coffee, masala chai, and a sign: “Everyone has to use this kitchen. Let\'s keep it nice.”', 'Wet waste and dry waste bins are by the window. Please sort your trash.']) });
 
-    // north-east corner: tile feature wall in front of the windows, a desk facing it, two shared desk rows in front
-    box(5.4, 3.4, .3, MAT.tile, X(5.75), 0, Z(-26.45)); colBox(X(3), Z(-26.7), X(8.6), Z(-26.2));
-    box(4.2, .05, .7, MAT.walnut, X(5.9), .72, Z(-25.85)); for (const x of [3.85, 5.9, 7.95]) box(.05, .72, .6, MAT.white, X(x), 0, Z(-25.85));
-    box(4.1, .4, .04, MAT.fabric, X(5.9), .77, Z(-26.15));
-    for (const x of [4.9, 6.9]) { box(.6, .36, .04, MAT.charcoal, X(x), .9, Z(-26.05)); box(.56, .32, .02, MAT.monitor, X(x), .92, Z(-26.02)); chair(X(x), Z(-24.95), 1); }
-    colBox(X(3.7), Z(-26.2), X(8.1), Z(-25.45));
-    for (const z of [-18.9, -22.1]) { deskCluster(X(6), Z(z), 3, false); baffles(X(6), Z(z), 5, false); }
-    bigPlant(X(2.6), Z(-25.7));
+    // ---- east side going north: two desk pods, a desk facing the tile wall, the calling rooms behind it ----
+    for (const z of [-7.95, -4.9]) deskCluster(X(7.2) - 1.85, Z(z), 2, false);   // pushed up against the east windows
+    const TW = Z(-11.35);
+    // the tile wall runs from the window corner right across to the east windows, hiding the calling rooms behind it
+    const T0 = X(2) - .15;
+    // the short return at its west end, by the window, has the doorway to the calling rooms behind it
+    const T1 = EW, RZ0 = Z(-12.8), RZ1 = TW - .15, D0 = (RZ0 + RZ1) / 2 - .65, D1 = D0 + 1.3;
+    box(T1 - T0, 3.4, .3, MAT.tile, (T0 + T1) / 2, 0, TW); colBox(T0, TW - .15, T1, TW + .15);
+    box(.3, 3.4, D0 - RZ0, MAT.tile, X(2), 0, (RZ0 + D0) / 2); box(.3, 3.4, RZ1 - D1, MAT.tile, X(2), 0, (D1 + RZ1) / 2); box(.3, 1, D1 - D0, MAT.tile, X(2), 2.4, (D0 + D1) / 2);
+    box(.34, 2.4, .08, MAT.walnut, X(2), 0, D0); box(.34, 2.4, .08, MAT.walnut, X(2), 0, D1);
+    colBox(T0, RZ0, X(2) + .15, D0); colBox(T0, D1, X(2) + .15, RZ1);
+    const WD = X(7.2) - 1.85, WZ = TW + .6;
+    box(3.4, .05, .6, MAT.walnut, WD, .72, WZ); for (const dx of [-1.65, 1.65]) box(.05, .72, .55, MAT.white, WD + dx, 0, WZ);
+    for (const dx of [-.85, .85]) { box(.6, .36, .04, MAT.charcoal, WD + dx, .9, WZ - .2); box(.56, .32, .02, MAT.monitor, WD + dx, .92, WZ - .17); chair(WD + dx, WZ + .75, 1); }
+    colBox(WD - 1.7, WZ - .3, WD + 1.7, WZ + .3);
+    // two glass calling rooms in the corner, doors facing west
+    const bx0 = X(5.67), bx1 = EW, bm = (bx0 + bx1) / 2, bw = bx1 - bx0;
+    for (const [z0, z1] of [[Z(-14.1) + .15, Z(-12.7)], [Z(-12.7) + .05, TW - .16]]) {
+      const g = grp(), zm = (z0 + z1) / 2, d = z1 - z0;
+      box(.08, 2.5, d, MAT.walnut, bx0, 0, zm, { p: g }); box(.04, 2.3, d - .2, MAT.pane, bx0, .1, zm, { p: g, cast: false });
+      for (const z of [z0, z1]) box(bw, 2.5, .08, MAT.walnut, bm, 0, z, { p: g });
+      box(bw, .08, d, MAT.walnut, bm, 2.5, zm, { p: g });
+      box(.5, .05, .6, MAT.walnut, bx1 - .3, .72, zm, { p: g }); stool(bx1 - .85, zm);
+      makeFader(compact(g), () => hero.zone === 'lab' && hero.x > bx0 - 1 && hero.y < z1 && hero.y > z0 - 8);
+      colBox(bx0 - .07, z0, bx1, z1);
+    }
+    INTER.push({ x: bx0 - .7, z: Z(-12.7), r: 1.3, label: 'Calling Rooms', verb: 'Read', act: () => talk('Calling Rooms', ['Two soundproof booths for calls.', 'Book one before your client call, not during it.']) });
 
-    // ---- lounge at the north end: sofa, tub chairs, carrom, window bar ----
-    box(6.8, .06, .5, MAT.walnut, X(-1.6), 1.05, Z(-28.2)); for (let x = -4.8; x < 2; x += 2) box(.05, 1.05, .05, MAT.white, X(x), 0, Z(-28.2));
-    for (let x = -4.2; x < 1.6; x += 1.5) stool(X(x), Z(-27.3));
-    colBox(X(-5.1), Z(-28.5), X(1.9), Z(-27));
-    sofa(X(-1.4), Z(-18.8), Math.PI); sofa(X(-.8), Z(-25.3), 0);
-    for (const [dx, dz] of [[-1.35, 0], [1.35, 0], [0, -1.35], [-.95, 1.05], [1, 1.05]]) tubChair(X(-.8 + dx), Z(-22.8 + dz));
-    for (const [dx, dz] of [[-.5, -.5], [.5, -.5], [-.5, .5], [.5, .5]]) box(.06, .6, .06, MAT.charcoal, X(-.8 + dx), 0, Z(-22.8 + dz));
-    box(1.15, .07, 1.15, MAT.carrom, X(-.8), .6, Z(-22.8), { s: 0 }); colCirc(X(-.8), Z(-22.8), .75);
-    for (let i = 0; i < 9; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .015, 8), i % 3 ? (i % 2 ? MAT.charcoal : MAT.white) : MAT.pink)); c.position.set(X(-.8 + rr(-.35, .35)), .68, Z(-22.8 + rr(-.35, .35))); }
-    INTER.push({ x: X(-.8), z: Z(-20.9), r: 1.5, label: 'Carrom Board', verb: 'Play', act: () => talk('Carrom Board', ['Someone left a game half finished. The queen is still on the board.', 'Carrom tournaments: coming soon to TokenFall!']) });
-    const side = add(new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .5, 14), MAT.white)); side.position.set(X(-4.2), .25, Z(-19.4)); colCirc(X(-4.2), Z(-19.4), .35);
-    for (let i = 0; i < 5; i++) { const f = add(new THREE.Mesh(new THREE.SphereGeometry(.06, 6, 4), MAT.white)); f.position.set(X(-4.2 + rr(-.12, .12)), .65 + rr(0, .2), Z(-19.4 + rr(-.12, .12))); }
-    // top left: big conference room with a TV on the wall
-    room(X(-12.7), Z(-28.5), X(-6), Z(-18.6), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”'], { along: true });
-    chandelier(X(-.8), Z(-22.8), 3.15);
-    bigPlant(X(-11.9), Z(-17.9)); 
-    ledSign(['FIRE EXIT →'], '#7dff9a', X(-3.8), 2.75, Z(-17.6), 1.3, .3);
-
-    // the lift you arrive by
-    // the lift on the foyer's south wall, doors facing north into the foyer; electrical room door beside it.
-    // The rest of the south edge is a low cut-away wall so the camera can see in.
-    box(18.8, 1.1, .2, MAT.plaster, X(-3.3), 0, Z(13.4)); colBox(X(-12.7), Z(13.2), X(6.2), Z(13.6));
-    const lift = grp();
-    box(6.2, 3.4, .3, MAT.marble, X(-.3), 0, Z(13.35), { p: lift });
-    for (const dx of [-.31, .31]) box(.6, 2.3, .06, MAT.steel, X(1 + dx), 0, Z(13.17), { p: lift });
-    box(.02, 2.32, .07, MAT.charcoal, X(1), 0, Z(13.16), { p: lift }); box(1.5, .14, .08, MAT.steel, X(1), 2.3, Z(13.17), { p: lift });
-    box(.12, .3, .04, MAT.steel, X(1.95), 1.05, Z(13.18), { p: lift });
-    box(1.1, 2.3, .06, MAT.slat, X(-2.4), 0, Z(13.17), { p: lift }); box(.8, .32, .07, MAT.elecSign, X(-2.4), 1.75, Z(13.15), { p: lift, s: 0 });
-    makeFader(compact(lift), () => hero.zone === 'lab' && hero.x > X(-4) && hero.x < X(3.4) && hero.y < Z(13.3) && hero.y > Z(5));
-    box(1.6, .02, .9, MAT.charcoal, X(1), 0, Z(12.65), { cast: false });
-    garlandV(X(.15), Z(13.04), .9, 2.5, true); garlandV(X(1.85), Z(13.04), .9, 2.5, true);
-    ledSign(['LIFT · Lobby'], '#f6e3b4', X(1), 3.75, Z(13.35), 1.8, .34);
-    portal(X(1), Z(12.1), a.color, 'lab', 'lobby', 'TokenFall Lobby');
-    INTER.push({ x: X(-2.4), z: Z(12.4), r: 1.1, label: 'Electrical Room', verb: 'Read', act: () => talk('Electrical Room', ['AUTHORISED PERSONNEL ONLY.', 'Behind this door: the servers that never sleep, probably.']) });
-    bigPlant(X(-11.8), Z(12.6)); bigPlant(X(-6), Z(12.6)); bigPlant(X(5.5), Z(12.7));
+    // ---- north: the collab area (sofa, armchairs, the carrom table), the window bar ----
+    // a compact group: the sofa and armchairs a little south of the plan, the carrom table just in front of them, the rug under both
+    const SZ = Z(-10.15) + .8, tx = X(.35), tz = SZ + 4.4;
+    plane(L(3), tz + 1.6 - (SZ - .6), MAT.felt, X(.3), .02, (SZ - .6 + tz + 1.6) / 2, 1);
+    sofa(X(.3), SZ, 0, .8);
+    tubChair(X(1.3), SZ + 1.6); tubChair(X(-.75), SZ + 1.6);
+    for (const [dx, dz] of [[-.95, 0], [.95, 0], [0, -.95], [0, .95]]) tubChair(tx + dx, tz + dz);
+    for (const [dx, dz] of [[-.4, -.4], [.4, -.4], [-.4, .4], [.4, .4]]) box(.06, .6, .06, MAT.charcoal, tx + dx, 0, tz + dz);
+    box(1, .07, 1, MAT.carrom, tx, .6, tz, { s: 0 }); colCirc(tx, tz, .6);
+    for (let i = 0; i < 9; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .015, 8), i % 3 ? (i % 2 ? MAT.charcoal : MAT.white) : MAT.pink)); c.position.set(tx + rr(-.3, .3), .68, tz + rr(-.3, .3)); }
+    INTER.push({ x: tx, z: tz + 1.6, r: 1.5, label: 'Carrom Board', verb: 'Play', act: () => talk('Carrom Board', ['Someone left a game half finished. The queen is still on the board.', 'Carrom tournaments: coming soon to TokenFall!']) });
+    chandelier(X(.3), (SZ + tz) / 2, 3.15);
+    // a counter with stools along the north windows, including the bit behind the tile wall
+    const NZ = Z(-12.8) + .3, N2 = Z(-14.1) + .3;
+    box(X(1.9) - X(-7), .06, .45, MAT.walnut, (X(1.9) + X(-7)) / 2, 1.05, NZ); for (let x = -6.9; x < 2; x += 2.2) box(.05, 1.05, .05, MAT.white, X(x), 0, NZ);
+    for (const x of [1.44, -.1, -1.87, -3.5, -5, -6.4]) stool(X(x), NZ + .45);
+    colBox(X(-7), NZ - .25, X(1.9), NZ + .25);
+    box(X(5.5) - X(2.2), .06, .45, MAT.walnut, (X(5.5) + X(2.2)) / 2, 1.05, N2); for (const x of [2.3, 5.4]) box(.05, 1.05, .05, MAT.white, X(x), 0, N2);
+    for (const x of [2.7, 4]) stool(X(x), N2 + .45);
+    colBox(X(2.2), N2 - .25, X(5.5), N2 + .25);
 
     // all the marigold beads in one draw call
     const bead = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.07, 0), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .9, emissive: 0x6a2a00, emissiveIntensity: .35 }), BEADS.length);
@@ -1201,17 +1438,66 @@
     anim.push(t => { orb.position.set(a.cx, 1.6 + Math.sin(t * 1.5) * .12, a.cz - 1.5); orb.rotation.y = t * .6; });
     colCirc(a.cx, a.cz - 1.5, .7);
     pointLight('archive', 0xffb347, 2, 10, a.cx, 2.4, a.cz - 1);
-    // Model Garden: hedges, trees, a greenhouse
-    a = AREAS.garden; areaShell(a, MAT.grass, MAT.darkGrass, false);
-    for (const s of [-1, 1]) { for (let i = 0; i < 8; i++) bush(a.cx + s * 11.5, a.cz - 7.5 + i * 2.2, 1.1, MAT.leafB); }
-    for (let i = 0; i < 10; i++) bush(a.cx - 10 + i * 2.2, a.cz - 8.4, 1.1, MAT.leafB);
-    tree(a.cx - 8, a.cz - 4, 1.1, MAT.blossom); tree(a.cx + 8.5, a.cz - 5, 1.2, MAT.leafC); tree(a.cx - 7, a.cz + 3, 1, MAT.leafA); tree(a.cx + 7.5, a.cz + 2.5, .9, MAT.blossom);
-    box(6, .1, 4, MAT.flag, a.cx, 0, a.cz - 4, { cast: false });
-    box(5.6, 2.6, 3.6, MAT.glass, a.cx, .1, a.cz - 4, { cast: false });
-    for (const [dx, dz] of [[-2.8, -1.8], [2.8, -1.8], [-2.8, 1.8], [2.8, 1.8]]) box(.12, 2.7, .12, MAT.darkWood, a.cx + dx, .1, a.cz - 4 + dz);
-    box(5.8, .12, 3.8, MAT.darkWood, a.cx, 2.75, a.cz - 4);
-    colBox(a.cx - 3, a.cz - 6, a.cx + 3, a.cz - 2);
-    pointLight('garden', 0xc8ffb0, 2, 10, a.cx, 2, a.cz);
+    // Pune: a city block. Crescent Bay (the Calfus building) with its parking lot, the street on its east side,
+    // ABZ across that street, a main road along the south, and more office blocks behind
+    a = AREAS.pune; areaShell(a, MAT.paver, MAT.concrete, false, false, [7, 3.5]);
+    const { cx, cz } = a;
+    plane(33, 18.5, MAT.paver, cx - 5.5, .011, cz + .25, 3);
+    WALK.push([cx - 22, cz - 9.5, cx + 11, cz + 9.4], [cx + 11, cz - 8, cx + 37, cz + 9.4]);
+    const cf = calfusHQ(cx, cz - 5.6);
+    portal(cx - 2.5, cf + 1.7, 0x5cd6ff, 'pune', 'lab', 'Crescent Bay');
+    pointLight('pune', 0xffe0b0, 1.6, 12, cx + 4, 3, cz + 2);
+    tree(cx + 9.4, cz - 3.5, 1.2, MAT.leafC);
+    // one fingerpost beside where you arrive, out of the way: Crescent Bay to the left, ABZ to the right
+    const FX = cx + 3.6, FZ = cz + 5.2;
+    box(.14, 2.7, .14, MAT.metal, FX, 0, FZ); colCirc(FX, FZ, .2);
+    ledSign(['◀ Crescent Bay'], '#8ff0e4', FX - 1.2, 2.25, FZ, 2.3, .42, 0, undefined, PLAIN);
+    ledSign(['ABZ ▶'], '#9fd8ff', FX + .95, 1.7, FZ, 1.8, .42);
+    // roads: the street on the east side and the main road along the south, crossing at a junction
+    const RX = cx + 14.5, MZ = cz + 12.5;
+    const asphalt = std(TX.concrete, 1.5, { roughness: .8 }); asphalt.color.setRGB(.36, .37, .41);
+    plane(6, 70, asphalt, RX, .02, cz, 1.5); plane(84, 6, asphalt, cx + 5, .021, MZ, 1.5);
+    for (let z = -32; z < 34; z += 4) if (Math.abs(cz + z - MZ) > 4) box(.18, .02, 2, MAT.white, RX, .02, cz + z, { cast: false });
+    for (let x = -36; x < 46; x += 4) if (Math.abs(cx + x - RX) > 4) box(2, .02, .18, MAT.white, cx + x, .02, MZ, { cast: false });
+    for (const s2 of [-3.9, 3.9]) {
+      plane(1.8, 70, MAT.paver, RX + s2, .025, cz, 3); box(.2, .14, 70, MAT.concrete, RX + s2 * .77, 0, cz, { cast: false });
+      plane(84, 1.8, MAT.paver, cx + 5, .026, MZ + s2, 3); box(84, .14, .2, MAT.concrete, cx + 5, 0, MZ + s2 * .77, { cast: false });
+    }
+    for (const z of [-14, -4, 6]) streetLight(RX - 3.4, cz + z, 1, 0);
+    for (const z of [-11, 1]) streetLight(RX + 3.4, cz + z, -1, 0);
+    for (const x of [-18, -6, 24, 34]) streetLight(cx + x, MZ - 3.4, 0, 1);
+    car(RX - 1.5, cz + 1.5, 0, 0xe8e8ec); car(RX + 1.5, cz - 5.5, Math.PI, 0x2a4f9e); car(cx - 8, MZ + 1.5, -Math.PI / 2, 0xb02a2a); car(cx + 26, MZ - 1.5, Math.PI / 2, 0x55595f);
+    // ABZ, across the street
+    const tf = finTower(cx + 28.3, cz - 4.5);
+    plane(16.6, 4, MAT.paver, cx + 28.3, .013, tf + 2, 3);
+    for (const x of [19.4, 24.8, 30.2, 35.6]) palm(cx + x, tf + 2.4, rr(3.2, 3.8));
+    ledSign(['ABZ'], '#9fd8ff', cx + 28.3, 2.15, tf + .45, 2.4, .5);
+    INTER.push({ x: cx + 24, z: tf + 1.4, r: 2, label: 'ABZ', verb: 'Look', act: () => talk('ABZ', ['The ABZ tower, across the street from Crescent Bay.']) });
+    // Crescent Bay parking, west of the building: cars along the far side, a row of bikes at the front
+    const lot = cx - 14.6;
+    plane(12.8, 15, asphalt, lot, .02, cz - 1.5, 1.5);
+    for (const z of [-8, -5.2, -2.4, .4, 3.2]) box(4.8, .015, .1, MAT.white, cx - 18.3, .02, cz + z, { cast: false });
+    // bike bays painted at 45 degrees so the bikes show their side as well as their back
+    const BA = Math.PI * .75;
+    for (const x of [-17.2, -15.2, -13.2, -11.2, -9.2]) box(.08, .015, 2.6, MAT.white, cx + x, .02, cz + 3.2, { ry: BA, cast: false });
+    car(cx - 18.3, cz - 6.6, -Math.PI / 2, 0xe8e8ec); car(cx - 18.3, cz - 3.8, -Math.PI / 2, 0xb02a2a); car(cx - 18.3, cz - 1, -Math.PI / 2, 0x55595f);
+    const BIKES = [['r15', -16.2, 'Yamaha R15M', 'A Yamaha R15M in metallic grey, with blue wheels and gold forks.'],
+      ['vstrom', -14.2, 'Suzuki V-Strom', 'A yellow Suzuki V-Strom SX, ready for a long ride.'],
+      ['avenger', -12.2, 'Bajaj Avenger', 'A black Bajaj Avenger cruiser, all chrome and low seat.'],
+      ['thruxton', -10.2, 'Royal Enfield Thruxton', 'A green café racer with wire wheels and clip-on bars.']];
+    for (const [kind, x, name, line] of BIKES) {
+      bike(cx + x, cz + 3.2, BA, kind);
+      INTER.push({ x: cx + x, z: cz + 4.7, r: 1, label: name, verb: 'Look', act: () => talk(name, [line]) });
+    }
+    ledSign(['Crescent Bay Parking'], '#9fd0ff', lot, 2.4, cz - 8.9, 4.6, .5, 0, [480, 52], PLAIN);
+    for (const s2 of [-2, 2]) box(.1, 2.2, .1, MAT.metal, lot + s2, 0, cz - 8.96);
+    colBox(lot - 2.2, cz - 9.1, lot + 2.2, cz - 8.8);
+    // more office blocks around the edges
+    officeBlock(cx - 16, cz - 17, 12, 8, 8, { floors: 3, fins: 2.5 });
+    officeBlock(cx + 5, cz - 19, 12, 6, 10, { floors: 4 });
+    officeBlock(cx + 28, cz - 20, 14, 7, 11, { floors: 4, side: MAT.cladding });
+    officeBlock(cx + 44, cz - 6, 8, 14, 9, { floors: 3 });
+    officeBlock(cx - 30, cz - 2, 8, 12, 9, { floors: 3, side: MAT.cladding });
   }
 
   // ================= static batching =================
@@ -1361,12 +1647,12 @@
   const NPC_TALK = {
     rosa_j: ['Hey! First day in TokenFall?', 'Tip: a model reads text in little pieces called tokens. That\'s where the name comes from!'],
     chaiwala: ['Chai? No? More for me.', 'I heard the Prompt Lab teaches you to ask models better questions.'],
-    pixelpriya: ['I\'m trying to visit all three areas today.', 'The Model Garden is my favourite. Things just… grow there.'],
+    pixelpriya: ['I\'m trying to visit all three areas today.', 'Pune is my favourite. The Calfus office is there.'],
     bobby5: ['brb, afk', '...oh, you\'re still here. Did you read the notice board?'],
   };
   let npcs = [];
   const CHATTER_OFFICE = ['who booked the Prompt Lab again?', 'chai break in 5?', 'the carrom queen is MINE', 'standup in the Token Room', 'love the marigolds', 'anyone seen my charger?'];
-  const NPC_BOUNDS = { lobby: [-16, -10.5, 16, 17.5], lab: [-12, -327.8, 13.8, -290] };
+  const NPC_BOUNDS = { lobby: [-16, -10.5, 16, 17.5], lab: [-9.6, -317.5, 9.6, -282.3] };
   const OFFICE_NPCS = ['rahul.k', 'meera_s', 'devansh'];
   Object.assign(NPC_TALK, {
     'rahul.k': ['Welcome to the office!', 'Fair warning: the Prompt Lab meeting room is always booked.'],
@@ -1535,11 +1821,13 @@
   function travel(p) {
     traveling = true; fadeEl.style.opacity = 1;
     setTimeout(() => {
-      if (p.to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = p.zone === 'lab' ? 'down' : p.zone === 'archive' ? 'right' : 'left'; }
-      else { const a = AREAS[p.to], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.dir = 'up'; }
-      setZone(p.to); hero.zone = p.to; armed = false;
+      const to = p.to;
+      if (p.at) { hero.x = p.at[0]; hero.y = p.at[1]; hero.dir = 'down'; }
+      else if (to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = p.zone === 'lab' ? 'down' : p.zone === 'archive' ? 'right' : 'left'; }
+      else { const a = AREAS[to], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.dir = 'up'; }
+      setZone(to); hero.zone = to; armed = false;
       snapCamera();
-      const a = AREAS[p.to];
+      const a = AREAS[to];
       showBanner(a ? a.name : 'TokenFall Lobby', a ? a.sub : 'Main Plaza');
       log('', `You travelled to ${a ? a.name : 'the Lobby'}.`, true);
       fadeEl.style.opacity = 0; traveling = false;
@@ -1551,7 +1839,7 @@
   function snapCamera() { camTarget.set(hero.x, .9, hero.y); camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget); }
 
   // ================= main loop =================
-  let hero, nearest = null, last = performance.now(), T = 0, chatterT = 4000;
+  let hero, nearest = null, nearP = null, last = performance.now(), T = 0, chatterT = 4000;
   function frame(now) {
     const raw = now - last, dt = Math.min(50, raw); last = now;
     if (!document.hidden) { ftAcc += raw; ftN++; }
@@ -1575,10 +1863,11 @@
     if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone); if (here.length) { const pool = zone === 'lab' ? CHATTER_OFFICE : CHATTER; say(here[Math.random() * here.length | 0], pool[Math.random() * pool.length | 0]); } }
     for (const c of chars) syncChar(c);
     // portals
-    let nearPortal = false;
+    let nearPortal = false, bestP = 3.4; nearP = null;
     for (const p of PORTALS) {
       const d = Math.hypot(hero.x - p.x, hero.y - p.z);
       if (d < 2.4) nearPortal = true;
+      if (p.zone === zone && d < bestP) { bestP = d; nearP = p; }
       if (armed && !traveling && d < 1.1) travel(p);
     }
     if (!nearPortal) armed = true;
@@ -1633,6 +1922,10 @@
       const [sx, sy] = toScreen(nearest.x, 2.4, nearest.z);
       promptEl.innerHTML = `<kbd>E</kbd>${esc(nearest.verb)} · ${esc(nearest.label)}`;
       promptEl.style.display = 'block'; promptEl.style.left = sx + 'px'; promptEl.style.top = sy + 'px';
+    } else if (nearP && !dialog && !traveling) {   // portals say where they go when you walk up to them
+      const [sx, sy] = toScreen(nearP.x, 2.1, nearP.z);
+      promptEl.innerHTML = `Step in · ${esc(nearP.label)}`;
+      promptEl.style.display = 'block'; promptEl.style.left = sx + 'px'; promptEl.style.top = sy + 'px';
     } else promptEl.style.display = 'none';
     if (dialog) {
       const l = dialog.lines[dialog.i];
@@ -1653,7 +1946,7 @@
     hero = makeChar('aditya', 0, 2.6, { me: true });
     hero.dir = 'down'; hero.zone = 'lobby';
     npcs = NPC_NAMES.map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2 }); c.wait = Math.random() * 3000; return c; });
-    for (const [n, x, z] of [['rahul.k', -3.8, -6], ['meera_s', 2, -21.5], ['devansh', 0, 5]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
+    for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
     const q = new URLSearchParams(location.search);
     if (q.get('zone') && AREAS[q.get('zone')]) { const a = AREAS[q.get('zone')], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.zone = q.get('zone'); }
     if (q.get('at')) { const [ax, az] = q.get('at').split(',').map(Number); hero.x = ax; hero.y = az; }
