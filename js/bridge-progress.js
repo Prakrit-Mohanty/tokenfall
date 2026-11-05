@@ -5,6 +5,10 @@
 //     progress.newRun()        -> { playerId, runIndex, history }  (history feeds BridgeGenerator.composeRun)
 //     progress.onEvent(e)         every play event; the data is saved after each one, so a closed tab loses nothing
 //     progress.attach(play, TF)   report card at the end of a run (R shows it again, J exports it, E closes it)
+//     progress.save()             writes the data now (another game that changed its own namespace calls this)
+//     progress.ns(name, empty)    a namespaced slot inside the same saved data (data[name], created with empty() on first use): another game keeps its
+//                                 progress here, so there is ONE store and ONE export. The data version stays 1: old saves load as they were.
+//     progress.addExportSection(name, fn)  fn(data) -> object; the export (download, exportJSON) then carries it under `name` and reports schema 2
 //   pure and tested: emptyData, applyEvent, topicStats, topicWeights, revisitList, historyFor, buildExport, createStore
 //
 // Data (v1): { v, playerId, runCount, concepts: { id: { attempts, firstTryCorrect, falls, variantsSeen, firstTry: [{v, r}], avgAnswerMs,
@@ -99,6 +103,14 @@
     };
   }
 
+  // the export with other games' sections added: bridge fields stay where they were (flat); each section is a named top-level key
+  function withSections(exp, sections, d) {
+    const names = Object.keys(sections); if (!names.length) return exp;
+    const out = Object.assign({}, exp, { schema: 2, games: ['bridge'].concat(names) });
+    for (const k of names) out[k] = sections[k](d);
+    return out;
+  }
+
   // storage is anything with getItem / setItem; load() never throws, save() says whether it worked
   function createStore(storage, key) {
     return {
@@ -126,6 +138,7 @@
     if (fixed && fixed.runIndex != null) data.runCount = fixed.runIndex;
     const cur = { runIndex: 0, run: null };
     let TF = null, play = null, warned = false, panel = null, last = null;
+    const sections = {};
 
     const persist = () => {
       if (!store.save(data) && saved) { saved = false; }
@@ -173,8 +186,8 @@
     function hide() { if (panel) panel.style.display = 'none'; }
     const open = () => !!panel && panel.style.display === 'block';
     function download() {
-      const blob = new Blob([JSON.stringify(buildExport(data), null, 2)], { type: 'application/json' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tokenfall-glass-bridge-progress.json';
+      const blob = new Blob([JSON.stringify(withSections(buildExport(data), sections, data), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = Object.keys(sections).length ? 'tokenfall-progress.json' : 'tokenfall-glass-bridge-progress.json';
       document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
       if (TF) TF.sys('Progress exported as JSON.');
     }
@@ -183,7 +196,9 @@
       get data() { return data; }, get panelOpen() { return open(); }, storageOk: () => saved,
       newRun() { const r = { playerId: data.playerId, runIndex: data.runCount++, history: historyFor(data) }; persist(); return r; },
       onEvent(e) { applyEvent(data, e, cur); persist(); },
-      exportJSON: () => buildExport(data), download, show, hide,
+      exportJSON: () => withSections(buildExport(data), sections, data), download, show, hide,
+      save: () => persist(), ns(name, empty) { return data[name] || (data[name] = empty()); },
+      addExportSection(name, fn) { sections[name] = fn; },
       attach(p, tf) {
         play = p; TF = tf;
         if (!saved) { warned = false; }
@@ -212,5 +227,5 @@
     return progress;
   }
 
-  return { KEY, emptyData, applyEvent, topicStats, topicWeights, revisitList, historyFor, buildExport, createStore, isMastered, create };
+  return { KEY, emptyData, applyEvent, topicStats, topicWeights, revisitList, historyFor, buildExport, withSections, createStore, isMastered, create };
 });

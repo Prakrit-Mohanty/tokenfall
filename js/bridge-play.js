@@ -4,6 +4,7 @@
 //   starsFor({ falls, scans })                            1-3 stars for a finished run
 //   install(TokenFall, { debug, fixed, progress })        builds the world + play, registers at lobby boot
 //
+// Shared with the other games: play.audio (the synth and the M mute), play.card (the Concept Card panel), play.progress (the one progress store).
 // Events (play.on): run, answer, fall, checkpoint, scan, finish, abandon. A progress object (bridge-progress.js) supplies
 // newRun() -> { playerId, runIndex, history } and receives every event through onEvent(e); attach(play, TF) lets it add the report card
 // (play.debrief = fn(summary)) and keys. Without bridge-progress.js a per-page memory is used.
@@ -283,10 +284,22 @@
       if (on) hud.h.innerHTML = '<h3>HOW TO PLAY</h3><ul><li>Every row asks a question, and every tile is an answer.</li><li>Jump onto the tile you think is right. A wrong tile breaks: you fall, learn why, and the row is dealt again.</li><li><kbd>Space</kbd> jumps (tap it alone to hop forward). <kbd>Shift</kbd> runs.</li><li>Once a row is answered it links up: walk to any lane, then jump on.</li><li><kbd>F</kbd> Scan (2 per run) cracks one wrong tile, but caps you at 2 stars. <kbd>M</kbd> sound. <kbd>R</kbd> report card. <kbd>E</kbd> closes cards.</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
       hud.h.style.display = on ? 'block' : 'none';
     }
+    // The Concept Card panel, shared with the other games (play.card): show({ lead, text, breaks, idea, hint }) / hide() / open.
+    // lead defaults to "You chose:"; breaks and idea are left out when absent. The HUD and its CSS are built on first use, so a game that
+    // never visited the bridge still gets the same card.
+    const card = {
+      show(o) {
+        hud = hud || makeHud();
+        hud.c.innerHTML = `<h3>CONCEPT CARD</h3><p>${esc(o.lead || 'You chose:')} <b>“${esc(o.text)}”</b></p>` + (o.breaks ? `<p class="w">Why it breaks: ${esc(o.breaks)}</p>` : '')
+          + (o.idea ? `<p class="i">The idea: ${esc(o.idea)}</p>` : '') + `<p class="go"><kbd>E</kbd> ${esc(o.hint || 'Continue')} ▼</p>`;
+        hud.c.style.display = 'block';
+      },
+      hide() { if (hud) hud.c.style.display = 'none'; },
+      get open() { return !!hud && hud.c.style.display === 'block'; },
+    };
     function showCard(p) {
       S.card = p; S.lock = { x: TF.hero.x, z: TF.hero.y };
-      hud.c.innerHTML = `<h3>CONCEPT CARD</h3><p>You chose: <b>“${esc(p.tileText)}”</b></p><p class="w">Why it breaks: ${esc(p.breaks)}</p><p class="i">The idea: ${esc(p.idea)}</p><p class="go"><kbd>E</kbd> Continue ▼</p>`;
-      hud.c.style.display = 'block';
+      card.show({ text: p.tileText, breaks: p.breaks, idea: p.idea });
     }
 
     // ---- what happens to a row ----
@@ -470,7 +483,7 @@
       TF.setGroundProvider('bridge', (x, z) => (world.surfaceAt(x, z, now(), PHYS.EDGE) ? 0 : null));
       TF.life.push((t, dt) => frame(t, dt));
     };
-    Object.assign(play, { tick, scan, closeCard, finish, audio, world, onKey });
+    Object.assign(play, { tick, scan, closeCard, finish, audio, world, onKey, card, progress });   // card and progress are shared with carrom-play.js
     Object.defineProperties(play, { state: { get: () => S }, fx: { get: () => fx }, coins: { get: () => coins } });   // live views (Object.assign would copy the getters' current values)
     return play;
   }

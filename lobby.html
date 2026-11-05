@@ -82,8 +82,15 @@
 <script src="js/bridge-world.js"></script>
 <script src="js/bridge-play.js"></script>
 <script src="js/bridge-progress.js"></script>
+<script src="js/carrom-content.js"></script>
+<script src="js/carrom-physics.js"></script>
+<script src="js/carrom-generator.js"></script>
+<script src="js/carrom-world.js"></script>
+<script src="js/carrom-play.js"></script>
+<script src="js/carrom-progress.js"></script>
 <script>
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => BridgePlay.install(TF));
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => { CarromWorld.install(TF); CarromPlay.install(TF); CarromProgress.install(TF); });
 </script>
 <script>
 (() => {
@@ -903,7 +910,7 @@
     const paper = std(canvasTex(32, 20, (g) => { g.fillStyle = '#b48a5a'; g.fillRect(0, 0, 32, 20); for (const [x, y, w, h, c] of [[2, 2, 9, 11, '#efe4c8'], [13, 3, 8, 7, '#f6d98a'], [23, 2, 7, 10, '#efe4c8'], [13, 11, 9, 7, '#cfe6f0']]) { g.fillStyle = c; g.fillRect(x, y, w, h); g.fillStyle = '#8a7a60'; for (let yy = y + 2; yy < y + h - 1; yy += 2) g.fillRect(x + 1, yy, w - 2, 1); g.fillStyle = '#c0392b'; g.fillRect(x + (w >> 1), y, 1, 1); } }, { nearest: true }), 0);
     const pb = add(new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, .08), [MAT.metal, MAT.metal, MAT.metal, MAT.metal, paper, MAT.metal])); pb.position.set(4.6, 1.3, -1.56);
     colBox(3.4, -1.85, 5.8, -1.35);
-    INTER.push({ x: 4.6, z: -.6, r: 1.4, label: 'Notice Board', verb: 'Read', act: () => talk('Notice Board', ['📌 Week 1 — What even is a token?', '📌 Prompt Lab opens soon: learn to talk to models clearly.', '📌 New: the Glass Bridge, south of the plaza. Pick the right tile. Or don\'t.', '📌 Lost: one rubber duck. Answers to “Debug”.']) });
+    INTER.push({ x: 4.6, z: -.6, r: 1.4, label: 'Notice Board', verb: 'Read', act: () => talk('Notice Board', ['📌 Week 1 — What even is a token?', '📌 Prompt Lab opens soon: learn to talk to models clearly.', '📌 New: the Glass Bridge, south of the plaza. Pick the right tile. Or don\'t.', '📌 House rules at the HQ carrom table: sink the coin that carries the right answer.', '📌 Lost: one rubber duck. Answers to “Debug”.']) });
 
     // plaza furniture
     streetLamp(-14.2, -9.8, 'lobby'); streetLamp(14.2, -2.8, 'lobby', false); streetLamp(-14.2, 4.6, 'lobby'); streetLamp(14.2, 4.6, 'lobby');
@@ -1434,8 +1441,9 @@
     for (const [dx, dz] of [[-.95, 0], [.95, 0], [0, -.95], [0, .95]]) tubChair(tx + dx, tz + dz);
     for (const [dx, dz] of [[-.4, -.4], [.4, -.4], [-.4, .4], [.4, .4]]) box(.06, .6, .06, MAT.charcoal, tx + dx, 0, tz + dz);
     box(1, .07, 1, MAT.carrom, tx, .6, tz, { s: 0 }); colCirc(tx, tz, .6);
-    for (let i = 0; i < 9; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .015, 8), i % 3 ? (i % 2 ? MAT.charcoal : MAT.white) : MAT.pink)); c.position.set(tx + rr(-.3, .3), .68, tz + rr(-.3, .3)); }
-    INTER.push({ x: tx, z: tz + 1.6, r: 1.5, label: 'Carrom Board', verb: 'Play', act: () => talk('Carrom Board', ['Someone left a game half finished. The queen is still on the board.', 'Carrom tournaments: coming soon to TokenFall!']) });
+    for (let i = 0; i < 9; i++) { rr(-.3, .3); rr(-.3, .3); }   // the seeded random stream stays exactly where it was, so nothing built after this moves
+    if (TF.carrom) TF.carrom.table({ x: tx, z: tz, top: .67, size: 1 });
+    INTER.push({ x: tx, z: tz + 1.6, r: 1.5, label: 'Carrom Board', verb: 'Play', act: () => (TF.carrom ? TF.carrom.open() : talk('Carrom Board', ['Someone left a game half finished. The queen is still on the board.', 'Carrom tournaments: coming soon to TokenFall!'])) });
     chandelier(X(.3), (SZ + tz) / 2, 3.15);
     // a counter with stools along the north windows, including the bit behind the tile wall
     const NZ = Z(-12.8) + .3, N2 = Z(-14.1) + .3;
@@ -2140,7 +2148,7 @@
     } T += dt / 1000; timeU.value = T; final.u.time.value = T % 100;
     // hero
     const typing = document.activeElement === chatIn;
-    hero.setInput(dialog || traveling || typing ? { up: false, down: false, left: false, right: false, run: false } : {
+    hero.setInput(dialog || traveling || typing || playerLocked ? { up: false, down: false, left: false, right: false, run: false } : {
       up: keys.KeyW || keys.ArrowUp, down: keys.KeyS || keys.ArrowDown, left: keys.KeyA || keys.ArrowLeft, right: keys.KeyD || keys.ArrowRight, run: keys.ShiftLeft || keys.ShiftRight,
     });
     stepChar(hero, dt);
@@ -2171,6 +2179,7 @@
       const d = Math.hypot(hero.x - c.x, hero.y - c.y);
       if (d < 1.5 && d < best) { best = d; nearest = { x: c.x, z: c.y, label: c.name, verb: 'Talk', act: () => { c.wait = 4000; c.setInput({}); c.dir = Math.abs(hero.x - c.x) > Math.abs(hero.y - c.y) ? (hero.x > c.x ? 'right' : 'left') : (hero.y > c.y ? 'down' : 'up'); talk(c.name, NPC_TALK[c.name]); } }; }
     }
+    if (playerLocked) { nearest = null; nearP = null; }
     // camera follows with a little lag
     camTarget.lerp(tmp.set(hero.x, CAM_VIEWS[camView].y, hero.y), 1 - Math.pow(.004, dt / 1000));
     camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget);
@@ -2293,6 +2302,48 @@
       c.wait = 1e12; c.mute = true; c.dir = 'down'; npcs.push(c); return c;
     },
   };
+  // ---- carrom additions: lockPlayer, cameraTo / cameraRestore, sparkles ----
+  // lockPlayer(on): the hero stands where it is; no walking, no E prompt, no name tags or speech bubbles (the carrom table, any future table game)
+  let playerLocked = false;
+  TF.lockPlayer = (on) => { playerLocked = !!on; tagsEl.style.display = playerLocked ? 'none' : ''; return playerLocked; };
+  Object.defineProperty(TF, 'locked', { get: () => playerLocked });
+  // cameraTo(pos, look, ms, fov): eases the camera from where it is to a fixed view (fov kept unless given) and holds it, with the depth of field
+  // re-focused and softened for the close view; cameraRestore(ms): eases back to the follow camera (0 = at once). Runs in 'life', after the follow
+  // camera has been placed and before the frame is drawn, so it composes with anything else that nudges the camera (the bridge's shake).
+  const camFx = { on: false, mode: '', t: 0, dur: 1, from: null, to: null, cur: null };
+  const camEase = (k) => k * k * (3 - 2 * k), camRes = () => Math.max(4, rtScene.height / 105);
+  function camApply(p, l, fov, soften) {
+    camera.position.copy(p); camera.lookAt(l);
+    if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; camera.updateProjectionMatrix(); }
+    final.u.focus.value = p.distanceTo(l); final.u.maxR.value = camRes() * soften;
+    camFx.cur = { p: p.clone(), l: l.clone(), fov };
+  }
+  TF.cameraTo = (pos, look, ms = 800, fov) => {
+    const from = camFx.on && camFx.cur ? { p: camera.position.clone(), l: camFx.cur.l.clone(), fov: camera.fov } : { p: camera.position.clone(), l: camTarget.clone(), fov: camera.fov };
+    Object.assign(camFx, { on: true, mode: 'to', t: 0, dur: Math.max(0.001, ms / 1000), from, to: { p: pos.clone(), l: look.clone(), fov: fov || camera.fov } });
+  };
+  TF.cameraRestore = (ms = 700) => {
+    if (!camFx.on) return;
+    if (ms <= 0) { camFx.on = false; camera.fov = CAM_VIEWS[camView].fov; camera.updateProjectionMatrix(); final.u.maxR.value = camRes(); snapCamera(); return; }
+    Object.assign(camFx, { mode: 'back', t: 0, dur: ms / 1000, from: { p: camera.position.clone(), l: camFx.cur.l.clone(), fov: camera.fov } });
+  };
+  Object.defineProperty(TF, 'cameraHeld', { get: () => camFx.on });
+  life.push((T, dt) => {
+    if (!camFx.on) return;
+    camFx.t = Math.min(1, camFx.t + dt / camFx.dur);
+    const k = camEase(camFx.t), f = camFx.from;
+    if (camFx.mode === 'to') {
+      const t = camFx.to;
+      camApply(f.p.clone().lerp(t.p, k), f.l.clone().lerp(t.l, k), f.fov + (t.fov - f.fov) * k, 1 - 0.65 * k);
+      if (camFx.t >= 1) camFx.mode = 'hold';
+    } else if (camFx.mode === 'hold') camApply(camFx.to.p, camFx.to.l, camFx.to.fov, 0.35);
+    else {   // 'back': towards the follow camera the main loop has just placed
+      const liveP = camera.position.clone(), liveL = camTarget.clone(), liveFov = CAM_VIEWS[camView].fov;
+      camApply(f.p.clone().lerp(liveP, k), f.l.clone().lerp(liveL, k), f.fov + (liveFov - f.fov) * k, 0.35 + 0.65 * k);
+      if (camFx.t >= 1) { camFx.on = false; camera.fov = liveFov; camera.updateProjectionMatrix(); final.u.maxR.value = camRes(); }
+    }
+  });
+  TF.sparkles = (...a) => { sparkles(...a); return scene.children[scene.children.length - 1]; };   // the twinkle that marks something playable; returns it, so a game can hide it while it plays
   const _ready = window.TokenFallReady || [];
   window.TokenFallReady = { push(f) { f(TF); } };
   _ready.forEach(f => f(TF));

@@ -5,6 +5,7 @@
 //   composeRun(seed, history, opts?) -> runSpec (plain JSON)
 //   rerollRow(spec, rowIndex)        -> { spec, row }   fresh variant of the same concept after a fall
 //   insertBonusRow(spec, rowIndex)   -> { spec, row }   spaced-retrieval row 2-3 rows later (row is null if none inserted)
+//   pick, shuffle, weightedPick, sampleParams, fill, conceptWeight, recentInfo, pickVariant   the seeded helpers, shared with carrom-generator.js
 //
 // history (all optional):
 //   { runs: [ { variants: ['T1a', ...] }, ... ],              // oldest -> newest; every variant shown, incl. rerolls
@@ -227,5 +228,6 @@
     return { spec: s, row };
   }
 
-  return { STAGES, INTERLUDES, hash32, mulberry32, seedFor, composeRun, rerollRow, insertBonusRow };
+  // the seeded-choice helpers below are also what carrom-generator.js builds on (history shape, anti-repeat and weighting included)
+  return { STAGES, INTERLUDES, hash32, mulberry32, seedFor, composeRun, rerollRow, insertBonusRow, pick, shuffle, weightedPick, sampleParams, fill, conceptWeight, recentInfo, pickVariant };
 });
