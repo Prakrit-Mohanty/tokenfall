@@ -1,0 +1,191 @@
+// TokenFall: pixel-art canvas textures (grass, stone, glass, signs, the Calfus coin).
+// Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
+
+// ================= pixel textures =================
+function canvasTex(w, h, draw, opts = {}) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); draw(g, w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.NearestFilter;
+  t.minFilter = opts.nearest ? THREE.NearestFilter : THREE.LinearMipmapLinearFilter;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 8;
+  return t;
+}
+const rgb = (c, f = 1) => `rgb(${Math.max(0, Math.min(255, c[0] * f)) | 0},${Math.max(0, Math.min(255, c[1] * f)) | 0},${Math.max(0, Math.min(255, c[2] * f)) | 0})`;
+const P = (g, x, y, c, f) => { g.fillStyle = rgb(c, f); g.fillRect(x, y, 1, 1); };
+function noiseFill(g, w, h, base, amt, chance = 1) {
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (rnd() < chance) P(g, x, y, base, 1 + (rnd() - .5) * amt);
+}
+
+// stones laid in rows; tiles seamlessly
+function stoneTex(base, mortar, rowH = [5, 8], wid = [6, 12], size = 64) {
+  return canvasTex(size, size, (g, W, H) => {
+    g.fillStyle = rgb(mortar); g.fillRect(0, 0, W, H);
+    let y = 0;
+    while (y < H) {
+      let rh = rowH[0] + (rnd() * (rowH[1] - rowH[0]) | 0); if (H - y < rh + rowH[0]) rh = H - y;
+      const off = rnd() * W | 0; let x = 0;
+      while (x < W) {
+        let sw = wid[0] + (rnd() * (wid[1] - wid[0]) | 0); if (W - x < sw + wid[0]) sw = W - x;
+        const v = (rnd() - .5) * 34, c = [base[0] + v + (rnd() - .5) * 12, base[1] + v, base[2] + v - rnd() * 10];
+        for (let i = 1; i < sw; i++) for (let j = 1; j < rh; j++) {
+          if ((i === 1 || i === sw - 1) && (j === 1 || j === rh - 1)) continue;
+          let f = 1;
+          if (j === 1 || i === 1) f = 1.16; else if (j === rh - 1 || i === sw - 1) f = .76;
+          if (rnd() < .1) f *= .9;
+          P(g, (x + i + off) % W, (y + j) % H, c, f);
+        }
+        x += sw;
+      }
+      y += rh;
+    }
+  });
+}
+const TX = {};
+function buildTextures() {
+  TX.cobble = stoneTex([168, 156, 132], [78, 70, 60]);
+  TX.flag = stoneTex([150, 146, 140], [70, 66, 62], [10, 14], [10, 18]);
+  TX.stoneWall = stoneTex([138, 132, 122], [60, 56, 52], [6, 9], [9, 16], 32);
+  TX.grass = canvasTex(64, 64, (g, W, H) => {
+    noiseFill(g, W, H, [92, 128, 58], .22);
+    for (let i = 0; i < 140; i++) { const x = rnd() * W | 0, y = rnd() * H | 0, c = rnd() < .5 ? [122, 160, 70] : [70, 104, 46]; P(g, x, y, c); P(g, x, (y + 1) % H, c, .9); }
+  });
+  TX.darkGrass = canvasTex(64, 64, (g, W, H) => { noiseFill(g, W, H, [70, 102, 50], .25); });
+  TX.dirt = canvasTex(32, 32, (g, W, H) => { noiseFill(g, W, H, [120, 92, 64], .25); });
+  TX.plaster = canvasTex(32, 32, (g, W, H) => {
+    noiseFill(g, W, H, [222, 214, 196], .07);
+    for (let i = 0; i < 6; i++) { let x = rnd() * W | 0, y = rnd() * H | 0; for (let k = 0; k < 4; k++) { P(g, x % W, y % H, [180, 170, 152]); x += rnd() < .5 ? 1 : 0; y++; } }
+  });
+  TX.wood = canvasTex(32, 32, (g, W, H) => {
+    for (let x = 0; x < W; x++) { const plank = (x / 8 | 0), b = [112 + plank % 2 * 10, 74 + plank % 2 * 6, 46]; for (let y = 0; y < H; y++) P(g, x, y, b, x % 8 === 0 ? .62 : 1 + (rnd() - .5) * .1); }
+    for (let i = 0; i < 10; i++) { const x = rnd() * W | 0, y = rnd() * H | 0; for (let k = 0; k < 5; k++) P(g, x, (y + k) % H, [80, 52, 32]); }
+  });
+  TX.darkWood = canvasTex(16, 16, (g, W, H) => { noiseFill(g, W, H, [74, 48, 32], .14); for (let y = 0; y < H; y += 5) for (let x = 0; x < W; x++) if (rnd() < .5) P(g, x, y, [58, 38, 26]); });
+  TX.floor = canvasTex(32, 32, (g, W, H) => {
+    for (let y = 0; y < H; y++) { const row = y / 8 | 0, b = [150 - row % 2 * 14, 108 - row % 2 * 10, 70]; for (let x = 0; x < W; x++) P(g, x, y, b, y % 8 === 0 || (x + row * 11) % 32 === 0 ? .7 : 1 + (rnd() - .5) * .08); }
+  });
+  TX.roof = canvasTex(32, 32, (g, W, H) => {
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const col = x % 6, row = y % 8;
+      let f = [1.25, 1.1, 1, .9, .7, .5][col];
+      if (row === 0) f *= .55; else if (row === 1) f *= 1.15;
+      P(g, x, y, [74, 78, 84], f * (1 + (rnd() - .5) * .08));
+    }
+  });
+  TX.lattice = canvasTex(32, 32, (g, W, H) => {
+    g.fillStyle = '#2a1d14'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#5a3a24';
+    for (let x = 0; x < W; x += 4) g.fillRect(x, 0, 1, H);
+    for (let y = 0; y < H; y += 6) g.fillRect(0, y, W, 1);
+    g.fillStyle = '#7a5032'; g.fillRect(0, 0, W, 2); g.fillRect(0, H - 2, W, 2); g.fillRect(0, 0, 2, H); g.fillRect(W - 2, 0, 2, H);
+  }, { nearest: true });
+  TX.door = canvasTex(32, 32, (g, W, H) => {
+    noiseFill(g, W, H, [98, 64, 40], .1);
+    g.fillStyle = '#3a2416'; g.fillRect(15, 0, 2, H);
+    for (const x of [3, 19]) { g.fillStyle = '#4a2e1c'; g.fillRect(x, 3, 10, 26); g.fillStyle = '#6a4630'; for (let yy = 5; yy < 28; yy += 3) g.fillRect(x + 1, yy, 8, 1); }
+    g.fillStyle = '#d9b46a'; g.fillRect(13, 16, 2, 2); g.fillRect(17, 16, 2, 2);
+  }, { nearest: true });
+  TX.cloth = canvasTex(16, 16, (g, W, H) => { for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) P(g, x, y, [150, 52, 40], x % 4 < 2 ? 1 : .86); });
+  TX.bark = canvasTex(16, 16, (g, W, H) => { noiseFill(g, W, H, [86, 62, 44], .25); for (let x = 0; x < W; x += 3) for (let y = 0; y < H; y++) if (rnd() < .6) P(g, x, y, [60, 42, 30]); });
+  const leaf = (base) => canvasTex(32, 32, (g, W, H) => {
+    noiseFill(g, W, H, base, .18);
+    for (let i = 0; i < 70; i++) {
+      const x = rnd() * W | 0, y = rnd() * H | 0, f = rnd() < .5 ? 1.3 : .62;
+      for (let k = 0; k < 5; k++) P(g, (x + [0, 1, -1, 0, 0][k] + W) % W, (y + [0, 0, 0, 1, -1][k] + H) % H, base, f * (k ? .92 : 1));
+    }
+  });
+  TX.leafA = leaf([74, 116, 52]); TX.leafB = leaf([52, 92, 50]); TX.leafC = leaf([96, 132, 56]); TX.blossom = leaf([196, 128, 148]);
+  TX.books = canvasTex(32, 32, (g, W, H) => {
+    g.fillStyle = '#3b2618'; g.fillRect(0, 0, W, H);
+    for (let shelf = 0; shelf < 4; shelf++) {
+      let x = 1; const y0 = shelf * 8;
+      g.fillStyle = '#6a4630'; g.fillRect(0, y0 + 7, W, 1);
+      while (x < W - 1) { const w = 1 + (rnd() * 2 | 0), h = 4 + (rnd() * 3 | 0), c = [[140, 50, 40], [50, 80, 120], [180, 150, 80], [60, 110, 70], [120, 80, 140]][rnd() * 5 | 0]; g.fillStyle = rgb(c); g.fillRect(x, y0 + 7 - h, w, h); g.fillStyle = rgb(c, 1.3); g.fillRect(x, y0 + 7 - h, w, 1); x += w + (rnd() < .15 ? 1 : 0); }
+    }
+  }, { nearest: true });
+  TX.rack = canvasTex(16, 32, (g, W, H) => {
+    g.fillStyle = '#1b1d24'; g.fillRect(0, 0, W, H);
+    for (let y = 2; y < H; y += 4) { g.fillStyle = '#2c303a'; g.fillRect(1, y, W - 2, 3); g.fillStyle = rnd() < .5 ? '#ffb347' : '#6ee07a'; g.fillRect(2, y + 1, 1, 1); g.fillStyle = '#ffb347'; if (rnd() < .5) g.fillRect(4, y + 1, 1, 1); }
+  }, { nearest: true });
+  TX.screen = canvasTex(32, 20, (g, W, H) => {
+    g.fillStyle = '#0d2a36'; g.fillRect(0, 0, W, H);
+    for (let y = 2; y < H - 1; y += 2) { const x0 = 2 + (rnd() * 4 | 0); g.fillStyle = rnd() < .3 ? '#ffd27a' : '#7fe6ff'; g.fillRect(x0, y, 4 + (rnd() * 20 | 0), 1); }
+  }, { nearest: true });
+  TX.paver = canvasTex(64, 64, (g, W, H) => {
+    g.fillStyle = rgb([128, 122, 112]); g.fillRect(0, 0, W, H);
+    for (let r = 0; r < 8; r++) for (let c = -1; c < 4; c++) {
+      const x0 = c * 16 + (r % 2) * 8, y0 = r * 8, v = (rnd() - .5) * 26, b = [182 + v, 174 + v, 160 + v - rnd() * 8];
+      for (let i = 1; i < 16; i++) for (let j = 1; j < 8; j++) { const x = x0 + i; if (x < 0 || x >= W) continue; P(g, x, y0 + j, b, (j === 1 ? 1.05 : j === 7 ? .9 : 1) * (1 + (rnd() - .5) * .05)); }
+    }
+  });
+  TX.concrete = canvasTex(32, 32, (g, W, H) => {
+    noiseFill(g, W, H, [196, 192, 184], .06);
+    g.fillStyle = rgb([172, 168, 160]); g.fillRect(0, 15, W, 1); g.fillRect(15, 0, 1, H);
+    for (const [x, y] of [[7, 7], [23, 7], [7, 23], [23, 23]]) P(g, x, y, [140, 136, 130]);
+  });
+  TX.cladding = canvasTex(32, 32, (g, W, H) => {
+    for (let y = 0; y < H; y++) { const sl = y / 4 | 0, b = [[168, 116, 72], [150, 102, 62], [176, 124, 78]][sl % 3]; for (let x = 0; x < W; x++) P(g, x, y, b, y % 4 === 3 ? .55 : 1 + (rnd() - .5) * .08); }
+  });
+  TX.roofFlat = canvasTex(32, 32, (g, W, H) => { noiseFill(g, W, H, [124, 122, 118], .1); g.fillStyle = rgb([104, 102, 98]); g.fillRect(0, 0, W, 1); g.fillRect(0, 16, W, 1); });
+  // curtain-wall glass: some panes reflect the sky, some show warm lit offices
+  const lit = Array.from({ length: 4 }, () => Array.from({ length: 2 }, () => rnd() < .45));
+  const glass = (emissive) => canvasTex(32, 32, (g, W, H) => {
+    g.fillStyle = emissive ? '#000' : '#363a42'; g.fillRect(0, 0, W, H);
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) {
+      const x0 = c * 8 + 1, y0 = r * 16 + 1, on = lit[c][r];
+      for (let j = 0; j < 14; j++) for (let i = 0; i < 7; i++) {
+        let col;
+        if (on) col = j > 9 ? [120, 92, 66] : [255, 214, 150];
+        else { const t = j / 14; col = [150 - t * 60, 176 - t * 66, 196 - t * 66]; if ((i + j) % 9 === 0 || (i + j) % 9 === 1) col = col.map(v => v + 30); }
+        if (emissive) col = on && j <= 9 ? [255, 190, 120] : [0, 0, 0];
+        P(g, x0 + i, y0 + j, col);
+      }
+      if (!emissive) { g.fillStyle = '#4a4f58'; g.fillRect(x0, y0 + 10, 7, 1); }
+    }
+  }, { nearest: true });
+  TX.glass = glass(false); TX.glassE = glass(true);
+  TX.awning = canvasTex(16, 16, (g, W, H) => { for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) P(g, x, y, x % 8 < 4 ? [46, 120, 112] : [236, 226, 204]); }, { nearest: true });
+  TX.coin = canvasTex(64, 64, (g, W, H) => {
+    g.fillStyle = '#b8862c'; g.fillRect(0, 0, W, H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const d = Math.hypot(x - 31.5, y - 31.5); if (d > 26 && d < 29) P(g, x, y, [140, 96, 30]); else if (d <= 26) P(g, x, y, [232, 186, 84], 1 - (x + y) / 400); }
+    // the Calfus "C": a heavy black C whose top end finishes in a teal dot
+    const dotX = 31.5 + 12.75 * Math.cos(-.6), dotY = 31.5 + 12.75 * Math.sin(-.6);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const dx = x - 31.5, dy = y - 31.5, d = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
+      if (d > 8 && d < 17.5 && (a < -1.02 || a > .55)) P(g, x, y, [22, 20, 18]);
+      if (Math.hypot(x - dotX, y - dotY) < 5.1) P(g, x, y, [95, 192, 176]);
+    }
+  }, { nearest: true });
+  TX.coin.center.set(.5, .5); TX.coin.rotation = Math.PI / 2;
+  TX.grassTuft = canvasTex(16, 16, (g, W, H) => {
+    for (let i = 0; i < 9; i++) {
+      let x = 2 + rnd() * 12, h = 6 + rnd() * 9; const c = [[96, 140, 60], [120, 160, 70], [76, 112, 48]][i % 3];
+      for (let y = 0; y < h; y++) { P(g, x | 0, H - 1 - y, c, 1 + y / h * .25); x += (rnd() - .5) * .8; }
+    }
+  }, { nearest: true });
+  TX.flowers = [[226, 70, 60], [246, 238, 220], [246, 200, 70], [170, 110, 220]].map(pc => canvasTex(16, 16, (g, W, H) => {
+    for (let i = 0; i < 4; i++) {
+      const x = 2 + i * 4 - (rnd() * 2 | 0), top = 4 + (rnd() * 6 | 0);
+      for (let y = top; y < H; y++) P(g, x, y, [80, 120, 50]);
+      P(g, x - 1, top, pc); P(g, x + 1, top, pc); P(g, x, top - 1, pc); P(g, x, top + 1, pc, .85); P(g, x, top, [250, 220, 120]);
+      P(g, x + 1, top + 5, [96, 140, 60]);
+    }
+  }, { nearest: true }));
+  const blob = document.createElement('canvas'); blob.width = blob.height = 64;
+  const bg = blob.getContext('2d'), grd = bg.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grd.addColorStop(0, 'rgba(0,0,0,.55)'); grd.addColorStop(1, 'rgba(0,0,0,0)'); bg.fillStyle = grd; bg.fillRect(0, 0, 64, 64);
+  TX.blob = new THREE.CanvasTexture(blob);
+}
+
+function textTex(text, opts = {}) {
+  const w = opts.w || 256, h = opts.h || 48;
+  return canvasTex(w, h, (g) => {
+    g.fillStyle = opts.bg || '#6b4528'; g.fillRect(0, 0, w, h);
+    g.fillStyle = opts.edge || '#3c2414'; g.fillRect(0, 0, w, 3); g.fillRect(0, h - 3, w, 3); g.fillRect(0, 0, 3, h); g.fillRect(w - 3, 0, 3, h);
+    g.fillStyle = 'rgba(255,255,255,.08)'; for (let y = 6; y < h - 4; y += 6) g.fillRect(4, y, w - 8, 1);
+    g.font = `600 ${opts.size || 24}px "Pixelify Sans", monospace`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = 'rgba(0,0,0,.55)'; g.fillText(text, w / 2 + 2, h / 2 + 3);
+    g.fillStyle = opts.color || '#f6e3b4'; g.fillText(text, w / 2, h / 2 + 1);
+  }, { nearest: false });
+}

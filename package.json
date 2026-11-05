@@ -1,0 +1,9 @@
+{
+  "name": "tokenfall",
+  "private": true,
+  "description": "HD-2D pixel-art game set in the Calfus offices, for learning AI literacy",
+  "scripts": {
+    "dev": "python3 -m http.server 8765",
+    "test": "node js/bridge/bridge-tests.js"
+  }
+}
