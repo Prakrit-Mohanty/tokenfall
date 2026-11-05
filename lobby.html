@@ -730,6 +730,24 @@
     return front;
   }
   // steel gateway frame; the glowing portal sits inside it
+  // rising, twinkling sparkles that mark something you can play (the minigames)
+  function sparkles(x, z, color, n = 26, r = .8, h = 2.4) {
+    const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), base = new THREE.Color(color), seed = [];
+    for (let i = 0; i < n; i++) seed.push({ a: rnd() * 6.283, r: r * (.35 + rnd() * .65), sp: .22 + rnd() * .3, ph: rnd(), tw: 3 + rnd() * 4 });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const star = canvasTex(8, 8, g => { g.fillStyle = '#fff'; g.fillRect(3, 0, 2, 8); g.fillRect(0, 3, 8, 2); g.fillRect(2, 2, 4, 4); }, { nearest: true });
+    const mat = new THREE.PointsMaterial({ map: star, size: .2, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.userData.dyn = true; scene.add(pts);
+    anim.push(t => {
+      seed.forEach((s, i) => {
+        const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) * (.6 + .4 * Math.sin(t * s.tw + s.ph * 9));
+        pos[i * 3] = x + Math.cos(a) * s.r; pos[i * 3 + 1] = .15 + f * h; pos[i * 3 + 2] = z + Math.sin(a) * s.r;
+        col[i * 3] = base.r * k; col[i * 3 + 1] = base.g * k; col[i * 3 + 2] = base.b * k;
+      });
+      geo.attributes.position.needsUpdate = geo.attributes.color.needsUpdate = true;
+    });
+  }
   function gate(x, z, ry, title, color, zone, to) {
     const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
     const strip = glowStrip(color);
@@ -856,7 +874,7 @@
     // side gates
     gate(-17.8, 0, Math.PI / 2, 'Data Archive', 0xffb347, 'lobby', 'archive');
     gate(17.8, 0, Math.PI / 2, 'Pune', 0x7dff8a, 'lobby', 'pune');
-    gate(0, 17.6, 0, 'The Glass Bridge', 0xffd27a, 'lobby', 'bridge');
+    gate(0, 17.6, 0, 'The Glass Bridge', 0xffd27a, 'lobby', 'bridge'); sparkles(0, 17.6, 0xffd27a, 34, 1.3, 3.6);
     ledSign(['▼ The Glass Bridge'], '#ffe39a', 0, 5.4, 17.6, 3.8, .55);
     for (const [sx, txt, col] of [[-14.6, '◀ Data Archive', '#ffcf7a'], [14.6, 'Pune ▶', '#9dff9f']]) {
       ledSign([txt], col, sx, 1.75, -2.6, 2.6, .5);
@@ -1092,7 +1110,7 @@
         g.fillStyle = b; g.beginPath(); g.ellipse(12, 13, 2.5, 5, 0, 0, 6.3); g.fill(); g.fillRect(11, 20, 2, 4);
       }, { nearest: true });
     }
-    MAT.oFloor = std(T.floor, 5, { roughness: .36, metalness: .1 });
+    MAT.oFloor = std(T.floor, 5, { roughness: 1, metalness: 0 });   // matte: no light spots on the floor
     MAT.tile = std(T.tile, .9); MAT.walnut = std(T.walnut, 1.2); MAT.slat = std(T.slat, .5);
     MAT.felt = std(T.felt, 1); MAT.fabric = std(T.fabric, 1); MAT.navy = std(T.navy, 1);
     MAT.navy2 = std(T.navy, 1, { side: THREE.DoubleSide }); MAT.navy2.color.setRGB(1.45, 1.45, 1.5);
@@ -1334,7 +1352,7 @@
     // four desk pods along the west windows, two computers on each side
     for (const z of [-5.6, -2.6, .4, 3.5]) deskCluster(X(-5.75), Z(z), 2, false);
     room(X(-7), Z(-10.5), X(-3.1), Z(-7.2), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”', 'In the corner there is a terminal for the Glass Bridge: pick the right tile, or fall.'], { table: 'long', seats: 3, along: true });
-    if (TF.officeEntrance) TF.officeEntrance({ x: X(-3.1) - .55, z: Z(-10.5) + .6, near: [X(-3.1) - .5, Z(-10.5) + 1.9] });
+    if (TF.officeEntrance) { TF.officeEntrance({ x: X(-3.1) - .55, z: Z(-10.5) + .6, near: [X(-3.1) - .5, Z(-10.5) + 1.9] }); sparkles(X(-3.1) - .55, Z(-10.5) + 1.3, 0xffd27a, 22, .6, 2.4); }
     box(L(2.6), .9, .4, MAT.white, X(-4.4), 0, Z(-10.5) - .35); colBox(X(-5.7), Z(-10.5) - .55, X(-3.1), Z(-10.5) - .15);   // storage
 
     // ---- main corridor running north ----
@@ -1451,10 +1469,10 @@
     const wood = std(canvasTex(32, 32, (g, W, H) => {
       const tones = [[212, 194, 166], [200, 181, 152], [218, 202, 176], [194, 174, 146]];
       for (let x = 0; x < W; x++) { const k = x >> 3; for (let y = 0; y < H; y++) P(g, x, y, tones[k % 4], x % 8 === 0 || (y + k * 11) % 32 === 0 ? .82 : 1 + (rnd() - .5) * .05); }
-    }), 1.6, { roughness: .55 });
+    }), 1.6, { roughness: 1 });
     const tile = (base, n) => canvasTex(32, 32, (g, W, H) => { noiseFill(g, W, H, base, .04); g.fillStyle = rgb(base, .8); for (let i = 0; i < 32; i += 32 / n) { g.fillRect(i, 0, 1, 32); g.fillRect(0, i, 32, 1); } });
     const carpet = std(TX.concrete, 1.5, { roughness: 1 }); carpet.color.setRGB(.42, .43, .47);
-    const grey = std(tile([150, 152, 156], 2), 1.2, { roughness: .5 }), beige = std(tile([214, 208, 196], 2), 1.4, { roughness: .45 });
+    const grey = std(tile([150, 152, 156], 2), 1.2, { roughness: 1 }), beige = std(tile([214, 208, 196], 2), 1.4, { roughness: 1 });
     const wallM = std(TX.plaster, 1); wallM.color.setRGB(.82, .82, .8);
     const black = new THREE.MeshStandardMaterial({ color: 0x18191c, roughness: .35 });
     const cream = new THREE.MeshStandardMaterial({ color: 0xe9e1cd, roughness: .6 });
