@@ -285,12 +285,12 @@
       hud.h.style.display = on ? 'block' : 'none';
     }
     // The Concept Card panel, shared with the other games (play.card): show({ lead, text, breaks, idea, hint }) / hide() / open.
-    // lead defaults to "You chose:"; breaks and idea are left out when absent. The HUD and its CSS are built on first use, so a game that
+    // lead defaults to "You chose:"; line (a whole sentence, no quoted answer) replaces lead + text; breaks and idea are left out when absent. The HUD and its CSS are built on first use, so a game that
     // never visited the bridge still gets the same card.
     const card = {
       show(o) {
         hud = hud || makeHud();
-        hud.c.innerHTML = `<h3>CONCEPT CARD</h3><p>${esc(o.lead || 'You chose:')} <b>“${esc(o.text)}”</b></p>` + (o.breaks ? `<p class="w">Why it breaks: ${esc(o.breaks)}</p>` : '')
+        hud.c.innerHTML = `<h3>CONCEPT CARD</h3>` + (o.line ? `<p><b>${esc(o.line)}</b></p>` : `<p>${esc(o.lead || 'You chose:')} <b>“${esc(o.text)}”</b></p>`) + (o.breaks ? `<p class="w">Why it breaks: ${esc(o.breaks)}</p>` : '')
           + (o.idea ? `<p class="i">The idea: ${esc(o.idea)}</p>` : '') + `<p class="go"><kbd>E</kbd> ${esc(o.hint || 'Continue')} ▼</p>`;
         hud.c.style.display = 'block';
       },

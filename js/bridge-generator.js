@@ -117,14 +117,15 @@
     last.forEach((r, i) => (r.variants || []).forEach((v) => { recent.add(v); lastSeen[v] = i; }));
     return { recent, lastSeen };
   }
-  // a variant unseen in the last 3 runs; if the player has seen them all, the one seen longest ago
-  function pickVariant(rng, card, info, used) {
+  // the variants a card may deal: unseen in the last 3 runs; if the player has seen them all, the ones seen longest ago
+  function eligibleVariants(card, info, used) {
     const vs = card.variants;
     let c = vs.filter((v) => !info.recent.has(v.id) && !used.has(v.id));
     if (!c.length) c = vs.filter((v) => !info.recent.has(v.id));
     if (!c.length) { const oldest = Math.min(...vs.map((v) => info.lastSeen[v.id])); c = vs.filter((v) => info.lastSeen[v.id] === oldest); }
-    return pick(rng, c);
+    return c;
   }
+  const pickVariant = (rng, card, info, used) => pick(rng, eligibleVariants(card, info, used));
   function pickScenario(rng, info) {
     const all = [...new Set(CARD.B1.variants.map((v) => v.scenario))];
     const seen = (s) => CARD.B1.variants.concat(CARD.B2.variants, CARD.B3.variants).some((v) => v.scenario === s && info.recent.has(v.id));
@@ -229,5 +230,5 @@
   }
 
   // the seeded-choice helpers below are also what carrom-generator.js builds on (history shape, anti-repeat and weighting included)
-  return { STAGES, INTERLUDES, hash32, mulberry32, seedFor, composeRun, rerollRow, insertBonusRow, pick, shuffle, weightedPick, sampleParams, fill, conceptWeight, recentInfo, pickVariant };
+  return { STAGES, INTERLUDES, hash32, mulberry32, seedFor, composeRun, rerollRow, insertBonusRow, pick, shuffle, weightedPick, sampleParams, fill, conceptWeight, recentInfo, eligibleVariants, pickVariant };
 });
