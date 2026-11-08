@@ -174,8 +174,9 @@ function buildOffice(a) {
   for (const [dx, dz] of [[-.95, 0], [.95, 0], [0, -.95], [0, .95]]) tubChair(tx + dx, tz + dz);
   for (const [dx, dz] of [[-.4, -.4], [.4, -.4], [-.4, .4], [.4, .4]]) box(.06, .6, .06, MAT.charcoal, tx + dx, 0, tz + dz);
   box(1, .07, 1, MAT.carrom, tx, .6, tz, { s: 0 }); colCirc(tx, tz, .6);
-  for (let i = 0; i < 9; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .015, 8), i % 3 ? (i % 2 ? MAT.charcoal : MAT.white) : MAT.pink)); c.position.set(tx + rr(-.3, .3), .68, tz + rr(-.3, .3)); }
-  INTER.push({ x: tx, z: tz + 1.6, r: 1.5, label: 'Carrom Board', verb: 'Play', act: () => talk('Carrom Board', ['Someone left a game half finished. The queen is still on the board.', 'Carrom tournaments: coming soon to TokenFall!']) });
+  for (let i = 0; i < 9; i++) { rr(-.3, .3); rr(-.3, .3); }   // the seeded random stream stays exactly where it was, so nothing built after this moves
+  if (TF.carrom) TF.carrom.table({ x: tx, z: tz, top: .67, size: 1 });
+  INTER.push({ x: tx, z: tz + 1.6, r: 1.5, label: 'Carrom Board', verb: 'Play', act: () => (TF.carrom ? TF.carrom.open() : talk('Carrom Board', ['Someone left a game half finished. The queen is still on the board.', 'Carrom tournaments: coming soon to TokenFall!'])) });
   chandelier(X(.3), (SZ + tz) / 2, 3.15);
   // a counter with stools along the north windows, including the bit behind the tile wall
   const NZ = Z(-12.8) + .3, N2 = Z(-14.1) + .3;

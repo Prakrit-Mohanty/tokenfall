@@ -3,9 +3,12 @@
 
 // ================= TokenFall API (Glass Bridge integration) =================
 // Modules register with (window.TokenFallReady = window.TokenFallReady || []).push(TF => ...).
+const LOBBY = new URLSearchParams(location.search).get('lobby') === 'waterfront' ? WATERFRONT : VILLAGE;
+if (LOBBY.npcBounds) NPC_BOUNDS.lobby = LOBBY.npcBounds;
+
 const TF = window.TokenFall = {
   THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, rnd, rr, timeU, keys, post: final.u,
-  INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life, leaderboard: LEADERBOARD_API,
+  INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life, leaderboard: LEADERBOARD_API, get lobbySpots() { return LOBBY.minigameSpots || {}; },
   canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
   gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,
   get hero() { return hero; }, get zone() { return zone; }, get talking() { return !!dialog; }, get traveling() { return traveling; },
@@ -42,14 +45,53 @@ const TF = window.TokenFall = {
     c.wait = 1e12; c.mute = true; c.dir = 'down'; npcs.push(c); return c;
   },
 };
+// ---- carrom additions: lockPlayer, cameraTo / cameraRestore, sparkles ----
+// lockPlayer(on): the hero stands where it is; no walking, no E prompt, no name tags or speech bubbles (the carrom table, any future table game)
+let playerLocked = false;
+TF.lockPlayer = (on) => { playerLocked = !!on; tagsEl.style.display = playerLocked ? 'none' : ''; return playerLocked; };
+Object.defineProperty(TF, 'locked', { get: () => playerLocked });
+// cameraTo(pos, look, ms, fov): eases the camera from where it is to a fixed view (fov kept unless given) and holds it, with the depth of field
+// re-focused and softened for the close view; cameraRestore(ms): eases back to the follow camera (0 = at once). Runs in 'life', after the follow
+// camera has been placed and before the frame is drawn, so it composes with anything else that nudges the camera (the bridge's shake).
+const camFx = { on: false, mode: '', t: 0, dur: 1, from: null, to: null, cur: null };
+const camEase = (k) => k * k * (3 - 2 * k), camRes = () => Math.max(4, rtScene.height / 105);
+function camApply(p, l, fov, soften) {
+  camera.position.copy(p); camera.lookAt(l);
+  if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  final.u.focus.value = p.distanceTo(l); final.u.maxR.value = camRes() * soften;
+  camFx.cur = { p: p.clone(), l: l.clone(), fov };
+}
+TF.cameraTo = (pos, look, ms = 800, fov) => {
+  const from = camFx.on && camFx.cur ? { p: camera.position.clone(), l: camFx.cur.l.clone(), fov: camera.fov } : { p: camera.position.clone(), l: camTarget.clone(), fov: camera.fov };
+  Object.assign(camFx, { on: true, mode: 'to', t: 0, dur: Math.max(0.001, ms / 1000), from, to: { p: pos.clone(), l: look.clone(), fov: fov || camera.fov } });
+};
+TF.cameraRestore = (ms = 700) => {
+  if (!camFx.on) return;
+  if (ms <= 0) { camFx.on = false; camera.fov = CAM_VIEWS[camView].fov; camera.updateProjectionMatrix(); final.u.maxR.value = camRes(); snapCamera(); return; }
+  Object.assign(camFx, { mode: 'back', t: 0, dur: ms / 1000, from: { p: camera.position.clone(), l: camFx.cur.l.clone(), fov: camera.fov } });
+};
+Object.defineProperty(TF, 'cameraHeld', { get: () => camFx.on });
+life.push((T, dt) => {
+  if (!camFx.on) return;
+  camFx.t = Math.min(1, camFx.t + dt / camFx.dur);
+  const k = camEase(camFx.t), f = camFx.from;
+  if (camFx.mode === 'to') {
+    const t = camFx.to;
+    camApply(f.p.clone().lerp(t.p, k), f.l.clone().lerp(t.l, k), f.fov + (t.fov - f.fov) * k, 1 - 0.65 * k);
+    if (camFx.t >= 1) camFx.mode = 'hold';
+  } else if (camFx.mode === 'hold') camApply(camFx.to.p, camFx.to.l, camFx.to.fov, 0.35);
+  else {   // 'back': towards the follow camera the main loop has just placed
+    const liveP = camera.position.clone(), liveL = camTarget.clone(), liveFov = CAM_VIEWS[camView].fov;
+    camApply(f.p.clone().lerp(liveP, k), f.l.clone().lerp(liveL, k), f.fov + (liveFov - f.fov) * k, 0.35 + 0.65 * k);
+    if (camFx.t >= 1) { camFx.on = false; camera.fov = liveFov; camera.updateProjectionMatrix(); final.u.maxR.value = camRes(); }
+  }
+});
+TF.sparkles = (...a) => { sparkles(...a); return scene.children[scene.children.length - 1]; };   // the twinkle that marks something playable; returns it, so a game can hide it while it plays
 const _ready = window.TokenFallReady || [];
 window.TokenFallReady = { push(f) { f(TF); } };
 _ready.forEach(f => f(TF));
 
 // ================= boot =================
-// ?lobby=village builds the village lobby instead of the waterfront one
-const LOBBY = new URLSearchParams(location.search).get('lobby') === 'village' ? VILLAGE : WATERFRONT;
-if (LOBBY.npcBounds) NPC_BOUNDS.lobby = LOBBY.npcBounds;
 const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImg = new Image();
 const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.ADITYA_SHEET; });

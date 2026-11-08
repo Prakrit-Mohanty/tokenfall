@@ -52,7 +52,7 @@ function frame(now) {
   } T += dt / 1000; timeU.value = T; final.u.time.value = T % 100;
   // hero
   const typing = document.activeElement === chatIn;
-  hero.setInput(dialog || traveling || typing ? { up: false, down: false, left: false, right: false, run: false } : {
+  hero.setInput(dialog || traveling || typing || playerLocked ? { up: false, down: false, left: false, right: false, run: false } : {
     up: keys.KeyW || keys.ArrowUp, down: keys.KeyS || keys.ArrowDown, left: keys.KeyA || keys.ArrowLeft, right: keys.KeyD || keys.ArrowRight, run: keys.ShiftLeft || keys.ShiftRight,
   });
   stepChar(hero, dt);
@@ -83,6 +83,7 @@ function frame(now) {
     const d = Math.hypot(hero.x - c.x, hero.y - c.y);
     if (d < 1.5 && d < best) { best = d; nearest = { x: c.x, z: c.y, label: c.name, verb: 'Talk', act: () => { c.wait = 4000; c.setInput({}); c.dir = Math.abs(hero.x - c.x) > Math.abs(hero.y - c.y) ? (hero.x > c.x ? 'right' : 'left') : (hero.y > c.y ? 'down' : 'up'); talk(c.name, NPC_TALK[c.name]); } }; }
   }
+  if (playerLocked) { nearest = null; nearP = null; }
   // camera follows with a little lag
   camTarget.lerp(tmp.set(hero.x, CAM_VIEWS[camView].y, hero.y), 1 - Math.pow(.004, dt / 1000));
   camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget);

@@ -38,8 +38,28 @@
 <script src="js/bridge/bridge-world.js?v=2"></script>
 <script src="js/bridge/bridge-play.js?v=2"></script>
 <script src="js/bridge/bridge-progress.js?v=2"></script>
+<script src="js/carrom-content.js?v=2"></script>
+<script src="js/carrom-physics.js?v=2"></script>
+<script src="js/carrom-generator.js?v=2"></script>
+<script src="js/carrom-world.js?v=2"></script>
+<script src="js/carrom-play.js?v=2"></script>
+<script src="js/carrom-progress.js?v=2"></script>
+<script src="js/jenga-content.js?v=2"></script>
+<script src="js/jenga-engine.js?v=2"></script>
+<script src="js/jenga-generator.js?v=2"></script>
+<script src="js/jenga-world.js?v=2"></script>
+<script src="js/jenga-play.js?v=2"></script>
+<script src="js/jenga-progress.js?v=2"></script>
+<script src="js/gallery-content.js?v=2"></script>
+<script src="js/gallery-engine.js?v=2"></script>
+<script src="js/gallery-world.js?v=2"></script>
+<script src="js/gallery-play.js?v=2"></script>
+<script src="js/gallery-progress.js?v=2"></script>
 <script>
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => BridgePlay.install(TF));
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => { CarromWorld.install(TF); CarromPlay.install(TF); CarromProgress.install(TF); });
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => { JengaWorld.install(TF); JengaPlay.install(TF); JengaProgress.install(TF); });
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => { GalleryWorld.install(TF); GalleryPlay.install(TF); GalleryProgress.install(TF); });
 </script>
 <script src="js/game/setup.js?v=2"></script>
 <script src="js/game/textures.js?v=2"></script>

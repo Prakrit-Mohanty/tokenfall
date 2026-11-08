@@ -126,7 +126,7 @@ function buildLobby() {
   const houseFront = modernHouse(-13.4, -15);
   INTER.push({ x: -14.9, z: houseFront + 1.9, r: 1.6, label: 'Home', verb: 'Knock', act: () => talk('Home', ['Nobody\'s home right now.', 'A note on the door: “Moving in soon — your own space in TokenFall!”']) });
   const cafeFront = cafe(13.4, -14.6);
-  INTER.push({ x: 13.4, z: cafeFront + 1.2, r: 1.7, label: 'Token Brew', verb: 'Order', act: () => talk('Token Brew', ['One masala chai, coming up! ☕', 'Fun fact: this sentence is about 12 tokens long.']) });
+  INTER.push({ x: 13.4, z: cafeFront + 1.2, r: 1.7, label: 'Token Brew', verb: 'Order', act: () => talk('Token Brew', ['One masala chai, coming up! ☕', 'Fun fact: this sentence is about 12 tokens long.', 'Someone left a tower on the terrace. Nobody owns up to it. Pull the right block and I will say nothing about the table.']) });
   hedgeRow(-10.1, -13.2, -8.6, -12.6); hedgeRow(8.6, -13.2, 10.6, -12.6); hedgeRow(16.2, -13.2, 17.9, -12.6);
   umbrellaTable(10.3, -9.9, MAT.umbrellaA); umbrellaTable(13.4, -9.4, MAT.umbrellaB);
   for (const x of [-2.6, 2.6]) pot(x, -10.9, 1.1);   // small pots by the HQ door; the forecourt must stay open to both bridges
@@ -161,7 +161,7 @@ function buildLobby() {
   const paper = std(canvasTex(32, 20, (g) => { g.fillStyle = '#b48a5a'; g.fillRect(0, 0, 32, 20); for (const [x, y, w, h, c] of [[2, 2, 9, 11, '#efe4c8'], [13, 3, 8, 7, '#f6d98a'], [23, 2, 7, 10, '#efe4c8'], [13, 11, 9, 7, '#cfe6f0']]) { g.fillStyle = c; g.fillRect(x, y, w, h); g.fillStyle = '#8a7a60'; for (let yy = y + 2; yy < y + h - 1; yy += 2) g.fillRect(x + 1, yy, w - 2, 1); g.fillStyle = '#c0392b'; g.fillRect(x + (w >> 1), y, 1, 1); } }, { nearest: true }), 0);
   const pb = add(new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, .08), [MAT.metal, MAT.metal, MAT.metal, MAT.metal, paper, MAT.metal])); pb.position.set(4.2, 1.3, .44);
   colBox(3, .15, 5.4, .65);
-  INTER.push({ x: 4.2, z: 1.4, r: 1.4, label: 'Notice Board', verb: 'Read', act: () => talk('Notice Board', ['📌 Week 1 — What even is a token?', '📌 Prompt Lab opens soon: learn to talk to models clearly.', '📌 New: the Glass Bridge, south of the plaza. Pick the right tile. Or don\'t.', '📌 Lost: one rubber duck. Answers to “Debug”.']) });
+  INTER.push({ x: 4.2, z: 1.4, r: 1.4, label: 'Notice Board', verb: 'Read', act: () => talk('Notice Board', ['📌 Week 1 — What even is a token?', '📌 Prompt Lab opens soon: learn to talk to models clearly.', '📌 New: the Glass Bridge, south of the plaza. Pick the right tile. Or don\'t.', '📌 House rules at the HQ carrom table: sink the coin that carries the right answer.', '📌 Someone left a tower on the terrace by Token Brew. Pull the block that carries the right answer. Three wrong tries and it falls.', '📌 The fair is in town! Spot Shot is on the south lawn, past the pool. Shoot the fakes and the scams, spare the real ones, and check a card before you trust it.', '📌 Lost: one rubber duck. Answers to “Debug”.']) });
   tokenFountain(FOUNTAIN[0], FOUNTAIN[1]);
   // where the Token used to stand: a round flower bed
   const bed = add(new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.7, .35, 28), MAT.concrete)); bed.position.set(WEST_BED[0], .175, WEST_BED[1]);
@@ -210,5 +210,6 @@ function buildLobby() {
 
 const WATERFRONT = {
   build: buildLobby, spawn: [0, 2.6], spawnDir: 'down', npcBounds: null, returns: {},
+  minigameSpots: { tower: [[13, -1.5]] },
   petals: [[-10, 1.2], [15.2, 16]], lightPoles: [[9.2, -9.9], [15.9, -9.9], [15.9, -3.6], [9.2, -3.6]],
 };

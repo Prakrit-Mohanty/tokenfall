@@ -8,6 +8,8 @@ const V_ROADS = [[-2.6, -30.5, 2.6, -10], [-2.6, 10, 2.6, 46], [-46, -2.6, -12, 
 const V_RIVER = [-80, -37.5, 80, -30.5];
 const V_POND = [25, 25, 8];
 const V_MOW = [-43, 6, -35, 14];
+const V_GAMES_LAWN = [-28.2, -9, -16.9, -2.6];
+const V_GAME_SPOTS = { tower: [[-26, -6.5]], stall: [[-20.5, -4.6]] };
 const V_HALF = 46;
 const V_LED = 0x8fe8ff;
 const V_LED_WARM = 0xffe2b0;
@@ -16,7 +18,7 @@ const V_SPAWN = [0, 13];
 const V_BOT_CYCLE = 54;
 const V_BOT_DOCK = [38.9, -3.5];
 const V_HOMES = [
-  { x: -19, z: -12.5, w: 9, d: 7, wall: 0xf2efe8, style: 'flat', solar: true, label: ['Home', '#9dff9f'], inter: ['Home', 'Knock', ['Nobody\'s home right now.', 'A note on the door: “Moving in soon — your own space in TokenFall!”']] },
+  { x: -19, z: -12.5, w: 9, d: 7, wall: 0xf2efe8, style: 'flat', solar: true, label: ['Home', '#9dff9f'], labelRight: true, inter: ['Home', 'Knock', ['Nobody\'s home right now.', 'A note on the door: “Moving in soon — your own space in TokenFall!”']] },
   { x: -32, z: -13, w: 8, d: 7, wall: 0xe8e2d6, style: 'mono', storeys: 2, clad: true, flue: true },
   { x: -26, z: -25, w: 10, d: 8, wall: 0xefe6d8, style: 'gable', storeys: 2, led: true },
   { x: 20, z: -13, w: 10, d: 7, wall: 0xd9cfbf, style: 'flat', cafe: true, label: ['TOKEN BREW', '#ffd27a'], inter: ['Token Brew', 'Order', ['One masala chai, coming up! ☕', 'Fun fact: this sentence is about 12 tokens long.']] },
@@ -34,7 +36,7 @@ const V_HOMES = [
   { x: 10.5, z: 38, w: 8, d: 7, ry: -Math.PI / 2, wall: 0xd9cfbf, style: 'mono', clad: true, flue: true },
 ];
 const V_EXTRA_PATHS = [[0, -42.2, 5, 9.4], [5.15, 26, 5.1, 1.8], [32.4, -6, 5.6, 3]];
-const V_FENCES = [[-14, -4, -14, -9.5], [14.5, 4, 14.5, 7.5], [-14.5, 4, -14.5, 9], [-24, -4.2, -28.2, -4.2], [-34, -4.2, -38, -4.2], [29.5, 4.2, 31, 4.2]];
+const V_FENCES = [[-14, -4, -14, -9.5], [14.5, 4, 14.5, 7.5], [-14.5, 4, -14.5, 9], [-34, -4.2, -38, -4.2], [29.5, 4.2, 31, 4.2]];
 const V_LAMPS = [[-11.4, -9.4, 1], [11.4, 9.4, 1], [-11.4, 9.4, 0], [11.4, -9.4, 0], [-3.6, -14, 0], [3.6, -17, 1], [-3.6, 16, 1], [3.6, 30, 0], [-16, -3.6, 1], [-30, 3.6, 0], [16, 3.6, 1], [30, -3.6, 0], [-3.6, -28.5, 0], [3.6, 35, 0]];
 const V_HOLOS = [[0, -10.8, 0, '▲ HQ'], [-12.8, 0, Math.PI / 2, '◀ DATA ARCHIVE'], [12.8, 0, -Math.PI / 2, 'PUNE ▶'], [0, 10.8, Math.PI, '▼ GLASS BRIDGE']];
 const V_AI_TIPS = ['AI tip: an AI can sound sure of itself and still be wrong. Check answers that matter.', 'AI tip: give it context. "Summarise this for a new joiner" beats "summarise this".', 'AI tip: never paste passwords or private customer data into a chatbot.'];
@@ -59,7 +61,7 @@ function vDoorPath(c) {
 const V_PATHS = [...V_HOMES.map(vDoorPath).filter(Boolean), ...V_EXTRA_PATHS];
 const vPaved = (x, z, m = 0) => vInRect(V_PLAZA, x, z, m) || V_ROADS.some((r) => vInRect(r, x, z, m)) || V_PATHS.some(([px, pz, w, d]) => vInRect([px - w / 2, pz - d / 2, px + w / 2, pz + d / 2], x, z, m));
 const vWater = (x, z, m = 0) => vInRect(V_RIVER, x, z, m) || Math.hypot(x - V_POND[0], z - V_POND[1]) < V_POND[2] + m;
-const vClear = (x, z, m) => !vPaved(x, z, m) && !vWater(x, z, m) && !vInRect(V_MOW, x, z, m) && !(walkable(x, z) && blocked(x, z, m));
+const vClear = (x, z, m) => !vPaved(x, z, m) && !vWater(x, z, m) && !vInRect(V_MOW, x, z, m) && !vInRect(V_GAMES_LAWN, x, z, m) && !(walkable(x, z) && blocked(x, z, m));
 
 const vCache = {};
 const vOnce = (key, make) => vCache[key] || (vCache[key] = make());
@@ -126,7 +128,7 @@ function vRoof(g, c, H, mw, mx, sw, sx, sideH) {
 
 // a modern home: a rendered main volume with big glazing, a recessed wood or clad volume with the door, and one of three roofs
 function vHome(c) {
-  const { x, z, w, d, ry = 0, storeys = 1, wall, style, label, led, flue, clad, cafe, inter } = c;
+  const { x, z, w, d, ry = 0, storeys = 1, wall, style, label, labelRight, led, flue, clad, cafe, inter } = c;
   const g = vGroup(x, z, ry), H = .3 + storeys * 3, wallM = vTint(TX.plaster, 1, wall), sideM = clad ? MAT.cladding : MAT.wood;
   const mw = w * .62, sw = w - mw, mx = -w / 2 + mw / 2, sx = w / 2 - sw / 2, sideH = style === 'flat' ? H - 1 : H - .3;
   gbox(g, w + .4, .3, d + .4, MAT.concrete, 0, 0, 0);
@@ -157,7 +159,7 @@ function vHome(c) {
 
   const s = Math.sin(ry), cs = Math.cos(ry), door = vDoor(c);
   if (label) {
-    const lx = -w / 2 + .9, lz = d / 2 + 1.6, wx = x + cs * lx + s * lz, wz = z - s * lx + cs * lz;
+    const lx = labelRight ? w / 2 - .5 : -w / 2 + .9, lz = d / 2 + 1.6, wx = x + cs * lx + s * lz, wz = z - s * lx + cs * lz;
     ledSign([label[0]], label[1], wx, 1.7, wz, 2.6, .55, ry); box(.1, 1.45, .1, MAT.metal, wx, 0, wz); colCirc(wx, wz, .2);
   }
   if (inter) { const [name, verb, lines] = inter; INTER.push({ x: door.x + door.dirX * 1.4, z: door.z + door.dirZ * 1.4, r: 1.7, label: name, verb, act: () => talk(name, lines) }); }
@@ -300,7 +302,7 @@ function vPathLights() {
     const alongX = x1 - x0 > z1 - z0, a = alongX ? x0 : z0, b = alongX ? x1 : z1;
     for (let t = a + 3; t < b - 1; t += 7) for (const edge of alongX ? [z0 - .45, z1 + .45] : [x0 - .45, x1 + .45]) {
       const x = alongX ? t : edge, z = alongX ? edge : t;
-      if (V_PATHS.some(([px, pz, w, d]) => vInRect([px - w / 2, pz - d / 2, px + w / 2, pz + d / 2], x, z, .6)) || blocked(x, z, .1)) continue;
+      if (V_PATHS.some(([px, pz, w, d]) => vInRect([px - w / 2, pz - d / 2, px + w / 2, pz + d / 2], x, z, .6)) || vInRect(V_GAMES_LAWN, x, z, .2) || blocked(x, z, .1)) continue;
       box(.16, .55, .16, MAT.metal, x, 0, z); box(.18, .08, .18, vGlow(V_LED_COOL), x, .45, z, { cast: false }); colCirc(x, z, .12);
     }
   }
@@ -405,7 +407,7 @@ function vRobots() {
 
 function vFoliage() {
   const leaves = [MAT.leafA, MAT.leafB, MAT.leafC];
-  for (const [x, z, s, leaf] of [[-10.6, -8.6, 1, MAT.blossom], [10.6, 8.6, .9, MAT.leafC], [-6.5, 27, 1.1, MAT.leafA], [6.6, -18, 1, MAT.leafB], [-17, 12, 1.1, MAT.blossom], [17, 18, 1.2, MAT.leafA], [-22, -6.5, .9, MAT.leafC], [24, -20, 1, MAT.blossom]]) tree(x, z, s, leaf);
+  for (const [x, z, s, leaf] of [[-10.6, -8.6, 1, MAT.blossom], [10.6, 8.6, .9, MAT.leafC], [-6.5, 27, 1.1, MAT.leafA], [6.6, -18, 1, MAT.leafB], [-17, 12, 1.1, MAT.blossom], [17, 18, 1.2, MAT.leafA], [24, -20, 1, MAT.blossom]]) tree(x, z, s, leaf);
   for (let i = 0, n = 0; i < 400 && n < 40; i++) {
     const x = rr(-V_HALF + 2, V_HALF - 2), z = rr(-V_HALF + 2, V_HALF - 2);
     if (!vClear(x, z, 2.2)) continue;
@@ -456,7 +458,7 @@ function buildVillageLobby() {
   for (const f of V_FENCES) vFence(...f);
   for (const [x, z] of [[-12.6, 3.6], [12.6, -3.6], [4.6, -10.8]]) pot(x, z);
   for (const [x, z, ry, text] of V_HOLOS) vHolo(x, z, ry, text);
-  vTotem(-5.6, 11.4, 'WELCOME', ['▲ HQ', '◀ Archive', 'Pune ▶', '▼ Glass Bridge'], 'Directory', ['Welcome to TokenFall!', 'West, past the food stalls: the Data Archive. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The leaderboard by the plaza shows who has the most correct answers.']);
+  vTotem(-5.6, 11.4, 'WELCOME', ['▲ HQ', '◀ Archive', 'Pune ▶', '▼ Glass Bridge'], 'Directory', ['Welcome to TokenFall!', 'West, past the food stalls: the Data Archive. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'The leaderboard by the plaza shows who has the most correct answers.']);
   vTotem(5.6, 11.4, 'AI TIP', ['Sounding sure is not the same as being right.'], 'AI Tips', V_AI_TIPS);
 
   gate(-40, 0, Math.PI / 2, 'Data Archive', 0xffb347, 'lobby', 'archive');
@@ -479,4 +481,5 @@ const VILLAGE = {
   returns: { archive: [-37, 0], pune: [37, 0], bridge: [0, 37] },
   petals: [[-10.6, -8.6], [-17, 12]], lightPoles: [],
   dof: { farStart: 14, farRange: 50, edgeBlur: .25 },
+  minigameSpots: V_GAME_SPOTS,
 };

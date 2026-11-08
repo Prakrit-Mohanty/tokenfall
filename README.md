@@ -12,7 +12,7 @@ npm run dev
 
 Then open http://127.0.0.1:8765/. Opening `index.html` directly from disk works too.
 
-Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `archive`) starts in an area, `?at=x,z` starts at a position.
+Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `archive`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?lobby=waterfront` builds the earlier waterfront lobby instead of the village, `?board=sample` fills the leaderboard with sample rows.
 
 ## Layout
 
@@ -27,7 +27,11 @@ js/game/            the game, one file per system (classic scripts sharing one g
   props.js            trees, bushes, lamps, benches, signs
   buildings.js        lobby buildings, gates, Crescent Bay (Calfus), the ABZ tower, bikes, street lights
   portals.js          water and the teleporter pads
-  lobby.js            the main plaza
+  lobby-village.js    the village lobby (the default): homes, plaza, roads, river, pond, the minigame lawn
+  village-ai.js       AI set pieces: TOKEN-1, neural-net sculpture, ticker, model servers, art wall, robot dog
+  village-robots.js   robot arm, barista, chess table, sweeper, parcel lockers
+  leaderboard.js      most-correct-answers board; games report through TokenFall.leaderboard.set
+  lobby.js            the earlier waterfront lobby (?lobby=waterfront)
   areas.js            AREAS registry + placeholder shell
   office-kit.js       shared office pieces: desks, meeting rooms, sofas, garlands, faders
   office-hq.js        Calfus HQ office (zone "lab")
@@ -39,11 +43,16 @@ js/game/            the game, one file per system (classic scripts sharing one g
   post.js             tilt-shift, bloom, colour grade
   loop.js             zones and travel, camera, frame loop
   main.js             window.TokenFall API for modules, then boot
-js/bridge/          The Glass Bridge minigame (plugs in through window.TokenFall); tests: npm test
+js/bridge/          The Glass Bridge minigame (plugs in through window.TokenFall)
+js/carrom-*.js      House Rules Carrom (HQ carrom table)
+js/jenga-*.js       Token Tower (lobby, by Home)
+js/gallery-*.js     Spot Shot (lobby, by Home)
+                    every minigame's tests: npm test
+launcher/           the retro-PC start screen
 js/sprites/         sprite player + Aditya's sheet
 assets/             source sprite sheet
 old/                earlier prototypes, not used
-tools/              bridge-patch.js (historical record of the bridge integration)
+tools/              dev-server.py; bridge-patch.js and carrom-patch.js (historical records of the lobby.html integrations)
 ```
 
 Files in `js/game/` see each other's functions and constants directly, so a new file only needs a `<script>` tag in `index.html` after the files it uses.
