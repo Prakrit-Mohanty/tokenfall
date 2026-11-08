@@ -49,12 +49,15 @@ const NPC_TALK = {
 };
 let npcs = [];
 const CHATTER_OFFICE = ['who booked the Prompt Lab again?', 'chai break in 5?', 'the carrom queen is MINE', 'standup in the Token Room', 'love the marigolds', 'anyone seen my charger?'];
-const NPC_BOUNDS = { lobby: [-16, -10.5, 16, 17.5], lab: [-9.6, -317.5, 9.6, -282.3], abz: [-12.2, 286.7, 12, 313.3] };
+const NPC_BOUNDS = { lobby: [-16, -10.5, 16, 17.5], lab: [-9.6, -317.5, 9.6, -282.3], abz: [-12.2, 286.7, 12, 313.3], pune: [279, -8.5, 336, 9] };
 const OFFICE_NPCS = ['rahul.k', 'meera_s', 'devansh'];
 Object.assign(NPC_TALK, {
   'rahul.k': ['Welcome to the office!', 'Fair warning: the Prompt Lab meeting room is always booked.'],
   'meera_s': ['The chai machine is by the lounge. Probably.', 'Ask me about tokens. Actually, ask the Token Room.'],
   'devansh': ['I\'m on carrom duty today.', 'Did you see the chandeliers? Nobody knows who picked them, but we love them.'],
+  'ananya.r': ['Waiting for the bus. It\'s always "five minutes away".', 'Fun fact: a model has no idea what time it is unless you tell it.'],
+  'kabir_m': ['Grabbing misal before standup.', 'I asked an AI for directions once. Confidently wrong. Check its answers!'],
+  'sneha.d': ['ABZ is on the 15th floor, the lift is in the lobby.', 'Crescent Bay is the Calfus office, right over there.'],
 });
 function randomSpot() {
   for (let i = 0; i < 200; i++) { const x = rr(-15, 15), z = rr(-9, 16); if (!blocked(x, z, .6)) return { x, z }; }

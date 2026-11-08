@@ -3,6 +3,8 @@
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0b10; font-family: 'Pixelify Sans', monospace; color: var(--ink); }
   canvas { display: block; width: 100vw; height: 100vh; }
   #ui { position: fixed; inset: 0; pointer-events: none; }
+  #launcher { position: fixed; inset: 0; z-index: 100; }
+  #launcher, #launcher * { box-sizing: content-box; }
   .panel { background: var(--panel); border: 1px solid rgba(217, 180, 106, .55); box-shadow: 0 0 0 1px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04); }
 
   #loc { position: absolute; top: 18px; left: 18px; padding: 8px 16px 8px 12px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .08em; display: flex; align-items: center; gap: 10px; }
@@ -47,3 +49,18 @@
   #fade { position: absolute; inset: 0; background: #000; opacity: 1; transition: opacity .45s; }
   #loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: 'Cinzel', serif; letter-spacing: .2em; font-size: 14px; color: var(--gold); }
   @media (max-width: 720px) { #party, #help { display: none; } #chat { width: calc(100vw - 32px); left: 16px; } }
+
+  #board { position: absolute; inset: 0; display: none; place-items: center; background: rgba(6, 8, 14, .45); pointer-events: auto; }
+  #board .card { width: min(440px, calc(100vw - 32px)); padding: 18px 20px 14px; }
+  #board .title { font-family: 'Cinzel', serif; font-size: 20px; letter-spacing: .08em; color: var(--gold); }
+  #board .sub { font-size: 13px; opacity: .75; margin: 2px 0 12px; }
+  #board .rows { list-style: none; margin: 0; padding: 0; max-height: 52vh; overflow-y: auto; }
+  #board li { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 6px 8px; font-size: 16px; }
+  #board li:nth-child(odd) { background: rgba(255, 255, 255, .05); }
+  #board .rank { display: grid; place-items: center; height: 24px; background: #3a4a6b; color: var(--ink); }
+  #board .r1 .rank { background: #f2b53a; color: #15171d; } #board .r2 .rank { background: #cfd5dc; color: #15171d; } #board .r3 .rank { background: #e0a878; color: #15171d; }
+  #board .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #board .score { color: #8fe8ff; font-variant-numeric: tabular-nums; }
+  #board .empty { display: block; text-align: center; padding: 22px 8px; opacity: .8; }
+  #board .hint { margin-top: 10px; text-align: center; font-size: 12px; opacity: .7; }
+  #board kbd { font: inherit; color: #1a140c; background: var(--gold); padding: 0 5px; }

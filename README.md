@@ -8,7 +8,7 @@ An HD-2D pixel-art game set in the Calfus offices, for learning AI literacy. Pla
 npm run dev
 ```
 
-(That just runs `python3 -m http.server 8765`; there are no dependencies to install.)
+(That runs `tools/dev-server.py`, a plain Python file server that tells the browser not to cache, so a normal refresh always shows your latest edits; there are no dependencies to install.)
 
 Then open http://127.0.0.1:8765/. Opening `index.html` directly from disk works too.
 
@@ -19,6 +19,7 @@ Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `archive`) starts in
 ```
 index.html          page shell: HUD markup and the script list (load order matters)
 css/game.css        HUD and UI styles
+launcher/           start screen (retro PC → menu); start.js holds the game until Enter, ?zone= / ?at= skip it
 js/game/            the game, one file per system (classic scripts sharing one global scope)
   setup.js            renderer, scene, camera views, seeded random
   textures.js         pixel-art canvas textures

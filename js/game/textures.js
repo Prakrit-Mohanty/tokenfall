@@ -14,26 +14,39 @@ function canvasTex(w, h, draw, opts = {}) {
 }
 const rgb = (c, f = 1) => `rgb(${Math.max(0, Math.min(255, c[0] * f)) | 0},${Math.max(0, Math.min(255, c[1] * f)) | 0},${Math.max(0, Math.min(255, c[2] * f)) | 0})`;
 const P = (g, x, y, c, f) => { g.fillStyle = rgb(c, f); g.fillRect(x, y, 1, 1); };
-function noiseFill(g, w, h, base, amt, chance = 1) {
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (rnd() < chance) P(g, x, y, base, 1 + (rnd() - .5) * amt);
+function noiseFill(g, w, h, base, amt, chance = 1, rng = rnd) {
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (rng() < chance) P(g, x, y, base, 1 + (rng() - .5) * amt);
+}
+// a second seeded sequence for detail drawn after the world is built, so the layout's rnd() sequence never shifts
+let decorSeed = 424242;
+const decorRandom = () => (decorSeed = (decorSeed * 16807) % 2147483647) / 2147483647;
+const TEXTURE_REFINES = [];
+// queues a sharper redraw (w x h) of a texture; applyTextureRefines() swaps it in once the world exists
+function refineTexture(tex, w, h, draw) { TEXTURE_REFINES.push({ tex, w, h, draw }); return tex; }
+function applyTextureRefines() {
+  for (const r of TEXTURE_REFINES) {
+    const c = document.createElement('canvas'); c.width = r.w; c.height = r.h;
+    r.draw(c.getContext('2d'), r.w, r.h);
+    r.tex.image = c; r.tex.needsUpdate = true;
+  }
 }
 
 // stones laid in rows; tiles seamlessly
-function stoneTex(base, mortar, rowH = [5, 8], wid = [6, 12], size = 64) {
+function stoneTex(base, mortar, rowH = [5, 8], wid = [6, 12], size = 64, rng = rnd) {
   return canvasTex(size, size, (g, W, H) => {
     g.fillStyle = rgb(mortar); g.fillRect(0, 0, W, H);
     let y = 0;
     while (y < H) {
-      let rh = rowH[0] + (rnd() * (rowH[1] - rowH[0]) | 0); if (H - y < rh + rowH[0]) rh = H - y;
-      const off = rnd() * W | 0; let x = 0;
+      let rh = rowH[0] + (rng() * (rowH[1] - rowH[0]) | 0); if (H - y < rh + rowH[0]) rh = H - y;
+      const off = rng() * W | 0; let x = 0;
       while (x < W) {
-        let sw = wid[0] + (rnd() * (wid[1] - wid[0]) | 0); if (W - x < sw + wid[0]) sw = W - x;
-        const v = (rnd() - .5) * 34, c = [base[0] + v + (rnd() - .5) * 12, base[1] + v, base[2] + v - rnd() * 10];
+        let sw = wid[0] + (rng() * (wid[1] - wid[0]) | 0); if (W - x < sw + wid[0]) sw = W - x;
+        const v = (rng() - .5) * 34, c = [base[0] + v + (rng() - .5) * 12, base[1] + v, base[2] + v - rng() * 10];
         for (let i = 1; i < sw; i++) for (let j = 1; j < rh; j++) {
           if ((i === 1 || i === sw - 1) && (j === 1 || j === rh - 1)) continue;
           let f = 1;
           if (j === 1 || i === 1) f = 1.16; else if (j === rh - 1 || i === sw - 1) f = .76;
-          if (rnd() < .1) f *= .9;
+          if (rng() < .1) f *= .9;
           P(g, (x + i + off) % W, (y + j) % H, c, f);
         }
         x += sw;
@@ -45,7 +58,7 @@ function stoneTex(base, mortar, rowH = [5, 8], wid = [6, 12], size = 64) {
 const TX = {};
 function buildTextures() {
   TX.cobble = stoneTex([168, 156, 132], [78, 70, 60]);
-  TX.flag = stoneTex([150, 146, 140], [70, 66, 62], [10, 14], [10, 18]);
+  TX.flag = refineTexture(stoneTex([150, 146, 140], [70, 66, 62], [10, 14], [10, 18]), 80, 80, (g, W, H) => g.drawImage(stoneTex([150, 146, 140], [70, 66, 62], [12, 18], [12, 22], 80, decorRandom).image, 0, 0));
   TX.stoneWall = stoneTex([138, 132, 122], [60, 56, 52], [6, 9], [9, 16], 32);
   TX.grass = canvasTex(64, 64, (g, W, H) => {
     noiseFill(g, W, H, [92, 128, 58], .22);
@@ -112,22 +125,37 @@ function buildTextures() {
     g.fillStyle = '#0d2a36'; g.fillRect(0, 0, W, H);
     for (let y = 2; y < H - 1; y += 2) { const x0 = 2 + (rnd() * 4 | 0); g.fillStyle = rnd() < .3 ? '#ffd27a' : '#7fe6ff'; g.fillRect(x0, y, 4 + (rnd() * 20 | 0), 1); }
   }, { nearest: true });
-  TX.paver = canvasTex(64, 64, (g, W, H) => {
+  TX.paver = refineTexture(canvasTex(64, 64, (g, W, H) => {
     g.fillStyle = rgb([128, 122, 112]); g.fillRect(0, 0, W, H);
     for (let r = 0; r < 8; r++) for (let c = -1; c < 4; c++) {
       const x0 = c * 16 + (r % 2) * 8, y0 = r * 8, v = (rnd() - .5) * 26, b = [182 + v, 174 + v, 160 + v - rnd() * 8];
       for (let i = 1; i < 16; i++) for (let j = 1; j < 8; j++) { const x = x0 + i; if (x < 0 || x >= W) continue; P(g, x, y0 + j, b, (j === 1 ? 1.05 : j === 7 ? .9 : 1) * (1 + (rnd() - .5) * .05)); }
     }
+  }), 96, 96, (g, W, H) => {
+    g.fillStyle = rgb([128, 122, 112]); g.fillRect(0, 0, W, H);
+    for (let r = 0; r < 8; r++) for (let c = -1; c < 4; c++) {
+      const x0 = c * 24 + (r % 2) * 12, y0 = r * 12, v = (decorRandom() - .5) * 26, b = [182 + v, 174 + v, 160 + v - decorRandom() * 8];
+      for (let i = 1; i < 24; i++) for (let j = 1; j < 12; j++) { const x = x0 + i; if (x < 0 || x >= W) continue; P(g, x, y0 + j, b, (j === 1 ? 1.06 : j === 11 ? .88 : i === 1 ? 1.03 : i === 23 ? .94 : 1) * (1 + (decorRandom() - .5) * .05)); }
+    }
   });
-  TX.concrete = canvasTex(32, 32, (g, W, H) => {
+  TX.concrete = refineTexture(canvasTex(32, 32, (g, W, H) => {
     noiseFill(g, W, H, [196, 192, 184], .06);
     g.fillStyle = rgb([172, 168, 160]); g.fillRect(0, 15, W, 1); g.fillRect(15, 0, 1, H);
     for (const [x, y] of [[7, 7], [23, 7], [7, 23], [23, 23]]) P(g, x, y, [140, 136, 130]);
+  }), 48, 48, (g, W, H) => {
+    noiseFill(g, W, H, [196, 192, 184], .06, 1, decorRandom);
+    for (let i = 0; i < 40; i++) P(g, decorRandom() * W | 0, decorRandom() * H | 0, [176, 172, 164]);
+    g.fillStyle = rgb([172, 168, 160]); g.fillRect(0, 23, W, 1); g.fillRect(23, 0, 1, H);
+    for (const [x, y] of [[11, 11], [35, 11], [11, 35], [35, 35]]) P(g, x, y, [140, 136, 130]);
   });
-  TX.cladding = canvasTex(32, 32, (g, W, H) => {
+  TX.cladding = refineTexture(canvasTex(32, 32, (g, W, H) => {
     for (let y = 0; y < H; y++) { const sl = y / 4 | 0, b = [[168, 116, 72], [150, 102, 62], [176, 124, 78]][sl % 3]; for (let x = 0; x < W; x++) P(g, x, y, b, y % 4 === 3 ? .55 : 1 + (rnd() - .5) * .08); }
+  }), 48, 48, (g, W, H) => {
+    for (let y = 0; y < H; y++) { const sl = y / 6 | 0, b = [[168, 116, 72], [150, 102, 62], [176, 124, 78]][sl % 3]; for (let x = 0; x < W; x++) P(g, x, y, b, y % 6 === 5 ? .55 : y % 6 === 0 ? 1.08 : 1 + (decorRandom() - .5) * .08); }
+    for (let i = 0; i < 30; i++) { const x = decorRandom() * W | 0, y = decorRandom() * H | 0; P(g, x, y, [120, 80, 50]); P(g, (x + 1) % W, y, [120, 80, 50]); }
   });
-  TX.roofFlat = canvasTex(32, 32, (g, W, H) => { noiseFill(g, W, H, [124, 122, 118], .1); g.fillStyle = rgb([104, 102, 98]); g.fillRect(0, 0, W, 1); g.fillRect(0, 16, W, 1); });
+  TX.roofFlat = refineTexture(canvasTex(32, 32, (g, W, H) => { noiseFill(g, W, H, [124, 122, 118], .1); g.fillStyle = rgb([104, 102, 98]); g.fillRect(0, 0, W, 1); g.fillRect(0, 16, W, 1); }),
+    64, 64, (g, W, H) => { noiseFill(g, W, H, [124, 122, 118], .1, 1, decorRandom); g.fillStyle = rgb([104, 102, 98]); g.fillRect(0, 0, W, 1); g.fillRect(0, 32, W, 1); g.fillStyle = rgb([138, 136, 130]); g.fillRect(0, 1, W, 1); g.fillRect(0, 33, W, 1); });
   // curtain-wall glass: some panes reflect the sky, some show warm lit offices
   const lit = Array.from({ length: 4 }, () => Array.from({ length: 2 }, () => rnd() < .45));
   const glass = (emissive) => canvasTex(32, 32, (g, W, H) => {
@@ -145,6 +173,22 @@ function buildTextures() {
     }
   }, { nearest: true });
   TX.glass = glass(false); TX.glassE = glass(true);
+  const glassHi = (emissive) => (g, W, H) => {
+    g.fillStyle = emissive ? '#000' : '#363a42'; g.fillRect(0, 0, W, H);
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) {
+      const x0 = c * 24 + 2, y0 = r * 48 + 2, on = lit[c][r];
+      for (let j = 0; j < 45; j++) for (let i = 0; i < 21; i++) {
+        let col;
+        if (on) col = j < 3 ? [255, 238, 196] : j > 34 ? [96, 74, 56] : j > 29 ? [120, 92, 66] : [255, 214, 150];
+        else { const t = j / 45; col = [150 - t * 60, 176 - t * 66, 196 - t * 66]; if ((i + j) % 27 < 3) col = col.map(v => v + 30); }
+        if (on && j > 29 && j < 35 && (i % 7 === 2 || i % 7 === 3)) col = [70, 56, 44];
+        if (emissive) col = on && j <= 29 ? (j < 3 ? [255, 228, 170] : [255, 190, 120]) : [0, 0, 0];
+        P(g, x0 + i, y0 + j, col);
+      }
+      if (!emissive) { g.fillStyle = '#4a4f58'; g.fillRect(x0, y0 + 30, 21, 2); }
+    }
+  };
+  refineTexture(TX.glass, 96, 96, glassHi(false)); refineTexture(TX.glassE, 96, 96, glassHi(true));
   TX.awning = canvasTex(16, 16, (g, W, H) => { for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) P(g, x, y, x % 8 < 4 ? [46, 120, 112] : [236, 226, 204]); }, { nearest: true });
   TX.coin = canvasTex(64, 64, (g, W, H) => {
     g.fillStyle = '#b8862c'; g.fillRect(0, 0, W, H);
@@ -176,6 +220,10 @@ function buildTextures() {
   const bg = blob.getContext('2d'), grd = bg.createRadialGradient(32, 32, 0, 32, 32, 32);
   grd.addColorStop(0, 'rgba(0,0,0,.55)'); grd.addColorStop(1, 'rgba(0,0,0,0)'); bg.fillStyle = grd; bg.fillRect(0, 0, 64, 64);
   TX.blob = new THREE.CanvasTexture(blob);
+  const glow = document.createElement('canvas'); glow.width = glow.height = 64;
+  const gg = glow.getContext('2d'), gl = gg.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gl.addColorStop(0, 'rgba(255,214,150,1)'); gl.addColorStop(.55, 'rgba(255,190,120,.35)'); gl.addColorStop(1, 'rgba(255,180,110,0)'); gg.fillStyle = gl; gg.fillRect(0, 0, 64, 64);
+  TX.glow = new THREE.CanvasTexture(glow);
 }
 
 function textTex(text, opts = {}) {

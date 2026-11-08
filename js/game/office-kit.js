@@ -51,11 +51,15 @@ function compact(g) {
 function officeMaterials() {
   const TAU = Math.PI * 2;
   const T = {};
-  T.floor = canvasTex(64, 64, (g, W, H) => {
+  const floorDraw = (random) => (g, W, H) => {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const n = Math.sin(x / W * TAU * 3 + Math.sin(y / H * TAU * 2) * 2) * Math.sin(y / H * TAU * 3 + x / W * TAU);
-      P(g, x, y, [98, 110, 124], 1 + n * .08 + (rnd() - .5) * .04);
+      P(g, x, y, [98, 110, 124], 1 + n * .08 + (random() - .5) * .04);
     }
+  };
+  T.floor = refineTexture(canvasTex(64, 64, floorDraw(rnd)), 160, 160, (g, W, H) => {
+    floorDraw(decorRandom)(g, W, H);
+    for (let i = 0; i < 260; i++) P(g, decorRandom() * W | 0, decorRandom() * H | 0, [128, 140, 154]);   // polished concrete flecks
   });
   // the feature wall's tiles: an eight-point star in rust with navy florals
   T.tile = canvasTex(32, 32, (g) => {
@@ -79,10 +83,11 @@ function officeMaterials() {
   }, { nearest: true });
   T.walnut = canvasTex(32, 32, (g, W, H) => { for (let x = 0; x < W; x++) { const b = 1 + Math.sin(x * .9) * .06 + (rnd() - .5) * .08; for (let y = 0; y < H; y++) P(g, x, y, [122, 76, 42], b * (1 + (rnd() - .5) * .05)); } });
   T.slat = canvasTex(16, 16, (g, W, H) => { for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) P(g, x, y, [72, 45, 30], x % 4 === 0 ? .5 : 1 + (rnd() - .5) * .08); }, { nearest: true });
-  T.felt = canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [204, 180, 142], .08));
-  T.fabric = canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [158, 158, 152], .1));
-  T.navy = canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [50, 66, 98], .12));
-  T.window = canvasTex(32, 32, (g, W, H) => {
+  const weave = (base, amt) => (g, W, H) => { noiseFill(g, W, H, base, amt, 1, decorRandom); for (let y = 0; y < H; y += 2) for (let x = (y / 2) % 2; x < W; x += 2) P(g, x, y, base, .94); };
+  T.felt = refineTexture(canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [204, 180, 142], .08)), 32, 32, weave([204, 180, 142], .08));
+  T.fabric = refineTexture(canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [158, 158, 152], .1)), 32, 32, weave([158, 158, 152], .1));
+  T.navy = refineTexture(canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [50, 66, 98], .12)), 32, 32, weave([50, 66, 98], .12));
+  T.window = refineTexture(canvasTex(32, 32, (g, W, H) => {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       let c;
       if (y < 17) c = y % 3 === 2 ? [196, 188, 170] : [218, 210, 192];                    // roller blind
@@ -94,7 +99,20 @@ function officeMaterials() {
       const bx = 2 + rnd() * 28 | 0, by = 20 + rnd() * 10 | 0, r = 2 + rnd() * 3, c = rnd() < .5 ? [86, 128, 74] : [112, 152, 90];
       for (let yy = 18; yy < H; yy++) for (let xx = 1; xx < W; xx++) if (Math.hypot(xx - bx, (yy - by) * 1.2) < r) P(g, xx, yy, c, 1 + (rnd() - .5) * .15);
     }
-  }, { nearest: true });
+  }, { nearest: true }), 64, 64, (g, W, H) => {
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const c = y < 34 ? (y % 4 === 3 ? [190, 182, 164] : y % 4 === 0 ? [230, 222, 204] : [216, 208, 190]) : [182, 210, 206];   // roller blind slats, then pale sky
+      P(g, x, y, c, 1 + (decorRandom() - .5) * .04);
+    }
+    for (let i = 0; i < 28; i++) {                                                                    // tree crowns: lit tops, dark undersides
+      const bx = decorRandom() * W, by = 40 + decorRandom() * 22, r = 3 + decorRandom() * 5, tone = [[78, 122, 66], [96, 140, 76], [66, 108, 60]][i % 3];
+      for (let yy = 35; yy < H; yy++) for (let xx = 1; xx < W; xx++) {
+        const dy = yy - by; if (Math.hypot(xx - bx, dy * 1.15) >= r) continue;
+        P(g, xx, yy, tone, (dy < -r * .3 ? 1.22 : dy > r * .45 ? .8 : 1) * (1 + (decorRandom() - .5) * .12));
+      }
+    }
+    g.fillStyle = '#404246'; g.fillRect(0, 0, 1, H); g.fillRect(0, 34, W, 1);
+  });
   T.exit = canvasTex(32, 64, (g, W, H) => {
     noiseFill(g, W, H, [112, 114, 116], .05);
     g.fillStyle = '#4a4c50'; g.fillRect(0, 0, W, 2); g.fillRect(0, 0, 2, H); g.fillRect(W - 2, 0, 2, H);
@@ -118,7 +136,7 @@ function officeMaterials() {
     }, { nearest: true });
   }
   MAT.oFloor = std(T.floor, 5, { roughness: 1, metalness: 0 });   // matte: no light spots on the floor
-  MAT.tile = std(T.tile, .9); MAT.walnut = std(T.walnut, 1.2); MAT.slat = std(T.slat, .5);
+  MAT.tile = std(T.tile, .9); MAT.walnut = std(T.walnut, 1); MAT.slat = std(T.slat, .5);
   MAT.felt = std(T.felt, 1); MAT.fabric = std(T.fabric, 1); MAT.navy = std(T.navy, 1);
   MAT.navy2 = std(T.navy, 1, { side: THREE.DoubleSide }); MAT.navy2.color.setRGB(1.45, 1.45, 1.5);
   MAT.navy3 = std(T.navy, 1); MAT.navy3.color.setRGB(1.3, 1.3, 1.35);
@@ -128,15 +146,17 @@ function officeMaterials() {
   MAT.window = std(T.window, 2, { emissive: 0xffffff, emissiveMap: T.window, emissiveIntensity: .55 });
   MAT.pane = new THREE.MeshStandardMaterial({ color: 0xd2e8ee, transparent: true, opacity: .16, roughness: .05, depthWrite: false });
   MAT.ledStrip = new THREE.MeshStandardMaterial({ color: 0xffc070, emissive: 0xffa040, emissiveIntensity: 2.2 });
-  MAT.shade = new THREE.MeshStandardMaterial({ color: 0xf3e6c8, emissive: 0xffc888, emissiveIntensity: .7, side: THREE.DoubleSide });
+  MAT.shade = new THREE.MeshStandardMaterial({ color: 0xf3e6c8, emissive: 0xffc888, emissiveIntensity: .45, side: THREE.DoubleSide });
   MAT.monitor = new THREE.MeshStandardMaterial({ map: TX.screen, emissive: 0xffffff, emissiveMap: TX.screen, emissiveIntensity: .5 });
+  MAT.screens = screenTextures().map(t => new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .5 }));
+  const code = MAT.screens[0].map; anim.push(t => { code.offset.y = Math.floor(t * 2.5) / 20; });
   MAT.pink = new THREE.MeshStandardMaterial({ color: 0xe8a596, roughness: .7 });
   MAT.exit = std(T.exit, 0, { emissive: 0xffffff, emissiveMap: T.exit, emissiveIntensity: .15 });
   T.marble = canvasTex(32, 32, (g, W, H) => {
     noiseFill(g, W, H, [30, 30, 33], .12);
     for (let v = 0; v < 3; v++) { let x = rnd() * W, y = 0; while (y < H) { P(g, (x | 0 + W) % W, y | 0, [150, 150, 154], 1 - rnd() * .3); x += (rnd() - .4) * 1.6; y += .7; } }
   });
-  MAT.marble = std(T.marble, 1.2, { roughness: .3, metalness: .1 });
+  MAT.marble = std(T.marble, 1, { roughness: .3, metalness: .1 });
   MAT.steel = new THREE.MeshStandardMaterial({ color: 0xb9bdc2, roughness: .3, metalness: .7 });
   MAT.elecSign = std(canvasTex(48, 16, g => { g.fillStyle = '#c0281c'; g.fillRect(0, 0, 48, 16); g.fillStyle = '#fff'; g.font = '600 7px "Pixelify Sans", monospace'; g.textBaseline = 'middle'; g.fillText('ELECTRICAL', 3, 5); g.fillText('ROOM', 3, 12); g.fillStyle = '#ffd23a'; g.fillRect(38, 4, 6, 8); }), 0);
   MAT.carrom = std(T.carrom, 0);
@@ -148,6 +168,32 @@ function officeMaterials() {
   MAT.lotusB = new THREE.MeshStandardMaterial({ map: T.lotusB, alphaTest: .5, side: THREE.DoubleSide, emissive: 0xffffff, emissiveMap: T.lotusB, emissiveIntensity: .3 });
 }
 
+// pixel-art screens: code editor, spreadsheet, team chat, dashboard, video call, document
+function screenTextures() {
+  const R = decorRandom, scr = (bg, draw) => canvasTex(32, 20, g => { g.fillStyle = bg; g.fillRect(0, 0, 32, 20); draw(g); }, { nearest: true });
+  const px = (g, c, x, y, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+  return [
+    scr('#1b2430', g => { for (let y = 0; y < 20; y++) { const ind = 2 + (R() * 3 | 0) * 2; px(g, '#3a4a5c', 0, y, 1); px(g, ['#7fe6ff', '#ffd27a', '#c39bff', '#8ee07a'][R() * 4 | 0], ind, y, 3 + (R() * 14 | 0)); } }),
+    scr('#f4f6f2', g => { for (let y = 0; y < 20; y += 3) px(g, '#c8d2c4', 0, y, 32); for (let x = 0; x < 32; x += 8) px(g, '#c8d2c4', x, 0, 1, 20); px(g, '#2f8a4e', 0, 0, 32, 2); for (let i = 0; i < 18; i++) px(g, '#6b7a6a', 1 + (R() * 4 | 0) * 8, 4 + (R() * 5 | 0) * 3, 3 + (R() * 3 | 0)); }),
+    scr('#f2f0f6', g => { px(g, '#3f2d5c', 0, 0, 7, 20); for (let y = 2; y < 18; y += 3) px(g, '#9a86c4', 1, y, 4); for (let y = 2; y < 18; y += 4) { px(g, ['#e08a6a', '#6ab0e0', '#8ac46a'][R() * 3 | 0], 9, y, 2, 2); px(g, '#6a6874', 12, y, 6 + (R() * 13 | 0)); px(g, '#a8a6b0', 12, y + 1, 4 + (R() * 9 | 0)); } }),
+    scr('#1d2028', g => { px(g, '#2a2e38', 1, 1, 30, 18); for (let i = 0; i < 6; i++) { const h = 3 + (R() * 11 | 0); px(g, ['#5fc0b0', '#ffb347', '#7fa8ff'][i % 3], 3 + i * 4, 17 - h, 3, h); } let y = 9; for (let x = 2; x < 30; x++) { y = Math.max(3, Math.min(8, y + (R() * 3 | 0) - 1)); px(g, '#ff6f91', x, y); } }),
+    scr('#14161c', g => { for (const [x, y, c] of [[1, 1, '#4a6a8a'], [17, 1, '#6a5a4a'], [1, 11, '#5a7a5a'], [17, 11, '#7a5a6a']]) { px(g, c, x, y, 14, 8); px(g, '#e8c8a8', x + 5, y + 2, 4, 4); px(g, '#2a2a30', x + 4, y + 6, 6, 2); } px(g, '#6ee07a', 0, 0, 16, 1); px(g, '#6ee07a', 0, 0, 1, 10); }),
+    scr('#fbfaf6', g => { px(g, '#2d5fa8', 4, 2, 18, 2); for (let y = 6; y < 19; y += 2) px(g, '#8a8a94', 4, y, 18 + (R() * 7 | 0) - (y % 6 === 0 ? 6 : 0)); px(g, '#e4e2dc', 26, 2, 5, 16); }),
+  ];
+}
+let screenTurn = 0;
+const nextScreen = () => MAT.screens[screenTurn++ % MAT.screens.length];
+// a keyboard and mouse at a seat; `toward` is the direction the person sits (+1 / -1 along z), y the desk top
+function keyboardAt(x, y, z, toward, p) {
+  box(.4, .02, .13, MAT.charcoal, x, y, z, { p }); box(.36, .005, .1, MAT.chrome, x, y + .02, z, { p });
+  box(.06, .02, .1, MAT.charcoal, x + .3, y, z + toward * .02, { p });
+}
+// lived-in desks: a sheet or two of paper, or a mug
+function deskClutter(x, y, z, p) {
+  const r = decorRandom();
+  if (r < .3) box(.21, .006, .3, MAT.white, x, y, z, { p, ry: (decorRandom() - .5) * .6 });
+  else if (r < .55) { const m = add(new THREE.Mesh(new THREE.CylinderGeometry(.045, .04, .1, 10), [MAT.white, MAT.pink, MAT.navy3][decorRandom() * 3 | 0]), p); m.position.set(x, y + .05, z); }
+}
 function chandelier(x, z, y = 3.25) {
   const g = new THREE.Group(); g.position.set(x, y, z); scene.add(g);
   const rod = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 2.6, 6), MAT.chrome); rod.position.y = 1.3; g.add(rod);
@@ -160,6 +206,8 @@ function chandelier(x, z, y = 3.25) {
     const c = new THREE.Mesh(cone, MAT.chrome); c.rotation.x = Math.PI; c.position.set(sx, h - .14, sz); g.add(c);
   }
   pointLight('lab', 0xffcf94, 1.9, 10, x, y - .5, z);
+  const pool = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 4.4), new THREE.MeshBasicMaterial({ map: TX.glow, transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false }));
+  pool.rotation.x = -Math.PI / 2; pool.position.set(x, .03, z); pool.userData.dyn = true; scene.add(pool);   // warm light pool on the floor
 }
 function chair(x, z, side, p, m = MAT.charcoal) {
   box(.5, .08, .48, m, x, .42, z, { p }); box(.48, .56, .05, m, x, .55, z + side * .24, { p });
@@ -181,8 +229,9 @@ function deskCluster(cx, cz, cols, ns, o = {}) {
     for (let i = 0; i < cols; i++) {
       const x = x0 + i * P;
       box(.42, .58, .5, MAT.white, x + .5, 0, dz, { p: g });
-      box(.64, .4, .04, MAT.charcoal, x - .1, .9, side * .13, { p: g }); box(.6, .34, .02, MAT.monitor, x - .1, .93, side * .155, { p: g });
+      box(.64, .4, .04, MAT.charcoal, x - .1, .9, side * .13, { p: g }); box(.6, .34, .02, nextScreen(), x - .1, .93, side * .155, { p: g });
       box(.06, .14, .06, MAT.charcoal, x - .1, .77, side * .1, { p: g });
+      keyboardAt(x - .1, .77, side * (o.tight ? .42 : .5), side, g); deskClutter(x + .2, .77, side * (o.tight ? .55 : .7), g);
       chair(x - .1, side * cz2, side, g);
       if (rnd() < .45) deskPlant(x + .45, .77, dz + side * .1, g);
       if (rnd() < .4) { const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .26, 8), MAT.chrome), g); b.position.set(x + .25, .9, dz - side * .05); }
@@ -195,7 +244,7 @@ function deskCluster(cx, cz, cols, ns, o = {}) {
   if (ns) colBox(cx - hz, cz - hx, cx + hz, cz + hx); else colBox(cx - hx, cz - hz, cx + hx, cz + hz);
 }
 // walnut meeting room. `front` ('n', 'e' or 'w') gets the glass, door and garlands; the south wall is cut low so you can look in
-// o.table 'long' or 'round', o.seats per side, o.doorAt (distance of the door along the front), o.sMat for a full-height south wall
+// o.table 'long' or 'round', o.seats per side, o.doorAt (distance of the door along the front), o.sMat for a full-height south wall, o.sGlass for a glass one
 function room(x0, z0, x1, z1, front, name, lines, o = {}) {
   const g = grp(), H = 3, czr = (z0 + z1) / 2;
   const sides = { n: [x0, z0, x1, z0], s: [x0, z1, x1, z1], w: [x0, z0, x0, z1], e: [x1, z0, x1, z1] };
@@ -216,7 +265,11 @@ function room(x0, z0, x1, z1, front, name, lines, o = {}) {
       for (const t of [e, d0 - .08, d1 + .08, len - e]) horiz ? garlandV(a + t, b + off, .1, H - .15) : garlandV(a + off, b + t, .1, H - .15);
       door = horiz ? [a + dm, b - .9] : [a + (k === 'e' ? .9 : -.9), b + dm];
       plate = horiz ? [a + dm, H - .25, b + off * .8, 0] : [a + off * .8, H - .25, b + dm, Math.PI / 2];
-    } else if (k === 's') { put(0, len, 0, o.sMat ? H : 1.1, o.sMat || MAT.walnut, .2); col(0, len); }
+    } else if (k === 's') {
+      if (o.sGlass) { put(0, len, .1, H - .22, MAT.pane, .05, false); put(0, len, 0, .1, MAT.walnut, .14); put(0, len, H - .12, .12, MAT.walnut, .14); }
+      else put(0, len, 0, o.sMat ? H : 1.1, o.sMat || MAT.walnut, .2);
+      col(0, len);
+    }
     else { put(0, len, 0, H, MAT.walnut, .2); col(0, len); }
   }
   g.add(signBoard(name, plate[0], plate[1], plate[2], 1.15, .36, plate[3], { size: 17, bg: '#4a2c18', edge: '#2a180c', color: '#f6e3b4', w: 160, h: 52 }));

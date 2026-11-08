@@ -39,8 +39,8 @@ function buildAreas() {
   const RX = cx + 14.5, MZ = cz + 12.5;
   const asphalt = std(TX.concrete, 1.5, { roughness: .8 }); asphalt.color.setRGB(.36, .37, .41);
   plane(6, 70, asphalt, RX, .02, cz, 1.5); plane(84, 6, asphalt, cx + 5, .021, MZ, 1.5);
-  for (let z = -32; z < 34; z += 4) if (Math.abs(cz + z - MZ) > 4) box(.18, .02, 2, MAT.white, RX, .02, cz + z, { cast: false });
-  for (let x = -36; x < 46; x += 4) if (Math.abs(cx + x - RX) > 4) box(2, .02, .18, MAT.white, cx + x, .02, MZ, { cast: false });
+  for (let z = -32; z < 34; z += 4) if (Math.abs(cz + z - MZ) > 7) box(.18, .02, 2, MAT.white, RX, .02, cz + z, { cast: false });   // lane dashes stop short of the zebra crossings
+  for (let x = -36; x < 46; x += 4) if (Math.abs(cx + x - RX) > 7) box(2, .02, .18, MAT.white, cx + x, .02, MZ, { cast: false });
   for (const s2 of [-3.9, 3.9]) {
     plane(1.8, 70, MAT.paver, RX + s2, .025, cz, 3); box(.2, .14, 70, MAT.concrete, RX + s2 * .77, 0, cz, { cast: false });
     plane(84, 1.8, MAT.paver, cx + 5, .026, MZ + s2, 3); box(84, .14, .2, MAT.concrete, cx + 5, 0, MZ + s2 * .77, { cast: false });
@@ -48,7 +48,7 @@ function buildAreas() {
   for (const z of [-14, -4, 6]) streetLight(RX - 3.4, cz + z, 1, 0);
   for (const z of [-11, 1]) streetLight(RX + 3.4, cz + z, -1, 0);
   for (const x of [-18, -6, 24, 34]) streetLight(cx + x, MZ - 3.4, 0, 1);
-  car(RX - 1.5, cz + 1.5, 0, 0xe8e8ec); car(RX + 1.5, cz - 5.5, Math.PI, 0x2a4f9e); car(cx - 8, MZ + 1.5, -Math.PI / 2, 0xb02a2a); car(cx + 26, MZ - 1.5, Math.PI / 2, 0x55595f);
+  // the cars on these roads now drive (city.js): same four cars, plus autos and a few more
   // ABZ, across the street
   const tf = finTower(cx + 28.3, cz - 4.5);
   plane(16.6, 4, MAT.paver, cx + 28.3, .013, tf + 2, 3);
@@ -80,4 +80,5 @@ function buildAreas() {
   officeBlock(cx + 28, cz - 20, 14, 7, 11, { floors: 4, side: MAT.cladding });
   officeBlock(cx + 44, cz - 6, 8, 14, 9, { floors: 3 });
   officeBlock(cx - 30, cz - 2, 8, 12, 9, { floors: 3, side: MAT.cladding });
+  buildCity(a, RX, MZ, asphalt);
 }

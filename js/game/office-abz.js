@@ -17,10 +17,10 @@ function buildABZ(a) {
   const wood = std(canvasTex(32, 32, (g, W, H) => {
     const tones = [[212, 194, 166], [200, 181, 152], [218, 202, 176], [194, 174, 146]];
     for (let x = 0; x < W; x++) { const k = x >> 3; for (let y = 0; y < H; y++) P(g, x, y, tones[k % 4], x % 8 === 0 || (y + k * 11) % 32 === 0 ? .82 : 1 + (rnd() - .5) * .05); }
-  }), 1.6, { roughness: 1 });
+  }), 1, { roughness: 1 });
   const tile = (base, n) => canvasTex(32, 32, (g, W, H) => { noiseFill(g, W, H, base, .04); g.fillStyle = rgb(base, .8); for (let i = 0; i < 32; i += 32 / n) { g.fillRect(i, 0, 1, 32); g.fillRect(0, i, 32, 1); } });
   const carpet = std(TX.concrete, 1.5, { roughness: 1 }); carpet.color.setRGB(.42, .43, .47);
-  const grey = std(tile([150, 152, 156], 2), 1.2, { roughness: 1 }), beige = std(tile([214, 208, 196], 2), 1.4, { roughness: 1 });
+  const grey = std(tile([150, 152, 156], 2), 1, { roughness: 1 }), beige = std(tile([214, 208, 196], 2), 1, { roughness: 1 });
   const wallM = std(TX.plaster, 1); wallM.color.setRGB(.82, .82, .8);
   const black = new THREE.MeshStandardMaterial({ color: 0x18191c, roughness: .35 });
   const cream = new THREE.MeshStandardMaterial({ color: 0xe9e1cd, roughness: .6 });
@@ -184,7 +184,7 @@ function buildABZ(a) {
       const z = z0 + (i + .5) * p;
       for (const s2 of sides) {
         const mx = xc + s2 * (sides.length > 1 ? .22 : -.12);
-        box(.05, .34, .58, black, mx, .9, z); box(.02, .3, .54, MAT.monitor, mx + s2 * .03, .92, z); box(.2, .14, .2, black, mx, .76, z);
+        box(.05, .34, .58, black, mx, .9, z); box(.02, .3, .54, nextScreen(), mx + s2 * .03, .92, z); box(.2, .14, .2, black, mx, .76, z);
         box(.14, .02, .4, black, xc + s2 * (W / 2 - .2), .76, z);
         sitAt(xc + s2 * (W / 2 + .42), z, s2 > 0 ? Math.PI / 2 : -Math.PI / 2);
       }
@@ -198,7 +198,8 @@ function buildABZ(a) {
   bench(7.3, 14.1, 16.5, [1]); bench(10.3, 14.1, 16.5, [-1, 1]); bench(13, 14.1, 16.5, [-1, 1]);
 
   // ---- lounge: egg chairs on a blue rug, carrom with four chairs, teal sofa, stools and a counter by the east wall ----
-  const rug = std(canvasTex(16, 16, (g, W, Hh) => { for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) P(g, x, y, ((x >> 2) + (y >> 2)) % 2 ? [52, 92, 150] : [226, 230, 236]); }, { nearest: true }), 1);
+  const rugDraw = (q) => (g, W, Hh) => { for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) P(g, x, y, ((x >> q) + (y >> q)) % 2 ? [52, 92, 150] : [226, 230, 236], 1 + ((x + y * 3) % 7 === 0 ? -.06 : 0)); };
+  const rug = std(refineTexture(canvasTex(16, 16, rugDraw(2), { nearest: true }), 32, 32, rugDraw(3)), 1);
   floor(16.3, 4.95, 18.6, 6.05, rug, .02, 1);
   egg(X(16.9), Z(5.5), Math.PI); egg(X(18), Z(5.5), Math.PI);
   const ctx = X(17.6), ctz = Z(9.05);

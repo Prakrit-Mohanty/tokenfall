@@ -11,8 +11,8 @@ function buildMaterials() {
   MAT.cobble = std(TX.cobble, 2); MAT.flag = std(TX.flag, 2.5); MAT.stone = std(TX.stoneWall, 1);
   MAT.grass = groundVariation(std(TX.grass, 2), true); MAT.darkGrass = std(TX.darkGrass, 2); MAT.dirt = std(TX.dirt, 1);
   MAT.plaster = std(TX.plaster, 1); MAT.wood = std(TX.wood, 1); MAT.darkWood = std(TX.darkWood, .5);
-  MAT.floor = std(TX.floor, 1.2); MAT.roof = std(TX.roof, 1); MAT.lattice = std(TX.lattice, 1);
-  MAT.cloth = std(TX.cloth, .6); MAT.bark = std(TX.bark, .6); MAT.books = std(TX.books, 1.6); MAT.rack = std(TX.rack, 0);
+  MAT.floor = std(TX.floor, 1); MAT.roof = std(TX.roof, 1); MAT.lattice = std(TX.lattice, 1);
+  MAT.cloth = std(TX.cloth, .5); MAT.bark = std(TX.bark, .5); MAT.books = std(TX.books, 1); MAT.rack = std(TX.rack, 0);
   MAT.door = std(TX.door, 0);
   MAT.leafA = std(TX.leafA, 0); MAT.leafB = std(TX.leafB, 0); MAT.leafC = std(TX.leafC, 0); MAT.blossom = std(TX.blossom, 0);
   MAT.redLantern = new THREE.MeshStandardMaterial({ color: 0xd4402a, emissive: 0xff5a2c, emissiveIntensity: 1.9, roughness: .8 });

@@ -24,13 +24,14 @@ function buildOffice(a) {
   const windowRun = (x0, z0, x1, z1) => {
     const len = Math.hypot(x1 - x0, z1 - z0), ry = x0 === x1 ? Math.PI / 2 : 0;
     const g = new THREE.Group(); g.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); g.rotation.y = ry; scene.add(g);
-    box(len, .55, .3, MAT.plaster, 0, 0, 0, { p: g }); box(len, 2.55, .12, MAT.window, 0, .55, 0, { p: g }); box(len, .3, .3, MAT.plaster, 0, 3.1, 0, { p: g });
+    box(len, .55, .3, MAT.plaster, 0, 0, 0, { p: g }); box(len, 2.55, .12, MAT.window, 0, .55, 0, { p: g, cast: false });   // glass lets the sun in; sill, header and mullions cast box(len, .3, .3, MAT.plaster, 0, 3.1, 0, { p: g });
     for (let s = 0; s <= len; s += 3.6) box(.14, 3.4, .32, MAT.charcoal, s - len / 2, 0, 0, { p: g });
   };
   windowRun(X(-7.2), Z(-12.8), X(2), Z(-12.8));
   windowRun(X(2), Z(-14.1), X(7.2), Z(-14.1));
   box(.3, 3.4, L(1.3), MAT.plaster, X(2), 0, Z(-13.45)); colBox(X(2) - .15, Z(-14.1), X(2) + .15, Z(-12.8));
   windowRun(X(-7.2), Z(-12.8), X(-7.2), Z(6));
+  sunShafts('lab', X(-7.2) + .1, Z(-12.8), Z(6), 3.6, .55, 3.1);   // the low afternoon sun comes in through the west windows
   box(.3, 3.4, L(7.4), MAT.plaster, X(-7.2), 0, Z(9.7));
   windowRun(X(7.2), Z(-14.1), X(7.2), Z(3.9));
   for (let i = 0; i < 16; i++) tree(cx + rr(-24, 24), cz + rr(-34, -26), rr(1.2, 1.7), [MAT.leafA, MAT.leafB, MAT.leafC][rnd() * 3 | 0], false).position.y = GROUND;
@@ -90,7 +91,7 @@ function buildOffice(a) {
   box(.8, .9, .7, MAT.white, X(-5.2), 0, Z(5.7)); colBox(X(-5.2) - .4, Z(5.7) - .35, X(-5.2) + .4, Z(5.7) + .35);   // storage
   // four desk pods along the west windows, two computers on each side
   for (const z of [-5.6, -2.6, .4, 3.5]) deskCluster(X(-5.75), Z(z), 2, false);
-  room(X(-7), Z(-10.5), X(-3.1), Z(-7.2), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”', 'In the corner there is a terminal for the Glass Bridge: pick the right tile, or fall.'], { table: 'long', seats: 3, along: true });
+  room(X(-7), Z(-10.5), X(-3.1), Z(-7.2), 'e', 'Conference Room', ['The Conference Room.', 'Today\'s slide: “AI literacy 101: what models are good at, and where they go wrong.”', 'In the corner there is a terminal for the Glass Bridge: pick the right tile, or fall.'], { table: 'long', seats: 3, along: true, sGlass: true });
   if (TF.officeEntrance) { TF.officeEntrance({ x: X(-3.1) - .55, z: Z(-10.5) + .6, near: [X(-3.1) - .5, Z(-10.5) + 1.9] }); sparkles(X(-3.1) - .55, Z(-10.5) + 1.3, 0xffd27a, 22, .6, 2.4); }
   box(L(2.6), .9, .4, MAT.white, X(-4.4), 0, Z(-10.5) - .35); colBox(X(-5.7), Z(-10.5) - .55, X(-3.1), Z(-10.5) - .15);   // storage
 
@@ -104,7 +105,7 @@ function buildOffice(a) {
   const DZ = Z(-1.2) - .45, DX = X(1.7);
   box(6.9, .05, .6, MAT.walnut, DX, .72, DZ); for (const dx of [-3.4, -1.15, 1.15, 3.4]) box(.05, .72, .55, MAT.white, DX + dx, 0, DZ);
   box(6.8, .4, .04, MAT.fabric, DX, .77, DZ + .27);
-  for (const dx of [-2.6, -.87, .87, 2.6]) { box(.6, .36, .04, MAT.charcoal, DX + dx, .9, DZ + .17); box(.56, .32, .02, MAT.monitor, DX + dx, .92, DZ + .14); chair(DX + dx, DZ - .75, -1); }
+  for (const dx of [-2.6, -.87, .87, 2.6]) { box(.6, .36, .04, MAT.charcoal, DX + dx, .9, DZ + .17); box(.56, .32, .02, nextScreen(), DX + dx, .92, DZ + .14); keyboardAt(DX + dx, .77, DZ - .06, -1); deskClutter(DX + dx + .5, .77, DZ - .12); chair(DX + dx, DZ - .75, -1); }
   colBox(DX - 3.5, DZ - .3, DX + 3.5, Z(-1.2));
 
   // ---- pantry: a galley along the east windows, open to the north ----
@@ -149,7 +150,7 @@ function buildOffice(a) {
   colBox(T0, RZ0, X(2) + .15, D0); colBox(T0, D1, X(2) + .15, RZ1);
   const WD = X(7.2) - 1.85, WZ = TW + .6;
   box(3.4, .05, .6, MAT.walnut, WD, .72, WZ); for (const dx of [-1.65, 1.65]) box(.05, .72, .55, MAT.white, WD + dx, 0, WZ);
-  for (const dx of [-.85, .85]) { box(.6, .36, .04, MAT.charcoal, WD + dx, .9, WZ - .2); box(.56, .32, .02, MAT.monitor, WD + dx, .92, WZ - .17); chair(WD + dx, WZ + .75, 1); }
+  for (const dx of [-.85, .85]) { box(.6, .36, .04, MAT.charcoal, WD + dx, .9, WZ - .2); box(.56, .32, .02, nextScreen(), WD + dx, .92, WZ - .17); keyboardAt(WD + dx, .77, WZ + .08, 1); deskClutter(WD + dx + .5, .77, WZ + .12); chair(WD + dx, WZ + .75, 1); }
   colBox(WD - 1.7, WZ - .3, WD + 1.7, WZ + .3);
   // two glass calling rooms in the corner, doors facing west
   const bx0 = X(5.67), bx1 = EW, bm = (bx0 + bx1) / 2, bw = bx1 - bx0;

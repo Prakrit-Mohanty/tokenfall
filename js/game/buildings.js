@@ -35,18 +35,24 @@ function hq(cx, cz) {
 // the real Calfus building: a glass-fronted block with white cladding down its side, and a taller grey tower
 // with the Calfus logo, a column of windows with little awnings, and vertical louvres on the far edge
 function calfusHQ(cx, cz) {
-  const panel = (base, joints) => canvasTex(32, 32, (g, W, H) => {
+  const panel = (base, joints) => refineTexture(canvasTex(32, 32, (g, W, H) => {
     noiseFill(g, W, H, base, .05);
     g.fillStyle = rgb(base, .82); for (const [x, y, w, h] of joints) g.fillRect(x, y, w, h);
+  }), 70, 70, (g, W, H) => {
+    noiseFill(g, W, H, base, .05, 1, decorRandom);
+    const k = W / 32; g.fillStyle = rgb(base, .82);
+    for (const [x, y, w, h] of joints) g.fillRect(Math.round(x * k), Math.round(y * k), w > 1 ? Math.round(w * k) : 1, h > 1 ? Math.round(h * k) : 1);
+    g.fillStyle = rgb(base, 1.06); for (const [x, y, w, h] of joints) if (w > 1) g.fillRect(0, Math.round(y * k) + 1, W, 1);
   });
-  const curtain = std(canvasTex(32, 32, (g, W, H) => {
+  const curtainDraw = (k) => (g, W, H) => {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const t = y / H, sheen = ((x + y) % 23 < 3) ? 26 : 0;
+      const t = y / H, sheen = ((x + y) % Math.round(23 * k) < 3 * k) ? 26 : 0;
       let c = [86 - t * 22 + sheen, 146 - t * 30 + sheen, 196 - t * 30 + sheen];
-      if (x % 16 === 0 || y === 0) c = [62, 70, 80]; else if (y >= 25 && y <= 26) c = [70, 96, 124];
+      if (x % Math.round(16 * k) === 0 || y === 0) c = [62, 70, 80]; else if (y >= Math.round(25 * k) && y <= Math.round(26.5 * k)) c = [70, 96, 124];
       P(g, x, y, c);
     }
-  }, { nearest: true }), 2.2, { roughness: .15, metalness: .45 });
+  };
+  const curtain = std(refineTexture(canvasTex(32, 32, curtainDraw(1), { nearest: true }), 70, 70, curtainDraw(70 / 32)), 2.2, { roughness: .15, metalness: .45 });
   const white = std(panel([226, 228, 230], [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32], [16, 0, 1, 32]]), 2.2);
   const grey = std(panel([116, 120, 126], [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32]]), 2.2);
   // squashed in height so the whole front, logo included, fits in the game camera's narrow view
@@ -123,14 +129,16 @@ function palm(x, z, h = 3.4) {
   }
   colCirc(x, z, .3);
 }
-function car(x, z, ry, color) {
+// o.collide false for moving traffic (no static colliders); returns the car's group
+function car(x, z, ry, color, o = {}) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
   const paint = new THREE.MeshStandardMaterial({ color, roughness: .3, metalness: .5 });
   box(1.8, .55, 4.1, paint, 0, .3, 0, { p: g }); box(1.6, .5, 2.1, paint, 0, .85, -.2, { p: g });
   box(1.62, .38, 2.12, MAT.pane, 0, .9, -.2, { p: g, cast: false });
   for (const sx of [-.85, .85]) for (const sz of [-1.3, 1.3]) { const w = add(new THREE.Mesh(new THREE.CylinderGeometry(.33, .33, .22, 10), MAT.charcoal), g); w.rotation.z = Math.PI / 2; w.position.set(sx, .33, sz); }
   box(1.4, .1, .05, glowStrip(0xfff0c0), 0, .55, 2.06, { p: g, cast: false }); box(1.4, .1, .05, glowStrip(0xff3020), 0, .55, -2.06, { p: g, cast: false });
-  colCirc(x - Math.sin(ry), z - Math.cos(ry), 1); colCirc(x + Math.sin(ry), z + Math.cos(ry), 1);
+  if (o.collide !== false) { colCirc(x - Math.sin(ry), z - Math.cos(ry), 1); colCirc(x + Math.sin(ry), z + Math.cos(ry), 1); }
+  return g;
 }
 // parked motorbikes, leaning on their side stands: 'r15' (Yamaha R15M), 'vstrom' (Suzuki V-Strom SX),
 // 'avenger' (Bajaj Avenger), 'thruxton' (café racer). Local axes: x across the bike, z forward.

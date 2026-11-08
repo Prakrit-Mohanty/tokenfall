@@ -2,6 +2,7 @@
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
 // ================= post-processing: tilt-shift depth of field + bloom =================
+const DOF_DEFAULT = { farStart: 3, farRange: 14, edgeBlur: 1 };
 const fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), fsGeo = new THREE.PlaneGeometry(2, 2);
 const VS = 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.,1.); }';
 function fsPass(fragmentShader, uniforms) {
@@ -19,10 +20,10 @@ const bright = fsPass(`uniform sampler2D t; uniform vec2 px; varying vec2 vUv;
 const blur = fsPass(`uniform sampler2D t; uniform vec2 dir; varying vec2 vUv;
   void main(){ vec3 c=texture2D(t,vUv).rgb*.227; c+=(texture2D(t,vUv+dir*1.38).rgb+texture2D(t,vUv-dir*1.38).rgb)*.316; c+=(texture2D(t,vUv+dir*3.23).rgb+texture2D(t,vUv-dir*3.23).rgb)*.07; gl_FragColor=vec4(c,1.); }`,
   { t: { value: null }, dir: { value: new THREE.Vector2() } });
-const final = fsPass(`uniform sampler2D tColor, tDepth, tBloom; uniform vec2 res; uniform float focus, nearP, farP, maxR, time, exposure, aoAmt;
+const final = fsPass(`uniform sampler2D tColor, tDepth, tBloom; uniform vec2 res; uniform float focus, nearP, farP, maxR, time, exposure, aoAmt, farStart, farRange, edgeBlur;
   varying vec2 vUv;
   float lin(float d){ float z=d*2.-1.; return 2.*nearP*farP/(farP+nearP-z*(farP-nearP)); }
-  float coc(float z, vec2 uv){ float d=z-focus; float c=clamp((abs(d)-(d<0.?1.5:3.))/(d<0.?5.:14.),0.,1.); c=max(c,smoothstep(.2,0.,uv.y)*.8+smoothstep(.82,1.,uv.y)*.6); return min(c,1.)*maxR; }
+  float coc(float z, vec2 uv){ float d=z-focus; float c=clamp((abs(d)-(d<0.?1.5:farStart))/(d<0.?5.:farRange),0.,1.); c=max(c,(smoothstep(.2,0.,uv.y)*.8+smoothstep(.82,1.,uv.y)*.6)*edgeBlur); return min(c,1.)*maxR; }
   void main(){
     float zc=lin(texture2D(tDepth,vUv).x), cc=coc(zc,vUv);
     vec3 acc=texture2D(tColor,vUv).rgb; float ws=1.;
@@ -55,7 +56,7 @@ const final = fsPass(`uniform sampler2D tColor, tDepth, tBloom; uniform vec2 res
     gl_FragColor=vec4(c,1.);
   }`, {
   tColor: { value: rtScene.texture }, tDepth: { value: rtScene.depthTexture }, tBloom: { value: rtA.texture },
-  res: { value: new THREE.Vector2() }, focus: { value: 19 }, nearP: { value: camera.near }, farP: { value: camera.far }, maxR: { value: 8 }, time: { value: 0 }, exposure: { value: .95 }, aoAmt: { value: .8 },
+  res: { value: new THREE.Vector2() }, focus: { value: 19 }, nearP: { value: camera.near }, farP: { value: camera.far }, maxR: { value: 8 }, time: { value: 0 }, exposure: { value: .95 }, aoAmt: { value: .8 }, farStart: { value: 3 }, farRange: { value: 14 }, edgeBlur: { value: 1 },
 });
 function resize() {
   const w = innerWidth, h = innerHeight;

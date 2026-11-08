@@ -11,6 +11,8 @@ function setZone(z) {
   scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
   sun.intensity = indoor ? .5 : 1.3; hemi.intensity = indoor ? .5 : .58;
   hemi.color.set(indoor ? 0xe8e4dc : 0xcfdcff);
+  const dof = (z === 'lobby' && LOBBY.dof) || DOF_DEFAULT;
+  final.u.farStart.value = dof.farStart; final.u.farRange.value = dof.farRange; final.u.edgeBlur.value = dof.edgeBlur;
   TF.enter(prevZone, z);
   const a = AREAS[z];
   locName.textContent = a ? a.name : 'TokenFall Lobby'; locSub.textContent = a ? a.sub : 'Main Plaza';

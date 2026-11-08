@@ -62,7 +62,7 @@ function buildLife() {
   }
   // petals drifting off the blossom trees
   const n = 90, pos = new Float32Array(n * 3), seedA = [];
-  const src = [[-10, 1.2], [15.2, 16]];
+  const src = LOBBY.petals;
   const reset = (i, y) => { const s = src[i % 2]; pos[i * 3] = s[0] + rr(-1.4, 1.4); pos[i * 3 + 1] = y ?? rr(2.4, 3.6); pos[i * 3 + 2] = s[1] + rr(-1.2, 1.2); };
   for (let i = 0; i < n; i++) { reset(i, rr(0, 3.6)); seedA.push(rnd() * 9); }
   const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -75,7 +75,9 @@ function buildLife() {
     pg.attributes.position.needsUpdate = true;
   });
   // string lights over the cafe tables
-  const poles = [[9.2, -9.9], [15.9, -9.9], [15.9, -3.6], [9.2, -3.6]];
+  // string lights over the active lobby's cafe tables (four poles, strung round and across)
+  const poles = LOBBY.lightPoles;
+  if (poles.length !== 4) return;
   for (const [x, z] of poles) { const p = new THREE.Mesh(new THREE.BoxGeometry(.1, 3.7, .1), MAT.metal); p.position.set(x, 1.85, z); p.castShadow = true; scene.add(p); colCirc(x, z, .15); }
   const bulbs = [], segs = [[0, 1], [1, 2], [2, 3], [3, 0], [0, 2]];
   for (const [a, b] of segs) {
@@ -105,15 +107,50 @@ sun.shadow.bias = -.0006; sun.shadow.normalBias = .03;
 scene.add(sun, sun.target);
 const SUN_DIR = new THREE.Vector3(-26, 19, 14);   // low, late-afternoon sun: long warm shadows
 // gradient sky dome around the camera: horizon matches the fog, blue overhead, a soft glow around the sun
-const skyU = { horizon: { value: new THREE.Color(FOG) }, sunDir: { value: new THREE.Vector3() } };
+const skyU = { horizon: { value: new THREE.Color(FOG) }, sunDir: { value: new THREE.Vector3() }, time: timeU };
 const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.ShaderMaterial({
   uniforms: skyU, side: THREE.BackSide, depthWrite: false, fog: false,
   vertexShader: 'varying vec3 vD; void main(){ vD=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-  fragmentShader: `uniform vec3 horizon, sunDir; varying vec3 vD;
+  fragmentShader: `uniform vec3 horizon, sunDir; uniform float time; varying vec3 vD;
+    float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+    float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+      return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }
     void main(){ float h=max(vD.y,0.), l=dot(horizon,vec3(.3,.59,.11));
       vec3 top=mix(horizon*.55, vec3(.36,.56,.86), smoothstep(.2,.55,l));
       vec3 c=mix(horizon, top, pow(smoothstep(0.,.55,h),.8));
       float s=max(dot(vD,sunDir),0.); c+=vec3(1.,.78,.5)*(pow(s,8.)*.35+pow(s,300.)*1.4)*smoothstep(.2,.55,l);
+      // pixel clouds: the sky plane is snapped to a coarse grid and the cloud cover posterised into two tones
+      vec2 q=floor(vD.xz/(h+.18)*26.)/26.+vec2(time*.004,0.);
+      float n=noise(q*1.6)*.6+noise(q*3.7)*.3+noise(q*8.1)*.1;
+      float cover=step(.56,n), core=step(.66,n), fade=smoothstep(.04,.3,h)*smoothstep(.2,.55,l);
+      vec3 lit=mix(vec3(1.,.95,.88),vec3(1.,.86,.7),pow(s,4.));
+      c=mix(c,mix(lit*.86,lit,core),cover*fade*.85);
       gl_FragColor=vec4(c,1.); }`,
 }));
 sky.renderOrder = -1; sky.frustumCulled = false; sky.userData.dyn = true; scene.add(sky);
+
+const shaftMat = new THREE.ShaderMaterial({
+  uniforms: { time: timeU }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+  fragmentShader: `uniform float time; varying vec2 vUv;
+    void main(){ float edge=smoothstep(0.,.18,vUv.x)*smoothstep(1.,.82,vUv.x), along=pow(1.-vUv.y,1.4);
+      float dust=.85+.15*sin(time*.6+vUv.x*11.+vUv.y*5.);
+      gl_FragColor=vec4(vec3(1.,.84,.58)*edge*along*dust*.16,1.); }`,
+});
+// soft beams of sunlight from a window wall at x = wx into the room, one per pane between mullions (step apart)
+function sunShafts(zoneKey, wx, z0, z1, step, yLow, yHigh) {
+  const L = SUN_DIR.clone().normalize().negate(), pos = [], uv = [], idx = [];
+  const hit = (z, y) => [wx + L.x * (y / -L.y), 0, z + L.z * (y / -L.y)];
+  for (let a = z0; a < z1 - .5; a += step) {
+    const za = a + .2, zb = Math.min(a + step, z1) - .2;
+    for (const y of [yHigh, yLow]) {
+      const n = pos.length / 3;
+      pos.push(wx, y, za, wx, y, zb, ...hit(zb, y), ...hit(za, y)); uv.push(0, 0, 1, 0, 1, 1, 0, 1);
+      idx.push(n, n + 1, n + 2, n, n + 2, n + 3);
+    }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  const m = new THREE.Mesh(g, shaftMat); m.userData.dyn = true; m.renderOrder = 2; scene.add(m);
+  ZONE_LIGHTS[zoneKey].push(Object.assign(m, { intensity: 1, userData: Object.assign(m.userData, { base: 1 }) }));
+  return m;
+}

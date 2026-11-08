@@ -5,7 +5,7 @@
 // Modules register with (window.TokenFallReady = window.TokenFallReady || []).push(TF => ...).
 const TF = window.TokenFall = {
   THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, rnd, rr, timeU, keys, post: final.u,
-  INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life,
+  INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life, leaderboard: LEADERBOARD_API,
   canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
   gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,
   get hero() { return hero; }, get zone() { return zone; }, get talking() { return !!dialog; }, get traveling() { return traveling; },
@@ -47,24 +47,33 @@ window.TokenFallReady = { push(f) { f(TF); } };
 _ready.forEach(f => f(TF));
 
 // ================= boot =================
+// ?lobby=village builds the village lobby instead of the waterfront one
+const LOBBY = new URLSearchParams(location.search).get('lobby') === 'village' ? VILLAGE : WATERFRONT;
+if (LOBBY.npcBounds) NPC_BOUNDS.lobby = LOBBY.npcBounds;
 const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImg = new Image();
 const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.ADITYA_SHEET; });
 Promise.all([fontsReady, sheetReady]).then(() => {
   buildTextures(); buildMaterials();
   sheetTex = new THREE.Texture(sheetImg); sheetTex.magFilter = sheetTex.minFilter = THREE.NearestFilter; sheetTex.generateMipmaps = false; sheetTex.needsUpdate = true;
-  buildLobby(); buildAreas(); mergeStatic(); buildDust(); buildLife();
-  hero = makeChar('aditya', 0, 2.6, { me: true });
-  hero.dir = 'down'; hero.zone = 'lobby';
+  LOBBY.build(); buildAreas(); mergeStatic(); buildDust(); buildLife();
+  applyTextureRefines();
+  hero = makeChar('aditya', LOBBY.spawn[0], LOBBY.spawn[1], { me: true });
+  hero.dir = LOBBY.spawnDir; hero.zone = 'lobby';
   npcs = NPC_NAMES.map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2 }); c.wait = Math.random() * 3000; return c; });
   for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
+  for (const [n, x, z] of [['ananya.r', 288, 9.2], ['kabir_m', 296, 6.4], ['sneha.d', 318, 2]]) { const c = makeChar(n, x, z, { speed: 1.9, zone: 'pune' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['sana.k', 7.4, 298.6], ['arjun_p', -.3, 291.6]]) { const c = makeChar(n, x, z, { speed: 2.1, zone: 'abz' }); c.wait = Math.random() * 3000; npcs.push(c); }
   TF.boot();
+  for (const [k, r] of Object.entries(LOBBY.returns)) AREAS[k].ret = r;
   const q = new URLSearchParams(location.search);
   if (q.get('zone') && AREAS[q.get('zone')]) { const a = AREAS[q.get('zone')], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.zone = q.get('zone'); }
   if (q.get('at')) { const [ax, az] = q.get('at').split(',').map(Number); hero.x = ax; hero.y = az; }
   setZone(hero.zone); resize(); snapCamera();
   document.getElementById('loading').remove();
+  // the world is built behind the launcher; start rendering and greeting once the player presses Enter
+  return window.TokenFallStart || Promise.resolve();
+}).then(() => {
   fadeEl.style.opacity = 0;
   showBanner('TokenFall', 'Main Plaza');
   log('', 'Welcome to TokenFall! Walk through a glowing gate to visit an area.', true);

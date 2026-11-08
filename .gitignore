@@ -1,2 +1,3 @@
 .DS_Store
 _stats.html
+__pycache__/
