@@ -15,6 +15,12 @@ const V_LED = 0x8fe8ff;
 const V_LED_WARM = 0xffe2b0;
 const V_LED_COOL = 0xe6f2ff;
 const V_SPAWN = [0, 13];
+const SEED_AFTER_LOBBY = 1643086149;
+const V_STALLS = [
+  ['Chai Tapri', 0xb8543c, ['Cutting chai, extra strong. ☕', 'The chaiwala swears his recipe is "fine-tuned". On 40 years of customers.']],
+  ['Vada Pav Corner', 0xc98a3a, ['Two vada pav, extra chutney!', 'Fun fact: a model\'s "context window" is like this plate. Only so much fits.']],
+  ['Dosa Point', 0x4a7a5e, ['One masala dosa, crispy.', 'The menu is 40 tokens long. The queue is longer.']],
+];
 const V_BOT_CYCLE = 54;
 const V_BOT_DOCK = [38.9, -3.5];
 const V_HOMES = [
@@ -194,6 +200,29 @@ function vGround() {
   const [px0, pz0, px1, pz1] = V_PLAZA, led = vGlow(V_LED_COOL);
   for (const z of [pz0 + .15, pz1 - .15]) for (const [a, b] of [[px0, -2.6], [2.6, px1]]) box(b - a, .03, .08, led, (a + b) / 2, .015, z, { cast: false });
   for (const x of [px0 + .15, px1 - .15]) for (const [a, b] of [[pz0, -2.6], [2.6, pz1]]) box(.08, .03, b - a, led, x, .015, (a + b) / 2, { cast: false });
+}
+
+// the centrepiece: a two-tier fountain with arcing jets and the Calfus coin floating above it
+function tokenFountain(fx, fz) {
+  const basin = add(new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.35, .5, 36), MAT.stone)); basin.position.set(fx, .25, fz);
+  const pool = new THREE.Mesh(new THREE.CircleGeometry(2, 36), waterMat); pool.rotation.x = -Math.PI / 2; pool.position.set(fx, .51, fz); scene.add(pool);
+  const tier = add(new THREE.Mesh(new THREE.CylinderGeometry(.65, .85, 1, 20), MAT.stone)); tier.position.set(fx, .5, fz);
+  const top = new THREE.Mesh(new THREE.CircleGeometry(.56, 20), waterMat); top.rotation.x = -Math.PI / 2; top.position.set(fx, 1.01, fz); scene.add(top);
+  const JETS = 12, DROPS = 8, pos = new Float32Array(JETS * DROPS * 3), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const jets = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xcdeeff, size: .085, transparent: true, opacity: .85 })); jets.userData.dyn = true; jets.frustumCulled = false; scene.add(jets);
+  anim.push(t => {
+    for (let j = 0; j < JETS; j++) for (let k = 0; k < DROPS; k++) {
+      const a = j / JETS * 6.283, u = (t * .9 + k / DROPS + j * .13) % 1, r = .6 + u * 1.25, i = (j * DROPS + k) * 3;
+      pos[i] = fx + Math.cos(a) * r; pos[i + 1] = 1 + Math.sin(u * Math.PI) * .8 - u * .45; pos[i + 2] = fz + Math.sin(a) * r;
+    }
+    geo.attributes.position.needsUpdate = true;
+  });
+  const coinFace = std(TX.coin, 0, { emissive: 0xffffff, emissiveMap: TX.coin, emissiveIntensity: .35, roughness: .5, metalness: .3 });
+  const coin = add(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .18, 32), [MAT.gold, coinFace, coinFace])); coin.rotation.x = Math.PI / 2;
+  const coinG = new THREE.Group(); coinG.add(coin); scene.add(coinG); coinG.userData.dyn = true;
+  anim.push(t => { coinG.position.set(fx, 2.8 + Math.sin(t * 1.4) * .15, fz); coinG.rotation.y = t * .7; });
+  colCirc(fx, fz, 2.45);
+  INTER.push({ x: fx, z: fz + 3, r: 1.5, label: 'The Token', verb: 'Inspect', act: () => talk('The Token', ['A giant golden token hovers over the fountain.', 'Models don\'t read words — they read tokens: small chunks of text.', '“TokenFall” might be 3 tokens. Or 2. It depends on the model!', 'Rumour: the glass bridge south of here only holds up the right answer.']) });
 }
 
 // the coin fountain stands in a round reflecting pool with a cyan LED rim
@@ -445,9 +474,9 @@ function buildVillageLobby() {
   vPond();
   vHQ();
   for (const c of V_HOMES) vHome(c);
-  umbrellaTable(19, -6.4, MAT.umbrellaA); umbrellaTable(16.2, -4.2, MAT.umbrellaB);
+  umbrellaTable(14.4, -6.6, MAT.umbrellaA); umbrellaTable(14.2, -4.2, MAT.umbrellaB);
   vFountain();
-  STALLS.forEach(([, name, colour, lines], i) => vStall(-17 - i * 4.4, 5.6, Math.PI, name, colour, lines));
+  V_STALLS.forEach(([name, colour, lines], i) => vStall(-17 - i * 4.4, 5.6, Math.PI, name, colour, lines));
   vStage();
   vLeaderboard();
   vPromptLab();

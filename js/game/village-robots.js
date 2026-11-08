@@ -38,17 +38,17 @@ const armTipIn = (arm, parent, out) => { arm.tip.getWorldPosition(out); return p
 
 // an outdoor coffee bar under Token Brew's awning: the arm fetches the kettle, pours, then slides the cup over to serve
 function robotBarista(x, z) {
-  const g = vGroup(x, z), top = 1.05;
+  const g = vGroup(x, z), top = 1.05; g.name = 'robotBarista';
   gbox(g, 2.4, top, .62, MAT.wood, 0, 0, 0); gbox(g, 2.5, .06, .7, MAT.concrete, 0, top, 0);
   gbox(g, 2.4, .05, .05, vGlow(V_LED_WARM), 0, top - .1, .33, { cast: false });
   const menu = ledSign(['ROBO BARISTA', 'chai · coffee'], '#ffd27a', 0, 0, 0, 1.4, .5, 0, [256, 80]); g.add(menu); menu.position.set(0, top + 1.3, -.32);
   for (const s of [-1, 1]) gbox(g, .06, 1.4, .06, MAT.metal, s * .66, top, -.32);
-  const arm = robotArm(g, 0, top + .06, -.12);
-  const kettleHome = new THREE.Vector3(-.62, top + .06, .02), pourAt = new THREE.Vector3(.02, top + .06, .16), serveAt = new THREE.Vector3(.8, top + .06, .18);
+  const arm = robotArm(g, 0, top + .06, -.12, 0x3a4150, 1.45);
+  const kettleHome = new THREE.Vector3(-.75, top + .06, .02), pourAt = new THREE.Vector3(.02, top + .06, .18), serveAt = new THREE.Vector3(.95, top + .06, .2);
   const kettle = new THREE.Group(); g.add(kettle); kettle.position.copy(kettleHome);
-  box(.18, .2, .16, MAT.metal, 0, 0, 0, { p: kettle }); box(.06, .05, .12, MAT.metal, .1, .14, 0, { p: kettle });
+  box(.26, .28, .22, MAT.metal, 0, 0, 0, { p: kettle }); box(.08, .07, .16, MAT.metal, .15, .2, 0, { p: kettle }); box(.27, .04, .23, vGlow(V_LED), 0, .28, 0, { p: kettle, cast: false });
   const cupMat = vOnce('cup', () => new THREE.MeshStandardMaterial({ color: 0xf4efe6, roughness: .5 }));
-  const cup = add(new THREE.Mesh(new THREE.CylinderGeometry(.06, .05, .12, 10), cupMat), g); cup.position.copy(pourAt).add(new THREE.Vector3(0, .06, 0));
+  const cup = add(new THREE.Mesh(new THREE.CylinderGeometry(.09, .075, .18, 12), cupMat), g); cup.position.copy(pourAt).add(new THREE.Vector3(0, .09, 0));
   const stream = gbox(g, .02, .18, .02, vOnce('tea', () => new THREE.MeshStandardMaterial({ color: 0xb87a3c, emissive: 0x3a1a08 })), 0, 0, 0, { cast: false });
   const steam = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(15), 3)), new THREE.PointsMaterial({ color: 0xffffff, size: .08, transparent: true, opacity: .6, depthWrite: false }));
   g.add(steam);
@@ -64,12 +64,12 @@ function robotBarista(x, z) {
     arm.target.copy(KEYS[k][1]); armReach(arm, dt);
     const tipL = armTipIn(arm, g, tmpV);
     const holdingKettle = u >= 1.2 && u < 5.6, pouring = u >= 2.4 && u < 4.4, carryingCup = u >= 6.8 && u < 7.9;
-    kettle.position.copy(holdingKettle ? tipL.clone().add(new THREE.Vector3(0, -.2, 0)) : kettleHome);
+    kettle.position.copy(holdingKettle ? tipL.clone().add(new THREE.Vector3(0, -.3, 0)) : kettleHome);
     kettle.rotation.z = pouring ? -.6 : 0;
-    stream.visible = pouring; stream.position.set(pourAt.x + .04, pourAt.y + .14, pourAt.z);
-    if (u < 6.8) cup.position.set(pourAt.x, pourAt.y + .06, pourAt.z);
-    else if (carryingCup) cup.position.copy(tipL).add(new THREE.Vector3(0, -.08, 0));
-    else cup.position.set(serveAt.x, serveAt.y + .06, serveAt.z);
+    stream.visible = pouring; stream.position.set(pourAt.x + .04, pourAt.y + .2, pourAt.z);
+    if (u < 6.8) cup.position.set(pourAt.x, pourAt.y + .09, pourAt.z);
+    else if (carryingCup) cup.position.copy(tipL).add(new THREE.Vector3(0, -.12, 0));
+    else cup.position.set(serveAt.x, serveAt.y + .09, serveAt.z);
     const sp = steam.geometry.attributes.position;
     for (let i = 0; i < 5; i++) { const f = (t * .6 + i / 5) % 1; sp.setXYZ(i, cup.position.x + Math.sin(t * 2 + i) * .03, cup.position.y + .08 + f * .35, cup.position.z); }
     sp.needsUpdate = true; steam.visible = u >= 4.4;

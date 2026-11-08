@@ -12,7 +12,7 @@ npm run dev
 
 Then open http://127.0.0.1:8765/. Opening `index.html` directly from disk works too.
 
-Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `archive`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?lobby=waterfront` builds the earlier waterfront lobby instead of the village, `?board=sample` fills the leaderboard with sample rows.
+Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `archive`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?board=sample` fills the leaderboard with sample rows.
 
 ## Layout
 
@@ -27,11 +27,10 @@ js/game/            the game, one file per system (classic scripts sharing one g
   props.js            trees, bushes, lamps, benches, signs
   buildings.js        lobby buildings, gates, Crescent Bay (Calfus), the ABZ tower, bikes, street lights
   portals.js          water and the teleporter pads
-  lobby-village.js    the village lobby (the default): homes, plaza, roads, river, pond, the minigame lawn
+  lobby-village.js    the lobby: a village of homes, plaza, roads, river, pond, the minigame lawn
   village-ai.js       AI set pieces: TOKEN-1, neural-net sculpture, ticker, model servers, art wall, robot dog
   village-robots.js   robot arm, barista, chess table, sweeper, parcel lockers
   leaderboard.js      most-correct-answers board; games report through TokenFall.leaderboard.set
-  lobby.js            the earlier waterfront lobby (?lobby=waterfront)
   areas.js            AREAS registry + placeholder shell
   office-kit.js       shared office pieces: desks, meeting rooms, sofas, garlands, faders
   office-hq.js        Calfus HQ office (zone "lab")

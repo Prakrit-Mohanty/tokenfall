@@ -3,7 +3,7 @@
 
 // ================= TokenFall API (Glass Bridge integration) =================
 // Modules register with (window.TokenFallReady = window.TokenFallReady || []).push(TF => ...).
-const LOBBY = new URLSearchParams(location.search).get('lobby') === 'waterfront' ? WATERFRONT : VILLAGE;
+const LOBBY = VILLAGE;
 if (LOBBY.npcBounds) NPC_BOUNDS.lobby = LOBBY.npcBounds;
 
 const TF = window.TokenFall = {
