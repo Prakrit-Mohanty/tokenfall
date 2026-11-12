@@ -35,7 +35,9 @@ js/game/            the game, one file per system (classic scripts sharing one g
   office-kit.js       shared office pieces: desks, meeting rooms, sofas, garlands, faders
   office-hq.js        Calfus HQ office (zone "lab")
   office-abz.js       ABZ office (zone "abz"), 15th floor
-  build-areas.js      builds the offices, Data Archive and Pune
+  build-areas.js      builds the offices and the Data Archive, then Pune
+  city.js             city pieces: apartments, bus stop, traffic lanes and signals
+  pune.js             Pune: main road, Crescent Bay, the park, ABZ, khau galli, bike taxi
   effects.js          static batching, ambient life, dust, sun/sky
   characters.js       hero and NPC sprites, wandering
   ui.js               chat, dialogue, banners, keyboard
