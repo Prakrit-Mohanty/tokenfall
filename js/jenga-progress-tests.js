@@ -3,7 +3,7 @@ const assert = require('assert');
 const { test, done } = require('./test-kit.js');
 const JP = require('./jenga-progress.js');
 const G = require('./jenga-generator.js');
-const BP = require('./bridge-progress.js');
+const BP = require('./bridge/bridge-progress.js');
 const CP = require('./carrom-progress.js');
 const C = require('./jenga-content.js');
 

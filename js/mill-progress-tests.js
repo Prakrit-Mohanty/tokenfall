@@ -4,10 +4,10 @@ const { test, done } = require('./test-kit.js');
 const MP = require('./mill-progress.js');
 const E = require('./mill-engine.js');
 const P = require('./mill-play.js');
-const BP = require('./bridge-progress.js');
+const BP = require('./bridge/bridge-progress.js');
 const CP = require('./carrom-progress.js');
 const C = require('./mill-content.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 
 const ans = (o) => Object.assign({ type: 'answer', credit: true, conceptId: 'MD1', variantId: 'MD1a', correct: true, direction: null, severe: false }, o);
 const fin = (clean, o) => Object.assign({ type: 'finish', stars: 2, accuracy: 0.8, severe: 1, dropped: 1, cost: 120, idealCost: 100, correct: 50, total: 62, timeMs: 270000, clean }, o);

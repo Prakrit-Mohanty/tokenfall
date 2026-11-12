@@ -1,8 +1,8 @@
 // Self-test for carrom progress: mastery, the shared store, the combined export, and migration of saves made before carrom existed. Run: node js/carrom-progress-tests.js
 const assert = require('assert');
 const CP = require('./carrom-progress.js');
-const BP = require('./bridge-progress.js');
-const BC = require('./bridge-content.js');
+const BP = require('./bridge/bridge-progress.js');
+const BC = require('./bridge/bridge-content.js');
 const C = require('./carrom-content.js');
 const G = require('./carrom-generator.js');
 const P = require('./carrom-physics.js');

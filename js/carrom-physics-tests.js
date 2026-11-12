@@ -1,7 +1,7 @@
 // Self-test for the carrom physics. Run: node js/carrom-physics-tests.js
 const assert = require('assert');
 const P = require('./carrom-physics.js');
-const { mulberry32 } = require('./bridge-generator.js');   // the bridge's seeded RNG: tests only, the physics itself never draws a random number
+const { mulberry32 } = require('./bridge/bridge-generator.js');   // the bridge's seeded RNG: tests only, the physics itself never draws a random number
 const { CFG } = P;
 
 let checks = 0;

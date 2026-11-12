@@ -4,7 +4,7 @@ const { test, done } = require('./test-kit.js');
 const P = require('./mill-play.js');
 const E = require('./mill-engine.js');
 const C = require('./mill-content.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 const { RUN, SIDES } = C;
 
 const spec = E.composeRun(BG.hash32('rules'), null), sh = (i) => spec.shifts[i], inside = (sh_, e) => e.t0 + 3.2;   // a belt time when the crate is in the zone

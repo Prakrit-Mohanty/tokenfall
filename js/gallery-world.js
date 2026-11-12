@@ -88,8 +88,9 @@
     const SPOTS = [[10.0, 18.2], [10.6, 18.2], [9.4, 18.2], [10.0, 18.6]];
     function findSpot() {
       const free = (x, z) => { for (let dx = -3.5; dx <= 3.5; dx += 0.5) for (let dz = -3.3; dz <= 0.4; dz += 0.5) if (TF.COL.some((c) => (c.r !== undefined ? (x + dx - c.x) ** 2 + (z + dz - c.z) ** 2 < (c.r + 0.1) ** 2 : c.ex !== undefined ? false : x + dx > c.x0 - 0.1 && x + dx < c.x1 + 0.1 && z + dz > c.z0 - 0.1 && z + dz < c.z1 + 0.1))) return false; return true; };
-      for (const [x, z] of SPOTS) if (free(x, z)) return [x, z];
-      return SPOTS[0];
+      const spots = (TF.lobbySpots && TF.lobbySpots.stall) || SPOTS;
+      for (const [x, z] of spots) if (free(x, z)) return [x, z];
+      return spots[0];
     }
 
     // ---- the stall, in local metres: the counter at z = 0 facing south, the shelves running north behind it ----
@@ -421,10 +422,12 @@
       TF.WALK.push([S.at[0] - 6.6, S.at[1], S.at[0] + 6.8, S.at[1] + 3.6]);                  // the apron south of the counter, joined to the lawn's walkable edge
       if (TF.sparkles) S.sparkles = TF.sparkles(S.at[0], S.at[1] + 1.0, 0xffd27a, 18, 0.5, 2.2);   // the twinkle that says "you can play this"
       TF.INTER.push({ x: S.at[0], z: S.at[1] + 1.15, r: 1.7, label: 'Spot Shot', verb: 'Play', act: () => world.open() });
-      // the signpost on the path towards it, east of the Glass Bridge path
-      const sx = 3.95, sz = S.at[1] - 1.0;
-      TF.ledSign(['Spot Shot ▶'], '#ffe39a', sx, 1.75, sz, 1.7, 0.45);
-      TF.box(0.1, 1.5, 0.1, MAT.metal, sx - 0.7, 0, sz - 0.06); TF.box(0.1, 1.5, 0.1, MAT.metal, sx + 0.7, 0, sz - 0.06); TF.colBox(sx - 0.85, sz - 0.2, sx + 0.85, sz + 0.1);
+      // the signpost on the path towards it, east of the Glass Bridge path; a lobby that places the stall itself does without it
+      if (!(TF.lobbySpots && TF.lobbySpots.stall)) {
+        const sx = 3.95, sz = S.at[1] - 1.0;
+        TF.ledSign(['Spot Shot ▶'], '#ffe39a', sx, 1.75, sz, 1.7, 0.45);
+        TF.box(0.1, 1.5, 0.1, MAT.metal, sx - 0.7, 0, sz - 0.06); TF.box(0.1, 1.5, 0.1, MAT.metal, sx + 0.7, 0, sz - 0.06); TF.colBox(sx - 0.85, sz - 0.2, sx + 0.85, sz + 0.1);
+      }
       S.built = true;
     };
     world.keys = { onKey, onKeyUp, onDown, onMove, onUp };

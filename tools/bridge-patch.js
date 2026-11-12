@@ -1,6 +1,8 @@
 // The Glass Bridge — integration patch for lobby.html: every change the game makes to the lobby, as exact find/replace anchors.
 // Build tool, not loaded by the game. To re-apply it to a fresh upstream lobby.html:
 //     node tools/bridge-patch.js path/to/upstream-lobby.html lobby.html
+// NOTE: written for the single-file lobby.html. The game is now split into index.html + js/game/*.js and these edits
+// are already in those files, so this tool is only a record of what the bridge changed.
 // apply() throws if any anchor is missing or not unique, so an upstream lobby.html that moved on fails loudly instead of silently
 // (then update the anchor here). The generated lobby.html is what is committed.
 //

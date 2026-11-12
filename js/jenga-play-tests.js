@@ -4,7 +4,7 @@ const { test, done } = require('./test-kit.js');
 const P = require('./jenga-play.js');
 const E = require('./jenga-engine.js');
 const G = require('./jenga-generator.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 
 const spec = G.composeRun(G.seedFor('rules', 0));
 const wrongOf = (q) => q.options.filter((o) => !o.correct).map((o) => o.n);

@@ -3,7 +3,7 @@
 //   run(spec, planner) -> { score, state, actions }       actions = the log that playActions() replays to the same result
 const E = require('./kitchen-engine.js');
 const C = require('./kitchen-content.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 const { RUN } = C, R = RUN.time, L = E.LAYOUT;
 
 const straight = (a, b) => Math.hypot(a.x - b.x, a.z - b.z) * L.detour;

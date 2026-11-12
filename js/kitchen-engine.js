@@ -18,7 +18,7 @@
 // RULES: the places where the spec was silent and a choice was made (each one is a switch; kitchen-tests.js prints them). See the report that came with this file.
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
-  const api = factory(isNode ? require('./kitchen-content.js') : root.KITCHEN_CONTENT, isNode ? require('./bridge-generator.js') : root.BridgeGenerator);
+  const api = factory(isNode ? require('./kitchen-content.js') : root.KITCHEN_CONTENT, isNode ? require('./bridge/bridge-generator.js') : root.BridgeGenerator);
   if (isNode) module.exports = api;
   else root.KitchenEngine = api;
 })(this, function (C, BG) {

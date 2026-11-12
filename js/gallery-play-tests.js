@@ -4,7 +4,7 @@ const { test, done } = require('./test-kit.js');
 const P = require('./gallery-play.js');
 const E = require('./gallery-engine.js');
 const C = require('./gallery-content.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 
 const spec = E.composeRun(BG.hash32('rules'), null), round = (i) => spec.rounds[i];
 const cam = E.LAYOUT.camera, ASPECT = 16 / 9;

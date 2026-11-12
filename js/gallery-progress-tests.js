@@ -4,10 +4,10 @@ const { test, done } = require('./test-kit.js');
 const GP = require('./gallery-progress.js');
 const E = require('./gallery-engine.js');
 const P = require('./gallery-play.js');
-const BP = require('./bridge-progress.js');
+const BP = require('./bridge/bridge-progress.js');
 const CP = require('./carrom-progress.js');
 const C = require('./gallery-content.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 
 const ans = (o) => Object.assign({ type: 'answer', credit: true, conceptId: 'XC1', variantId: 'XC1a', correct: true, lucky: false, inspected: false, kind: 'clear' }, o);
 const fin = (clean, o) => Object.assign({ type: 'finish', stars: 2, catchRate: 0.9, accuracy: 0.9, leaks: 1, friendly: 1, trapsInspected: 2, lucky: 3, timeMs: 270000, clean }, o);

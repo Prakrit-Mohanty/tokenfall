@@ -7,7 +7,7 @@ const { test, done, mean } = require('./test-kit.js');
 const C = require('./kitchen-content.js');
 const E = require('./kitchen-engine.js');
 const B = require('./kitchen-bots.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 const W = require('./kitchen-world.js');   // its pure part: the real walking paths round the counters, which the bots walk below
 const { RUN } = C;
 const SEEDS = 500, seedOf = (i) => E.seedFor('player-' + (i % 97), i);
@@ -24,7 +24,7 @@ test('content: 18 orders, 36 variants, 4+ per concept, ids that cannot collide w
   assert.deepStrictEqual(C.validate(), []);
   assert.strictEqual(C.ORDERS.length, 18); assert.strictEqual(C.VARIANTS.length, 36);
   const others = new Set();
-  for (const m of ['./bridge-content.js', './carrom-content.js', './jenga-content.js']) for (const k of require(m).CARDS) { others.add(k.id); k.variants.forEach((v) => others.add(v.id)); }
+  for (const m of ['./bridge/bridge-content.js', './carrom-content.js', './jenga-content.js']) for (const k of require(m).CARDS) { others.add(k.id); k.variants.forEach((v) => others.add(v.id)); }
   for (const m of ['./gallery-content.js', './mill-content.js']) for (const k of require(m).CONCEPTS) { others.add(k.id); k.variants.forEach((v) => others.add(v.id)); }
   const ids = new Set();
   for (const o of C.ORDERS) { assert(!others.has(o.id) && !ids.has(o.id)); ids.add(o.id); for (const v of o.variants) { assert(!others.has(v.id) && !ids.has(v.id), v.id); ids.add(v.id); } }

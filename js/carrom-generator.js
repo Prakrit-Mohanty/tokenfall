@@ -28,7 +28,7 @@
 //     sort: items: [{ id, text, pocket (the right option's id), breaks: { <option id>: sentence }, flip, start, ghost }] sunk one after another
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
-  const api = factory(isNode ? require('./bridge-generator.js') : root.BridgeGenerator, isNode ? require('./carrom-content.js') : root.CARROM_CONTENT, isNode ? require('./carrom-physics.js') : root.CarromPhysics);
+  const api = factory(isNode ? require('./bridge/bridge-generator.js') : root.BridgeGenerator, isNode ? require('./carrom-content.js') : root.CARROM_CONTENT, isNode ? require('./carrom-physics.js') : root.CarromPhysics);
   if (isNode) module.exports = api;
   else root.CarromGenerator = api;
 })(this, function (BG, CONTENT, P) {

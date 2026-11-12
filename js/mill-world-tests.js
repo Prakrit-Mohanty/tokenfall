@@ -4,7 +4,7 @@ const { test, done } = require('./test-kit.js');
 const W = require('./mill-world.js');
 const E = require('./mill-engine.js');
 const C = require('./mill-content.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 const { RUN } = C, L = W.LAYOUT;
 
 test('layout: the four bins sit exactly where the engine says (-4.5, -1.5, 1.5, 4.5), the sorting zone lies on the belt, the pit is just beyond its end, and the hopper is at its start', () => {

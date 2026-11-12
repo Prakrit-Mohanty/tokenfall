@@ -4,7 +4,7 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 const { test, done, mean } = require('./test-kit.js');
 const E = require('./mill-engine.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 const C = require('./mill-content.js');
 const { LIMITS, CONCEPTS, SIDE_IDS, SIDES, RUN } = C;
 
@@ -17,7 +17,7 @@ function* combos(params) { let acc = [{}]; for (const k of Object.keys(params)) 
 // ================================================================= the bank
 test('content: 4 sides x 4 concepts, 10 variants and 60 crates a side, every variant two twin pairs + 1 clear + 1 trap, one shared policy per side, ids that cannot collide with the other games', () => {
   const others = new Set();
-  for (const m of ['./bridge-content.js', './carrom-content.js', './jenga-content.js']) for (const k of require(m).CARDS) { others.add(k.id); k.variants.forEach((v) => others.add(v.id)); }
+  for (const m of ['./bridge/bridge-content.js', './carrom-content.js', './jenga-content.js']) for (const k of require(m).CARDS) { others.add(k.id); k.variants.forEach((v) => others.add(v.id)); }
   for (const k of require('./gallery-content.js').CONCEPTS) { others.add(k.id); k.variants.forEach((v) => { others.add(v.id); v.items.forEach((i) => others.add(i.id)); }); }
   const ids = new Set();
   for (const side of SIDE_IDS) {
@@ -314,8 +314,8 @@ test('rerollShift: a fresh draw of the same side (or the finale), none of the ru
 });
 
 // ================================================================= the other games
-test('the other games\' tests still pass (bridge, carrom, token tower, spot shot)', () => {
-  for (const f of ['bridge-tests.js', 'carrom-tests.js', 'carrom-physics-tests.js', 'carrom-play-tests.js', 'carrom-progress-tests.js', 'carrom-world-tests.js', 'jenga-world-tests.js', 'jenga-play-tests.js', 'jenga-progress-tests.js',
+if (!process.env.MILL_SKIP_OTHERS) test('the other games\' tests still pass (bridge, carrom, token tower, spot shot)', () => {
+  for (const f of ['bridge/bridge-tests.js', 'carrom-tests.js', 'carrom-physics-tests.js', 'carrom-play-tests.js', 'carrom-progress-tests.js', 'carrom-world-tests.js', 'jenga-world-tests.js', 'jenga-play-tests.js', 'jenga-progress-tests.js',
     'gallery-world-tests.js', 'gallery-play-tests.js', 'gallery-progress-tests.js']) {
     const out = execFileSync('node', [path.join(__dirname, f)], { encoding: 'utf8' });
     console.log('   ' + f + ': ' + out.trim().split('\n').pop());

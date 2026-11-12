@@ -20,15 +20,16 @@ test('layout: every station can be reached from a free cell inside its own radiu
   assert(W.walkable(9.8, -2.4), 'the portal stands on free floor');
 });
 
-test('layout: the staff door sits on the cafe front at its east end, reached from the plaza floor with no change to the walkable area: the stand point is free floor, inside the INTER\'s reach of the door, clear of the cafe\'s collider and both hedge rows', () => {
-  const lobbyWalk = [-17.2, -11.4, 17.2, 18.4], cafeCol = [W.CAFE.cx - W.CAFE.w / 2 - 0.2, W.CAFE.cz - W.CAFE.d / 2 - 0.2, W.CAFE.cx + W.CAFE.w / 2 + 0.2, W.CAFE.cz + W.CAFE.d / 2 + 0.2], front = W.CAFE.cz + W.CAFE.d / 2;
-  const hedges = [[-10.1, -13.2, -8.6, -12.6], [8.6, -13.2, 10.6, -12.6], [16.2, -13.2, 17.9, -12.6]], pad = 0.32;
-  const inside = (b, x, z, p) => x > b[0] - p && x < b[2] + p && z > b[1] - p && z < b[3] + p;
-  const [sx, sz] = W.DOOR.stand, [rx, rz] = W.DOOR.ret;
-  assert.strictEqual(W.DOOR.z, front, 'on the front face'); assert(W.DOOR.x - W.DOOR.w / 2 > W.CAFE.cx && W.DOOR.x + W.DOOR.w / 2 < W.CAFE.cx + W.CAFE.w / 2, 'inside the cafe\'s width, at its east end');
-  for (const [x, z] of [[sx, sz], [rx, rz]]) { assert(x > lobbyWalk[0] && x < lobbyWalk[2] && z > lobbyWalk[1] && z < lobbyWalk[3], 'on the plaza floor'); assert(!inside(cafeCol, x, z, pad) && !hedges.some((h) => inside(h, x, z, pad)), 'free of every collider'); }
-  assert(Math.hypot(sx - W.DOOR.x, sz - W.DOOR.z) <= W.DOOR.r, 'the INTER reaches the door'); assert(Math.hypot(sx - W.CAFE.cx, sz - (front + 1.2)) >= 1.7 + 0.1 && W.DOOR.r >= 1.7, 'its radius is not smaller than the counter\'s (1.7), so walking east from the counter you meet "Cook" before you leave the cafe'); assert(Math.hypot(sx - W.CAFE.cx, sz - (front + 1.2)) > 1.7, 'its prompt does not hide the cafe\'s own');
-  assert.strictEqual(W.DOOR.patch, undefined, 'no walkable patch is needed');
+test('layout: the staff door is the cafe\'s own door, placed by the lobby (lobbySpots.kitchen): the board stands between the stand point and the door, leaves the stand point clear by the hero\'s width, and the way back out is in front of it', () => {
+  // the village's Token Brew: a home at (20, -13), 10 wide and 7 deep, facing +z; its door is at (x + 0.31 w, z + d/2 - 0.6) (lobby-village.js vDoor)
+  const home = { x: 20, z: -13, w: 10, d: 7 }, door = [home.x + 0.31 * home.w, home.z + home.d / 2 - 0.6], spot = { door, dir: [0, 1], stand: [door[0], door[1] + 1.4], ret: [door[0], door[1] + 2.1] };
+  const s = W.doorSpot(spot), hero = 0.32; assert.strictEqual(W.doorSpot(null), null, 'no spot, no entrance');
+  const inBox = (b, x, z, pad) => x > b[0] - pad && x < b[2] + pad && z > b[1] - pad && z < b[3] + pad;
+  assert(s.board[1] > door[1] && s.board[1] < spot.stand[1], 'the board is between the door and the stand point'); assert(!inBox(s.box, spot.stand[0], spot.stand[1], hero), 'the stand point is clear of the board');
+  assert(!inBox(s.box, spot.ret[0], spot.ret[1], hero), 'so is the way back out'); assert(s.posts.every(([x, z]) => x >= s.box[0] - 0.05 && x <= s.box[2] + 0.05), 'the posts hold the board up at its ends');
+  assert.strictEqual(s.retDir, 'down'); assert.strictEqual(s.ry, 0); assert(Math.hypot(spot.stand[0] - door[0], spot.stand[1] - door[1]) <= W.DOOR.r, 'the prompt reaches the door');
+  const counter = [home.x + (-home.w / 2 + home.w * 0.62 / 2), home.z + home.d / 2 + 1.4]; assert(Math.hypot(spot.stand[0] - counter[0], spot.stand[1] - counter[1]) > 1.7 + W.DOOR.r, 'the chai counter\'s prompt (radius 1.7) and the door\'s do not overlap');
+  const east = W.doorSpot({ door: [0, 0], dir: [1, 0], stand: [1.4, 0], ret: [2.1, 0] }); assert.strictEqual(east.retDir, 'right'); assert(Math.abs(east.ry - Math.PI / 2) < 1e-9);
 });
 
 test('camera: the whole kitchen (the room corners, the back wall top and every station) is on screen at 16:9, 16:10, 4:3, a square window and a phone', () => {

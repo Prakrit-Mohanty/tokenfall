@@ -15,7 +15,7 @@
 // attempt and never counts towards mastery.
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
-  const api = factory(isNode ? require('./carrom-content.js') : root.CARROM_CONTENT, isNode ? require('./bridge-content.js') : root.BRIDGE_CONTENT);
+  const api = factory(isNode ? require('./carrom-content.js') : root.CARROM_CONTENT, isNode ? require('./bridge/bridge-content.js') : root.BRIDGE_CONTENT);
   if (isNode) module.exports = api;
   else root.CarromProgress = api;
 })(this, function (C, BC) {

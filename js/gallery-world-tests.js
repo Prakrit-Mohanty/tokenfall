@@ -3,7 +3,7 @@ const assert = require('assert');
 const { test, done } = require('./test-kit.js');
 const W = require('./gallery-world.js');
 const E = require('./gallery-engine.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 
 const at = [10, 18.2];
 test('mapping: stall-local x is the lobby\'s x, local z runs north from the counter, y is unchanged, and the mapping inverts', () => {

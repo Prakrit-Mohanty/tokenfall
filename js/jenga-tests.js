@@ -5,7 +5,7 @@ const path = require('path');
 const { test, done, mean, words, addRank, uniform } = require('./test-kit.js');
 const E = require('./jenga-engine.js');
 const G = require('./jenga-generator.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 const C = require('./jenga-content.js');
 const { LIMITS, CARDS } = C;
 
@@ -21,7 +21,7 @@ function* combos(params) {   // every sample of a param table (an object entry b
 
 // ================================================================= content
 test('content: 19 cards, 4+ variants each, a flip variant each, 4+ wrong tags each, ids that cannot collide with the other games', () => {
-  const bridge = require('./bridge-content.js'), carrom = require('./carrom-content.js'), ids = new Set();
+  const bridge = require('./bridge/bridge-content.js'), carrom = require('./carrom-content.js'), ids = new Set();
   assert.strictEqual(CARDS.length, 19);
   for (const c of CARDS) {
     assert(c.id.startsWith('J') && !bridge.CARDS.some((b) => b.id === c.id) && !carrom.CARDS.some((b) => b.id === c.id), c.id);
@@ -282,7 +282,7 @@ test('pace: 7 questions x about 35 s stays under the 5:00 clock', () => {
 });
 
 test('the other games\' tests still pass (bridge, carrom)', () => {
-  for (const f of ['bridge-tests.js', 'carrom-tests.js', 'carrom-physics-tests.js', 'carrom-play-tests.js', 'carrom-progress-tests.js', 'carrom-world-tests.js']) {
+  for (const f of ['bridge/bridge-tests.js', 'carrom-tests.js', 'carrom-physics-tests.js', 'carrom-play-tests.js', 'carrom-progress-tests.js', 'carrom-world-tests.js']) {
     const out = execFileSync('node', [path.join(__dirname, f)], { encoding: 'utf8' });
     console.log('   ' + f + ': ' + out.trim().split('\n').pop());
   }

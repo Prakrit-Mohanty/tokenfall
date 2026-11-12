@@ -20,7 +20,7 @@
 //   variant and the three wrong tags are chosen to land on it: otherwise "the longest tag is right" would be a tell.
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
-  const api = factory(isNode ? require('./jenga-content.js') : root.JENGA_CONTENT, isNode ? require('./jenga-engine.js') : root.JengaEngine, isNode ? require('./bridge-generator.js') : root.BridgeGenerator);
+  const api = factory(isNode ? require('./jenga-content.js') : root.JENGA_CONTENT, isNode ? require('./jenga-engine.js') : root.JengaEngine, isNode ? require('./bridge/bridge-generator.js') : root.BridgeGenerator);
   if (isNode) module.exports = api;
   else root.JengaGenerator = api;
 })(this, function (C, E, BG) {

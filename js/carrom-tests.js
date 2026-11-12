@@ -4,7 +4,7 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 const G = require('./carrom-generator.js');
 const P = require('./carrom-physics.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 const { LIMITS, SIDES, CARDS } = require('./carrom-content.js');
 
 const N = 500;
@@ -164,7 +164,7 @@ test('speed: composing a whole run, ghost shots included, takes milliseconds, so
 });
 
 test('the shared code still works: bridge, physics, world, rules and progress tests pass', () => {
-  for (const f of ['bridge-tests.js', 'carrom-physics-tests.js', 'carrom-world-tests.js', 'carrom-play-tests.js', 'carrom-progress-tests.js']) {
+  for (const f of ['bridge/bridge-tests.js', 'carrom-physics-tests.js', 'carrom-world-tests.js', 'carrom-play-tests.js', 'carrom-progress-tests.js']) {
     let out; try { out = execFileSync('node', [path.join(__dirname, f)], { encoding: 'utf8' }); } catch (e) { if (f === 'carrom-progress-tests.js' && /Cannot find module/.test(String(e.stderr))) continue; throw e; }
     const m = out.match(/(\d+) checks passed/); assert(m, f); console.log(`   ${f}: ${m[1]} checks passed`);
   }

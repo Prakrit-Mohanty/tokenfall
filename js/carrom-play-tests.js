@@ -3,7 +3,7 @@ const assert = require('assert');
 const Play = require('./carrom-play.js');
 const P = require('./carrom-physics.js');
 const G = require('./carrom-generator.js');
-const { mulberry32 } = require('./bridge-generator.js');
+const { mulberry32 } = require('./bridge/bridge-generator.js');
 const { RULES, pointsFor, starsFor, aimGuide, angleTo, createRound, createRun, memoryProgress } = Play;
 const { CFG } = P;
 

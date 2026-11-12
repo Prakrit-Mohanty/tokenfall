@@ -23,7 +23,7 @@
 //   independently of its lane, direction, speed, spawn time, popup flag and text length; the ammo is always threats + 2.
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
-  const api = factory(isNode ? require('./gallery-content.js') : root.GALLERY_CONTENT, isNode ? require('./bridge-generator.js') : root.BridgeGenerator);
+  const api = factory(isNode ? require('./gallery-content.js') : root.GALLERY_CONTENT, isNode ? require('./bridge/bridge-generator.js') : root.BridgeGenerator);
   if (isNode) module.exports = api;
   else root.GalleryEngine = api;
 })(this, function (C, BG) {

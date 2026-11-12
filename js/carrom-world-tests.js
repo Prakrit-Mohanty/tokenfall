@@ -3,7 +3,7 @@
 const assert = require('assert');
 const W = require('./carrom-world.js');
 const P = require('./carrom-physics.js');
-const { mulberry32 } = require('./bridge-generator.js');
+const { mulberry32 } = require('./bridge/bridge-generator.js');
 const { CFG } = P;
 
 let checks = 0;

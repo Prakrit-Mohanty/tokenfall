@@ -2,7 +2,7 @@
 //
 // A new zone, "kitchen" (Token Brew Kitchen · Staff only), registered through TF.registerZone at (600, 0): a plank floor, plaster walls with a striped tile backsplash (MAT.awning), wooden
 // counters, steel stoves with pots, hanging red lanterns that sway, steam, a pass counter with a window and customer silhouettes behind it, a ticket rail and a stock shelf. The way in is a
-// staff door on the front face of the Token Brew cafe (built here; no change to the lobby's walkable floor); the way out is the "Back to Lobby" portal. The hero is never locked: WASD and Shift
+// staff door that is the Token Brew cafe's own door (the lobby says where it is: TF.lobbySpots.kitchen; this module adds the board, the twinkle and the prompt); the way out is the "Back to Lobby" portal. The hero is never locked: WASD and Shift
 // work the whole time, the camera is held at a fixed three-quarter view that frames the whole kitchen (TF.cameraTo / TF.cameraRestore), and E works the stations.
 //
 //   install(TF)                 registers at the lobby's boot (after mergeStatic, so everything here stays a live object); sets TF.kitchen = world
@@ -24,9 +24,15 @@
   const { RUN } = C, STYLE = CW.STYLE, L0 = E.LAYOUT, BASE_ASPECT = 16 / 9, TAP = 0.2;
   const POOL = { chunks: 10, cards: 3, crates: 6, gauges: 2 };   // pooled chunk meshes (carry 1, floor 6, stock shelf 3), ticket cards, pantry labels, pot gauges
   const ZONE = { cx: 600, cz: 0 };
-  const CAFE = { cx: 13.4, cz: -14.6, w: 5.4, d: 4 };           // the Token Brew building in the lobby (verified against its INTER before anything is built)
-  // the staff door: on the cafe's FRONT face at its east end. A door on the east face was ruled out: a hedge row (x 16.2-17.9) and the plaza's boundary hedge (x 17.4-18.2) leave a 0.46 m alley, narrower than the hero.
-  const DOOR = { x: 15.3, z: CAFE.cz + CAFE.d / 2, w: 1.1, stand: [15.3, -11.3], r: 1.9, ret: [15.3, -10.4] };
+  // the staff door is the Token Brew cafe's own door. The lobby places it (TF.lobbySpots.kitchen = { door, dir, stand, ret }: the door's face, which way it faces, where to stand, where the hero
+  // comes back out); this module adds the board in front of it, the twinkle and the prompt. A lobby without that spot has no entrance, and the kitchen stays unreachable.
+  const DOOR = { r: 1.9, board: 0.75, w: 2.1 };
+  function doorSpot(spot) {
+    if (!spot) return null;
+    const [dx, dz] = spot.dir, bx = spot.door[0] + dx * DOOR.board, bz = spot.door[1] + dz * DOOR.board, hw = DOOR.w / 2, side = [-dz, dx];
+    return { door: spot.door.slice(), stand: spot.stand.slice(), ret: spot.ret.slice(), ry: Math.atan2(dx, dz), board: [bx, bz], posts: [-0.9, 0.9].map((k) => [bx + side[0] * k, bz + side[1] * k]),
+      box: dz ? [bx - hw, bz - 0.2, bx + hw, bz + 0.2] : [bx - 0.2, bz - hw, bx + 0.2, bz + hw], retDir: dz > 0 ? 'down' : dz < 0 ? 'up' : dx > 0 ? 'right' : 'left' };
+  }
   const ROOM = { x0: -12.2, x1: 12.2, zBack: -8.7, zFront: 3.4, wall: 3.4 };
   const WALK = [-11, -6.2, 11, -1.1];                            // where the hero may stand, kitchen-local: x0, z0, x1, z1
   // counters and appliances the hero cannot walk through (kitchen-local boxes x0, z0, x1, z1) and the stations the hero works from
@@ -365,18 +371,15 @@
       if (TF.mergeStatic) TF.mergeStatic(S.root);
     }
     function buildDoor() {
-      const cafe = TF.INTER.find((q) => q.label === 'Token Brew');
-      if (!cafe || Math.abs(cafe.x - CAFE.cx) > 0.01 || Math.abs(cafe.z - (CAFE.cz + CAFE.d / 2 + 1.2)) > 0.05) { S.door = null; return; }   // the cafe moved: no door, no entrance
-      const x = DOOR.x, z = DOOR.z, mk = (w, h, d, m, ox, y, oz, o) => TF.box(w, h, d, m, x + ox, y, z + oz, o);
-      mk(DOOR.w + 0.3, 2.5, 0.12, MAT.darkWood, 0, 0.3, 0.1); mk(DOOR.w, 2.3, 0.1, MAT.door, 0, 0.3, 0.17); mk(0.06, 0.14, 0.08, MAT.chrome, DOOR.w / 2 - 0.15, 1.3, 0.25);
-      mk(DOOR.w + 0.9, 0.06, 0.9, MAT.concrete, 0, 0.3, 0.55);
-      TF.signBoard('Kitchen - Staff', x, 2.95, z + 0.2, 1.7, 0.4, 0);
-      TF.pointLight('lobby', warm(), 0.7, 5, x, 2.7, z + 1.4);
-      TF.INTER.push({ x: DOOR.stand[0], z: DOOR.stand[1], r: DOOR.r, label: 'Token Brew Kitchen', verb: 'Cook', act: () => world.enterKitchen() });
-      // the way in is marked like every other game: the amber twinkle, and a low board in front of the door that the umbrellas do not hide
-      if (TF.sparkles) S.doorSparkles = TF.sparkles(DOOR.stand[0], DOOR.stand[1] - 0.2, STYLE[0].hex, 24, 0.8, 2.6);
-      mk(0.14, 0.7, 0.14, MAT.darkWood, -0.9, 0.3, 1.1); mk(0.14, 0.7, 0.14, MAT.darkWood, 0.9, 0.3, 1.1); TF.signBoard('Kitchen: cook a shift', x, 1.35, z + 1.1, 2.1, 0.46, 0);
-      S.door = { x, z };
+      const sp = S.spot; if (!sp) { S.door = null; return; }   // the lobby did not say where the door is: no entrance
+      const posts = (px, pz) => TF.box(0.14, 1.9, 0.14, MAT.darkWood, px, 0, pz);
+      sp.posts.forEach(([px, pz]) => posts(px, pz)); TF.signBoard('Kitchen - Staff', sp.board[0], 1.75, sp.board[1], 2.1, 0.46, sp.ry); TF.signBoard('Cook a shift', sp.board[0], 1.25, sp.board[1], 1.5, 0.36, sp.ry);
+      TF.colBox(sp.box[0], sp.box[1], sp.box[2], sp.box[3]);
+      TF.pointLight('lobby', warm(), 0.7, 5, sp.stand[0], 2.7, sp.stand[1]);
+      TF.INTER.push({ x: sp.stand[0], z: sp.stand[1], r: DOOR.r, label: 'Token Brew Kitchen', verb: 'Cook', act: () => world.enterKitchen() });
+      // the way in is marked like every other game: the amber twinkle
+      if (TF.sparkles) S.doorSparkles = TF.sparkles(sp.stand[0], sp.stand[1] - 0.2, STYLE[0].hex, 24, 0.8, 2.6);
+      S.door = { x: sp.door[0], z: sp.door[1] };
     }
     // the dynamic pieces: pantry labels, gauges, ticket cards, the carried chunk, the ring, customers, steam, sparks, floor items
     function buildLive() {
@@ -541,7 +544,8 @@
       root.appendChild(style); root.appendChild(prompt); document.body.appendChild(root); S.ui = { root, prompt };
     }
     world.build = () => {
-      const a = TF.registerZone('kitchen', { cx: ZONE.cx, cz: ZONE.cz, name: 'Token Brew Kitchen', sub: 'Staff only', color: STYLE[0].hex, ret: DOOR.ret.slice(), retDir: 'down', spawn: [L0.start.x, L0.start.z], env: { sun: 0.5, hemi: 0.6, near: 40, far: 130 } });
+      S.spot = doorSpot(TF.lobbySpots && TF.lobbySpots.kitchen);
+      const a = TF.registerZone('kitchen', { cx: ZONE.cx, cz: ZONE.cz, name: 'Token Brew Kitchen', sub: 'Staff only', color: STYLE[0].hex, ret: S.spot ? S.spot.ret : [0, 0], retDir: S.spot ? S.spot.retDir : 'down', spawn: [L0.start.x, L0.start.z], env: { sun: 0.5, hemi: 0.6, near: 40, far: 130 } });
       S.A = a; S.tok = tokens(); makeUi(); build(); buildLive(); S.built = true;
     };
     return world;
@@ -561,5 +565,5 @@
     if (typeof window !== 'undefined') window.kitchenWorld = world;
     return world;
   }
-  return { ZONE, ROOM, WALK, BOXES, OCCLUDERS, STATIONS, CAMERA, DOOR, CAFE, POOL, TAP, LABEL, fitView, project, visible, framePoints, walkable, makePather, nearest, holdWork, tapAction, holdStep, gaugeSegments, create, install };
+  return { ZONE, ROOM, WALK, BOXES, OCCLUDERS, STATIONS, CAMERA, DOOR, doorSpot, POOL, TAP, LABEL, fitView, project, visible, framePoints, walkable, makePather, nearest, holdWork, tapAction, holdStep, gaugeSegments, create, install };
 });

@@ -25,7 +25,7 @@
 //   per side, whose bin plates flip between waves. Which bin is correct is drawn to be independent of spawn order, text length and chip count.
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
-  const api = factory(isNode ? require('./mill-content.js') : root.MILL_CONTENT, isNode ? require('./bridge-generator.js') : root.BridgeGenerator);
+  const api = factory(isNode ? require('./mill-content.js') : root.MILL_CONTENT, isNode ? require('./bridge/bridge-generator.js') : root.BridgeGenerator);
   if (isNode) module.exports = api;
   else root.MillEngine = api;
 })(this, function (C, BG) {

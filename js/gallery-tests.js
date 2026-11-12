@@ -4,7 +4,7 @@ const { execFileSync } = require('child_process');
 const path = require('path');
 const { test, done, mean } = require('./test-kit.js');
 const E = require('./gallery-engine.js');
-const BG = require('./bridge-generator.js');
+const BG = require('./bridge/bridge-generator.js');
 const C = require('./gallery-content.js');
 const { LIMITS, CONCEPTS, SIDE_IDS } = C;
 
@@ -16,7 +16,7 @@ function* combos(params) { let acc = [{}]; for (const k of Object.keys(params)) 
 
 // ================================================================= the bank
 test('content: 4 sides x 4 concepts, 4+ variants and 16+ cards per side, every variant two twin pairs (2 threats, 2 legit), ids that cannot collide with the other games', () => {
-  const bridge = require('./bridge-content.js'), carrom = require('./carrom-content.js'), jenga = require('./jenga-content.js'), ids = new Set(), other = new Set([bridge, carrom, jenga].flatMap((m) => m.CARDS.map((c) => c.id)));
+  const bridge = require('./bridge/bridge-content.js'), carrom = require('./carrom-content.js'), jenga = require('./jenga-content.js'), ids = new Set(), other = new Set([bridge, carrom, jenga].flatMap((m) => m.CARDS.map((c) => c.id)));
   for (const side of SIDE_IDS) {
     const cs = CONCEPTS.filter((c) => c.side === side), vs = cs.flatMap((c) => c.variants);
     assert.strictEqual(cs.length, 4, side); assert(vs.length >= LIMITS.minVariants && vs.length * 4 >= LIMITS.minItems * 3, side);
@@ -309,7 +309,7 @@ test('rerollRound: a fresh draw of the same side (or the finale), none of the ru
 
 // ================================================================= the other games
 test('the other games\' tests still pass (bridge, carrom, token tower)', () => {
-  for (const f of ['bridge-tests.js', 'carrom-tests.js', 'carrom-physics-tests.js', 'carrom-play-tests.js', 'carrom-progress-tests.js', 'carrom-world-tests.js', 'jenga-world-tests.js', 'jenga-play-tests.js', 'jenga-progress-tests.js']) {
+  for (const f of ['bridge/bridge-tests.js', 'carrom-tests.js', 'carrom-physics-tests.js', 'carrom-play-tests.js', 'carrom-progress-tests.js', 'carrom-world-tests.js', 'jenga-world-tests.js', 'jenga-play-tests.js', 'jenga-progress-tests.js']) {
     const out = execFileSync('node', [path.join(__dirname, f)], { encoding: 'utf8' });
     console.log('   ' + f + ': ' + out.trim().split('\n').pop());
   }

@@ -7,7 +7,7 @@ const P = require('./kitchen-play.js');
 const E = require('./kitchen-engine.js');
 const B = require('./kitchen-bots.js');
 const C = require('./kitchen-content.js');
-const BP = require('./bridge-progress.js');
+const BP = require('./bridge/bridge-progress.js');
 const CP = require('./carrom-progress.js');
 
 const ans = (o) => Object.assign({ type: 'answer', credit: true, conceptId: 'K2', variantId: 'K2-1a', kind: 'served', clean: true }, o);

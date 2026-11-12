@@ -22,7 +22,7 @@
 // Units: 1 block width = UNIT metres; tower-local coordinates, y = 0 on the table top.
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
-  const api = factory(isNode ? require('./jenga-engine.js') : root.JengaEngine, isNode ? require('./carrom-world.js') : root.CarromWorld, isNode ? require('./bridge-generator.js') : root.BridgeGenerator);
+  const api = factory(isNode ? require('./jenga-engine.js') : root.JengaEngine, isNode ? require('./carrom-world.js') : root.CarromWorld, isNode ? require('./bridge/bridge-generator.js') : root.BridgeGenerator);
   if (isNode) module.exports = api;
   else root.JengaWorld = api;
 })(this, function (E, CW, BG) {
@@ -101,8 +101,9 @@
     function findSpot() {
       const ring = []; for (let a = 0; a < 12; a++) ring.push([Math.cos(a * Math.PI / 6) * 1.5, Math.sin(a * Math.PI / 6) * 1.5]);
       ring.push([0, 0], [0, 2.1]);
-      for (const [x, z] of SPOTS) if (ring.every(([dx, dz]) => !TF.blocked(x + dx, z + dz, 0.05))) return [x, z];
-      return SPOTS[0];
+      const spots = (TF.lobbySpots && TF.lobbySpots.tower) || SPOTS;
+      for (const [x, z] of spots) if (ring.every(([dx, dz]) => !TF.blocked(x + dx, z + dz, 0.05))) return [x, z];
+      return spots[0];
     }
 
     // ---- the table and its dressing: wood top on dark legs, a plaque, two stools, a few spare blocks, all lobby helpers ----
