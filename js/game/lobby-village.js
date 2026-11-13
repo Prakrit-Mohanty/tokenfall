@@ -475,11 +475,20 @@ function vFoliage() {
 }
 
 function vGrass() {
-  const lawn = () => { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = rr(-V_ISLAND + 1, V_ISLAND - 1); return vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)) ? null : [x, z]; };
-  scatter(TX.grassTuft, 3400, .6, lawn);
-  const fern = canvasTex(16, 16, (g) => { for (const [x, c] of [[4, '#6c9658'], [8, '#7aa266'], [12, '#6c9658']]) { g.fillStyle = c; for (let y = 2; y < 16; y++) { g.fillRect(x, y, 1, 1); if (y % 2) { g.fillRect(x - 2, y, 2, 1); g.fillRect(x + 1, y, 2, 1); } } } }, { smooth: true });
-  scatter(fern, 240, .62, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 2.5) && !vPaved(x, z, .6) && !vWater(x, z, .2) && !blocked(x, z, -.1) ? [x, z] : null; });
-  TX.flowers.forEach((ft) => scatter(ft, 160, .5, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 1.8) && !vPaved(x, z, .5) && !vWater(x, z) && !blocked(x, z, -.1) ? [x, z] : null; }));
+  // greenery gathers in lush patches and thins out between them
+  const patch = (x, z, o = 0) => { const v = .5 + .5 * Math.sin((x + o) * .21 + Math.sin(z * .17) * 2) * Math.sin(z * .19 + (x + o) * .07); return v * v; };
+  const lawn = (o) => () => { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = rr(-V_ISLAND + 1, V_ISLAND - 1); return vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)) || rnd() > .12 + .9 * patch(x, z, o) ? null : [x, z]; };
+  scatter(TX.grassTuft, 2300, .6, lawn(0), true);
+  scatter(TX.clover, 700, .5, lawn(31), true);
+  const fern = canvasTex(32, 32, (g, W, H) => {   // three arching fronds with rounded leaflets
+    g.fillStyle = '#6c9658';
+    for (const [lean, s] of [[-9, .9], [0, 1.1], [9, .9]]) for (let k = 1; k <= 7; k++) {
+      const t = k / 8, x = 16 + lean * t * t * 1.4, y = H - 2 - 26 * s * t, a = lean * .04 * k;
+      for (const side of [-1, 1]) { g.beginPath(); g.ellipse(x + side * 3, y, 3.4 * (1 - t * .5), 1.5, side * .5 + a, 0, 7); g.fill(); }
+    }
+  }, { smooth: true });
+  scatter(fern, 240, .62, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 2.5) && !vPaved(x, z, .6) && !vWater(x, z, .2) && !blocked(x, z, -.1) ? [x, z] : null; }, true);
+  TX.flowers.forEach((ft, i) => scatter(ft, 160, .5, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 1.8) && !vPaved(x, z, .5) && !vWater(x, z) && !blocked(x, z, -.1) && rnd() < .15 + .9 * patch(x, z, 60 + i * 23) ? [x, z] : null; }));
 }
 
 function buildVillageLobby() {

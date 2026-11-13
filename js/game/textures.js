@@ -208,20 +208,34 @@ function buildTextures() {
     }
   }, { nearest: true });
   TX.coin.center.set(.5, .5); TX.coin.rotation = Math.PI / 2;
-  TX.grassTuft = canvasTex(16, 16, (g, W, H) => {
+  // soft, rounded greenery: curved blades, clover and round-petalled flowers, drawn smooth (decorRandom keeps the layout's rnd() sequence still)
+  const dr = (a, b) => a + decorRandom() * (b - a);
+  TX.grassTuft = canvasTex(32, 32, (g, W, H) => {
+    g.lineCap = 'round';
     for (let i = 0; i < 9; i++) {
-      let x = 2 + rnd() * 12, h = 5 + rnd() * 7; const c = [[108, 134, 80], [118, 144, 88], [94, 120, 70]][i % 3];
-      for (let y = 0; y < h; y++) { P(g, x | 0, H - 1 - y, c, 1 + y / h * .25); x += (rnd() - .5) * .8; }
+      const x = 4 + i * 3 + dr(-1, 1), h = dr(10, 26), lean = dr(-5, 5);
+      g.strokeStyle = ['#7fa05a', '#8fb066', '#6e9150', '#9bba72'][i % 4]; g.lineWidth = dr(1.8, 2.6);
+      g.beginPath(); g.moveTo(x, H); g.quadraticCurveTo(x + lean * .2, H - h * .6, x + lean, H - h); g.stroke();
     }
   }, { smooth: true });
-  TX.flowers = [[214, 116, 104], [240, 232, 214], [238, 206, 126], [172, 146, 208]].map(pc => canvasTex(16, 16, (g, W, H) => {
-    for (let i = 0; i < 4; i++) {
-      const x = 2 + i * 4 - (rnd() * 2 | 0), top = 4 + (rnd() * 6 | 0);
-      for (let y = top; y < H; y++) P(g, x, y, [96, 124, 74]);
-      P(g, x - 1, top, pc); P(g, x + 1, top, pc); P(g, x, top - 1, pc); P(g, x, top + 1, pc, .85); P(g, x, top, [250, 220, 120]);
-      P(g, x + 1, top + 5, [96, 140, 60]);
+  TX.clover = canvasTex(32, 32, (g, W, H) => {
+    const disc = (x, y, r, c) => { g.fillStyle = c; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
+    for (let i = 0; i < 7; i++) {
+      const x = 5 + (i % 4) * 7 + dr(-2, 2), y = H - 5 - (i > 3 ? 8 : 0) - dr(0, 4), c = ['#86a864', '#6f9a58', '#98b672'][i % 3];
+      for (let k = 0; k < 3; k++) disc(x + Math.cos(k * 2.1) * 2.6, y + Math.sin(k * 2.1) * 2.6 - 2, 3, c);
+      if (i % 3 === 0) disc(x + 1, y - 7, 2.4, '#f4ecd8');
     }
-  }, { nearest: true }));
+  }, { smooth: true });
+  TX.flowers = [[214, 116, 104], [240, 232, 214], [238, 206, 126], [172, 146, 208]].map(pc => canvasTex(32, 32, (g, W, H) => {
+    const disc = (x, y, r, c) => { g.fillStyle = c; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
+    for (let i = 0; i < 3; i++) {
+      const x = 7 + i * 9 + dr(-2, 2), top = dr(7, 16);
+      g.strokeStyle = '#7fa05a'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(x, H); g.quadraticCurveTo(x + dr(-3, 3), (H + top) / 2, x, top); g.stroke();
+      disc(x + 3, top + 10, 2.2, '#86a864');
+      for (let k = 0; k < 5; k++) disc(x + Math.cos(k * 1.257) * 3, top + Math.sin(k * 1.257) * 3, 2.5, rgb(pc, k % 2 ? .95 : 1.05));
+      disc(x, top, 1.8, '#f6d672');
+    }
+  }, { smooth: true }));
   const blob = document.createElement('canvas'); blob.width = blob.height = 64;
   const bg = blob.getContext('2d'), grd = bg.createRadialGradient(32, 32, 0, 32, 32, 32);
   grd.addColorStop(0, 'rgba(0,0,0,.55)'); grd.addColorStop(1, 'rgba(0,0,0,0)'); bg.fillStyle = grd; bg.fillRect(0, 0, 64, 64);

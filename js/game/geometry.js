@@ -38,11 +38,17 @@ function buildMaterials() {
 function groundVariation(m, dry) {
   m.onBeforeCompile = sh => {
     sh.vertexShader = 'varying vec3 vGW;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGW = (modelMatrix * vec4(transformed, 1.)).xyz;');
-    sh.fragmentShader = 'varying vec3 vGW;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-      float gn = sin(vGW.x * .13 + sin(vGW.z * .09) * 2.) * sin(vGW.z * .11 + vGW.x * .05);
-      float gn2 = sin(vGW.x * .31 + 1.7) * sin(vGW.z * .27 + sin(vGW.x * .1) * 3.);
-      diffuseColor.rgb *= 1. + gn * .15 + gn2 * .05;
-      diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.05, 1.02, .93), smoothstep(-.25, .6, gn) * .25);
+    // value noise at three scales (broad drifts, patches, fine blotches), so a repeating tile never shows its repeat
+    sh.fragmentShader = `varying vec3 vGW;
+      float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float gv(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(gh(i), gh(i + vec2(1., 0.)), f.x), mix(gh(i + vec2(0., 1.)), gh(i + vec2(1., 1.)), f.x), f.y); }
+    ` + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+      float gn = (gv(vGW.xz * .07) + .5 * gv(vGW.xz * .17 + 7.)) / 1.5 * 2. - 1.;
+      float gn2 = gv(vGW.xz * .45 + 3.) * 2. - 1.;
+      float gn3 = gv(vGW.xz * 2.3 + 11.) * 2. - 1.;
+      diffuseColor.rgb *= 1. + gn * .2 + gn2 * .08 + gn3 * .045;
+      diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.05, 1.02, .93), smoothstep(-.25, .6, gn) * .3);
+      diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(.94, 1., 1.05), smoothstep(.1, .8, -gn2) * .25);
       ${dry ? 'diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.08, 1.03, .88), smoothstep(.35, .9, gn2) * .4);' : ''}`);
   };
   return m;

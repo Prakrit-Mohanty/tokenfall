@@ -7,7 +7,7 @@ const LOBBY = VILLAGE;
 if (LOBBY.npcBounds) NPC_BOUNDS.lobby = LOBBY.npcBounds;
 
 const TF = window.TokenFall = {
-  THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, rnd, rr, timeU, keys, post: final.u, charScale: CHAR_SCALE, skyU, SUN_DIR, shaftMat, get dust() { return dust; },
+  THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, GREEN_MATS, rnd, rr, timeU, keys, post: final.u, charScale: CHAR_SCALE, skyU, SUN_DIR, shaftMat, get dust() { return dust; },
   INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life, mergeStatic, leaderboard: LEADERBOARD_API, get lobbySpots() { return LOBBY.minigameSpots || {}; },
   canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
   gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,

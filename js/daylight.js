@@ -17,22 +17,22 @@
     morning: {   // fresh and natural: a low warm sun from the east, a soft haze, gently cool shadows, lamps going out
       sunDir: [28, 14, 12], sunColor: '#ffe6cc', sunI: 0.95, hemiSky: '#cfdcee', hemiGround: '#8a7e70', hemiI: 0.8, fog: '#e4dccf', fogNear: 16, fogFar: 78, zenith: '#8fb4de', stars: 0, cloud: '#fff6ee',
       lamps: 0.15, glow: 0.25, indoor: 1.05, exposure: 0.92, mul: [1, 1, 1], shadow: [0.95, 0.95, 1.03], hi: [1.02, 1, 0.97], sat: 1.02, vig: 0.6, bloom: 0.2, shafts: 1, dust: 0.5,
-      lift: [0.012, 0.012, 0.014],
+      lift: [0.012, 0.012, 0.014], leaf: '#e6fff0', leafLift: 0.02,
     },
     afternoon: {   // clear daylight: a high, soft sun, short shadows, a natural blue sky
       sunDir: [-8, 30, 8], sunColor: '#fff1dc', sunI: 1.05, hemiSky: '#d6e4f4', hemiGround: '#7e7058', hemiI: 0.78, fog: '#e4dccb', fogNear: 38, fogFar: 105, zenith: '#7fb0e6', stars: 0, cloud: '#fffaf2',
       lamps: 0, glow: 0.2, indoor: 1, exposure: 0.9, mul: [1.01, 1, 0.98], shadow: [0.96, 0.95, 1.02], hi: [1.03, 1, 0.96], sat: 1.04, vig: 0.55, bloom: 0.15, shafts: 0.6, dust: 0.35,
-      lift: [0.01, 0.01, 0.012],
+      lift: [0.01, 0.01, 0.012], leaf: '#fff8d6', leafLift: 0,
     },
     evening: {   // golden hour into dusk: a low orange sun from the west, long warm shadows, the lamps come on
       sunDir: [-34, 7, 4], sunColor: '#ff9a58', sunI: 0.85, hemiSky: '#c8a4b0', hemiGround: '#5a4a50', hemiI: 0.7, fog: '#d09a86', fogNear: 26, fogFar: 80, zenith: '#6a6aa0', stars: 0, cloud: '#ffd2c0',
       lamps: 1, glow: 0.8, indoor: 0.88, exposure: 0.92, mul: [1.06, 0.98, 0.9], shadow: [0.95, 0.9, 1], hi: [1.08, 0.99, 0.88], sat: 1.05, vig: 0.8, bloom: 0.28, shafts: 1.5,dust: 0.6,
-      lift: [0.014, 0.012, 0.016],
+      lift: [0.014, 0.012, 0.016], leaf: '#ffe0b0', leafLift: 0.04,
     },
     night: {   // moonlit: a blue moon, stars, warm pools of lamplight and lit windows
       sunDir: [12, 22, -12], sunColor: '#a8bcf0', sunI: 0.5, hemiSky: '#4c5c98', hemiGround: '#262a44', hemiI: 0.66, fog: '#1c2244', fogNear: 22, fogFar: 82, zenith: '#0a1030', stars: 1, cloud: '#7a76b8',
       lamps: 1.4, glow: 1, indoor: 0.6, exposure: 1.06, mul: [0.97, 0.98, 1.05], shadow: [0.82, 0.88, 1.15], hi: [1.03, 1, 0.95], sat: 1, vig: 1, bloom: 0.45, shafts: 0,dust: 1,
-      lift: [0.01, 0.012, 0.03],
+      lift: [0.01, 0.012, 0.03], leaf: '#8fd8d0', leafLift: 0.22,
     },
   };
   const MOODS = [['morning', 8, 'Morning', '🌅'], ['afternoon', 14, 'Afternoon', '☀️'], ['evening', 18.5, 'Evening', '🌇'], ['night', 22.5, 'Night', '🌙']];
@@ -91,7 +91,7 @@
         }
       });
     }
-    const col = (c, s) => c.set(s);
+    const col = (c, s) => c.set(s), tint = new THREE.Color();
 
     // what the zone itself asked for (setZone / the zone's env), recorded when it is entered, so a slider never compounds on its own output
     const record = () => { S.base = { sun: sun.intensity, hemi: hemi.intensity, hemiColor: hemi.color.clone(), fog: scene.fog.color.clone(), near: scene.fog.near, far: scene.fog.far }; };
@@ -114,6 +114,10 @@
       const gm = inside ? 0.6 + 0.4 * p.glow : p.glow;   // roofed places keep their lamps on all day
       for (const [m, base] of glowMats) m.emissiveIntensity = base * gm;
       for (const [m, base] of emitters) m.emissiveIntensity = base * Math.max(0.55, gm);
+      // the greenery follows the hour: dewy and fresh, rich and golden, amber at dusk, a cool moonlit teal (with a faint lift, so it never goes black)
+      for (const m of TF.GREEN_MATS) { m.color.set(p.leaf); m.emissive.set(p.leaf).multiplyScalar(p.leafLift); }
+      const gr = TF.MAT.grass; if (!gr.emissiveMap) { gr.emissiveMap = gr.map; gr.needsUpdate = true; S.grass0 = gr.color.clone(); }
+      gr.color.copy(S.grass0).multiply(tint.set(p.leaf)); gr.emissive.set(p.leaf).multiplyScalar(p.leafLift * 0.6);
       S.p = p; S.inside = inside; if (TF.dream) TF.dream.apply(p, inside, z); if (TF.ambience) TF.ambience.apply(p, inside, z); draw(p);
     }
 
