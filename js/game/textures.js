@@ -109,7 +109,7 @@ function buildTextures() {
       for (let k = 0; k < 5; k++) P(g, (x + [0, 1, -1, 0, 0][k] + W) % W, (y + [0, 0, 0, 1, -1][k] + H) % H, base, f * (k ? .92 : 1));
     }
   });
-  TX.leafA = leaf([96, 124, 76]); TX.leafB = leaf([78, 106, 70]); TX.leafC = leaf([112, 136, 80]); TX.blossom = leaf([196, 128, 148]);
+  TX.leafA = leaf([126, 168, 136]); TX.leafB = leaf([108, 148, 118]); TX.leafC = leaf([166, 190, 128]); TX.blossom = leaf([236, 176, 196]); TX.leafLav = leaf([178, 162, 214]);   // pastel canopies: mint, sage, butter-green, rose, lavender
   TX.books = canvasTex(32, 32, (g, W, H) => {
     g.fillStyle = '#3b2618'; g.fillRect(0, 0, W, H);
     for (let shelf = 0; shelf < 4; shelf++) {

@@ -19,20 +19,36 @@ function jitterSphere(r, detail) {
   const g = new THREE.IcosahedronGeometry(r, detail), p = g.attributes.position, n = g.attributes.normal, v = new THREE.Vector3();
   for (let i = 0; i < p.count; i++) {
     v.fromBufferAttribute(p, i); const nn = v.clone().normalize();
-    const k = 1 + .14 * Math.sin(v.x * 5.1 / r + v.y * 3.3 / r) * Math.cos(v.z * 4.7 / r - v.y * 2.1 / r);
+    const k = 1 + .08 * Math.sin(v.x * 5.1 / r + v.y * 3.3 / r) * Math.cos(v.z * 4.7 / r - v.y * 2.1 / r);
     v.multiplyScalar(k); p.setXYZ(i, v.x, v.y * .85, v.z); n.setXYZ(i, nn.x, nn.y, nn.z);
   }
   return g;
 }
+// a sprinkling of little pastel flowers over a canopy: one Points object per tree (a single draw call), soft round dots
+let blossomMat;
+function treeBlossoms(g, blobs, s) {
+  if (s < .8 || decorRandom() > .65) return;
+  blossomMat = blossomMat || new THREE.PointsMaterial({ size: .24, map: TX.glow, vertexColors: true, transparent: true, depthWrite: false });
+  const n = 12, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), pal = [[1, .96, .9], [1, .8, .86], [1, .92, .7], [.86, .8, 1]];
+  for (let i = 0; i < n; i++) {
+    const [p, r] = blobs[decorRandom() * blobs.length | 0], th = decorRandom() * 6.283, ph = decorRandom() * 1.3, c = pal[decorRandom() * 4 | 0];
+    pos.set([p.x + Math.cos(th) * Math.cos(ph) * r * .95, p.y + Math.sin(ph) * r * .8, p.z + Math.sin(th) * Math.cos(ph) * r * .95], i * 3); col.set(c, i * 3);
+  }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const pts = new THREE.Points(geo, blossomMat); pts.userData.dyn = true; g.add(pts);
+}
 function tree(x, z, s = 1, leaf = MAT.leafA, collide = true) {
   const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
   const tr = add(new THREE.Mesh(new THREE.CylinderGeometry(.15 * s, .26 * s, 2.6 * s, 7), MAT.bark), g); tr.position.y = 1.3 * s;
-  const n = 5 + (rnd() * 3 | 0);
+  const n = 5 + (rnd() * 3 | 0), blobs = [];
+  // some green canopies come out lavender or rose (chosen from the separate decor sequence, so the layout's own random numbers never shift)
+  const canopy = leaf === MAT.leafA || leaf === MAT.leafB || leaf === MAT.leafC ? ((u) => u < .2 ? MAT.leafLav : u < .38 ? MAT.blossom : leaf)(decorRandom()) : leaf;
   for (let i = 0; i < n; i++) {
-    const r = (i ? rr(.75, 1.15) : 1.35) * s, a = rnd() * 6.283, d = i ? rr(.7, 1.2) * s : 0;
-    const m = add(new THREE.Mesh(jitterSphere(r, 2), leaf), g);
-    m.position.set(Math.cos(a) * d, (i ? rr(2.3, 3.5) : 3.2) * s, Math.sin(a) * d * .8);
+    const r = (i ? rr(.75, 1.15) : 1.35) * s * 1.18, a = rnd() * 6.283, d = i ? rr(.7, 1.2) * s : 0;   // puffier, rounder clouds of leaves
+    const m = add(new THREE.Mesh(jitterSphere(r, 2), canopy), g);
+    m.position.set(Math.cos(a) * d, (i ? rr(2.3, 3.5) : 3.2) * s, Math.sin(a) * d * .8); blobs.push([m.position, r]);
   }
+  treeBlossoms(g, blobs, s);
   if (collide) { g.userData.dyn = true; const ph = rnd() * 6; anim.push(t => { g.rotation.z = Math.sin(t * .7 + ph) * .012; }); }
   if (collide) colCirc(x, z, .4 * s);
   if (collide) makeFader(g.children.slice(), () => { const dz = z - hero.y; return dz > .4 && dz < 15 && Math.abs(x - hero.x) < 2.7 * s + dz * .08; });
