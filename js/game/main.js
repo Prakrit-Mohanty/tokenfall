@@ -92,7 +92,7 @@ window.TokenFallReady = { push(f) { f(TF); } };
 _ready.forEach(f => f(TF));
 
 // ================= boot =================
-const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel'), document.fonts.load('600 24px "DM Sans"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
+const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel'), document.fonts.load('24px "Press Start 2P"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImg = new Image();
 const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.ADITYA_SHEET; });
 Promise.all([fontsReady, sheetReady]).then(() => {

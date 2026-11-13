@@ -47,7 +47,7 @@
       mesh(sph(0.34), M.fur, pup, -1.0, 0.3, 0.72, { s: [1.2, 0.8, 0.9] }); mesh(sph(0.22), M.fur, pup, -1.45, 0.5, -0.2);   // a hind paw and the tail
       [M.rose, M.butter, M.mint, M.sky].forEach((m, i) => mesh(new THREE.TorusGeometry(0.5, 0.06, 8, 20), m, pup, 0.88 - i * 0.07, 0.62, 0.15, { r: [0, PI / 2, 0], s: [1, 1, 1], cast: false }));   // a rainbow collar
       // the little Zs
-      const zTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.font = '700 52px "DM Sans", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineWidth = 7; x.strokeStyle = '#7a5a86'; x.strokeText('Z', 32, 34); x.fillStyle = '#ffe28a'; x.fillText('Z', 32, 34); return new THREE.CanvasTexture(c); })();
+      const zTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.font = '700 52px "Press Start 2P", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineWidth = 7; x.strokeStyle = '#7a5a86'; x.strokeText('Z', 32, 34); x.fillStyle = '#ffe28a'; x.fillText('Z', 32, 34); return new THREE.CanvasTexture(c); })();
       for (let i = 0; i < 3; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: zTex, transparent: true, depthWrite: false })); sp.userData.i = i; g.add(sp); S.zs.push(sp); }
       TF.colCirc(O.x - 0.2, O.z, 1.25); TF.colCirc(O.x + 1.3, O.z + 0.55, 0.6);
 
