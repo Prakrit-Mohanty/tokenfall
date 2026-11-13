@@ -252,7 +252,7 @@ function textTex(text, opts = {}) {
     g.fillStyle = opts.bg || '#6b4528'; g.fillRect(0, 0, w, h);
     g.fillStyle = opts.edge || '#3c2414'; g.fillRect(0, 0, w, 3); g.fillRect(0, h - 3, w, 3); g.fillRect(0, 0, 3, h); g.fillRect(w - 3, 0, 3, h);
     g.fillStyle = 'rgba(255,255,255,.08)'; for (let y = 6; y < h - 4; y += 6) g.fillRect(4, y, w - 8, 1);
-    g.font = `${opts.size ? opts.size * 1.12 : 27}px "Patrick Hand", "Pixelify Sans", monospace`; g.textAlign = 'center'; g.textBaseline = 'middle';   // hand-lettered, like the interface
+    g.font = `600 ${opts.size ? opts.size * 1.05 : 25}px "DM Sans", "Pixelify Sans", monospace`; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillStyle = 'rgba(0,0,0,.55)'; g.fillText(text, w / 2 + 2, h / 2 + 3);
     g.fillStyle = opts.color || '#f6e3b4'; g.fillText(text, w / 2, h / 2 + 1);
   }, { nearest: false });
