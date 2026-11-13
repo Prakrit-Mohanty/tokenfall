@@ -53,3 +53,7 @@ html body :is(.panel, .kp-help, .kp-brief, #help, #board) :is(h1, h2, h3, h4, .k
 html body #party h4 #count { font-family: var(--sb-font) !important; font-size: 14px; }
 /* while a game is open (daylight.js sets data-play) the lobby furniture steps aside: the key strip, the roster and the chat log; each game has its own help and HUD */
 html body #ui[data-play="1"] :is(#help, #party, #log) { display: none; }
+/* one job per moment: while a brief, a how-to or a results card is up, the HUD strips behind it step aside (read cards stay out of this: the clock must keep showing while a ticket is read).
+   A card counts as up when its game has put an inline display: block / flex on it. */
+html body #ui:has(:is(.kp-brief, .kp-help, .kp-rs, .mp-brief, .mp-help, .mp-rs, .gp-brief, .gp-help, .gp-rs, .th, .ch, .cp, .bh, .bc):is([style*="display: block"], [style*="display: flex"]))
+  :is(.kp-top, .kp-rail, .kp-carry, .kp-msg, .mp-top, .mp-stat, .mp-legend, .mp-msg, .gp-top, .gp-stat, .gp-msg, .tq, .ts, .tm, .tg, .cq, .cs, .cm, .bq, .bs, .bk, #prompt) { visibility: hidden; }
