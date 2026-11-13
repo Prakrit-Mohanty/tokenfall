@@ -14,25 +14,25 @@
   // ---------------------------------------------------------------- pure: the moods
   // sunDir: where the sun (or the moon) stands relative to what the camera looks at: +x east-ish, +y up, +z towards the player. mul / shadow / hi: the grade's overall tint, its shadow tint and its highlight tint.
   const PRESETS = {
-    morning: {   // a lavender dawn: a low peach sun, a milky haze, pale violet shadows, lamps going out
-      sunDir: [28, 14, 12], sunColor: '#ffd9bc', sunI: 0.9, hemiSky: '#d8d4f0', hemiGround: '#8a7a8e', hemiI: 0.86, fog: '#e6dcec', fogNear: 14, fogFar: 72, zenith: '#a9b8e2', stars: 0, cloud: '#fff0ee',
-      lamps: 0.15, glow: 0.3, indoor: 1.05, exposure: 0.95, mul: [0.99, 1.0, 1.04], shadow: [0.92, 0.9, 1.08], hi: [1.03, 1, 0.95], sat: 0.98, vig: 0.8, bloom: 0.65, shafts: 1, dust: 0.5,
-      paper: 0.55, hatch: 0.05, lift: [0.052, 0.046, 0.068],
+    morning: {   // fresh and natural: a low warm sun from the east, a soft haze, gently cool shadows, lamps going out
+      sunDir: [28, 14, 12], sunColor: '#ffe6cc', sunI: 0.95, hemiSky: '#cfdcee', hemiGround: '#8a7e70', hemiI: 0.8, fog: '#e4dccf', fogNear: 16, fogFar: 78, zenith: '#8fb4de', stars: 0, cloud: '#fff6ee',
+      lamps: 0.15, glow: 0.25, indoor: 1.05, exposure: 0.92, mul: [1, 1, 1], shadow: [0.95, 0.95, 1.03], hi: [1.02, 1, 0.97], sat: 1.02, vig: 0.6, bloom: 0.2, shafts: 1, dust: 0.5,
+      lift: [0.012, 0.012, 0.014],
     },
-    afternoon: {   // a peach-cream day: a high, soft sun, short shadows, a gentle blue, nothing glaring
-      sunDir: [-8, 30, 8], sunColor: '#fff0dc', sunI: 1, hemiSky: '#e6e4f2', hemiGround: '#8a7660', hemiI: 0.8, fog: '#f2dcc8', fogNear: 38, fogFar: 105, zenith: '#a4bfe8', stars: 0, cloud: '#fff6ec',
-      lamps: 0, glow: 0.2, indoor: 1, exposure: 0.88, mul: [1.03, 1, 0.96], shadow: [0.96, 0.92, 1.06], hi: [1.06, 1, 0.92], sat: 1, vig: 0.8, bloom: 0.4, shafts: 0.6, dust: 0.35,
-      paper: 0.5, hatch: 0.045, lift: [0.042, 0.037, 0.054],
+    afternoon: {   // clear daylight: a high, soft sun, short shadows, a natural blue sky
+      sunDir: [-8, 30, 8], sunColor: '#fff1dc', sunI: 1.05, hemiSky: '#d6e4f4', hemiGround: '#7e7058', hemiI: 0.78, fog: '#e4dccb', fogNear: 38, fogFar: 105, zenith: '#7fb0e6', stars: 0, cloud: '#fffaf2',
+      lamps: 0, glow: 0.2, indoor: 1, exposure: 0.9, mul: [1.01, 1, 0.98], shadow: [0.96, 0.95, 1.02], hi: [1.03, 1, 0.96], sat: 1.04, vig: 0.55, bloom: 0.15, shafts: 0.6, dust: 0.35,
+      lift: [0.01, 0.01, 0.012],
     },
-    evening: {   // golden hour into a rose-violet dusk: a low orange sun, long plum shadows, the lamps come on
-      sunDir: [-34, 7, 4], sunColor: '#ffa070', sunI: 0.8, hemiSky: '#dba8c0', hemiGround: '#5e4660', hemiI: 0.78, fog: '#cf9aa8', fogNear: 26, fogFar: 80, zenith: '#6a5a9a', stars: 0, cloud: '#ffd0c4',
-      lamps: 1, glow: 1.1, indoor: 0.88, exposure: 0.92, mul: [1.08, 0.97, 0.86], shadow: [1, 0.84, 1], hi: [1.1, 0.98, 0.84], sat: 1.04, vig: 1.05, bloom: 0.65, shafts: 1.5, dust: 0.7,
-      paper: 0.55, hatch: 0.06, lift: [0.058, 0.04, 0.066],
+    evening: {   // golden hour into dusk: a low orange sun from the west, long warm shadows, the lamps come on
+      sunDir: [-34, 7, 4], sunColor: '#ff9a58', sunI: 0.85, hemiSky: '#c8a4b0', hemiGround: '#5a4a50', hemiI: 0.7, fog: '#d09a86', fogNear: 26, fogFar: 80, zenith: '#6a6aa0', stars: 0, cloud: '#ffd2c0',
+      lamps: 1, glow: 0.8, indoor: 0.88, exposure: 0.92, mul: [1.06, 0.98, 0.9], shadow: [0.95, 0.9, 1], hi: [1.08, 0.99, 0.88], sat: 1.05, vig: 0.8, bloom: 0.28, shafts: 1.5,dust: 0.6,
+      lift: [0.014, 0.012, 0.016],
     },
-    night: {   // an indigo night: a blue moon, stars, warm pools of lamplight and lit windows, violet shadows
-      sunDir: [12, 22, -12], sunColor: '#9db2f0', sunI: 0.55, hemiSky: '#5260a8', hemiGround: '#262a46', hemiI: 0.66, fog: '#222650', fogNear: 22, fogFar: 82, zenith: '#0c1236', stars: 1, cloud: '#7a76b8',
-      lamps: 1.5, glow: 1.6, indoor: 0.6, exposure: 1.08, mul: [0.96, 0.98, 1.08], shadow: [0.8, 0.86, 1.25], hi: [1.04, 1, 0.94], sat: 1.02, vig: 1.2, bloom: 1, shafts: 0, dust: 1,
-      paper: 0.5, hatch: 0.04, lift: [0.03, 0.034, 0.07],
+    night: {   // moonlit: a blue moon, stars, warm pools of lamplight and lit windows
+      sunDir: [12, 22, -12], sunColor: '#a8bcf0', sunI: 0.5, hemiSky: '#4c5c98', hemiGround: '#262a44', hemiI: 0.66, fog: '#1c2244', fogNear: 22, fogFar: 82, zenith: '#0a1030', stars: 1, cloud: '#7a76b8',
+      lamps: 1.4, glow: 1, indoor: 0.6, exposure: 1.06, mul: [0.97, 0.98, 1.05], shadow: [0.82, 0.88, 1.15], hi: [1.03, 1, 0.95], sat: 1, vig: 1, bloom: 0.45, shafts: 0,dust: 1,
+      lift: [0.01, 0.012, 0.03],
     },
   };
   const MOODS = [['morning', 8, 'Morning', '🌅'], ['afternoon', 14, 'Afternoon', '☀️'], ['evening', 18.5, 'Evening', '🌇'], ['night', 22.5, 'Night', '🌙']];
@@ -71,13 +71,13 @@
 
   function install(TF) {
     const { THREE, scene, sun, hemi, MAT, post, skyU, SUN_DIR } = TF;
-    const S = { hour: 15, bright: 0, warm: 0, auto: false, open: false, zone: 'lobby', base: null, orb: null, face: null, drawn: '', acc: 0 };
+    const S = { hour: 15, bright: 0, warm: 0, sketch: 0.7, auto: false, open: false, zone: 'lobby', base: null, orb: null, face: null, drawn: '', acc: 0 };
     try { Object.assign(S, JSON.parse(localStorage.getItem('tokenfall.daylight') || '{}')); } catch (e) { /* private window: the default day */ }
     S.open = false;
-    const save = () => { try { localStorage.setItem('tokenfall.daylight', JSON.stringify({ hour: S.hour, bright: S.bright, warm: S.warm, auto: S.auto })); } catch (e) { /* not saved */ } };
+    const save = () => { try { localStorage.setItem('tokenfall.daylight', JSON.stringify({ hour: S.hour, bright: S.bright, warm: S.warm, sketch: S.sketch, auto: S.auto })); } catch (e) { /* not saved */ } };
     // glare: strong emitters were set far too hot, so they are eased (SOFT), and the solid-colour ones (strips, lamps, lanterns) follow the day: dim by day, bright at night. The named
     // lamp and window materials move the whole way; every other emitter found at boot keeps at least half its light, so a portal or a game marker never goes dark.
-    const SOFT = 0.78, glowMats = [[MAT.warmGlow], [MAT.redLantern], [MAT.glass], [MAT.glassLit], [MAT.shade]].filter((m) => m[0]).map(([m]) => [m, m.emissiveIntensity * (m.emissiveIntensity > 1.4 ? SOFT : 1)]);
+    const SOFT = 0.6, glowMats = [[MAT.warmGlow], [MAT.redLantern], [MAT.glass], [MAT.glassLit], [MAT.shade]].filter((m) => m[0]).map(([m]) => [m, m.emissiveIntensity * (m.emissiveIntensity > 1.4 ? SOFT : 1)]);
     const emitters = [];
     function collectEmitters() {
       const known = new Set(glowMats.map((m) => m[0])), seen = new Set();
@@ -107,7 +107,8 @@
       skyU.zenith.value.set(p.zenith); skyU.sunCol.value.set(p.sunColor); skyU.cloudCol.value.set(p.cloud); skyU.stars.value = p.stars;
       TF.shaftMat.uniforms.amt.value = p.shafts; if (TF.dust) TF.dust.material.opacity = 0.8 * p.dust;
       // roofed places do not brighten their picture at night, they dim with the day outside: their light is the lamps
-      const u = post; u.exposure.value = inside ? 0.88 * (1 + 0.3 * S.bright) * (0.65 + 0.35 * p.indoor) : p.exposure; u.gradeMul.value.set(...p.mul); u.shadowTint.value.set(...p.shadow); u.hiTint.value.set(...p.hi); u.sat.value = p.sat; u.vig.value = p.vig; u.bloomAmt.value = p.bloom; u.paperAmt.value = p.paper; u.hatchAmt.value = p.hatch; u.lift.value.set(...p.lift);
+      const u = post; u.exposure.value = inside ? 0.88 * (1 + 0.3 * S.bright) * (0.65 + 0.35 * p.indoor) : p.exposure; u.gradeMul.value.set(...p.mul); u.shadowTint.value.set(...p.shadow); u.hiTint.value.set(...p.hi); u.sat.value = p.sat; u.vig.value = p.vig; u.bloomAmt.value = p.bloom; const sk = z === 'kitchen' ? S.sketch * 0.6 : S.sketch;   // the kitchen's small labels and gauges carry gameplay information: a lighter hand there
+      u.sketch.value = sk; u.lift.value.set(...p.lift);
       const lampK = inside ? 0.85 + 0.15 * p.lamps : p.lamps;
       for (const l of TF.ZONE_LIGHTS[z] || []) if (l.isLight && l.userData.base != null) l.intensity = l.userData.base * lampK;
       const gm = inside ? 0.6 + 0.4 * p.glow : p.glow;   // roofed places keep their lamps on all day
@@ -168,7 +169,7 @@
     // the dial: a sky in the colours of the hour, hills, the sun climbing from 6 am to 6 pm and the moon from 6 pm to 6 am, and the clock
     function draw(p) {
       if (!S.canvas) return;
-      const key = S.hour.toFixed(2) + S.bright + S.warm; if (key === S.drawn) return; S.drawn = key;
+      const key = S.hour.toFixed(2) + S.bright + S.warm + S.sketch; if (key === S.drawn) return; S.drawn = key;
       const g = S.canvas.getContext('2d'), W = 256, t = (((S.hour - 6) % 24) + 24) % 24 / 12, night = t >= 1, a = Math.PI * (night ? t - 1 : t), cx = 128 - Math.cos(a) * 92, cy = 168 - Math.sin(a) * 118;
       const sky = g.createLinearGradient(0, 0, 0, W); sky.addColorStop(0, p.zenith); sky.addColorStop(1, p.fog); g.fillStyle = sky; g.fillRect(0, 0, W, W);
       if (p.stars > 0.05) { g.fillStyle = `rgba(255,255,240,${0.8 * p.stars})`; for (let i = 0; i < 26; i++) g.fillRect((i * 97) % 250, (i * 53) % 120, 2, 2); }
@@ -196,13 +197,14 @@
       <label>Time<input type="range" min="0" max="24" step="0.25" data-h></label>
       <label>Brightness<input type="range" min="-1" max="1" step="0.05" data-b></label>
       <label>Warmth<input type="range" min="-1" max="1" step="0.05" data-w></label>
+      <label>Ink &amp; sketch<input type="range" min="0" max="1" step="0.05" data-k></label>
       <label class="chk"><input type="checkbox" data-a> Let the day pass (a day takes 4 minutes)</label>
       <label class="chk"><input type="checkbox" data-s> Gentle sound (music box, birds, crickets)</label>
       <small>1-4 pick a mood · ← → move the time · E or Esc to close</small></div>`;
     document.body.appendChild(ui);
-    const q = (s) => ui.querySelector(s), R = { h: q('[data-h]'), b: q('[data-b]'), w: q('[data-w]'), a: q('[data-a]'), s: q('[data-s]') };
+    const q = (s) => ui.querySelector(s), R = { h: q('[data-h]'), b: q('[data-b]'), w: q('[data-w]'), k: q('[data-k]'), a: q('[data-a]'), s: q('[data-s]') };
     function sync() {
-      q('[data-t]').textContent = clock(S.hour); q('[data-n]').textContent = nameOf(S.hour); R.h.value = S.hour; R.b.value = S.bright; R.w.value = S.warm; R.a.checked = S.auto; R.s.checked = !TF.ambience || TF.ambience.state.on;
+      q('[data-t]').textContent = clock(S.hour); q('[data-n]').textContent = nameOf(S.hour); R.h.value = S.hour; R.b.value = S.bright; R.w.value = S.warm; R.k.value = S.sketch; R.a.checked = S.auto; R.s.checked = !TF.ambience || TF.ambience.state.on;
       ui.querySelectorAll('[data-m]').forEach((b) => b.classList.toggle('on', nameOf(S.hour).toLowerCase() === b.dataset.m));
     }
     function set(o) { const was = nameOf(S.hour); Object.assign(S, o); apply(); sync(); save(); if (o.hour != null && nameOf(S.hour) !== was && TF.ambience) TF.ambience.chime(); }
@@ -212,7 +214,7 @@
     }
     function close() { if (!S.open) return; S.open = false; ui.style.display = 'none'; TF.lockPlayer(false); }
     ui.addEventListener('click', (e) => { const m = e.target.closest('[data-m]'); if (m) set({ hour: MOODS.find((x) => x[0] === m.dataset.m)[1] }); if (e.target.closest('[data-x]')) close(); });
-    R.h.addEventListener('input', () => set({ hour: +R.h.value })); R.b.addEventListener('input', () => set({ bright: +R.b.value })); R.w.addEventListener('input', () => set({ warm: +R.w.value })); R.a.addEventListener('change', () => set({ auto: R.a.checked })); R.s.addEventListener('change', () => { if (TF.ambience) { TF.ambience.set(R.s.checked); TF.ambience.chime(); } });
+    R.h.addEventListener('input', () => set({ hour: +R.h.value })); R.b.addEventListener('input', () => set({ bright: +R.b.value })); R.w.addEventListener('input', () => set({ warm: +R.w.value })); R.k.addEventListener('input', () => set({ sketch: +R.k.value })); R.a.addEventListener('change', () => set({ auto: R.a.checked })); R.s.addEventListener('change', () => { if (TF.ambience) { TF.ambience.set(R.s.checked); TF.ambience.chime(); } });
     // hooked at boot, like the other games: the Bridge reassigns TF.onKey at its own boot, which would drop anything hooked earlier
     const hookKeys = () => { const prev = TF.onKey; TF.onKey = (e) => {
       if (!S.open) return prev ? prev(e) : false;
