@@ -39,3 +39,9 @@ html body #chatIn { border-radius: 999px; border: 2px solid rgba(234, 185, 138, 
 /* conversation box: the speaker's name is a rose tab */
 html body #dialog .name { background: var(--rose); color: var(--paper-ink); border: 2px solid var(--paper); border-radius: 999px; letter-spacing: .04em; }
 html body #banner .t { font-size: 46px; letter-spacing: .06em; text-shadow: 0 3px 14px rgba(50, 20, 50, .55); }
+/* a strip of washi tape on the bigger cards (only those that are positioned and do not scroll) */
+html body :is(#dialog, #party, .kp-brief, .kp-help, .dl-box)::before { content: ''; position: absolute; top: -9px; left: 22px; width: 58px; height: 18px; border-radius: 2px; transform: rotate(-6deg); pointer-events: none;
+  background: repeating-linear-gradient(45deg, rgba(244, 199, 208, .82) 0 6px, rgba(255, 236, 214, .82) 6px 12px); box-shadow: 0 1px 2px rgba(40, 20, 40, .3); }
+html body #dialog::before { left: auto; right: 30px; transform: rotate(5deg); }
+html body .kp-top::before { content: ''; position: absolute; top: -9px; left: calc(50% - 29px); width: 58px; height: 18px; border-radius: 2px; transform: rotate(-3deg); pointer-events: none;
+  background: repeating-linear-gradient(45deg, rgba(190, 220, 205, .82) 0 6px, rgba(255, 236, 214, .82) 6px 12px); box-shadow: 0 1px 2px rgba(40, 20, 40, .3); }

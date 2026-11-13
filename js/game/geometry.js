@@ -14,7 +14,7 @@ function buildMaterials() {
   MAT.floor = std(TX.floor, 1); MAT.roof = std(TX.roof, 1); MAT.lattice = std(TX.lattice, 1);
   MAT.cloth = std(TX.cloth, .5); MAT.bark = std(TX.bark, .5); MAT.books = std(TX.books, 1); MAT.rack = std(TX.rack, 0);
   MAT.door = std(TX.door, 0);
-  MAT.leafA = std(TX.leafA, 0); MAT.leafB = std(TX.leafB, 0); MAT.leafC = std(TX.leafC, 0); MAT.blossom = std(TX.blossom, 0); MAT.leafLav = std(TX.leafLav, 0);
+  MAT.leafA = std(TX.leafA, 0); MAT.leafB = std(TX.leafB, 0); MAT.leafC = std(TX.leafC, 0); MAT.blossom = std(TX.blossom, 0); MAT.leafLav = std(TX.leafLav, 0); MAT.patch = std(TX.patch, 2);
   MAT.redLantern = new THREE.MeshStandardMaterial({ color: 0xd4402a, emissive: 0xff5a2c, emissiveIntensity: 1.9, roughness: .8 });
   MAT.lanternCap = new THREE.MeshStandardMaterial({ color: 0x2a1a12, roughness: .9 });
   MAT.gold = new THREE.MeshStandardMaterial({ color: 0xc89a48, roughness: .6, metalness: .2 });

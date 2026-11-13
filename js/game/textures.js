@@ -110,6 +110,11 @@ function buildTextures() {
     }
   });
   TX.leafA = leaf([126, 168, 136]); TX.leafB = leaf([108, 148, 118]); TX.leafC = leaf([166, 190, 128]); TX.blossom = leaf([236, 176, 196]); TX.leafLav = leaf([178, 162, 214]);   // pastel canopies: mint, sage, butter-green, rose, lavender
+  TX.patch = canvasTex(64, 64, (g, W, H) => {   // a patchwork quilt of soft squares with running stitches, for the paths
+    const cols = ['#e9c9c4', '#d7d9ec', '#f1e2bd', '#cfe3d4', '#e6d3ea', '#f3d6c2'];
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) { g.fillStyle = cols[(i * 3 + j * 5 + (i ^ j)) % cols.length]; g.fillRect(i * 16, j * 16, 16, 16); }
+    g.strokeStyle = 'rgba(120,90,110,.5)'; g.lineWidth = 1; g.setLineDash([2, 2]); for (let k = 0; k <= 4; k++) { g.beginPath(); g.moveTo(k * 16 + .5, 0); g.lineTo(k * 16 + .5, H); g.stroke(); g.beginPath(); g.moveTo(0, k * 16 + .5); g.lineTo(W, k * 16 + .5); g.stroke(); }
+  });
   TX.books = canvasTex(32, 32, (g, W, H) => {
     g.fillStyle = '#3b2618'; g.fillRect(0, 0, W, H);
     for (let shelf = 0; shelf < 4; shelf++) {
@@ -233,7 +238,7 @@ function textTex(text, opts = {}) {
     g.fillStyle = opts.bg || '#6b4528'; g.fillRect(0, 0, w, h);
     g.fillStyle = opts.edge || '#3c2414'; g.fillRect(0, 0, w, 3); g.fillRect(0, h - 3, w, 3); g.fillRect(0, 0, 3, h); g.fillRect(w - 3, 0, 3, h);
     g.fillStyle = 'rgba(255,255,255,.08)'; for (let y = 6; y < h - 4; y += 6) g.fillRect(4, y, w - 8, 1);
-    g.font = `600 ${opts.size || 24}px "Pixelify Sans", monospace`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `${opts.size ? opts.size * 1.12 : 27}px "Patrick Hand", "Pixelify Sans", monospace`;   // hand-lettered, like the interface g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillStyle = 'rgba(0,0,0,.55)'; g.fillText(text, w / 2 + 2, h / 2 + 3);
     g.fillStyle = opts.color || '#f6e3b4'; g.fillText(text, w / 2, h / 2 + 1);
   }, { nearest: false });

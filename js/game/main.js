@@ -92,12 +92,13 @@ window.TokenFallReady = { push(f) { f(TF); } };
 _ready.forEach(f => f(TF));
 
 // ================= boot =================
-const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
+const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel'), document.fonts.load('24px "Patrick Hand"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImg = new Image();
 const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.ADITYA_SHEET; });
 Promise.all([fontsReady, sheetReady]).then(() => {
   buildTextures(); buildMaterials();
-  sheetTex = new THREE.Texture(sheetImg); sheetTex.magFilter = sheetTex.minFilter = THREE.NearestFilter; sheetTex.generateMipmaps = false; sheetTex.needsUpdate = true;
+  const soft = document.createElement('canvas'); soft.width = sheetImg.naturalWidth; soft.height = sheetImg.naturalHeight; { const g = soft.getContext('2d'); g.filter = 'saturate(.88) contrast(.94) brightness(1.07)'; g.drawImage(sheetImg, 0, 0); }
+  sheetTex = new THREE.Texture(soft); sheetTex.magFilter = sheetTex.minFilter = THREE.NearestFilter; sheetTex.generateMipmaps = false; sheetTex.needsUpdate = true;
   LOBBY.build(); buildAreas(); mergeStatic(); buildDust(); buildLife();
   applyTextureRefines();
   hero = makeChar('aditya', LOBBY.spawn[0], LOBBY.spawn[1], { me: true });

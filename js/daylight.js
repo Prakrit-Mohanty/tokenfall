@@ -20,7 +20,7 @@
       paper: 0.55, hatch: 0.05, lift: [0.052, 0.046, 0.068],
     },
     afternoon: {   // a peach-cream day: a high, soft sun, short shadows, a gentle blue, nothing glaring
-      sunDir: [-8, 30, 8], sunColor: '#fff0dc', sunI: 1, hemiSky: '#e6e4f2', hemiGround: '#8a7660', hemiI: 0.8, fog: '#ecdcc8', fogNear: 38, fogFar: 105, zenith: '#9ec0e6', stars: 0, cloud: '#fff6ec',
+      sunDir: [-8, 30, 8], sunColor: '#fff0dc', sunI: 1, hemiSky: '#e6e4f2', hemiGround: '#8a7660', hemiI: 0.8, fog: '#f2dcc8', fogNear: 38, fogFar: 105, zenith: '#a4bfe8', stars: 0, cloud: '#fff6ec',
       lamps: 0, glow: 0.2, indoor: 1, exposure: 0.88, mul: [1.03, 1, 0.96], shadow: [0.96, 0.92, 1.06], hi: [1.06, 1, 0.92], sat: 1, vig: 0.8, bloom: 0.4, shafts: 0.6, dust: 0.35,
       paper: 0.5, hatch: 0.045, lift: [0.042, 0.037, 0.054],
     },
@@ -113,7 +113,7 @@
       const gm = inside ? 0.6 + 0.4 * p.glow : p.glow;   // roofed places keep their lamps on all day
       for (const [m, base] of glowMats) m.emissiveIntensity = base * gm;
       for (const [m, base] of emitters) m.emissiveIntensity = base * Math.max(0.55, gm);
-      S.p = p; S.inside = inside; if (TF.dream) TF.dream.apply(p, inside, z); draw(p);
+      S.p = p; S.inside = inside; if (TF.dream) TF.dream.apply(p, inside, z); if (TF.ambience) TF.ambience.apply(p, inside, z); draw(p);
     }
 
     // the old sky dust was a cloud of hard squares (huge when one drifts past the camera): soft round glows instead
@@ -197,21 +197,22 @@
       <label>Brightness<input type="range" min="-1" max="1" step="0.05" data-b></label>
       <label>Warmth<input type="range" min="-1" max="1" step="0.05" data-w></label>
       <label class="chk"><input type="checkbox" data-a> Let the day pass (a day takes 4 minutes)</label>
+      <label class="chk"><input type="checkbox" data-s> Gentle sound (music box, birds, crickets)</label>
       <small>1-4 pick a mood · ← → move the time · E or Esc to close</small></div>`;
     document.body.appendChild(ui);
-    const q = (s) => ui.querySelector(s), R = { h: q('[data-h]'), b: q('[data-b]'), w: q('[data-w]'), a: q('[data-a]') };
+    const q = (s) => ui.querySelector(s), R = { h: q('[data-h]'), b: q('[data-b]'), w: q('[data-w]'), a: q('[data-a]'), s: q('[data-s]') };
     function sync() {
-      q('[data-t]').textContent = clock(S.hour); q('[data-n]').textContent = nameOf(S.hour); R.h.value = S.hour; R.b.value = S.bright; R.w.value = S.warm; R.a.checked = S.auto;
+      q('[data-t]').textContent = clock(S.hour); q('[data-n]').textContent = nameOf(S.hour); R.h.value = S.hour; R.b.value = S.bright; R.w.value = S.warm; R.a.checked = S.auto; R.s.checked = !TF.ambience || TF.ambience.state.on;
       ui.querySelectorAll('[data-m]').forEach((b) => b.classList.toggle('on', nameOf(S.hour).toLowerCase() === b.dataset.m));
     }
-    function set(o) { Object.assign(S, o); apply(); sync(); save(); }
+    function set(o) { const was = nameOf(S.hour); Object.assign(S, o); apply(); sync(); save(); if (o.hour != null && nameOf(S.hour) !== was && TF.ambience) TF.ambience.chime(); }
     function open() {
       if (S.open || TF.talking || TF.traveling || TF.locked || TF.cameraHeld || TF.zone !== 'lobby') return false;
       S.open = true; TF.lockPlayer(true); ui.style.display = 'block'; sync(); return true;
     }
     function close() { if (!S.open) return; S.open = false; ui.style.display = 'none'; TF.lockPlayer(false); }
     ui.addEventListener('click', (e) => { const m = e.target.closest('[data-m]'); if (m) set({ hour: MOODS.find((x) => x[0] === m.dataset.m)[1] }); if (e.target.closest('[data-x]')) close(); });
-    R.h.addEventListener('input', () => set({ hour: +R.h.value })); R.b.addEventListener('input', () => set({ bright: +R.b.value })); R.w.addEventListener('input', () => set({ warm: +R.w.value })); R.a.addEventListener('change', () => set({ auto: R.a.checked }));
+    R.h.addEventListener('input', () => set({ hour: +R.h.value })); R.b.addEventListener('input', () => set({ bright: +R.b.value })); R.w.addEventListener('input', () => set({ warm: +R.w.value })); R.a.addEventListener('change', () => set({ auto: R.a.checked })); R.s.addEventListener('change', () => { if (TF.ambience) { TF.ambience.set(R.s.checked); TF.ambience.chime(); } });
     // hooked at boot, like the other games: the Bridge reassigns TF.onKey at its own boot, which would drop anything hooked earlier
     const hookKeys = () => { const prev = TF.onKey; TF.onKey = (e) => {
       if (!S.open) return prev ? prev(e) : false;

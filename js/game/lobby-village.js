@@ -144,6 +144,13 @@ function vHome(c) {
   gbox(g, mw, H - .3, d, wallM, mx, .3, 0);
   gbox(g, sw, sideH, d - .6, sideM, sx, .3, -.3);
 
+  if (!cafe) {   // ivy hanging from the eave at both ends of the front, dotted with blossoms (from the separate decor sequence)
+    for (const k of [-1, 1]) for (let v = 0; v < 2; v++) {
+      const len = 1.1 + decorRandom() * 1.5, vx = mx + k * (mw / 2 - .16 - v * .26), leafM = decorRandom() < .3 ? MAT.leafLav : MAT.leafB;
+      gbox(g, .24, len, .05, leafM, vx, H - len, d / 2 + .06, { cast: false });
+      for (let b = 0; b < 3; b++) gbox(g, .09, .09, .09, MAT.blossom, vx + (decorRandom() - .5) * .2, H - decorRandom() * len, d / 2 + .1, { cast: false });
+    }
+  }
   const glassW = cafe ? mw - .4 : mw * .7;
   gbox(g, glassW, 2.4, .1, MAT.glassLit, mx, .35, d / 2 + .03, { cast: false });
   for (const k of [-.5, 0, .5]) gbox(g, .08, 2.4, .14, MAT.metal, mx + k * glassW, .35, d / 2 + .04);
@@ -202,8 +209,8 @@ function vGround() {
     plane(w, d, MAT.paver, (x0 + x1) / 2, .012, (z0 + z1) / 2, 3);
     for (const s of [-1, 1]) box(alongX ? w : .3, .1, alongX ? .3 : d, MAT.concrete, alongX ? (x0 + x1) / 2 : (s < 0 ? x0 : x1), 0, alongX ? (s < 0 ? z0 : z1) : (z0 + z1) / 2, { cast: false });
   }
-  for (const [x, z, w, d] of V_PATHS) plane(w, d, MAT.concrete, x, .013, z, 1.5);
-  const ring = new THREE.Mesh(new THREE.RingGeometry(5.4, 5.8, 48), MAT.concrete); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .016, 0); ring.receiveShadow = true; scene.add(ring);
+  for (const [x, z, w, d] of V_PATHS) plane(w, d, MAT.patch, x, .013, z, 2);   // door paths: patchwork quilt, stitched
+  const ring = new THREE.Mesh(new THREE.RingGeometry(5.4, 5.8, 48), MAT.patch); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .016, 0); ring.receiveShadow = true; scene.add(ring);
   // LED lines round the plaza edge, open where the roads leave it
   const [px0, pz0, px1, pz1] = V_PLAZA, led = vGlow(V_LED_COOL);
   for (const z of [pz0 + .15, pz1 - .15]) for (const [a, b] of [[px0, -2.6], [2.6, px1]]) box(b - a, .03, .08, led, (a + b) / 2, .015, z, { cast: false });

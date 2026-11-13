@@ -119,7 +119,7 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.Shad
     void main(){ float h=max(vD.y,0.), l=dot(horizon,vec3(.3,.59,.11)), day=smoothstep(.2,.55,l);
       // a lavender band between the horizon haze and the zenith, like the watercolour skies of a picture book
       vec3 top=mix(horizon*.55, zenith, day), mid=mix(horizon, top, .5)+vec3(.05,0.,.07)*day;
-      vec3 c=mix(mix(horizon, mid, smoothstep(0.,.24,h)), top, smoothstep(.2,.85,h));
+      vec3 c=mix(mix(horizon, mid, smoothstep(0.,.4,h)), top, smoothstep(.3,.95,h));
       float s=max(dot(vD,sunDir),0.); c+=sunCol*(pow(s,8.)*.3+pow(s,300.)*1.2)*day;
       // night: a moon where the sun was, and a few posterised stars
       vec2 sq=floor(vD.xz/(h+.12)*90.); float sh=hash(sq);
