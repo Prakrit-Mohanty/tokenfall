@@ -1,6 +1,6 @@
-  :root { --gold: #d9b46a; --ink: #f3ead6; --panel: rgba(14, 16, 26, .78); }
+  :root { --gold: #d9b46a; --ink: #f3ead6; --panel: rgba(40, 28, 24, .78); }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0b10; font-family: 'Pixelify Sans', monospace; color: var(--ink); }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1311; font-family: 'Pixelify Sans', monospace; color: var(--ink); }
   canvas { display: block; width: 100vw; height: 100vh; }
   #ui { position: fixed; inset: 0; pointer-events: none; }
   #launcher { position: fixed; inset: 0; z-index: 100; }

@@ -1,9 +1,10 @@
 // Prompt Kitchen — the kitchen in the world. Browser: window.KitchenWorld. Node: require('./kitchen-world.js') (the pure part: layout, colliders, stations, the camera fit, the E rules, the pathing).
 //
-// A new zone, "kitchen" (Token Brew Kitchen · Staff only), registered through TF.registerZone at (600, 0): a plank floor, plaster walls with a striped tile backsplash (MAT.awning), wooden
-// counters, steel stoves with pots, hanging red lanterns that sway, steam, a pass counter with a window and customer silhouettes behind it, a ticket rail and a stock shelf. The way in is a
+// A new zone, "kitchen" (Token Brew Kitchen · Staff only), registered through TF.registerZone at (600, 0): a candy-coloured diorama in the spirit of Purble Place and Overcooked (the look is
+// kitchen-decor.js): a checkerboard floor, a pink wallpapered back wall, colour-coded rounded counters, red stoves with pots, pendant lamps, a pass counter with a conveyor of cupcakes and round-faced
+// customers who look at the player, a ticket rail and a stock shelf. The way in is a
 // staff door that is the Token Brew cafe's own door (the lobby says where it is: TF.lobbySpots.kitchen; this module adds the board, the twinkle and the prompt); the way out is the "Back to Lobby" portal. The hero is never locked: WASD and Shift
-// work the whole time, the camera is held at a fixed three-quarter view that frames the whole kitchen (TF.cameraTo / TF.cameraRestore), and E works the stations.
+// work the whole time, the camera is held at a fixed, centred, steep view that frames the whole kitchen (TF.cameraTo / TF.cameraRestore), and E works the stations.
 //
 //   install(TF)                 registers at the lobby's boot (after mergeStatic, so everything here stays a live object); sets TF.kitchen = world
 //   world.attach(rules)         the game's rules (kitchen-play.js): rules.facts() -> what the E logic needs to know; rules.do(action) -> { ok, reason?, ... }
@@ -22,6 +23,7 @@
   else root.KitchenWorld = api;
 })(this, function (E, C, CW, MW) {
   const { RUN } = C, STYLE = CW.STYLE, L0 = E.LAYOUT, BASE_ASPECT = 16 / 9, TAP = 0.2;
+  const CARRY_Y = 3.0;   // the carried chunk floats this high over the (scaled-up) hero
   const POOL = { chunks: 10, cards: 3, crates: 6, gauges: 2 };   // pooled chunk meshes (carry 1, floor 6, stock shelf 3), ticket cards, pantry labels, pot gauges
   const ZONE = { cx: 600, cz: 0 };
   // the staff door is the Token Brew cafe's own door. The lobby places it (TF.lobbySpots.kitchen = { door, dir, stand, ret }: the door's face, which way it faces, where to stand, where the hero
@@ -33,13 +35,13 @@
     return { door: spot.door.slice(), stand: spot.stand.slice(), ret: spot.ret.slice(), ry: Math.atan2(dx, dz), board: [bx, bz], posts: [-0.9, 0.9].map((k) => [bx + side[0] * k, bz + side[1] * k]),
       box: dz ? [bx - hw, bz - 0.2, bx + hw, bz + 0.2] : [bx - 0.2, bz - hw, bx + 0.2, bz + hw], retDir: dz > 0 ? 'down' : dz < 0 ? 'up' : dx > 0 ? 'right' : 'left' };
   }
-  const ROOM = { x0: -12.2, x1: 12.2, zBack: -8.7, zFront: 3.4, wall: 3.4 };
+  const ROOM = { x0: -11.6, x1: 11.6, zBack: -8.7, zFront: 2.8, wall: 3.4 };
   const WALK = [-11, -6.2, 11, -1.1];                            // where the hero may stand, kitchen-local: x0, z0, x1, z1
   // counters and appliances the hero cannot walk through (kitchen-local boxes x0, z0, x1, z1) and the stations the hero works from
   const BOXES = {
     pantry: [-9.4, -7.9, 9.4, -6.6], chop: [L0.chop.x - 0.8, L0.chop.z - 0.6, L0.chop.x + 0.8, L0.chop.z + 0.6], sieve: [L0.sieve.x - 0.8, L0.sieve.z - 0.6, L0.sieve.x + 0.8, L0.sieve.z + 0.6],
     stove0: [L0.stoves[0].x - 0.8, L0.stoves[0].z - 0.8, L0.stoves[0].x + 0.8, L0.stoves[0].z + 0.8], stove1: [L0.stoves[1].x - 0.8, L0.stoves[1].z - 0.8, L0.stoves[1].x + 0.8, L0.stoves[1].z + 0.8],
-    pass: [-12, -1.0, 12, -0.2],
+    pass: [-11.6, -1.0, 11.6, -0.2],
   };
   const STATIONS = [].concat(
     L0.crates.map((p, i) => ({ id: 'crate' + i, type: 'crate', index: i, x: p.x, z: p.z, r: 1.45 })),
@@ -48,12 +50,12 @@
     L0.knobs.map((s, i) => ({ id: 'stove' + i, type: 'stove', index: i, x: s.x, z: s.z, r: 0.95 })),
     [{ id: 'window', type: 'window', x: L0.window.x, z: L0.window.z, r: 2.1 }, { id: 'rail', type: 'rail', x: L0.rail.x, z: L0.rail.z, r: 1.6 }]);
   // the tall things between the camera and the work area: [x0, z0, x1, z1, height]. Kept short on purpose; kitchen-world-tests.js ray-casts the hero's head and chest past them
-  const OCCLUDERS = [BOXES.pantry.concat(1.6), BOXES.chop.concat(1.45), BOXES.sieve.concat(1.5), BOXES.stove0.concat(1.7), BOXES.stove1.concat(1.7), BOXES.pass.concat(1.3)];
+  const OCCLUDERS = [BOXES.pantry.concat(1.6), BOXES.chop.concat(1.45), BOXES.sieve.concat(1.5), BOXES.stove0.concat(1.7), BOXES.stove1.concat(1.7), BOXES.pass.concat(1.7)];
   const LABEL = { crate: 'Crate', chop: 'Chopping board', sieve: 'Sieve', stock: 'Stock shelf', pot: 'Pot', stove: 'Stove', window: 'Pass window', rail: 'Ticket rail' };
 
   // ---------------------------------------------------------------- pure: the camera
-  // a three-quarter view from the camera side that frames the whole kitchen; pulled back along the line of sight when the window is narrower than 16:9
-  const CAMERA = { pos: [-3.8, 16.2, 16.4], look: [0, 0.4, -3.2], fov: 40 };
+  // a centred, steep view (Overcooked's: straight on, about 52 degrees down) from the camera side that frames the whole kitchen; pulled back along the line of sight when the window is narrower than 16:9
+  const CAMERA = { pos: [0, 17.6, 10.4], look: [0, 0.2, -3.0], fov: 40 };
   function fitView(aspect) {
     const k = Math.max(1, BASE_ASPECT / Math.max(0.4, aspect)), c = CAMERA;
     return { pos: k === 1 ? c.pos.slice() : c.pos.map((v, i) => c.look[i] + (v - c.look[i]) * k), look: c.look.slice(), fov: c.fov };
@@ -187,15 +189,13 @@
     const emit = (evt, a) => listeners.forEach(([e, f]) => (e === evt || e === '*') && f(a, evt));
     world.on = (evt, fn) => { listeners.push([evt, fn]); return fn; };
     Object.defineProperty(world, 'carrying', { get: () => S.carry });
-    const warm = () => MAT.warmGlow.emissive.getHex();   // the lamps share the lobby's warm glow
+    const warm = () => 0xffe3bc;   // the kitchen's lamps are a soft white; the staff door out in the lobby keeps the lobby's warm glow
+    const lobbyWarm = () => MAT.warmGlow.emissive.getHex();
     const V = (x, y, z) => new THREE.Vector3(S.A.cx + x, y, S.A.cz + z);
     const local = () => ({ x: TF.hero.x - S.A.cx, z: TF.hero.y - S.A.cz });
 
-    // ---- the colours and the font come from the lobby's own tokens, never from hex written here ----
-    function tokens() {
-      const cs = getComputedStyle(document.documentElement), v = (k, d) => cs.getPropertyValue(k).trim() || d, hex = (c) => '#' + c.getHexString();
-      return { paper: v('--ink', '#f3ead6'), gold: v('--gold', '#d9b46a'), dark: hex(MAT.lanternCap.color), wood: hex(MAT.lanternCap.color.clone().multiplyScalar(1.7)), red: hex(MAT.redLantern.color), font: getComputedStyle(document.body).fontFamily || 'sans-serif' };
-    }
+    // ---- the signs, gauges and cards are drawn in the kitchen's candy colours (the same palette as kitchen-decor.js) ----
+    const tokens = () => ({ paper: '#f4e6cc', gold: '#e59a2e', dark: '#3d2f3d', wood: '#e6c36e', red: '#c4544f', font: '"Trebuchet MS", "Arial Rounded MT Bold", Arial, sans-serif' });
 
     // ---- dynamic textures: drawn when the kitchen is entered, freed when it is left ----
     function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; return { c, g: c.getContext('2d'), tex, w, h }; }
@@ -307,59 +307,17 @@
 
     // ---- the room ----
     function build() {
-      const A = S.A, bx = (w, h, d, m, x, y, z, o) => TF.box(w, h, d, m, A.cx + x, y, A.cz + z, o), R = ROOM;
-      const kids = new Set(scene.children), snap = { inter: TF.INTER.length, cols: TF.COL.length, ports: TF.PORTALS.length, anim: TF.anim.length, walk: TF.WALK.length };
-      const mesh = (g, m, x, y, z) => { const me = new THREE.Mesh(g, m); me.position.set(A.cx + x, y, A.cz + z); me.castShadow = true; me.receiveShadow = true; scene.add(me); return me; };
-      const midZ = (R.zBack + R.zFront) / 2, depth = R.zFront - R.zBack;
-      TF.plane(90, 70, MAT.concrete, A.cx, 0, A.cz, 2);
-      TF.plane(R.x1 - R.x0, depth, MAT.floor, A.cx, 0.012, A.cz + midZ, MAT.floor.userData.s);
-      // walls: plaster, a concrete cap, the striped tile backsplash on the back wall (the cafe's own awning pattern), two windows
-      bx(R.x1 - R.x0 + 0.6, R.wall, 0.4, MAT.plaster, 0, 0, R.zBack - 0.2); bx(R.x1 - R.x0 + 1, 0.2, 0.7, MAT.concrete, 0, R.wall, R.zBack - 0.2);
-      for (const s of [-1, 1]) { bx(0.4, R.wall, depth + 0.4, MAT.plaster, s * (R.x1 + 0.2), 0, midZ); bx(0.7, 0.2, depth + 0.8, MAT.concrete, s * (R.x1 + 0.2), R.wall, midZ); }
-      bx(R.x1 - R.x0, 1.15, 0.1, MAT.awning, 0, 0.95, R.zBack + 0.05, { s: 1.15 }); bx(R.x1 - R.x0, 0.08, 0.14, MAT.chrome, 0, 2.1, R.zBack + 0.07);
-      for (const x of [-7.4, 7.4]) bx(2.4, 1.0, 0.08, MAT.glass, x, 2.15, R.zBack + 0.06, { s: 0 });
-      // the pantry counter along the back wall, six crates on it
-      bx(18.8, 0.9, 1.3, MAT.wood, 0, 0, -7.25); bx(19, 0.1, 1.5, MAT.darkWood, 0, 0.9, -7.25);
-      for (const p of L0.crates) { bx(1.5, 0.5, 0.9, MAT.wood, p.x, 1.0, -7.1); bx(1.56, 0.08, 0.96, MAT.darkWood, p.x, 1.5, -7.1); }
-      // the chopping board and the sieve: counters with their tools
-      for (const [k, p, box] of [['chop', L0.chop, BOXES.chop], ['sieve', L0.sieve, BOXES.sieve]]) {
-        const cx = (box[0] + box[2]) / 2, cz = (box[1] + box[3]) / 2; bx(1.6, 0.9, 1.2, MAT.wood, cx, 0, cz); bx(1.7, 0.1, 1.3, MAT.darkWood, cx, 0.9, cz);
-        if (k === 'chop') { bx(1.1, 0.08, 0.7, MAT.walnut, cx, 1.0, cz); bx(0.5, 0.04, 0.06, MAT.chrome, cx - 0.1, 1.08, cz + 0.2, { ry: 0.3 }); bx(0.14, 0.05, 0.14, MAT.wood, cx + 0.4, 1.08, cz - 0.1); }
-        else { const bowl = mesh(new THREE.CylinderGeometry(0.55, 0.4, 0.3, 14), MAT.steel, cx, 1.15, cz); bowl.castShadow = true; mesh(new THREE.TorusGeometry(0.55, 0.035, 5, 18), MAT.chrome, cx, 1.31, cz).rotation.x = Math.PI / 2; mesh(new THREE.CircleGeometry(0.5, 14), MAT.lattice, cx, 1.29, cz).rotation.x = -Math.PI / 2; }
-        TF.COL.push({ x0: A.cx + box[0], z0: A.cz + box[1], x1: A.cx + box[2], z1: A.cz + box[3] });
-      }
-      // the stock shelf: a wall unit over the middle of the pantry counter, three jars on it
-      { const sx = L0.stockShelf.x; bx(1.3, 0.08, 0.5, MAT.wood, sx, 2.2, R.zBack + 0.3); bx(0.08, 0.5, 0.4, MAT.darkWood, sx - 0.6, 2.2, R.zBack + 0.3); bx(0.08, 0.5, 0.4, MAT.darkWood, sx + 0.6, 2.2, R.zBack + 0.3); }
-      // the stoves: steel bodies, burners, a pot each
-      L0.stoves.forEach((s, i) => {
-        bx(1.6, 0.9, 1.6, MAT.steel, s.x, 0, s.z); bx(1.64, 0.06, 1.64, MAT.chrome, s.x, 0.9, s.z);
-        for (const k of [-0.4, 0, 0.4]) bx(0.08, 0.12, 0.12, MAT.chrome, s.x + (i ? -0.82 : 0.82), 0.5, s.z + k);
-        const ring = mesh(new THREE.TorusGeometry(0.42, 0.04, 5, 20), TF.glowStrip(STYLE[0].hex), s.x, 0.98, s.z); ring.rotation.x = Math.PI / 2; ring.userData.dyn = true;
-        const pot = mesh(new THREE.CylinderGeometry(0.5, 0.46, 0.62, 16), MAT.pot, s.x, 1.3, s.z); pot.userData.dyn = false; mesh(new THREE.TorusGeometry(0.5, 0.045, 5, 18), MAT.chrome, s.x, 1.61, s.z).rotation.x = Math.PI / 2;
-        for (const q of [-1, 1]) bx(0.1, 0.08, 0.22, MAT.chrome, s.x + q * 0.58, 1.42, s.z);
-        TF.COL.push({ x0: A.cx + BOXES['stove' + i][0], z0: A.cz + BOXES['stove' + i][1], x1: A.cx + BOXES['stove' + i][2], z1: A.cz + BOXES['stove' + i][3] });
-      });
-      TF.COL.push({ x0: A.cx + BOXES.pantry[0], z0: A.cz + BOXES.pantry[1], x1: A.cx + BOXES.pantry[2], z1: A.cz + BOXES.pantry[3] });
-      // the pass: a counter across the room with a bell, and a low rack for the ticket cards on its west end. Nothing here is taller than the counter plus the cards: from the fixed
-      // camera a tall frame or sign in front of the work area would hide the hero behind it (kitchen-world-tests.js checks the hero stays in sight)
-      bx(24, 1.1, 0.8, MAT.wood, 0, 0, -0.6); bx(24.2, 0.1, 1.0, MAT.walnut, 0, 1.1, -0.6); bx(5.6, 0.07, 0.07, MAT.warmGlow, 0, 1.22, -0.12, { cast: false });
-      mesh(new THREE.SphereGeometry(0.16, 10, 6), MAT.chrome, 1.6, 1.28, -0.6); bx(0.34, 0.05, 0.34, MAT.chrome, 1.6, 1.2, -0.6);
-      for (const x of [-9.7, -4.1]) bx(0.1, 0.55, 0.1, MAT.metal, x, 1.2, -0.85); bx(5.7, 0.07, 0.07, MAT.steel, -6.9, 1.7, -0.85);
-      // the way out: a doorway glow in the east wall and the portal in front of it
-      bx(0.3, 2.6, 2.4, MAT.darkWood, R.x1 - 0.05, 0, -2.4); bx(0.1, 2.3, 1.9, MAT.door, R.x1 - 0.12, 0, -2.4);
-      TF.signBoard('Back to the cafe', A.cx + R.x1 - 0.2, 2.75, A.cz - 2.4, 2.0, 0.4, -Math.PI / 2);
+      const A = S.A, R = ROOM, kids = new Set(scene.children), snap = { inter: TF.INTER.length, cols: TF.COL.length, ports: TF.PORTALS.length, anim: TF.anim.length, walk: TF.WALK.length };
+      const D = S.decor = window.KitchenDecor.make(TF, { A, ROOM, L0, BOXES, STYLE });
+      D.room();   // the look: kitchen-decor.js (a candy-coloured, colour-coded room); what follows is what the hero bumps into and walks through
+      const col = (b) => TF.COL.push({ x0: A.cx + b[0], z0: A.cz + b[1], x1: A.cx + b[2], z1: A.cz + b[3] });
+      ['chop', 'sieve', 'stove0', 'stove1', 'pantry'].forEach((k) => col(BOXES[k]));
+      // the way out: a doorway in the east wall and the portal in front of it
+      TF.signBoard('Back to the cafe', A.cx + R.x1 - 0.2, 2.95, A.cz - 2.4, 2.0, 0.4, -Math.PI / 2);
       TF.portal(A.cx + 9.8, A.cz - 2.4, STYLE[0].hex, 'kitchen', 'lobby', 'TokenFall Lobby');
       if (TF.sparkles) S.railSparkles = TF.sparkles(A.cx + L0.rail.x, A.cz + L0.rail.z, STYLE[0].hex, 20, 0.7, 2.3);   // where a shift starts: E at the Ticket Rail
-      // lanterns hang from short brackets on the back wall (a beam across the room would stand between the camera and the hero)
-      const lg = new THREE.SphereGeometry(0.34, 10, 8), cg = new THREE.CylinderGeometry(0.16, 0.2, 0.12, 8);
-      for (let i = 0; i < 6; i++) {
-        const x = -9.4 + i * 3.76; bx(0.08, 0.08, 0.7, MAT.darkWood, x, 3.05, R.zBack + 0.35);
-        const grp = new THREE.Group(); grp.userData.dyn = true; grp.position.set(A.cx + x, 3.05, A.cz + R.zBack + 0.65);
-        const cord = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.4, 0.03), MAT.lanternCap); cord.position.y = -0.2; grp.add(cord);
-        const body = new THREE.Mesh(lg, MAT.redLantern); body.scale.y = 1.2; body.position.y = -0.7; grp.add(body); const cap = new THREE.Mesh(cg, MAT.lanternCap); cap.position.y = -0.42; grp.add(cap);
-        scene.add(grp); S.lanterns.push({ g: grp, ph: i * 1.3 });
-      }
-      for (const [x, y, z, k, d] of [[-6, 3.0, -4, 0.85, 15], [6, 3.0, -4, 0.85, 15], [0, 2.8, 0.5, 0.55, 12], [0, 2.9, -7.2, 0.5, 11]]) S.lights.push(TF.pointLight('kitchen', warm(), k, d, A.cx + x, y, A.cz + z));
+      S.lanterns = D.lamps();   // pendant lamps that sway
+      for (const [x, y, z, k, d] of [[-6, 3.4, -4, 0.7, 22], [6, 3.4, -4, 0.7, 22], [0, 3.2, 0.5, 0.4, 16], [0, 3.0, -7.2, 0.4, 14]]) S.lights.push(TF.pointLight('kitchen', warm(), k, d, A.cx + x, y, A.cz + z));
       // the staff door and its way in, in the lobby
       buildDoor();
       // everything static is grouped (for the zone's own bookkeeping), the live parts stay free
@@ -375,7 +333,7 @@
       const posts = (px, pz) => TF.box(0.14, 1.9, 0.14, MAT.darkWood, px, 0, pz);
       sp.posts.forEach(([px, pz]) => posts(px, pz)); TF.signBoard('Kitchen - Staff', sp.board[0], 1.75, sp.board[1], 2.1, 0.46, sp.ry); TF.signBoard('Cook a shift', sp.board[0], 1.25, sp.board[1], 1.5, 0.36, sp.ry);
       TF.colBox(sp.box[0], sp.box[1], sp.box[2], sp.box[3]);
-      TF.pointLight('lobby', warm(), 0.7, 5, sp.stand[0], 2.7, sp.stand[1]);
+      TF.pointLight('lobby', lobbyWarm(), 0.7, 5, sp.stand[0], 2.7, sp.stand[1]);
       TF.INTER.push({ x: sp.stand[0], z: sp.stand[1], r: DOOR.r, label: 'Token Brew Kitchen', verb: 'Cook', act: () => world.enterKitchen() });
       // the way in is marked like every other game: the amber twinkle
       if (TF.sparkles) S.doorSparkles = TF.sparkles(sp.stand[0], sp.stand[1] - 0.2, STYLE[0].hex, 24, 0.8, 2.6);
@@ -384,29 +342,29 @@
     // the dynamic pieces: pantry labels, gauges, ticket cards, the carried chunk, the ring, customers, steam, sparks, floor items
     function buildLive() {
       const A = S.A, plane = (w, h, mat) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.userData.dyn = true; scene.add(m); return m; };
-      const basic = () => new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false });
+      const basic = () => new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, toneMapped: false }), CHUNK = new THREE.MeshStandardMaterial({ color: 0xe6c36e, roughness: 0.55 }), PLATE = new THREE.MeshStandardMaterial({ color: 0xf3e6cf, roughness: 0.5 }), DOME = new THREE.MeshStandardMaterial({ color: 0xdca63a, roughness: 0.35, metalness: 0.55 });
       for (const p of L0.crates) { const lab = plane(1.7, 0.74, new THREE.MeshBasicMaterial({ transparent: true })); lab.position.set(A.cx + p.x, 1.68, A.cz - 6.62); lab.rotation.x = -0.35; lab.visible = false; S.crates.push({ label: lab }); }
-      L0.stoves.forEach((s, i) => { const g = plane(3.3, 1.24, basic()); g.position.set(A.cx + s.x, 3.2, A.cz + s.z + 0.2); g.visible = false; S.gauges.push(g); const st = new THREE.Group(); st.userData.dyn = true; const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.3, 0.05, 14), MAT.chrome), dome = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 6, 0, 6.283, 0, 1.5), MAT.chrome); dome.position.y = 0.03; st.add(plate, dome); st.position.set(A.cx + s.x + 0.0, 1.0, A.cz + s.z + 0.62); st.visible = false; scene.add(st); S.stoveDishes.push(st); });
+      // each gauge floats over its stove, shifted away from the corridor between the stoves where the hero works, so it never covers the hero or the pantry labels
+      L0.stoves.forEach((s, i) => { const g = plane(3.3, 1.24, basic()); g.position.set(A.cx + s.x + (i ? 0.7 : -0.7), 3.15, A.cz + s.z + 0.2); g.scale.setScalar(0.95); g.visible = false; S.gauges.push(g); const st = new THREE.Group(); st.userData.dyn = true; const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.3, 0.05, 14), PLATE), dome = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 6, 0, 6.283, 0, 1.5), DOME); dome.position.y = 0.03; st.add(plate, dome); st.position.set(A.cx + s.x + 0.0, 1.0, A.cz + s.z + 0.62); st.visible = false; scene.add(st); S.stoveDishes.push(st); });
       for (let i = 0; i < POOL.cards; i++) { const c = plane(1.78, 1.34, new THREE.MeshBasicMaterial({ transparent: true })); c.position.set(A.cx - 8.65 + i * 1.88, 1.78, A.cz - 0.72); c.visible = false; c.rotation.x = -0.8; S.cards.push(c); }
       // the carried chunk: a small crate and its label, or a covered dish, on a group that rides on the hero
-      const grp = new THREE.Group(); grp.visible = false; grp.position.y = 2.15; TF.hero.g.add(grp);
-      const block = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.28, 0.4), MAT.wood); block.castShadow = true; grp.add(block);
-      const dish = new THREE.Group(); dish.add(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.26, 0.05, 12), MAT.chrome)); const dome = new THREE.Mesh(new THREE.SphereGeometry(0.26, 10, 6, 0, 6.283, 0, 1.5), MAT.chrome); dome.position.y = 0.03; dish.add(dome); dish.visible = false; grp.add(dish);
+      const grp = new THREE.Group(); grp.visible = false; grp.position.y = CARRY_Y; TF.hero.g.add(grp);
+      const block = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.28, 0.4), CHUNK); block.castShadow = true; grp.add(block);
+      const dish = new THREE.Group(); dish.add(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.26, 0.05, 12), PLATE)); const dome = new THREE.Mesh(new THREE.SphereGeometry(0.26, 10, 6, 0, 6.283, 0, 1.5), DOME); dome.position.y = 0.03; dish.add(dome); dish.visible = false; grp.add(dish);
       const label = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.6), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })); label.position.set(0, 0.55, 0.05); label.rotation.x = -0.45; grp.add(label);
       S.heroMesh = { group: grp, block, dish, label };
       const ring = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), basic()); ring.position.y = 1.05; ring.position.z = 0.4; ring.rotation.x = -0.45; ring.visible = false; TF.hero.g.add(ring); S.ringMesh = ring;
       // pooled chunk meshes lying on the floor (6) and on the stock shelf (3)
       S.floorMeshes = [];
-      for (let i = 0; i < 6; i++) { const g = new THREE.Group(); g.userData.dyn = true; const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.26, 0.4), MAT.wood); b.position.y = 0.13; b.castShadow = true; g.add(b); g.visible = false; scene.add(g); S.floorMeshes.push({ group: g, item: null, x: 0, z: 0 }); }
-      S.shelfJars = []; for (let i = 0; i < 3; i++) { const j = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.26, 0.3), MAT.pot); j.userData.dyn = true; j.position.set(A.cx + L0.stockShelf.x - 0.35 + i * 0.35, 2.4, A.cz + ROOM.zBack + 0.3); j.visible = false; scene.add(j); S.shelfJars.push(j); }
-      // customers behind the pass: dark silhouettes, a reply bubble above each
-      const body = new THREE.BoxGeometry(0.7, 1.25, 0.36), head = new THREE.SphereGeometry(0.24, 10, 8);
+      for (let i = 0; i < 6; i++) { const g = new THREE.Group(); g.userData.dyn = true; const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.26, 0.4), CHUNK); b.position.y = 0.13; b.castShadow = true; g.add(b); g.visible = false; scene.add(g); S.floorMeshes.push({ group: g, item: null, x: 0, z: 0 }); }
+      S.shelfJars = []; for (let i = 0; i < 3; i++) { const j = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.26, 0.3), new THREE.MeshStandardMaterial({ color: 0xaecab2, roughness: 0.5 })); j.userData.dyn = true; j.position.set(A.cx + L0.stockShelf.x - 0.35 + i * 0.35, 2.4, A.cz + ROOM.zBack + 0.3); j.visible = false; scene.add(j); S.shelfJars.push(j); }
+      // customers on the near side of the pass: round faces turned to the player, a reply bubble above each
       [-6.2, -2.4, 2.2, 6.4, 9.6].forEach((x, i) => {
-        const g = new THREE.Group(); g.userData.dyn = true; g.position.set(A.cx + x, 0, A.cz + 1.5);
-        const b = new THREE.Mesh(body, MAT.cabinet); b.position.y = 0.62; b.castShadow = true; g.add(b); const h = new THREE.Mesh(head, MAT.cabinet); h.position.y = 1.5; g.add(h);
-        const bub = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.14), basic()); bub.position.set(0, 2.7, 0); bub.visible = false; bub.rotation.x = -0.5; g.add(bub);
+        const g = S.decor.customer(i); g.userData.dyn = true; g.position.set(A.cx + x, 0, A.cz + 1.5);
+        const bub = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.14), basic()); bub.position.set(0, 3.0, 0); bub.visible = false; bub.rotation.x = -0.6; g.add(bub);
         scene.add(g); S.customers.push({ g, ph: i * 0.9, bubble: bub });
       });
+      S.decor.live();
       // steam puffs over the pots, gold sparks for a perfect serve
       const puffTex = TF.canvasTex(16, 16, (g, w, h) => { const gr = g.createRadialGradient(8, 8, 1, 8, 8, 8); gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }, { nearest: false });
       L0.stoves.forEach((s) => { const set = { on: false, x: s.x, z: s.z, puffs: [] }; for (let k = 0; k < 5; k++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), new THREE.MeshBasicMaterial({ map: puffTex, transparent: true, depthWrite: false, opacity: 0 })); m.userData.dyn = true; m.visible = false; scene.add(m); set.puffs.push({ m, t: k * 0.4 }); } S.steam.push(set); });
@@ -424,12 +382,12 @@
     };
     function onZone(prev, z) {
       if (z === 'kitchen' && !S.in) {
-        S.in = true; acquire(); S.ui.root.style.display = 'block';
+        S.in = true; acquire(); S.decor.hero(true); S.ui.root.style.display = 'block';
         setTimeout(() => { if (S.in) applyCamera(800); }, 0);   // after the lobby has put the follow camera at the hero, so the ease starts from this room
         TF.sys('Token Brew Kitchen: walk west along the pass to the Ticket Rail (the glowing spot) and press E to start a shift.');
         emit('enter');
       } else if (prev === 'kitchen' && z !== 'kitchen') {
-        S.in = false; S.camOn = false; S.hold = null; S.eDown = false; world.setPlaying(false); world.carry(null); world.floor.clear(); TF.cameraRestore(0); release(); S.ui.root.style.display = 'none';
+        S.in = false; S.camOn = false; S.hold = null; S.eDown = false; world.setPlaying(false); world.carry(null); world.floor.clear(); TF.cameraRestore(0); S.decor.hero(false); release(); S.ui.root.style.display = 'none';
         emit('leave');
       }
     }
@@ -494,13 +452,14 @@
     world.tick = (t, dt) => {
       if (!S.built) return;
       if (S.railSparkles) S.railSparkles.visible = S.in && !S.busy;
-      if (!S.in) return;
+      if (!S.in) { if (S.decor && S.decor.ring && S.decor.ring.visible) S.decor.ring.visible = false; return; }
       // real seconds, not the lobby's clamped frame time: a 1.2 s hold takes 1.2 s whatever the frame rate (a hidden tab pauses the frames; the jump after it is capped)
       const nowMs = performance.now(), sec = Math.min(0.5, (nowMs - (S.lastMs || nowMs)) / 1000); S.lastMs = nowMs;
       if (S.camOn && TF.camera.aspect && Math.abs(TF.camera.aspect - S.aspect) > 0.01) applyCamera(0);
+      S.decor.tick(t, sec, true);
       // lanterns sway, customers shift their weight, steam rises, sparks fall
       for (const l of S.lanterns) { l.g.rotation.z = Math.sin(t * 1.3 + l.ph) * 0.07; l.g.rotation.x = Math.sin(t * 0.9 + l.ph * 2) * 0.04; }
-      for (const c of S.customers) c.g.position.y = Math.abs(Math.sin(t * 0.7 + c.ph)) * 0.025;
+      for (const c of S.customers) { const k = Math.abs(Math.sin(t * 1.6 + c.ph)); c.g.position.y = k * 0.045; c.g.scale.set(1 + (1 - k) * 0.02, 1 - (1 - k) * 0.03, 1 + (1 - k) * 0.02); }
       for (const set of S.steam) for (const p of set.puffs) {
         if (set.on || p.m.visible) { p.t += sec * 0.7; if (p.t > 1) { p.t = 0; p.m.visible = set.on; } }
         if (p.m.visible) { p.m.position.set(S.A.cx + set.x + Math.sin(p.t * 5 + set.x) * 0.15, 1.8 + p.t * 1.1, S.A.cz + set.z + 0.1); p.m.material.opacity = 0.7 * Math.sin(p.t * Math.PI); p.m.quaternion.copy(TF.camera.quaternion); p.m.scale.setScalar(0.6 + p.t * 0.9); }
@@ -516,7 +475,7 @@
       }
       S.flips = S.flips.filter((f) => !f.done);
       // the hero's carried chunk bobs a little; the stock jars show what is prepped
-      if (S.carry) S.heroMesh.group.position.y = 2.15 + Math.sin(t * 4) * 0.04;
+      if (S.carry) S.heroMesh.group.position.y = CARRY_Y + Math.sin(t * 4) * 0.04;
       S.shelfJars.forEach((j, i) => { j.visible = !!(S.rules && S.rules.stockCount && S.rules.stockCount() > i); });
       for (const f of S.floorItems) f.mesh.group.rotation.y = 0.3;
       // the hold ring and the prompt
@@ -545,7 +504,7 @@
     }
     world.build = () => {
       S.spot = doorSpot(TF.lobbySpots && TF.lobbySpots.kitchen);
-      const a = TF.registerZone('kitchen', { cx: ZONE.cx, cz: ZONE.cz, name: 'Token Brew Kitchen', sub: 'Staff only', color: STYLE[0].hex, ret: S.spot ? S.spot.ret : [0, 0], retDir: S.spot ? S.spot.retDir : 'down', spawn: [L0.start.x, L0.start.z], env: { sun: 0.5, hemi: 0.6, near: 40, far: 130 } });
+      const a = TF.registerZone('kitchen', { cx: ZONE.cx, cz: ZONE.cz, name: 'Token Brew Kitchen', sub: 'Staff only', color: STYLE[0].hex, ret: S.spot ? S.spot.ret : [0, 0], retDir: S.spot ? S.spot.retDir : 'down', spawn: [L0.start.x, L0.start.z], env: { sun: 0.55, hemi: 0.78, hemiColor: 0xf6dfc4, fog: 0x3b2c35, near: 80, far: 190 } });
       S.A = a; S.tok = tokens(); makeUi(); build(); buildLive(); S.built = true;
     };
     return world;

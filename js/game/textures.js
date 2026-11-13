@@ -6,8 +6,9 @@ function canvasTex(w, h, draw, opts = {}) {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const g = c.getContext('2d'); draw(g, w, h);
   const t = new THREE.CanvasTexture(c);
-  t.magFilter = THREE.NearestFilter;
-  t.minFilter = opts.nearest ? THREE.NearestFilter : THREE.LinearMipmapLinearFilter;
+  // smooth up close (it used to be blocky); { nearest: true } keeps a texture crisp, and so do the tiny 8-16 px sprites (wings, puffs, ferns), which are pixel art
+  t.magFilter = opts.nearest || (w <= 16 && h <= 16 && !opts.smooth) ? THREE.NearestFilter : THREE.LinearFilter;   // { smooth: true } softens even a tiny sprite (the grass tufts)
+  t.minFilter = opts.nearest ? THREE.NearestFilter : opts.smooth ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter; if (opts.smooth) t.generateMipmaps = false;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.anisotropy = 8;
   return t;
@@ -61,10 +62,10 @@ function buildTextures() {
   TX.flag = refineTexture(stoneTex([150, 146, 140], [70, 66, 62], [10, 14], [10, 18]), 80, 80, (g, W, H) => g.drawImage(stoneTex([150, 146, 140], [70, 66, 62], [12, 18], [12, 22], 80, decorRandom).image, 0, 0));
   TX.stoneWall = stoneTex([138, 132, 122], [60, 56, 52], [6, 9], [9, 16], 32);
   TX.grass = canvasTex(64, 64, (g, W, H) => {
-    noiseFill(g, W, H, [92, 128, 58], .22);
-    for (let i = 0; i < 140; i++) { const x = rnd() * W | 0, y = rnd() * H | 0, c = rnd() < .5 ? [122, 160, 70] : [70, 104, 46]; P(g, x, y, c); P(g, x, (y + 1) % H, c, .9); }
+    noiseFill(g, W, H, [104, 122, 84], .08);
+    for (let i = 0; i < 40; i++) { const x = rnd() * W | 0, y = rnd() * H | 0, c = rnd() < .5 ? [110, 130, 90] : [94, 112, 74]; P(g, x, y, c); P(g, x, (y + 1) % H, c, .94); }
   });
-  TX.darkGrass = canvasTex(64, 64, (g, W, H) => { noiseFill(g, W, H, [70, 102, 50], .25); });
+  TX.darkGrass = canvasTex(64, 64, (g, W, H) => { noiseFill(g, W, H, [86, 108, 66], .09); });
   TX.dirt = canvasTex(32, 32, (g, W, H) => { noiseFill(g, W, H, [120, 92, 64], .25); });
   TX.plaster = canvasTex(32, 32, (g, W, H) => {
     noiseFill(g, W, H, [222, 214, 196], .07);
@@ -102,13 +103,13 @@ function buildTextures() {
   TX.cloth = canvasTex(16, 16, (g, W, H) => { for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) P(g, x, y, [150, 52, 40], x % 4 < 2 ? 1 : .86); });
   TX.bark = canvasTex(16, 16, (g, W, H) => { noiseFill(g, W, H, [86, 62, 44], .25); for (let x = 0; x < W; x += 3) for (let y = 0; y < H; y++) if (rnd() < .6) P(g, x, y, [60, 42, 30]); });
   const leaf = (base) => canvasTex(32, 32, (g, W, H) => {
-    noiseFill(g, W, H, base, .18);
-    for (let i = 0; i < 70; i++) {
-      const x = rnd() * W | 0, y = rnd() * H | 0, f = rnd() < .5 ? 1.3 : .62;
+    noiseFill(g, W, H, base, .08);
+    for (let i = 0; i < 36; i++) {
+      const x = rnd() * W | 0, y = rnd() * H | 0, f = rnd() < .5 ? 1.12 : .86;
       for (let k = 0; k < 5; k++) P(g, (x + [0, 1, -1, 0, 0][k] + W) % W, (y + [0, 0, 0, 1, -1][k] + H) % H, base, f * (k ? .92 : 1));
     }
   });
-  TX.leafA = leaf([74, 116, 52]); TX.leafB = leaf([52, 92, 50]); TX.leafC = leaf([96, 132, 56]); TX.blossom = leaf([196, 128, 148]);
+  TX.leafA = leaf([96, 124, 76]); TX.leafB = leaf([78, 106, 70]); TX.leafC = leaf([112, 136, 80]); TX.blossom = leaf([196, 128, 148]);
   TX.books = canvasTex(32, 32, (g, W, H) => {
     g.fillStyle = '#3b2618'; g.fillRect(0, 0, W, H);
     for (let shelf = 0; shelf < 4; shelf++) {
@@ -128,13 +129,13 @@ function buildTextures() {
   TX.paver = refineTexture(canvasTex(64, 64, (g, W, H) => {
     g.fillStyle = rgb([128, 122, 112]); g.fillRect(0, 0, W, H);
     for (let r = 0; r < 8; r++) for (let c = -1; c < 4; c++) {
-      const x0 = c * 16 + (r % 2) * 8, y0 = r * 8, v = (rnd() - .5) * 26, b = [182 + v, 174 + v, 160 + v - rnd() * 8];
+      const x0 = c * 16 + (r % 2) * 8, y0 = r * 8, v = (rnd() - .5) * 16, b = [182 + v, 174 + v, 160 + v - rnd() * 8];
       for (let i = 1; i < 16; i++) for (let j = 1; j < 8; j++) { const x = x0 + i; if (x < 0 || x >= W) continue; P(g, x, y0 + j, b, (j === 1 ? 1.05 : j === 7 ? .9 : 1) * (1 + (rnd() - .5) * .05)); }
     }
   }), 96, 96, (g, W, H) => {
     g.fillStyle = rgb([128, 122, 112]); g.fillRect(0, 0, W, H);
     for (let r = 0; r < 8; r++) for (let c = -1; c < 4; c++) {
-      const x0 = c * 24 + (r % 2) * 12, y0 = r * 12, v = (decorRandom() - .5) * 26, b = [182 + v, 174 + v, 160 + v - decorRandom() * 8];
+      const x0 = c * 24 + (r % 2) * 12, y0 = r * 12, v = (decorRandom() - .5) * 16, b = [182 + v, 174 + v, 160 + v - decorRandom() * 8];
       for (let i = 1; i < 24; i++) for (let j = 1; j < 12; j++) { const x = x0 + i; if (x < 0 || x >= W) continue; P(g, x, y0 + j, b, (j === 1 ? 1.06 : j === 11 ? .88 : i === 1 ? 1.03 : i === 23 ? .94 : 1) * (1 + (decorRandom() - .5) * .05)); }
     }
   });
@@ -204,14 +205,14 @@ function buildTextures() {
   TX.coin.center.set(.5, .5); TX.coin.rotation = Math.PI / 2;
   TX.grassTuft = canvasTex(16, 16, (g, W, H) => {
     for (let i = 0; i < 9; i++) {
-      let x = 2 + rnd() * 12, h = 6 + rnd() * 9; const c = [[96, 140, 60], [120, 160, 70], [76, 112, 48]][i % 3];
+      let x = 2 + rnd() * 12, h = 5 + rnd() * 7; const c = [[108, 134, 80], [118, 144, 88], [94, 120, 70]][i % 3];
       for (let y = 0; y < h; y++) { P(g, x | 0, H - 1 - y, c, 1 + y / h * .25); x += (rnd() - .5) * .8; }
     }
-  }, { nearest: true });
-  TX.flowers = [[226, 70, 60], [246, 238, 220], [246, 200, 70], [170, 110, 220]].map(pc => canvasTex(16, 16, (g, W, H) => {
+  }, { smooth: true });
+  TX.flowers = [[214, 116, 104], [240, 232, 214], [238, 206, 126], [172, 146, 208]].map(pc => canvasTex(16, 16, (g, W, H) => {
     for (let i = 0; i < 4; i++) {
       const x = 2 + i * 4 - (rnd() * 2 | 0), top = 4 + (rnd() * 6 | 0);
-      for (let y = top; y < H; y++) P(g, x, y, [80, 120, 50]);
+      for (let y = top; y < H; y++) P(g, x, y, [96, 124, 74]);
       P(g, x - 1, top, pc); P(g, x + 1, top, pc); P(g, x, top - 1, pc); P(g, x, top + 1, pc, .85); P(g, x, top, [250, 220, 120]);
       P(g, x + 1, top + 5, [96, 140, 60]);
     }

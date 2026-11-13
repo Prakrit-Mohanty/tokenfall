@@ -7,7 +7,7 @@ const LOBBY = VILLAGE;
 if (LOBBY.npcBounds) NPC_BOUNDS.lobby = LOBBY.npcBounds;
 
 const TF = window.TokenFall = {
-  THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, rnd, rr, timeU, keys, post: final.u,
+  THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, rnd, rr, timeU, keys, post: final.u, charScale: CHAR_SCALE, skyU, SUN_DIR, shaftMat, get dust() { return dust; },
   INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life, mergeStatic, leaderboard: LEADERBOARD_API, get lobbySpots() { return LOBBY.minigameSpots || {}; },
   canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
   gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,
@@ -54,7 +54,7 @@ Object.defineProperty(TF, 'locked', { get: () => playerLocked });
 // re-focused and softened for the close view; cameraRestore(ms): eases back to the follow camera (0 = at once). Runs in 'life', after the follow
 // camera has been placed and before the frame is drawn, so it composes with anything else that nudges the camera (the bridge's shake).
 const camFx = { on: false, mode: '', t: 0, dur: 1, from: null, to: null, cur: null };
-const camEase = (k) => k * k * (3 - 2 * k), camRes = () => Math.max(4, rtScene.height / 105);
+const camEase = (k) => k * k * (3 - 2 * k), camRes = () => Math.max(4, rtScene.height / 135);
 function camApply(p, l, fov, soften) {
   camera.position.copy(p); camera.lookAt(l);
   if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; camera.updateProjectionMatrix(); }

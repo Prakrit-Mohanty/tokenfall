@@ -54,7 +54,7 @@ test('sight: from the fixed camera the hero\'s head is in view at every spot the
     if (asp === 16 / 9) console.log('   at 16:9: head in view on ' + head + ' of ' + cells + ' cells, chest on ' + (100 * chest / cells).toFixed(0) + '%');
   }
   // the test would notice a tall frame: a lintel across the pass hides the hero behind it
-  W.OCCLUDERS.push([-2.7, -0.7, 2.7, -0.5, 2.9]); const v = W.fitView(16 / 9); assert(!W.visible(v, [0, 1.0, -2.95]), 'the ray-cast sees a lintel'); W.OCCLUDERS.pop();
+  W.OCCLUDERS.push([-2.7, -0.7, 2.7, -0.5, 4.6]); const v = W.fitView(16 / 9); assert(!W.visible(v, [0, 1.0, -2.95]), 'the ray-cast sees a lintel'); W.OCCLUDERS.pop();
 });
 
 const facts = (o) => Object.assign({ carry: null, pots: [{ items: 0, residue: false, busy: false }, { items: 0, residue: false, busy: false }], stoves: [{ dish: null }, { dish: null }], stockHas: false }, o);

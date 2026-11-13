@@ -150,7 +150,7 @@
     function makePanel() {
       const style = document.createElement('style');
       style.textContent = `
-        .br { position: absolute; top: 43%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); max-height: calc(100vh - 190px); overflow-y: auto; padding: 16px 22px 14px; display: none; font-size: 17px; line-height: 1.4; background: rgba(14, 16, 26, .95); pointer-events: auto; }
+        .br { position: absolute; top: 43%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); max-height: calc(100vh - 190px); overflow-y: auto; padding: 16px 22px 14px; display: none; font-size: 17px; line-height: 1.4; background: rgba(40, 28, 24, .95); pointer-events: auto; }
         .br h3 { margin: 0; font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
         .br .sum { margin: 4px 0 10px; font-size: 18px; } .br .sum b { color: #ffe39a; font-weight: 600; }
         .br .row { display: grid; grid-template-columns: 170px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 15px; }

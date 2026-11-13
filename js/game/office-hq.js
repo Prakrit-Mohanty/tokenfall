@@ -36,7 +36,7 @@ function buildOffice(a) {
   windowRun(X(7.2), Z(-14.1), X(7.2), Z(3.9));
   for (let i = 0; i < 16; i++) tree(cx + rr(-24, 24), cz + rr(-34, -26), rr(1.2, 1.7), [MAT.leafA, MAT.leafB, MAT.leafC][rnd() * 3 | 0], false).position.y = GROUND;
   for (let i = 0; i < 14; i++) { const s = rnd() < .5 ? -1 : 1; tree(cx + s * rr(13, 24), cz + rr(-24, 12), rr(1.2, 1.6), MAT.leafB, false).position.y = GROUND; }
-  pointLight('lab', 0xd6e8ff, 1.3, 16, X(-4), 2.4, Z(-11)); pointLight('lab', 0xd6e8ff, 1.3, 16, X(5), 2.4, Z(-12)); pointLight('lab', 0xd6e8ff, 1.1, 14, X(-5.6), 2.4, Z(-1));
+  pointLight('lab', 0xffe6c8, 1.3, 16, X(-4), 2.4, Z(-11)); pointLight('lab', 0xffe6c8, 1.3, 16, X(5), 2.4, Z(-12)); pointLight('lab', 0xffe6c8, 1.1, 14, X(-5.6), 2.4, Z(-1));
 
   // ---- south: the lift and electrical duct, the fire-exit stairs, and the waiting area in front ----
   box(L(14.4), 1.1, .2, MAT.plaster, X(0), 0, SE); colBox(X(-7.2), SE - .2, X(7.2), SE + .2);

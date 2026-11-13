@@ -62,7 +62,7 @@ function scatter(texture, count, size, pick) {
     sh.uniforms.uT = timeU;
     sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       vec2 ip = instanceMatrix[3].xz;
-      float sway = (sin(uT * 1.7 + ip.x * .45 + ip.y * .3) + .5 * sin(uT * 3.1 + ip.x)) * .09 * position.y / ${(size * .8).toFixed(2)};
+      float sway = (sin(uT * 1.7 + ip.x * .45 + ip.y * .3) + .5 * sin(uT * 3.1 + ip.x)) * .055 * position.y / ${(size * .8).toFixed(2)};
       transformed.x += sway; transformed.z += sway * .5;`);
   };
   const im = new THREE.InstancedMesh(merged, m, count), d = new THREE.Object3D();

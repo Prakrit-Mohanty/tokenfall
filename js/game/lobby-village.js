@@ -5,7 +5,8 @@
 
 const V_PLAZA = [-12, -10, 12, 10];
 const V_ROADS = [[-2.6, -30.5, 2.6, -10], [-2.6, 10, 2.6, 46], [-46, -2.6, -12, 2.6], [12, -2.6, 46, 2.6]];
-const V_RIVER = [-80, -37.5, 80, -30.5];
+const V_ISLAND = 53;   // the lobby is a floating island: its lawn, its river and its tufts end here, 7 m beyond where the hero can walk (dreamworld.js dresses the edge)
+const V_RIVER = [-V_ISLAND, -37.5, V_ISLAND, -30.5];
 const V_POND = [25, 25, 8];
 const V_MOW = [-43, 6, -35, 14];
 const V_GAMES_LAWN = [-28.2, -9, -16.9, -2.6];
@@ -194,7 +195,7 @@ function vSmokePoints() {
 }
 
 function vGround() {
-  plane(240, 240, MAT.grass, 0, 0, 0, 2);
+  plane(2 * V_ISLAND, 2 * V_ISLAND, MAT.grass, 0, 0, 0, 2);
   plane(24, 20, MAT.paver, 0, .014, 0, 2);
   for (const [x0, z0, x1, z1] of V_ROADS) {
     const w = x1 - x0, d = z1 - z0, alongX = w > d;
@@ -255,7 +256,7 @@ function vRiverAndBridge() {
     box(.05, .04, w + 1.4, vGlow(V_LED_COOL), s * 2.38, .22, zc, { cast: false });
     colBox(s * 2.45 - .12, z0 - .7, s * 2.45 + .12, z1 + .7);
   }
-  for (let i = 0; i < 160; i++) { const x = rr(-60, 60), z = (rnd() < .5 ? z0 : z1) + rr(-.5, .5); if (Math.abs(x) > 3.4) box(.06, rr(.7, 1.5), .06, MAT.leafB, x, 0, z, { cast: false }); }
+  for (let i = 0; i < 160; i++) { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = (rnd() < .5 ? z0 : z1) + rr(-.5, .5); if (Math.abs(x) > 3.4) box(.06, rr(.7, 1.5), .06, MAT.leafB, x, 0, z, { cast: false }); }
 }
 
 function vPond() {
@@ -299,7 +300,7 @@ function vStage() {
   for (const z of [z0 + 1, z1 - 1]) box(.7, 1.2, .7, MAT.metal, x0 + .6, .7, z);
   colBox(x0 - .3, z0, x1, z1);
   for (const [x, h] of [[-6.2, .3], [-5.3, .5]]) { box(.75, h, z1 - z0 - 1.6, MAT.concrete, x, 0, mz); box(.7, .06, z1 - z0 - 1.7, MAT.wood, x, h, mz); colBox(x - .38, z0 + .8, x + .38, z1 - .8); }
-  pointLight('lobby', 0xe6f0ff, 1.2, 8, x1 - .6, 3.2, mz);
+  pointLight('lobby', 0xffe2b8, 1.2, 8, x1 - .6, 3.2, mz);
   INTER.push({ x: -4, z: mz, r: 1.8, label: 'Stage', verb: 'Read', act: () => talk('TokenFall Talks', ['This Friday: "Why does my chatbot sound so sure?" Confidence is not the same as being right.', 'Next week: open mic. Bring your best prompt.']) });
 }
 
@@ -331,7 +332,7 @@ function vLamp(x, z, lit) {
   box(.3, .14, .3, MAT.concrete, x, 0, z); box(.1, 4.2, .1, MAT.metal, x, .14, z);
   box(.9, .08, .1, MAT.metal, x + .4, 4.26, z); box(.7, .1, .34, MAT.metal, x + .75, 4.2, z); box(.6, .03, .28, vGlow(V_LED_COOL), x + .75, 4.17, z, { cast: false });
   colCirc(x, z, .2);
-  if (lit) pointLight('lobby', 0xe6f0ff, 1.6, 9, x + .75, 3.9, z + .1);
+  if (lit) pointLight('lobby', 0xffe2b8, 1.6, 9, x + .75, 3.9, z + .1);
 }
 function vPathLights() {
   for (const [x0, z0, x1, z1] of V_ROADS) {
@@ -413,7 +414,7 @@ function vPromptLab() {
   gbox(g, 4, .08, .9, MAT.wood, 0, .95, -1.4); for (const dx of [-1.6, 1.6]) gbox(g, .1, .75, .8, MAT.metal, dx, .2, -1.4);
   for (const dx of [-1.3, 0, 1.3]) { gbox(g, .9, .55, .05, MAT.screen, dx, 1.12, -1.7, { cast: false }); const st = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .5, 10), MAT.metal), g); st.position.set(dx, .45, -.6); }
   const sign = ledSign(['PROMPT LAB'], '#8fe8ff', 0, 0, 0, 2.6, .45); g.add(sign); sign.position.set(0, H + .55, d / 2 + .62);
-  pointLight('lobby', 0xe6f0ff, .9, 6, x, 2.4, z);
+  pointLight('lobby', 0xffe2b8, .9, 6, x, 2.4, z);
   colBox(...vFootprint(x, z, w + .2, d + .2, -Math.PI / 2));
   INTER.push({ x: x - d / 2 - 1.4, z, r: 1.6, label: 'Prompt Lab', verb: 'Peek', act: () => talk('Prompt Lab', ['The doors are glass, the screens are on, the chairs are empty.', 'A sign: “Opening soon — practise writing clear prompts and spotting made-up answers.”']) });
 }
@@ -467,10 +468,10 @@ function vFoliage() {
 }
 
 function vGrass() {
-  const lawn = () => { const x = rr(-60, 60), z = rr(-60, 60); return vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)) ? null : [x, z]; };
-  scatter(TX.grassTuft, 6000, .6, lawn);
-  const fern = canvasTex(16, 16, (g) => { for (const [x, c] of [[4, '#4f8a34'], [8, '#5f9a3a'], [12, '#4f8a34']]) { g.fillStyle = c; for (let y = 2; y < 16; y++) { g.fillRect(x, y, 1, 1); if (y % 2) { g.fillRect(x - 2, y, 2, 1); g.fillRect(x + 1, y, 2, 1); } } } }, { nearest: true });
-  scatter(fern, 900, .9, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 2.5) && !vPaved(x, z, .6) && !vWater(x, z, .2) && !blocked(x, z, -.1) ? [x, z] : null; });
+  const lawn = () => { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = rr(-V_ISLAND + 1, V_ISLAND - 1); return vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)) ? null : [x, z]; };
+  scatter(TX.grassTuft, 3400, .6, lawn);
+  const fern = canvasTex(16, 16, (g) => { for (const [x, c] of [[4, '#6c9658'], [8, '#7aa266'], [12, '#6c9658']]) { g.fillStyle = c; for (let y = 2; y < 16; y++) { g.fillRect(x, y, 1, 1); if (y % 2) { g.fillRect(x - 2, y, 2, 1); g.fillRect(x + 1, y, 2, 1); } } } }, { smooth: true });
+  scatter(fern, 240, .62, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 2.5) && !vPaved(x, z, .6) && !vWater(x, z, .2) && !blocked(x, z, -.1) ? [x, z] : null; });
   TX.flowers.forEach((ft) => scatter(ft, 160, .5, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 1.8) && !vPaved(x, z, .5) && !vWater(x, z) && !blocked(x, z, -.1) ? [x, z] : null; }));
 }
 

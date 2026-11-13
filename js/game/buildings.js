@@ -116,7 +116,7 @@ function finTower(cx, cz) {
   for (let x = x0 + .2; x < x0 + W; x += .42) fin(x, F + .18, i++, false);
   i = 0;
   for (let z = F - .2; z > F - D; z -= .42) fin(x0 - .18, z, i++, true);
-  pointLight('pune', 0x9fd8ff, 1.4, 12, cx - 4, 3, F + 2.5);
+  pointLight('pune', 0xffe0bc, 1.4, 12, cx - 4, 3, F + 2.5);
   pointLight('pune', 0xffd090, 1.1, 8, cx + 3, 1.2, F + 1.5);
   colBox(x0 - .4, F - D - .3, x0 + W + .3, F + .4);
   return F;

@@ -5,6 +5,7 @@
 const SHEET_W = 456, SHEET_H = 2880, CW = 76, CH = 80, SPU = .0235;
 const spriteGeo = new THREE.PlaneGeometry(CW * SPU, CH * SPU); spriteGeo.translate(0, (CH / 2 - 77.6) * SPU * -1, 0);
 const blobGeo = new THREE.PlaneGeometry(1.1, .55);
+const CHAR_SCALE = 1.1;   // the sprites were a touch small beside the 3D world
 let sheetTex;
 const chars = [];
 const tagsEl = document.getElementById('tags');
@@ -12,10 +13,18 @@ function makeChar(name, x, z, opt = {}) {
   const c = new SpriteCharacter(ADITYA, null, { x, y: z, speed: opt.speed || 3.3, scale: 1 });
   const t = sheetTex.clone(); t.needsUpdate = true; t.repeat.set(CW / SHEET_W, CH / SHEET_H);
   const mat = new THREE.MeshStandardMaterial({ map: t, alphaTest: .5, roughness: 1, metalness: 0, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .28 });
-  const mesh = new THREE.Mesh(spriteGeo, mat); mesh.castShadow = true;
+  // a thin dark outline drawn into the transparent texel next to an opaque one, so a flat pixel sprite holds its own against the 3D scene
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uTexel = { value: new THREE.Vector2(1 / SHEET_W, 1 / SHEET_H) };
+    sh.fragmentShader = 'uniform vec2 uTexel;\n' + sh.fragmentShader.replace('#include <map_fragment>', `vec4 sc = texture2D(map, vUv);
+      float nb = max(max(texture2D(map, vUv + vec2(uTexel.x, 0.)).a, texture2D(map, vUv - vec2(uTexel.x, 0.)).a), max(texture2D(map, vUv + vec2(0., uTexel.y)).a, texture2D(map, vUv - vec2(0., uTexel.y)).a));
+      if (sc.a < .5 && nb >= .5) sc = vec4(.2, .13, .1, 1.);
+      diffuseColor *= sc;`);
+  };
+  const mesh = new THREE.Mesh(spriteGeo, mat); mesh.castShadow = true; mesh.scale.setScalar(CHAR_SCALE);
   mesh.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
   const g = new THREE.Group(), tilt = new THREE.Group(); g.userData.dyn = true; tilt.rotation.x = .28; tilt.add(mesh); g.add(tilt);
-  const sh = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({ map: TX.blob, transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = .025; g.add(sh);
+  const sh = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({ map: TX.blob, transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = .025; sh.scale.setScalar(CHAR_SCALE * .9); sh.material.opacity = .7; g.add(sh);
   scene.add(g);
   Object.assign(c, { name, g, mesh, tex: t, zone: opt.zone || 'lobby', wait: 0, target: null, stuck: 0 });
   c.tag = document.createElement('div'); c.tag.className = 'tag' + (opt.me ? ' me' : ''); c.tag.textContent = name; tagsEl.appendChild(c.tag);

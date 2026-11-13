@@ -99,43 +99,48 @@ function buildDust() {
 }
 
 // ================= lights =================
-const hemi = new THREE.HemisphereLight(0xcfdcff, 0x6b5a3a, .58); scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffcf96, 1.3);
+const hemi = new THREE.HemisphereLight(0xf2dfc6, 0x6b5238, .6); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffc488, 1.1);
 sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 90 });   // tighter: crisper shadows near the camera
-sun.shadow.bias = -.0006; sun.shadow.normalBias = .03;
+sun.shadow.bias = -.0006; sun.shadow.normalBias = .03; sun.shadow.radius = 3.2;   // a wider blur kernel: soft shadow edges instead of hard ones
 scene.add(sun, sun.target);
 const SUN_DIR = new THREE.Vector3(-26, 19, 14);   // low, late-afternoon sun: long warm shadows
 // gradient sky dome around the camera: horizon matches the fog, blue overhead, a soft glow around the sun
-const skyU = { horizon: { value: new THREE.Color(FOG) }, sunDir: { value: new THREE.Vector3() }, time: timeU };
+const skyU = { horizon: { value: new THREE.Color(FOG) }, sunDir: { value: new THREE.Vector3() }, time: timeU, zenith: { value: new THREE.Color(.5, .6, .78) }, sunCol: { value: new THREE.Color(1, .78, .5) }, cloudCol: { value: new THREE.Color(1, .96, .92) }, stars: { value: 0 } };   // zenith, sunCol and stars: the time of day (daylight.js)
 const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.ShaderMaterial({
   uniforms: skyU, side: THREE.BackSide, depthWrite: false, fog: false,
   vertexShader: 'varying vec3 vD; void main(){ vD=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-  fragmentShader: `uniform vec3 horizon, sunDir; uniform float time; varying vec3 vD;
+  fragmentShader: `uniform vec3 horizon, sunDir, zenith, sunCol, cloudCol; uniform float time, stars; varying vec3 vD;
     float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
     float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
       return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }
-    void main(){ float h=max(vD.y,0.), l=dot(horizon,vec3(.3,.59,.11));
-      vec3 top=mix(horizon*.55, vec3(.36,.56,.86), smoothstep(.2,.55,l));
-      vec3 c=mix(horizon, top, pow(smoothstep(0.,.55,h),.8));
-      float s=max(dot(vD,sunDir),0.); c+=vec3(1.,.78,.5)*(pow(s,8.)*.35+pow(s,300.)*1.4)*smoothstep(.2,.55,l);
-      // pixel clouds: the sky plane is snapped to a coarse grid and the cloud cover posterised into two tones
-      vec2 q=floor(vD.xz/(h+.18)*26.)/26.+vec2(time*.004,0.);
-      float n=noise(q*1.6)*.6+noise(q*3.7)*.3+noise(q*8.1)*.1;
-      float cover=step(.56,n), core=step(.66,n), fade=smoothstep(.04,.3,h)*smoothstep(.2,.55,l);
-      vec3 lit=mix(vec3(1.,.95,.88),vec3(1.,.86,.7),pow(s,4.));
-      c=mix(c,mix(lit*.86,lit,core),cover*fade*.85);
+    float fbm(vec2 p){ return noise(p)*.55+noise(p*2.1+7.3)*.3+noise(p*4.3+1.7)*.15; }
+    void main(){ float h=max(vD.y,0.), l=dot(horizon,vec3(.3,.59,.11)), day=smoothstep(.2,.55,l);
+      // a lavender band between the horizon haze and the zenith, like the watercolour skies of a picture book
+      vec3 top=mix(horizon*.55, zenith, day), mid=mix(horizon, top, .5)+vec3(.05,0.,.07)*day;
+      vec3 c=mix(mix(horizon, mid, smoothstep(0.,.24,h)), top, smoothstep(.2,.85,h));
+      float s=max(dot(vD,sunDir),0.); c+=sunCol*(pow(s,8.)*.3+pow(s,300.)*1.2)*day;
+      // night: a moon where the sun was, and a few posterised stars
+      vec2 sq=floor(vD.xz/(h+.12)*90.); float sh=hash(sq);
+      c+=sunCol*pow(s,900.)*3.*stars + vec3(.9,.93,1.)*step(.993,sh)*stars*smoothstep(.06,.35,h)*(.6+.4*sin(time*2.+sh*60.));
+      // painted clouds: soft, layered and drifting, lit on the sun side and shaded in lavender underneath
+      vec2 q=vD.xz/(h+.2)*1.5+vec2(time*.005,time*.0015);
+      float n=fbm(q), cover=smoothstep(.46,.78,n), under=smoothstep(.52,.92,fbm(q*1.6+vec2(3.1,time*.002)));
+      vec3 lit=mix(vec3(1.,.96,.92),sunCol,.3)*mix(vec3(1.),cloudCol,.6), shade=mix(lit*.8,horizon,.4)*vec3(.95,.92,1.03);
+      float fade=smoothstep(.01,.26,h)*day;
+      c=mix(c,mix(lit,shade,under*.75),cover*fade*.92);
       gl_FragColor=vec4(c,1.); }`,
 }));
 sky.renderOrder = -1; sky.frustumCulled = false; sky.userData.dyn = true; scene.add(sky);
 
 const shaftMat = new THREE.ShaderMaterial({
-  uniforms: { time: timeU }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  uniforms: { time: timeU, amt: { value: 1 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
   vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-  fragmentShader: `uniform float time; varying vec2 vUv;
+  fragmentShader: `uniform float time, amt; varying vec2 vUv;
     void main(){ float edge=smoothstep(0.,.18,vUv.x)*smoothstep(1.,.82,vUv.x), along=pow(1.-vUv.y,1.4);
       float dust=.85+.15*sin(time*.6+vUv.x*11.+vUv.y*5.);
-      gl_FragColor=vec4(vec3(1.,.84,.58)*edge*along*dust*.16,1.); }`,
+      gl_FragColor=vec4(vec3(1.,.84,.58)*edge*along*dust*.16*amt,1.); }`,
 });
 // soft beams of sunlight from a window wall at x = wx into the room, one per pane between mullions (step apart)
 function sunShafts(zoneKey, wx, z0, z1, step, yLow, yHigh) {
