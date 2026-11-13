@@ -51,3 +51,5 @@ html body #party h4 { white-space: nowrap; letter-spacing: 0; font-size: 9px; ga
 html body :is(.panel, .kp-help, .kp-brief, #help, #board) :is(h1, h2, h3, h4, .k), html body #dialog .name, html body #banner .t { font-family: var(--sb-title) !important; }
 html body :is(.panel, .kp-help, .kp-brief, #help, #board) :is(h1, h2, h3, h4, .k), html body #dialog .name { font-size: 10px; line-height: 1.6; letter-spacing: .02em; }
 html body #party h4 #count { font-family: var(--sb-font) !important; font-size: 14px; }
+/* while a game is open (daylight.js sets data-play) the lobby furniture steps aside: the key strip, the roster and the chat log; each game has its own help and HUD */
+html body #ui[data-play="1"] :is(#help, #party, #log) { display: none; }

@@ -95,9 +95,14 @@
 
     // what the zone itself asked for (setZone / the zone's env), recorded when it is entered, so a slider never compounds on its own output
     const record = () => { S.base = { sun: sun.intensity, hemi: hemi.intensity, hemiColor: hemi.color.clone(), fog: scene.fog.color.clone(), near: scene.fog.near, far: scene.fog.far }; };
+    // a game is open when it has put its '<name>-on' class on #ui, or in the bridge (a game you walk through); the interface hides its lobby furniture then (storybook.css, #ui[data-play])
+    const uiEl = () => document.getElementById('ui');
+    const inPlay = (z) => { const u = uiEl(); const on = z === 'bridge' || (!!u && /-on\b/.test(u.className)); if (u) u.dataset.play = on ? '1' : ''; return on; };
     function apply() {
       if (!S.base) record();
-      const z = S.zone, inside = !!INDOOR[z], p = adjust(at(S.hour), S), b = S.base;
+      const z = S.zone, inside = !!INDOOR[z], b = S.base, play = inPlay(z);
+      // while a game is open its words and pieces must read: the mood eases a third of the way to plain afternoon (brighter night, lighter vignette and bloom), and the ink thins out
+      const p = adjust(play ? blend(at(S.hour), at(14), 0.35) : at(S.hour), S);
       SUN_DIR.set(p.sunDir[0], p.sunDir[1], p.sunDir[2]).setLength(32);
       col(sun.color, p.sunColor); sun.intensity = inside ? b.sun * p.indoor : p.sunI;
       hemi.groundColor.set(p.hemiGround);
@@ -107,7 +112,7 @@
       skyU.zenith.value.set(p.zenith); skyU.sunCol.value.set(p.sunColor); skyU.cloudCol.value.set(p.cloud); skyU.stars.value = p.stars;
       TF.shaftMat.uniforms.amt.value = p.shafts; if (TF.dust) TF.dust.material.opacity = 0.8 * p.dust;
       // roofed places do not brighten their picture at night, they dim with the day outside: their light is the lamps
-      const u = post; u.exposure.value = inside ? 0.88 * (1 + 0.3 * S.bright) * (0.65 + 0.35 * p.indoor) : p.exposure; u.gradeMul.value.set(...p.mul); u.shadowTint.value.set(...p.shadow); u.hiTint.value.set(...p.hi); u.sat.value = p.sat; u.vig.value = p.vig; u.bloomAmt.value = p.bloom; const sk = z === 'kitchen' ? S.sketch * 0.6 : S.sketch;   // the kitchen's small labels and gauges carry gameplay information: a lighter hand there
+      const u = post; u.exposure.value = inside ? 0.88 * (1 + 0.3 * S.bright) * (0.65 + 0.35 * p.indoor) : p.exposure; u.gradeMul.value.set(...p.mul); u.shadowTint.value.set(...p.shadow); u.hiTint.value.set(...p.hi); u.sat.value = p.sat; u.vig.value = p.vig; u.bloomAmt.value = p.bloom; const sk = S.sketch * (play ? 0.5 : z === 'kitchen' ? 0.6 : 1);   // the kitchen's small labels and gauges carry gameplay information: a lighter hand there
       u.sketch.value = sk; u.lift.value.set(...p.lift);
       const lampK = inside ? 0.85 + 0.15 * p.lamps : p.lamps;
       for (const l of TF.ZONE_LIGHTS[z] || []) if (l.isLight && l.userData.base != null) l.intensity = l.userData.base * lampK;
@@ -237,6 +242,7 @@
     });
     TF.on('boot', () => { hookKeys(); softDust(); build(); buildAir(); collectEmitters(); record(); apply(); });
     TF.on('enter', (prevZone, z) => { S.zone = z; record(); apply(); });
+    TF.on('boot', () => { const u = uiEl(); if (u && window.MutationObserver) new MutationObserver(() => apply()).observe(u, { attributes: true, attributeFilter: ['class'] }); });
     TF.daylight = { state: S, apply, set, open, close };
     if (typeof window !== 'undefined') window.daylight = TF.daylight;
     return TF.daylight;
