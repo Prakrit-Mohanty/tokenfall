@@ -74,7 +74,7 @@ function hedgeRow(x0, z0, x1, z1) {
   colBox(cx - w / 2, cz - d / 2, cx + w / 2, cz + d / 2);
 }
 function signBoard(text, x, y, z, w = 2.4, h = .45, ry = 0, opts) {
-  const m = std(textTex(text, opts), 0);
+  const m = std(textTex(text, opts), 0); m.emissiveMap = m.map; m.emissive.setScalar(.3);   // a sign lights its own words a little, so they read at night too
   const side = MAT.darkWood;
   const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .08), [side, side, side, side, m, m]);
   b.position.set(x, y, z); b.rotation.y = ry; return add(b);

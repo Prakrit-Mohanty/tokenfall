@@ -164,7 +164,7 @@
       wrapLines(pt.legend, 380, (s) => g.measureText(s).width).slice(0, 2).forEach((l, i) => g.fillText(l, 116, 100 + i * 26));
       const tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; return tex;
     }
-    function applyPlate(k, bin) { const m = S.plates[k].material[4], old = m.map; m.map = drawPlate(k, bin); m.needsUpdate = true; if (old) old.dispose(); S.plateState[k].bin = bin; }
+    function applyPlate(k, bin) { const m = S.plates[k].material[4], old = m.map; m.map = m.emissiveMap = drawPlate(k, bin); m.needsUpdate = true; if (old) old.dispose(); S.plateState[k].bin = bin; }
     world.setPlates = (bins) => { if (!bins) return; bins.forEach((b, k) => applyPlate(k, b)); };
     // a flip: each plate turns over (to edge-on, new words, back) in a ripple along the belt; `at` is unused here (the rules time it); delay per plate from plateRipple
     world.flipPlate = (k, bin) => { S.flips.push({ k, bin, t: 0, swapped: false }); };   // one plate turns over now (the rules flip each as the old wave has passed it)
