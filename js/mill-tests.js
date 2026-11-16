@@ -197,7 +197,7 @@ test('the finale\'s plates flip between waves: every bin flips after the old wav
 test('pace: briefs + belts + debriefs come to about 4:37 and the worst case with the most brake in every shift stays under 4:55; the belt phase ends when the last crate leaves the zone', () => {
   const est = runs.map((r) => r.estSeconds), worst = runs.map((r) => E.estimateSeconds(r, { maxBrake: true }));
   console.log(`   mean ${mean(est).toFixed(1)} s (${Math.floor(mean(est) / 60)}:${String(Math.round(mean(est) % 60)).padStart(2, '0')}), worst case ${Math.max(...worst).toFixed(1)} s (${Math.floor(Math.max(...worst) / 60)}:${String(Math.round(Math.max(...worst) % 60)).padStart(2, '0')}), shortest ${Math.min(...est).toFixed(1)} s`);
-  for (const r of runs) { assert(r.estSeconds > 270 && r.estSeconds < 285); assert(E.estimateSeconds(r, { maxBrake: true }) < 295); r.shifts.forEach((s) => assert(Math.abs(s.beltSec - (s.schedule[s.schedule.length - 1].t0 + RUN.traverse)) < 1e-9)); }
+  for (const r of runs) { assert(r.estSeconds > 240 && r.estSeconds < 285); assert(E.estimateSeconds(r, { maxBrake: true }) < 295); r.shifts.forEach((s) => assert(Math.abs(s.beltSec - (s.schedule[s.schedule.length - 1].t0 + RUN.traverse)) < 1e-9)); }
   assert(standard.every((s) => Math.abs(s.beltSec - (11 * 3 + 7)) < 1e-9)); assert(finales.every((f) => Math.abs(f.beltSec - (13 * 2.8 + 3 * 1.2 + 7)) < 1e-9));
   // the brake really adds 1.8 s to a belt, measured on the clock itself
   for (const s of standard.slice(0, 20)) { const clock = E.beltClock([{ t0: 3, t1: 6 }]); assert(Math.abs(clock.t(s.beltSec) - (s.beltSec + 1.8)) < 1e-9); }

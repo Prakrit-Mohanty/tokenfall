@@ -415,7 +415,7 @@
   const RUSH = Cn('MF1', 'rush', 'Rush hour', 'The same skills, faster: read the plates, and let the rule of each wave pick the bin.', { lax: '', strict: '' }, []);
   const FINALE = { crates: 14, waves: [4, 4, 3, 3], minTraps: 3, minPairs: 3, spacing: 2.8, pause: 1.2, banner: 'Shift change: new plates, same crates' };
   // the numbers of a run (the engine and the world read these): shifts, seconds, belt, brake, desk, costs
-  const RUN = { shifts: 5, brief: 6, belt: 40, debrief: 8, crates: 12, spacing: 3.0, traverse: 7, maxInZone: 4, brake: 3, brakeSpeed: 0.4, relaxed: 0.75, desk: 6, costs: [1, 2, 4, 8], reviewCap: 5, ladder: 4 };
+  const RUN = { shifts: 5, brief: 5, belt: 40, debrief: 6, crates: 12, spacing: 3.0, traverse: 7, maxInZone: 4, brake: 3, brakeSpeed: 0.4, relaxed: 0.75, desk: 6, costs: [1, 2, 4, 8], reviewCap: 5, ladder: 4 };
 
   const CONCEPTS = [].concat(DOORS, TIERS, CHECKS, INCIDENTS);
   const byId = Object.fromEntries(CONCEPTS.map((c) => [c.id, c]));

@@ -62,7 +62,8 @@
     const lead = e.direction === 'dropped' ? 'It reached the pit:' : e.overGated ? 'You sent (the desk was jammed):' : 'You sent:';
     let breaks = e.tell; if (e.overGated) breaks = `The desk holds ${cap || RUN.desk} a shift, so gating everything jams it. ` + (e.correctBin === 'review' ? 'This one did belong here.' : e.tell);
     if (e.reveal) breaks += ` (${e.reveal === 'WAS WRONG' ? 'It was wrong.' : 'It went out fine, this time.'})`;
-    return { lead, text: chosen ? `${e.text} → ${chosen}` : e.text, breaks, breaksLabel: `It belongs in ${right}:`, idea, ideaLabel: 'The idea:' };
+    const text = chosen ? `${e.text} → ${chosen}` : e.text, breaksLabel = `It belongs in ${right}:`;
+    return { lead, text, breaks, breaksLabel, idea, ideaLabel: 'The idea:', card: { line: idea, breaks: `${lead} “${text}”. ${breaksLabel} ${breaks}`, breaksLabel: 'What happened:' } };   // the card opens on the one-line idea, the longer text below
   }
   function tradeoff(s) {
     const verdict = s.severe >= 3 ? 'Too many spills.' : s.idealCost && s.cost > 1.5 * s.idealCost ? 'Heavy on the locks.' : s.dropped > 2 ? 'Crates fell in the pit.' : s.accuracy >= 0.85 ? 'A steady line.' : 'A fair line.';
@@ -83,7 +84,8 @@
     let S = null, hud = null;
     const COACH_KEY = 'tokenfall.mill.coach', RELAX_KEY = 'tokenfall.mill.relaxed'; let coachSeen = 0, relaxed = false;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; relaxed = localStorage.getItem(RELAX_KEY) === '1'; } catch (e) {}
-    const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
+    const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };   // once per play
+    const TIPS = ['Drag a crate onto a bin, or press <kbd>1</kbd>-<kbd>4</kbd>.', 'Too lax is unsafe. Too strict wastes time.', 'Hold <kbd>Space</kbd> to slow the belt. 3 seconds a shift.'];   // one rule per early shift, the first 3 plays
     const setRelaxed = (on) => { relaxed = !!on; world.state.rate = relaxed ? RUN.relaxed : 1; try { localStorage.setItem(RELAX_KEY, relaxed ? '1' : '0'); } catch (e) {} };
 
     // ---- sound: the bridge's synth and its M mute, plus the mill's voices (a belt hum, a clunk, a ding, a siren, a bell, steam) ----
@@ -107,37 +109,39 @@
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
-        .mp-top { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 8px; text-align: center; display: none; background: rgba(10,12,20,.95); border-color: var(--gold); }
-        .mp-top .k { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
-        .mp-top .t { font-size: clamp(14px, 1.25vw, 17px); line-height: 1.25; margin: 2px 0 4px; color: var(--ink); }
+        .mp-top { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 8px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
+        .mp-top .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
+        .mp-top .t { font-size: clamp(16px, 1.25vw, 18px); line-height: 1.35; margin: 2px 0 4px; color: var(--ink); }
         .mp-top .pips { display: flex; gap: 4px; justify-content: center; } .mp-top .pips i { width: 26px; height: 7px; border: 1px solid rgba(243,234,214,.45); }
         .mp-top .pips i.done { border-color: transparent; background: var(--c); } .mp-top .pips i.cur { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
-        .mp-top .ribbon { display: none; margin-top: 4px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .2em; color: var(--gold); } .mp-top .ribbon.on { display: block; }
-        .mp-stat { position: absolute; bottom: 22px; right: 18px; text-align: right; padding: 7px 12px; font-size: 14px; line-height: 1.75; display: none; min-width: 200px; }
+        .mp-top .ribbon { display: none; margin-top: 4px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .2em; color: var(--gold); } .mp-top .ribbon.on { display: block; }
+        .mp-stat { position: absolute; bottom: 22px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.75; display: none; min-width: 200px; }
         .mp-stat .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .mp-stat b { color: var(--gold); font-weight: 600; }
         .mp-stat .gems { display: inline-flex; gap: 6px; vertical-align: middle; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
         .mp-gem { width: 9px; height: 9px; background: var(--c); transform: rotate(45deg); box-shadow: 0 0 8px var(--c); } .mp-gem.off { background: transparent; box-shadow: none; border: 1px solid rgba(243,234,214,.35); }
         .mp-brake { display: inline-block; width: 110px; height: 9px; vertical-align: middle; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.4); } .mp-brake i { display: block; height: 100%; background: var(--gold); }
         .mp-stat kbd, .mp-msg kbd, .mp-brief kbd, .mp-help kbd, .mp-rs kbd, .mp-legend kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
-        .mp-legend { position: absolute; left: 18px; bottom: 84px; width: 300px; padding: 7px 10px 8px; display: none; font-size: 14px; line-height: 1.3; }
-        .mp-legend h5 { margin: 0 0 4px; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: .14em; color: var(--gold); }
-        .mp-legend div.r { display: grid; grid-template-columns: 26px 1fr; gap: 6px; align-items: baseline; margin: 2px 0; } .mp-legend b { font-size: 15px; } .mp-legend small { display: block; opacity: .8; font-size: 12px; }
-        .mp-msg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
-        .mp-brief { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
-        .mp-brief .k { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: .16em; color: var(--gold); } .mp-brief .s { font-size: 12px; letter-spacing: .08em; color: var(--hot); margin: 2px 0 6px; } .mp-brief .t { font-size: 21px; margin: 6px 0 10px; line-height: 1.3; }
-        .mp-brief .bins { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 15px; } .mp-brief .bins span { display: block; opacity: .85; font-size: 13px; } .mp-brief .go { margin: 10px 0 0; font-size: 14px; color: var(--gold); text-align: right; }
-        .mp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 32px)); padding: 8px 16px 9px; text-align: center; display: none; font-size: 16px; line-height: 1.4; background: rgba(10,12,20,.96); border-color: var(--gold); }
-        .mp-rs h5 { margin: 0 0 3px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); } .mp-rs .go { color: var(--gold); font-size: 14px; margin-top: 3px; }
-        .mp-read { position: absolute; right: 18px; top: 110px; width: min(400px, calc(100vw - 36px)); max-height: calc(100vh - 330px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 19px; line-height: 1.3; background: rgba(10,12,20,.96); pointer-events: auto; }
-        .mp-read h5 { margin: 0 0 6px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); } .mp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); } .mp-read small { display: block; font-size: 13px; letter-spacing: .04em; color: var(--gold); } .mp-read i { display: block; font-style: normal; font-size: 15px; opacity: .85; margin-top: 2px; }
-        .mp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 18px; line-height: 1.4; background: rgba(10,12,20,.96); pointer-events: auto; }
+        .mp-legend { position: absolute; left: 18px; bottom: 84px; width: 330px; padding: 7px 10px 8px; display: none; font-size: 16px; line-height: 1.4; }
+        .mp-legend h5 { margin: 0 0 4px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
+        .mp-legend div.r { display: grid; grid-template-columns: 26px 1fr; gap: 6px; align-items: baseline; margin: 2px 0; } .mp-legend b { font-size: 15px; } .mp-legend small { display: block; opacity: .85; font-size: 16px; }
+        .mp-msg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.4; background: rgba(32, 22, 19,.93); }
+        .mp-brief { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.45; background: rgba(32, 22, 19,.96); }
+        .mp-brief .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .16em; color: var(--gold); } .mp-brief .s { font-size: 16px; letter-spacing: .08em; color: var(--hot); margin: 2px 0 6px; } .mp-brief .t { font-size: 21px; margin: 6px 0 10px; line-height: 1.3; }
+        .mp-brief .bins { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 16px; line-height: 1.4; } .mp-brief .bins span { display: block; opacity: .85; font-size: 16px; } .mp-brief .go { margin: 10px 0 0; font-size: 14px; color: var(--gold); text-align: right; }
+        .mp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 32px)); padding: 8px 16px 9px; text-align: center; display: none; font-size: 16px; line-height: 1.4; background: rgba(32, 22, 19,.96); border-color: var(--gold); }
+        .mp-rs h5 { margin: 0 0 3px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .mp-rs .go { color: var(--gold); font-size: 14px; margin-top: 3px; }
+        .mp-read { position: absolute; right: 18px; top: 110px; width: min(400px, calc(100vw - 36px)); max-height: calc(100vh - 330px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 19px; line-height: 1.4; background: rgba(32, 22, 19,.96); pointer-events: auto; }
+        .mp-read h5 { margin: 0 0 6px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .mp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); } .mp-read small { display: block; font-size: 16px; letter-spacing: .04em; color: var(--gold); } .mp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
+        .mp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 18px; line-height: 1.45; background: rgba(32, 22, 19,.96); pointer-events: auto; }
         .mp-help h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .mp-help ul { margin: 0; padding-left: 20px; } .mp-help li { margin: 5px 0; } .mp-help label { display: block; margin: 10px 0 0; cursor: pointer; } .mp-help .go { text-align: right; font-size: 14px; color: var(--gold); margin: 10px 0 0; }
+        .mp-flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s; }
         @media (max-width: 1100px) { .mp-top { left: 18px; transform: none; width: calc(100vw - 280px); top: 70px; } .mp-legend { bottom: 84px; width: 250px; } .mp-read { top: 140px; } }
         .mill-on .mp-top, .mill-on .mp-stat, .mill-on .mp-msg, .mill-on .mp-brief, .mill-on .mp-rs, .mill-on .mp-read, .mill-on .mp-legend, .mill-on .mw-read { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .mill-on #chat, .mill-on #help { display: none; }   /* the chat log and key hints sit over the mill; the mill has its own hints */`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
       const h = { style, top: mk('mp-top'), stat: mk('mp-stat'), legend: mk('mp-legend'), msg: mk('mp-msg'), brief: mk('mp-brief'), rs: mk('mp-rs'), read: mk('mp-read'), help: mk('mp-help'), topKey: '', statKey: '', readKey: '', legKey: '' };
+      h.flash = document.createElement('div'); h.flash.className = 'mp-flash'; ui.appendChild(h.flash);
       h.stat.style.setProperty('--hot', STYLE[3].css); h.brief.style.setProperty('--hot', STYLE[3].css);
       h.help.addEventListener('change', (e) => { if (e.target && e.target.id === 'mpRelax') setRelaxed(e.target.checked); });
       return h;
@@ -146,6 +150,7 @@
     const helpOpen = () => !!hud && hud.help.style.display === 'block';
     const sideCss = (s) => (s === 'rush' ? 'var(--gold)' : STYLE[SIDE_SLOT[s]].css);
     const sideName = (s) => (s === 'rush' ? 'Rush hour' : SIDES[s].name);
+    const flash = (good) => { if (!hud || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; const f = hud.flash; f.style.background = good ? 'rgba(217,180,106,.3)' : 'rgba(220,50,50,.32)'; f.style.opacity = 1; setTimeout(() => { f.style.opacity = 0; }, 150); };   // gold on a good crate, red on a mistake
     const say = (html, secs = 2.6) => { S.hint = secs; hud.msg.innerHTML = html; hud.msg.style.display = 'block'; };
     const gems = (n, total, color) => Array.from({ length: Math.max(n, total) }, (_, i) => `<i class="mp-gem ${i < n ? '' : 'off'}" style="--c:${color}"></i>`).join('');
     const clock = (secs) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
@@ -160,7 +165,7 @@
         hud.topKey = topKey;
         const pips = run.spec.shifts.map((x, i) => `<i class="${i < run.logs.length ? 'done' : ''}${i === run.i ? ' cur' : ''}" style="--c:${sideCss(x.side)}"></i>`).join('');
         const name = sh.kind === 'finale' ? `RUSH HOUR · WAVE ${S.wave + 1} OF 4 · ${sideName(sh.waves[S.wave].side).toUpperCase()}` : sideName(sh.side).toUpperCase();
-        hud.top.innerHTML = `<div class="k">SHIFT ${run.i + 1} OF ${run.spec.shifts.length} · ${esc(name)} · SAMPLE POLICY</div><div class="t">${esc(S.policy)}</div><div class="pips" aria-hidden="true">${pips}</div><div class="ribbon ${S.combo >= RULES.COMBO ? 'on' : ''}">COMBO × ${S.combo}</div>`;
+        hud.top.innerHTML = `<div class="k">SHIFT ${run.i + 1} OF ${run.spec.shifts.length} · ${esc(name)} · THE RULE</div><div class="t">${esc(S.policy)}</div><div class="pips" aria-hidden="true">${pips}</div><div class="ribbon ${S.combo >= RULES.COMBO ? 'on' : ''}">COMBO × ${S.combo}</div>`;
       }
       hud.stat.style.display = shown && inShift ? 'block' : 'none';
       if (inShift) {
@@ -168,15 +173,15 @@
         const brakeLeft = world.brakeLeft, key = [left, entries.length, spills, dropped, R.reviewCount, Math.round(brakeLeft * 10), S.phase, muted(), relaxed].join('|');
         if (key !== hud.statKey) {
           hud.statKey = key;
-          const deskRow = sh.side === 'tiers' || (sh.kind === 'finale' && sh.waves.some((w) => w.side === 'tiers')) ? `<br>Review desk <span class="gems">${gems(Math.min(R.reviewCount, sh.desk), sh.desk, STYLE[1].css)}</span>` : '';
-          hud.stat.innerHTML = `<div class="clock">${S.phase === 'play' ? clock(left) : 'DONE'}</div>Routed <b>${entries.length}/${sh.crates.length}</b><br>Spills <span class="gems">${gems(spills, 0, STYLE[3].css)}</span><br>Dropped <span class="gems">${gems(dropped, 0, STYLE[0].css)}</span>${deskRow}<br>Brake <span class="mp-brake"><i style="width:${Math.round(100 * brakeLeft / RUN.brake)}%"></i></span><br><kbd>H</kbd> menu · <kbd>R</kbd> read · <kbd>M</kbd> ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
+          const deskRow = sh.side === 'tiers' || (sh.kind === 'finale' && sh.waves.some((w) => w.side === 'tiers')) ? `<br>${STYLE[1].mark} Review desk <span class="gems">${gems(Math.min(R.reviewCount, sh.desk), sh.desk, STYLE[1].css)}</span>` : '';
+          hud.stat.innerHTML = `<div class="clock">${S.phase === 'play' ? clock(left) : 'DONE'}</div>Sorted <b>${entries.length}/${sh.crates.length}</b><br>${STYLE[3].mark} Spills <span class="gems">${gems(spills, 0, STYLE[3].css)}</span><br>${STYLE[0].mark} Fell in pit <span class="gems">${gems(dropped, 0, STYLE[0].css)}</span>${deskRow}<br>Brake <span class="mp-brake"><i style="width:${Math.round(100 * brakeLeft / RUN.brake)}%"></i></span><br><kbd>H</kbd> help · <kbd>R</kbd> read · <kbd>M</kbd> ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
         }
       }
       hud.legend.style.display = shown && inShift && S.phase === 'play' ? 'block' : 'none';
       const lk = S.legend.map((b) => b.id).join();
-      if (inShift && lk + S.wave !== hud.legKey) { hud.legKey = lk + S.wave; hud.legend.innerHTML = '<h5>THE BINS · 1 MOST PERMISSIVE .. 4 STRICTEST</h5>' + S.legend.map((b, k) => `<div class="r"><b style="color:${STYLE[k].css}">${STYLE[k].mark}${k + 1}</b><span><b>${esc(b.label)}</b><small>${esc(b.legend)}</small></span></div>`).join(''); }
+      if (inShift && lk + S.wave !== hud.legKey) { hud.legKey = lk + S.wave; hud.legend.innerHTML = '<h5>BINS · 1 LOOSEST .. 4 STRICTEST</h5>' + S.legend.map((b, k) => `<div class="r"><b style="color:${STYLE[k].css}">${STYLE[k].mark}${k + 1}</b><span><b>${esc(b.label)}</b><small>${esc(b.legend)}</small></span></div>`).join(''); }
       if (S.hint > 0) { S.hint -= dt; hud.msg.style.display = S.hint <= 0 || !shown ? 'none' : 'block'; }
-      else if (shown && S.phase === 'play' && coachSeen < 3 && !cardOpen()) { hud.msg.innerHTML = 'Drag a crate onto a bin, or click it then click a bin. <kbd>Tab</kbd> selects, <kbd>1</kbd>-<kbd>4</kbd> routes, hold <kbd>Space</kbd> to brake.'; hud.msg.style.display = 'block'; }
+      else if (shown && S.phase === 'play' && S.coach && TIPS[S.run.i] && !cardOpen()) { hud.msg.innerHTML = TIPS[S.run.i]; hud.msg.style.display = 'block'; }
       else hud.msg.style.display = 'none';
       hud.read.style.display = shown && S.read && S.phase === 'play' ? 'block' : 'none';
       if (S.read && S.phase === 'play') {
@@ -186,7 +191,7 @@
     }
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.help.innerHTML = `<h3>TOKEN MILL</h3><ul><li>Crates ride the belt past four bins, from the most permissive (1) to the strictest (4). Read the <b>sample policy</b> on the board and route each crate to the bin it says: <b>drag</b> it onto a bin, or <b>click</b> it and then click a bin, or <kbd>Tab</kbd> to select and <kbd>1</kbd>-<kbd>4</kbd> to route.</li><li>Too lax (a lower bin than the right one) is the unsafe direction, and two bins or more is a <b>spill</b>. Too strict wastes capacity. A crate that reaches the pit is dropped.</li><li>Hold <kbd>Space</kbd> to slow the belt to 40%: 3 seconds a shift, never refilled. <kbd>R</kbd> shows the crates in large text. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>Esc</kbd> leaves (settled crates are kept, without mastery credit).</li></ul><label><input type="checkbox" id="mpRelax" ${relaxed ? 'checked' : ''}> Relaxed belt (0.75× speed; the run is longer)</label><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>`;
+      if (on) hud.help.innerHTML = `<h3>TOKEN MILL</h3><ul><li>Crates ride past four bins, from loosest (1) to strictest (4). Read the <b>rule</b> on the board. Send each crate to the bin it names.</li><li>To route: <b>drag</b> it onto a bin, or <b>click</b> it then a bin, or <kbd>Tab</kbd> then <kbd>1</kbd>-<kbd>4</kbd>.</li><li>Too lax is unsafe. Two bins too lax is a <b>spill</b>. Too strict wastes capacity. A crate that reaches the pit is lost.</li><li>Hold <kbd>Space</kbd> to slow the belt: 3 seconds a shift. <kbd>R</kbd> shows crates in large text. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>S</kbd> skips cards. <kbd>Esc</kbd> leaves (settled crates are kept, without mastery credit).</li></ul><label><input type="checkbox" id="mpRelax" ${relaxed ? 'checked' : ''}> Relaxed belt (0.75× speed; the run is longer)</label><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>`;
       hud.help.style.display = on ? 'block' : 'none';
     }
 
@@ -194,14 +199,23 @@
     const afterTalk = (fn) => { S.waitTalk = fn; };
     function startRun(quiet) {
       const r = progress.newRun(), spec = E.composeRun(E.seedFor(r.playerId, r.runIndex), r.history);
-      S = { on: true, run: createRun(spec), runInfo: r, phase: 'intro', briefT: 0, hint: 0, waitTalk: null, read: false, combo: 0, landing: {}, queue: [], rsScore: null, humT: 0, endT: 0, summary: null, legend: SIDES.doors.bins, wave: 0, policy: '', flips: [], changes: [] };
-      world.state.rate = relaxed ? RUN.relaxed : 1; emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed });
+      S = { on: true, seen: coachSeen, coach: coachSeen < 3, quick: false, run: createRun(spec), runInfo: r, phase: 'intro', briefT: 0, hint: 0, waitTalk: null, read: false, combo: 0, landing: {}, queue: [], rsScore: null, humT: 0, endT: 0, summary: null, legend: SIDES.doors.bins, wave: 0, policy: '', flips: [], changes: [] };
+      world.state.rate = relaxed ? RUN.relaxed : 1; emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed }); bumpCoach();
       if (quiet) { TF.banner('A new shift', 'New crates'); beginShift(0); return; }
       TF.banner('Token Mill', 'Route every crate to the right bin');
-      TF.talk('Control Desk', coachSeen === 0
-        ? ['Welcome to the Token Mill. Five shifts, one belt.', 'Crates come down the belt. Read the policy on the board and send each one to the bin it names: drag it, or click it and click a bin. Too lax is unsafe, too strict is wasteful.', 'Space brakes the belt for three seconds a shift. R reads the crates in big text. M mutes. Esc leaves. The policies are a sample: security and legal will replace them.']
-        : ['Back on the floor? Same rules: read the policy, route each crate, brake if you must.']);
-      afterTalk(() => beginShift(0));
+      TF.talk('Control Desk', S.seen === 0
+        ? ['Welcome to the Token Mill. Crates come down one belt.', 'Read the rule on the board. Send each crate to the bin it names. Too lax is unsafe. Too strict is wasteful.', 'Space slows the belt. R reads crates in big text. Esc leaves. The rules are a sample: security and legal will replace them.']
+        : ['Back on the floor? Same rules: read, route, brake if you must.']);
+      afterTalk(showPick);
+    }
+    // Quick: the first two shifts and the finale (3 shifts, about 3 minutes); Full: all five. Keys 1 / 2, E = Full.
+    function showPick() {
+      S.phase = 'pick'; hud.brief.innerHTML = `<div class="k">HOW LONG?</div><div class="t"><kbd>1</kbd> Quick: 3 shifts, about 3 min<br><kbd>2</kbd> Full: 5 shifts, about 4-5 min</div><p class="go"><kbd>E</kbd> Full ▼</p>`; hud.brief.style.display = 'block';
+    }
+    function pick(q) {
+      if (!S || S.phase !== 'pick') return;
+      if (q) { const sp = S.run.spec; sp.shifts = sp.shifts.filter((x, i) => i < 2 || i === sp.shifts.length - 1); sp.estSeconds = E.estimateSeconds(sp); S.quick = true; }
+      hud.brief.style.display = 'none'; beginShift(0);
     }
     function beginShift(i) {
       const run = S.run, R = run.begin(i), sh = R.sh;
@@ -211,7 +225,7 @@
       hud.topKey = hud.statKey = hud.readKey = hud.legKey = '';
       emit('shift', { index: i, items: sh.crates.map((c) => c.itemId) });
       const first = sh.kind === 'finale' ? sh.waves[0] : sh, name = sh.kind === 'finale' ? `RUSH HOUR · WAVE 1 OF 4 · ${sideName(first.side).toUpperCase()}` : sideName(sh.side).toUpperCase();
-      hud.brief.innerHTML = `<div class="k">SHIFT ${i + 1} OF ${run.spec.shifts.length} · ${esc(name)}</div><div class="s">${esc(C.SAMPLE_NOTICE)}</div><div class="t">${esc(first.brief)}</div><div class="bins">${first.bins.map((b, k) => `<div><b style="color:${STYLE[k].css}">${STYLE[k].mark}${k + 1}</b> ${esc(b.label)}<span>${esc(b.legend)}</span></div>`).join('')}</div>${sh.kind === 'finale' ? `<div class="s" style="color:var(--gold)">Four waves. The plates flip between them: read the banner.</div>` : ''}<p class="go"><kbd>E</kbd> Start the belt ▼</p>`;
+      hud.brief.innerHTML = `<div class="k">SHIFT ${i + 1} OF ${run.spec.shifts.length} · ${esc(name)}</div>${S.seen >= 2 ? '' : `<div class="s">${esc(C.SAMPLE_NOTICE)}</div>`}<div class="t">${esc(first.brief)}</div>${S.seen >= 2 ? '' : `<div class="bins">${first.bins.map((b, k) => `<div><b style="color:${STYLE[k].css}">${STYLE[k].mark}${k + 1}</b> ${esc(b.label)}<span>${esc(b.legend)}</span></div>`).join('')}</div>${sh.kind === 'finale' ? `<div class="s" style="color:var(--gold)">Four waves. The plates flip between them: read the banner.</div>` : ''}`}<p class="go"><kbd>E</kbd> Start the belt ▼</p>`;
       hud.brief.style.display = 'block'; S.briefT = RUN.brief;
     }
     function startPlay() { if (!S || S.phase !== 'brief') return; hud.brief.style.display = 'none'; S.phase = 'play'; S.humT = 0; sfx('bell'); world.run(true); }
@@ -221,19 +235,19 @@
       if (!S || S.phase !== 'play') return;
       const res = S.run.route(ev.uid, ev.bin, world.rt, world.bt); if (!res) return;
       const e = res.entry; S.landing[e.uid] = res; S.combo = S.run.shift.combo; sfx('grab');
-      if (res.ribbon) { sfx('combo'); say(`<b>COMBO × ${S.combo}</b>`, 1.6); }
+      if (res.ribbon) { sfx('combo'); say(`<b style="font-size:28px">COMBO × ${S.combo}</b>`, 1.6); }
     }
     function onLand(ev) {
       if (!S || S.phase !== 'play') return;
       const res = S.landing[ev.uid]; if (!res) return; const e = res.entry, bin = ev.bin;
-      if (e.correct) { world.burst(bin); sfx('ding'); }
-      else if (e.direction === 'lax') { world.stamp(e.uid, { text: e.stamp, tone: e.severe ? 'spill' : 'lax', bin }); world.siren(e.severe ? 2.6 : 1.4); if (e.severe) { world.cameraShake(0.5, 0.06); sfx('spill'); say(`<b>SPILL.</b> ${esc(e.stamp)}`, 2.2); } else sfx('siren'); }
-      else { world.stamp(e.uid, { text: e.stamp, tone: 'strict', bin }); world.steam(bin); sfx('clunk'); sfx('steam'); if (e.overGated) say('<b>DESK JAMMED.</b> Gating everything wastes the reviewer.', 2.4); }
+      if (e.correct) { world.burst(bin); sfx('ding'); flash(true); }
+      else if (e.direction === 'lax') { flash(false); world.stamp(e.uid, { text: e.stamp, tone: e.severe ? 'spill' : 'lax', bin }); world.siren(e.severe ? 2.6 : 1.4); if (e.severe) { world.cameraShake(0.5, 0.06); sfx('spill'); say(`<b>SPILL.</b> ${esc(e.stamp)}`, 2.2); } else sfx('siren'); }
+      else { flash(false); world.stamp(e.uid, { text: e.stamp, tone: 'strict', bin }); world.steam(bin); sfx('clunk'); sfx('steam'); if (e.overGated) say('<b>DESK JAMMED.</b> Gating everything wastes the reviewer.', 2.4); }
       if (e.reveal) setTimeout(() => { if (S && S.phase === 'play') world.stamp(e.uid, { text: e.reveal, tone: e.reveal === 'WAS WRONG' ? 'spill' : 'ok', bin }); }, 900);
     }
     function onPit(ev) {
       if (!S || S.phase !== 'play') return;
-      const res = S.run.pit(ev.uid, world.rt); if (!res) return; S.combo = 0;
+      const res = S.run.pit(ev.uid, world.rt); if (!res) return; S.combo = 0; flash(false);
       world.stamp(ev.uid, { text: 'DROPPED', tone: 'strict', bin: -1 }); world.steam(-1); sfx('clunk'); say(ev.held ? 'It reached the pit while you held it: dropped.' : 'A crate fell in the pit: dropped.', 2.2);
     }
     const onBrake = (ev) => { if (S && S.phase === 'play') sfx(ev.on ? 'steam' : 'grab'); };
@@ -243,27 +257,28 @@
     function endShift() {
       const run = S.run, log = run.finish(world.brakes, world.rt), sc = E.scoreShift(log);
       for (const e of log.entries) emit('answer', { credit: true, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, correct: e.correct, direction: e.direction, severe: e.severe });
-      S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 3); world.run(false); S.read = false; hud.statKey = '';
+      S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 2); world.run(false); S.read = false; hud.statKey = '';
       const name = log.kind === 'finale' ? 'RUSH HOUR' : sideName(log.side).toUpperCase(), maxc = Math.max(sc.cost, sc.idealCost, 1);
-      hud.rs.innerHTML = `<h5>SHIFT ${run.i + 1} · ${esc(name)}</h5>${esc(shiftLine(sc))}<div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} ▼</div>`; hud.rs.style.display = 'block'; void maxc;
+      hud.rs.innerHTML = `<h5>SHIFT ${run.i + 1} · ${esc(name)}</h5>${esc(shiftLine(sc))}<div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>S</kbd> skip ▼</div>`; hud.rs.style.display = 'block'; void maxc;
       sfx('bell'); TF.sys(`Shift ${run.i + 1}: ${sc.correct} of ${sc.total} routed right, ${sc.severe} spill${sc.severe === 1 ? '' : 's'}, ${sc.dropped} dropped.`);
     }
     function nextCard() {
       if (!S || S.phase !== 'debrief') return;
       const e = S.queue.shift();
       if (!e) { hud.rs.style.display = 'none'; const run = S.run; if (run.i >= run.spec.shifts.length - 1) finish(); else beginShift(run.i + 1); return; }
-      const d = describe(e, C.byId[e.conceptId].idea, S.run.logs[S.run.logs.length - 1].deskCap); d.hint = S.queue.length ? 'Next card' : 'Continue'; bridge.card.show(d);
+      const d = describe(e, C.byId[e.conceptId].idea, S.run.logs[S.run.logs.length - 1].deskCap); bridge.card.show(Object.assign({}, d.card, { hint: S.queue.length ? 'Next card · S skips' : 'Continue' }));
     }
     function closeCard() {
       if (!S) return;
       if (S.phase === 'brief') { startPlay(); return; }
+      if (S.phase === 'pick') { pick(false); return; }
       if (S.phase !== 'debrief') return;
       if (cardOpen()) bridge.card.hide();
       nextCard();
     }
     function finish() {
       const run = S.run, sum = run.score(true);
-      Object.assign(sum, { seed: run.spec.seed, playerId: S.runInfo.playerId, runIndex: S.runInfo.runIndex, timeMs: Math.round(run.elapsed * 1000), why: 'done', relaxed,
+      Object.assign(sum, { seed: run.spec.seed, playerId: S.runInfo.playerId, runIndex: S.runInfo.runIndex, timeMs: Math.round(run.elapsed * 1000), why: 'done', relaxed, quick: S.quick,
         clean: Object.fromEntries(Object.entries(sum.perConcept).map(([id, c]) => [id, c.cleanVariants])) });
       S.phase = 'done'; S.summary = sum; world.clearShift(); hud.rs.style.display = 'none'; hud.legend.style.display = 'none'; sfx('bell');
       TF.banner('Shift over', `${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)}`);
@@ -295,8 +310,9 @@
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else if (!TF.talking) closeCard(); return true; }
       if (e.code === 'KeyR' && !e.repeat) { if (S.phase === 'play') S.read = !S.read; return true; }
+      if (S.phase === 'pick' && /^Digit[12]$/.test(e.code) && !e.repeat && !TF.talking && !helpOpen()) { pick(e.code === 'Digit1'); return true; }
+      if (e.code === 'KeyS' && !e.repeat && S.phase === 'debrief' && !helpOpen() && !TF.talking) { S.queue.length = 0; if (cardOpen()) bridge.card.hide(); nextCard(); return true; }
       if (cardOpen() || helpOpen() || TF.talking || S.phase !== 'play') return true;   // the card has the keys
-      if (/^Digit[1-4]$/.test(e.code)) bumpCoach();
       return world.keys.onKey(e) || true;   // the world takes Tab, 1-4 and Space; everything else is swallowed: no walking, no stray jumps, no camera switch
     }
 

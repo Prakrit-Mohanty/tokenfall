@@ -328,7 +328,7 @@
   // ================================================================ FINALE · RUSH HOUR
   const RUSH = C('XF1', 'rush', 'Rush hour', 'The same skills, less time: spot the threats, check the few that matter, spare the rest.', []);
   const FINALE = { items: 12, minPerSide: 2, minTraps: 3, minPairs: 3, traversal: [5, 6], banner: ['Rush hour', 'Handle the counter: shoot threats, spare the real, inspect when it matters'] };
-  const RUN = { rounds: 5, brief: 8, play: 40, debrief: 8, items: 10, magnifier: 5, spacing: 3.6, lanes: 3, traversal: [6, 8], maxOnScreen: 5, ammoExtra: 2 };
+  const RUN = { rounds: 5, brief: 6, play: 34, debrief: 6, items: 10, magnifier: 5, spacing: 3.2, lanes: 3, traversal: [6, 8], maxOnScreen: 5, ammoExtra: 2 };
 
   const CONCEPTS = [].concat(CLAIMS, ASKING, POISON, LABELS);
   const byId = Object.fromEntries(CONCEPTS.map((c) => [c.id, c]));

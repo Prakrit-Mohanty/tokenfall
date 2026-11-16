@@ -4,7 +4,8 @@
 //   starsFor({ falls, scans })                            1-3 stars for a finished run
 //   install(TokenFall, { debug, fixed, progress })        builds the world + play, registers at lobby boot
 //
-// Shared with the other games: play.audio (the synth and the M mute), play.card (the Concept Card panel), play.progress (the one progress store).
+// Shared with the other games: play.audio (the synth and the M mute), play.card (the Concept Card panel), play.progress (the one progress store),
+// play.flash(good, text) (a brief gold / red full-screen flash, with an optional big popup word) and play.skipTalk() (S ends the open dialogue).
 // Events (play.on): run, answer, fall, checkpoint, scan, finish, abandon. A progress object (bridge-progress.js) supplies
 // newRun() -> { playerId, runIndex, history } and receives every event through onEvent(e); attach(play, TF) lets it add the report card
 // (play.debrief = fn(summary)) and keys. Without bridge-progress.js a per-page memory is used.
@@ -66,18 +67,19 @@
   const FACING = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
   const STAGE_TEXT = [['Stage 1', 'Tokens, limits & data'], ['Stage 2', 'Models & prompts'], ['Stage 3', 'Verify, guard & approve'], ['The Boss', 'One scenario, three calls']];
   const BRIEFING = [
-    'Welcome to the Glass Bridge! Each row asks a question. The tiles carry the answers.',
-    'Jump onto the one you think is right. The wrong ones shatter on contact, and glass has no patience for hop-testing.',
-    'Space jumps (tap it on its own and you hop forward), Shift runs, E turns a card, F scans a row (twice per run), M mutes.',
+    'Welcome to the Glass Bridge! Each row asks a question. The tiles are the answers.',
+    'Jump onto the tile you think is right. A wrong tile shatters.',
+    'Space jumps (tap it alone to hop forward). Shift runs. E closes a card. F gives a hint, twice per run. M mutes. S skips talk.',
     'The parkour bits are just for fun: fall there and you only lose time. Fun fact: this sentence is about 12 tokens long.',
-  ];
+  ], BRIEF_SHORT = 'Back on the bridge. Jump onto the tile you think is right. Space jumps, F hints, M mutes.';
+  const STAGE_RULE = ['Read the question at the top, then hop onto the tile with the right answer.', 'A wrong tile means a fall and a card. Then the row is dealt again.', 'F gives a hint: it cracks one wrong tile, but caps you at 2 stars.', 'The boss is one case with three calls. Same rules.'];
 
   // ---------------------------------------------------------------- the game
   function create(TF, world, opts = {}) {
     const { THREE } = TF;
     const GLASS_WHITE = new THREE.Color(0xbfe8f0), tmpColor = new THREE.Color();   // reused: nothing is allocated per frame or per shatter
     const progress = opts.progress || (typeof window !== 'undefined' && window.BridgeProgress ? window.BridgeProgress.create({ fixed: opts.fixed }) : memoryProgress(opts.fixed));
-    const listeners = {};
+    const listeners = {}, referee = BRIEFING.slice();   // the referee's lines: one line from the third run on
     const play = { autotick: true, on(evt, fn) { (listeners[evt] = listeners[evt] || []).push(fn); return fn; } };
     const emit = (type, data = {}) => { const e = Object.assign({ type, at: Date.now() }, data); (listeners[type] || []).forEach((f) => f(e)); (listeners['*'] || []).forEach((f) => f(e)); if (progress.onEvent) progress.onEvent(e); };
     let S = null, hud = null, fx = null;
@@ -86,6 +88,7 @@
     // ---- run state ----
     function newRun() {
       const r = progress.newRun();
+      if (r.runIndex >= 2) referee.splice(0, referee.length, BRIEF_SHORT);
       S = { playerId: r.playerId, runIndex: r.runIndex, spec: G.composeRun(G.seedFor(r.playerId, r.runIndex), r.history), started: false, finished: false, startedAt: 0,
         falls: 0, scans: 0, tokens: 0, streak: 0, best: 0, cp: 0, rows: {}, taken: new Set(), lock: null, breakT: 0, pending: null, card: null,
         fallHandled: false, motor: createMotor(), jumpQ: false, standId: null, standRect: null, shake: { t: 0, d: 1, m: 0 }, scanned: {}, answers: [] };
@@ -212,25 +215,27 @@
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
-        .bq { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: min(880px, calc(100vw - 620px)); padding: 10px 18px 12px; text-align: center; display: none; background: rgba(10, 12, 20, .95); border-color: var(--gold); }
-        .bq .k { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: .14em; color: var(--gold); }
+        .bq { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: min(880px, calc(100vw - 620px)); padding: 10px 18px 12px; text-align: center; display: none; background: rgba(32, 22, 19, .95); border-color: var(--gold); }
+        .bq .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
         .bq .t { font-size: clamp(20px, 2.1vw, 28px); line-height: 1.25; margin: 3px 0 8px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
         .bq .a { display: grid; gap: 8px; text-align: left; } .bq .a.n2 { grid-template-columns: repeat(2, 1fr); } .bq .a.n3 { grid-template-columns: repeat(3, 1fr); }
         .bq .a > div { display: flex; gap: 8px; align-items: flex-start; padding: 6px 9px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: clamp(16px, 1.6vw, 21px); line-height: 1.25; }
         .bq .a i { font-style: normal; flex: none; font-size: 1.15em; line-height: 1.05; }
         .bq .a .x { opacity: .4; text-decoration: line-through; }
-        .bs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 14px; line-height: 1.6; display: none; }
+        .bs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.5; display: none; }
         .bs b { color: #ffe39a; font-weight: 600; } .bs kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .bc { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -52%); width: min(620px, calc(100vw - 32px)); padding: 18px 26px 16px; display: none; font-size: 22px; line-height: 1.45; background: rgba(40, 28, 24, .95); }
         .bc h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
-        .bc p { margin: 7px 0; } .bc .w { color: #ff9d8a; } .bc .i { color: #9dffc0; } .bc .go { text-align: right; font-size: 14px; color: var(--gold); margin: 12px 0 0; animation: bob 1s infinite; }
+        .bc p { margin: 7px 0; } .bc .w { color: #ff9d8a; } .bc .tk { color: #9dffc0; font-size: 24px; line-height: 1.3; margin: 0 0 10px; } .bc .go { text-align: right; font-size: 16px; color: var(--gold); margin: 12px 0 0; animation: bob 1s infinite; }
         .bc kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); }
         .bs .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 5px; }
         .bs .pips i { width: 13px; height: 8px; border: 1px solid rgba(243,234,214,.45); } .bs .pips i.done { border-color: transparent; background: var(--c, #ffd27a); } .bs .pips i.cur { border-color: #ffe39a; box-shadow: 0 0 0 1px #ffe39a; }
         .bk { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 9px 18px; text-align: center; display: none; font-size: clamp(17px, 1.6vw, 21px); line-height: 1.3; background: rgba(32, 22, 19, .93); }
         .bh { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 20px; line-height: 1.4; background: rgba(32, 22, 19, .96); }
         .bh h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
-        .bh ul { margin: 0; padding-left: 20px; } .bh li { margin: 5px 0; } .bh kbd, .bk kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); } .bh .go { text-align: right; font-size: 14px; color: var(--gold); margin: 10px 0 0; }
+        .bh ul { margin: 0; padding-left: 20px; } .bh li { margin: 5px 0; } .bh kbd, .bk kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); } .bh .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
+        .bf { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; opacity: 0; transition: opacity .3s; } .bf.g { background: radial-gradient(circle, rgba(255, 210, 122, .05) 30%, rgba(255, 210, 122, .38)); } .bf.r { background: radial-gradient(circle, rgba(255, 70, 60, .05) 30%, rgba(255, 70, 60, .4)); }
+        .bf b { font-family: 'Cinzel', serif; font-size: clamp(30px, 5vw, 56px); letter-spacing: .08em; color: #fff3c4; text-shadow: 0 2px 0 #000, 0 0 18px #ffb347; }
         @media (max-width: 1100px) { .bq { width: calc(100vw - 32px); top: 70px; } .bs { top: auto; bottom: 120px; right: 18px; } }`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
@@ -261,45 +266,56 @@
         hud.sKey = key;
         const zc = { amber: '#ffb347', green: '#7dff8a', cyan: '#5cd6ff' };
         const pips = S.spec.rows.map((r) => `<i class="${rowSt(r.id).solved ? 'done' : ''}${r.id === curId ? ' cur' : ''}" style="--c:${r.bonus || r.boss ? '#ffd27a' : zc[r.zone]}"></i>`).join('');
-        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div>Answered <b>${done}/${normal.length}</b> · Streak <b>${S.streak}</b> · Tokens <b>${S.tokens}</b><br>Scan <kbd>F</kbd> <b>${2 - S.scans}</b> left · Falls <b>${S.falls}</b> · <kbd>H</kbd> help · <kbd>M</kbd> ${audio.muted ? 'sound off' : 'sound on'}`;
+        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div>Answered <b>${done}/${normal.length}</b> · Streak <b>${S.streak}</b><br>Tokens <b>${S.tokens}</b> · Mistakes <b>${S.falls}</b><br>Hint <kbd>F</kbd> <b>${2 - S.scans}</b> left · <kbd>H</kbd> help · <kbd>M</kbd> ${audio.muted ? 'sound off' : 'sound on'}`;
       }
     }
-    // ---- gentle coaching for new players: until you have answered a few rows, say what to do next ----
+    // ---- gentle coaching for new players: one short rule per stage, for the first three runs ----
     const COACH_KEY = 'tokenfall.bridge.coach';
     let coachSeen = 0;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
     const helpOpen = () => !!hud && hud.h.style.display === 'block';
     function coachText() {
-      if (!S || S.finished || S.card || TF.talking || coachSeen >= 6 || helpOpen()) return '';
+      if (!S || S.finished || S.card || TF.talking || S.runIndex >= 3 || helpOpen()) return '';
       const st = S.stand;
-      if (!S.started) return 'Walk to the edge of the platform, then tap <kbd>Space</kbd> to hop onto the first row. Land on the tile that answers the question.';
-      if (st && (st.kind === 'tile' || st.kind === 'link') && rowSt(st.rowId).solved) return 'Row cleared! Walk sideways to line up with the next answer, then tap <kbd>Space</kbd>.';
-      if (st && st.kind === 'platform') return 'Read the question at the top, then hop onto the tile with the right answer.';
+      if (!S.started) return 'Walk to the edge, then tap <kbd>Space</kbd> to hop onto the first row. Land on the tile with the right answer.';
+      if (st && (st.kind === 'tile' || st.kind === 'link') && rowSt(st.rowId).solved) return 'Row cleared! Walk sideways to the next answer, then tap <kbd>Space</kbd>.';
+      if (st && st.kind === 'platform') return STAGE_RULE[Math.min(S.cp, 3)];
       if (st && st.kind !== 'tile') return 'Parkour: you lose nothing if you fall here. Hop across.';
       return '';
     }
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.h.innerHTML = '<h3>HOW TO PLAY</h3><ul><li>Every row asks a question, and every tile is an answer.</li><li>Jump onto the tile you think is right. A wrong tile breaks: you fall, learn why, and the row is dealt again.</li><li><kbd>Space</kbd> jumps (tap it alone to hop forward). <kbd>Shift</kbd> runs.</li><li>Once a row is answered it links up: walk to any lane, then jump on.</li><li><kbd>F</kbd> Scan (2 per run) cracks one wrong tile, but caps you at 2 stars. <kbd>M</kbd> sound. <kbd>R</kbd> report card. <kbd>E</kbd> closes cards.</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.h.innerHTML = '<h3>HOW TO PLAY</h3><ul><li>Every row asks a question. Every tile is an answer.</li><li>Jump onto the tile you think is right. A wrong tile breaks. You fall, read why, and the row is dealt again.</li><li><kbd>Space</kbd> jumps (tap it alone to hop forward). <kbd>Shift</kbd> runs.</li><li>An answered row links up. Walk to any lane, then jump on.</li><li><kbd>F</kbd> hint (2 per run) cracks one wrong tile, but caps you at 2 stars.</li><li><kbd>M</kbd> sound. <kbd>R</kbd> report card. <kbd>E</kbd> closes cards. <kbd>S</kbd> skips talk and cards.</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
       hud.h.style.display = on ? 'block' : 'none';
     }
     // The Concept Card panel, shared with the other games (play.card): show({ lead, text, breaks, idea, hint }) / hide() / open.
-    // lead defaults to "You chose:"; line (a whole sentence, no quoted answer) replaces lead + text; breaks and idea are left out when absent; breaksLabel / ideaLabel rename their lines ("Why it breaks:", "The idea:"). The HUD and its CSS are built on first use, so a game that
+    // lead defaults to "You chose:"; idea is shown first, as the one-sentence takeaway; skippable adds an "S skip" hint (the caller must handle S); line (a whole sentence, no quoted answer) replaces lead + text; breaks and idea are left out when absent; breaksLabel renames the breaks line ("Why it breaks:"); ideaLabel is accepted but no longer shown. The HUD and its CSS are built on first use, so a game that
     // never visited the bridge still gets the same card.
     const card = {
       show(o) {
         hud = hud || makeHud();
-        hud.c.innerHTML = `<h3>CONCEPT CARD</h3>` + (o.line ? `<p><b>${esc(o.line)}</b></p>` : `<p>${esc(o.lead || 'You chose:')} <b>“${esc(o.text)}”</b></p>`) + (o.breaks ? `<p class="w">${esc(o.breaksLabel || 'Why it breaks:')} ${esc(o.breaks)}</p>` : '')
-          + (o.idea ? `<p class="i">${esc(o.ideaLabel || 'The idea:')} ${esc(o.idea)}</p>` : '') + `<p class="go"><kbd>E</kbd> ${esc(o.hint || 'Continue')} ▼</p>`;
+        // the idea is the one-sentence takeaway and comes first; what you chose and why it breaks follow (ideaLabel is no longer shown: the headline is the idea)
+        hud.c.innerHTML = `<h3>CONCEPT CARD</h3>` + (o.idea ? `<p class="tk"><b>${esc(o.idea)}</b></p>` : '') + (o.line ? `<p><b>${esc(o.line)}</b></p>` : `<p>${esc(o.lead || 'You chose:')} <b>“${esc(o.text)}”</b></p>`) + (o.breaks ? `<p class="w">${esc(o.breaksLabel || 'Why it breaks:')} ${esc(o.breaks)}</p>` : '')
+          + `<p class="go"><kbd>E</kbd> ${esc(o.hint || 'Continue')} ▼${o.skippable ? ' · <kbd>S</kbd> skip' : ''}</p>`;
         hud.c.style.display = 'block';
       },
       hide() { if (hud) hud.c.style.display = 'none'; },
       get open() { return !!hud && hud.c.style.display === 'block'; },
     };
+    // a brief gold (good) or red (mistake) flash over the screen, with an optional big word for a standout moment; shared (play.flash). Reduced motion: a still, softer tint, no fade.
+    let fl = null, flT = 0;
+    function flash(good, text) {
+      hud = hud || makeHud(); const ui = document.getElementById('ui'); if (!ui) return;
+      if (!fl) { fl = document.createElement('div'); ui.appendChild(fl); }
+      clearTimeout(flT); fl.className = 'bf ' + (good ? 'g' : 'r'); fl.innerHTML = `<b>${esc(text || (good ? '' : '✕'))}</b>`;   // a mistake always carries a mark, never only a red tint fl.style.display = 'flex'; fl.style.transition = 'none'; fl.style.opacity = 0; void fl.offsetWidth;
+      fl.style.transition = REDUCED_MOTION ? 'none' : 'opacity .3s'; fl.style.opacity = REDUCED_MOTION ? 0.5 : 1;
+      flT = setTimeout(() => { fl.style.opacity = 0; flT = setTimeout(() => { fl.style.display = 'none'; }, 320); }, text ? 700 : 250);
+    }
+    const skipTalk = () => { for (let n = 0; TF.talking && n < 99 && typeof advanceDialog === 'function'; n++) advanceDialog(); };   // advanceDialog: the lobby's global; S ends what is left of a dialogue
     function showCard(p) {
       S.card = p; S.lock = { x: TF.hero.x, z: TF.hero.y };
-      card.show({ text: p.tileText, breaks: p.breaks, idea: p.idea });
+      card.show({ skippable: true, lead: `You chose ${(p.row.tiles.length === 2 ? ['▲', '◆'] : ['▲', '●', '◆'])[p.lane]}:`, text: p.tileText, breaks: p.breaks, idea: p.idea });   // the tile's shape mark, so the colour is not the only cue
     }
 
     // ---- what happens to a row ----
@@ -327,10 +343,10 @@
       if (tile.correct) {
         st.solved = true; S.streak++; S.best = Math.max(S.best, S.streak); S.tokens += 25;
         world.settleRow(row.id, s.lane); audio.play('chime'); bumpCoach();
-        if (!S.linkHint) { S.linkHint = true; TF.sys('The row links up: walk to any lane, then jump (Space) to the next row.'); }
+        if (!S.linkHint) { S.linkHint = true; TF.sys('The row links up. Walk to any lane, then jump (Space) to the next row.'); }
         const t = world.layout.rows.find((r) => r.id === row.id).tiles[s.lane];
         fx.spawn(18, t.x, 0.6, world.layout.rows.find((r) => r.id === row.id).zc, 0xffd27a, { speed: 3, up: 4, size: 0.2, life: 1.0, white: 0.4 });
-        TF.sys(S.streak > 1 ? `Correct! Streak ×${S.streak}.` : 'Correct!');
+        TF.sys(S.streak > 1 ? `Correct! Streak ×${S.streak}.` : 'Correct!'); flash(true, S.streak >= 3 ? `Streak ×${S.streak}!` : '');
         S.answers.push(Object.assign({ correct: true, firstTry: st.falls === 0 }, base));
         emit('answer', { correct: true, firstTry: st.falls === 0, ...base });
       } else {
@@ -344,7 +360,7 @@
       if (r) {
         fx.spawn(34, r.x, 0.1, r.z, tmpColor.set(r.hex).lerp(GLASS_WHITE, 0.5).getHex(), { speed: 2.6, up: 3.5, size: 0.42, life: 1.8, spread: 2.4, white: 0.1 });
       }
-      audio.play('shatter'); if (!REDUCED_MOTION) S.shake = { t: 0.25, d: 0.25, m: 0.08 };
+      audio.play('shatter'); flash(false); if (!REDUCED_MOTION) S.shake = { t: 0.25, d: 0.25, m: 0.08 };
       S.lock = null; S.standId = null;
       S.motor.doomed = true;   // committed: stepping or jumping back no longer saves you (that used to leave the wrong answer unresolved)
       TF.sys('The tile shatters.');
@@ -385,25 +401,25 @@
     }
     function scan() {
       if (S.finished || S.card || S.lock) return;
-      if (S.scans >= 2) return TF.sys('No Scans left on this run.');
+      if (S.scans >= 2) return TF.sys('No hints left on this run.');
       const h = TF.hero, rl = currentRow(h);
-      if (!rl) return TF.sys('Nothing to scan here.');
+      if (!rl) return TF.sys('Nothing to hint here.');
       const row = S.spec.rows[rl.index], done = S.scanned[rl.id] || [];
       const open = row.tiles.map((t, lane) => lane).filter((lane) => !row.tiles[lane].correct && !done.includes(lane));
-      if (!open.length) return TF.sys('That row is already scanned.');
+      if (!open.length) return TF.sys('That row already has a hint.');
       const rng = G.mulberry32(G.hash32(S.spec.seed + ':scan:' + rl.id + ':' + S.scans)), lane = open[(rng() * open.length) | 0];
       S.scans++; (S.scanned[rl.id] = done).push(lane); world.crackTile(rl.id, lane, 1); audio.play('scan');
-      TF.sys(`Scan: one wrong tile in ${rl.label.toLowerCase()} is cracked. (${2 - S.scans} left; the run is capped at 2 stars.)`);
+      TF.sys(`Hint: one wrong tile in ${rl.label.toLowerCase()} is cracked. ${2 - S.scans} left. The run is capped at 2 stars.`);
       emit('scan', { rowId: rl.id, conceptId: row.conceptId });
     }
     function finish() {
       S.finished = true; const stars = starsFor(S), secs = Math.round((Date.now() - S.startedAt) / 1000);
       audio.play('chime'); TF.banner('You made it', `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`);
       const summary = { stars, falls: S.falls, scans: S.scans, tokens: S.tokens, bestStreak: S.best, seconds: secs, answers: S.answers, seen: S.spec.seen, seed: S.spec.seed, runIndex: S.runIndex, playerId: S.playerId, spec: S.spec };
-      TF.sys(`Finished: ${stars} star${stars > 1 ? 's' : ''}, ${S.falls} knowledge fall${S.falls === 1 ? '' : 's'}, ${S.tokens} tokens.`);
+      TF.sys(`Finished: ${stars} star${stars > 1 ? 's' : ''}, ${S.falls} mistake${S.falls === 1 ? '' : 's'}, ${S.tokens} tokens.`);
       emit('finish', summary);
       if (play.debrief) play.debrief(summary);   // bridge-progress.js shows the report card
-      else TF.talk('Referee', [`You crossed! ${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`, `${S.falls} knowledge fall${S.falls === 1 ? '' : 's'}, ${S.scans} scan${S.scans === 1 ? '' : 's'}, ${S.tokens} tokens banked.`, 'Walk into the portal to head home. The bridge will be different next time.']);
+      else TF.talk('Referee', [`You crossed! ${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`, `${S.falls} mistake${S.falls === 1 ? '' : 's'}, ${S.scans} hint${S.scans === 1 ? '' : 's'}, ${S.tokens} tokens banked.`, 'Walk into the portal to head home. The bridge will be different next time.']);
     }
 
     // ---- the per-frame tick (right after the lobby moves the hero) ----
@@ -444,7 +460,7 @@
       if (TF.zone !== 'bridge' || !S) return false;
       audio.init();
       if (e.code === 'Space') { if (!e.repeat) S.jumpQ = true; return true; }
-      if (e.code === 'KeyE' && S.card) { if (!e.repeat) closeCard(); return true; }
+      if ((e.code === 'KeyE' || e.code === 'KeyS') && S.card) { if (!e.repeat) closeCard(); return true; }   // S on a card: the same as E (the row is re-dealt at once)
       if (e.code === 'KeyM' && !e.repeat) { audio.toggle(); return true; }
       if (e.code === 'KeyF' && !e.repeat) { scan(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
@@ -462,7 +478,7 @@
       hud = hud || makeHud(); fx = makeFx();   // the coins were built by the world's build event, which fires first
       const h = TF.hero; h.noLift = true; h.alt = 0; hud.qKey = hud.sKey = hud.kKey = ''; hud.c.style.display = 'none'; hud.h.style.display = 'none';
       if (coachSeen === 0) setTimeout(() => { if (TF.zone === 'bridge') showHelp(true); }, 900);   // the very first visit opens the how-to-play panel
-      TF.sys('The Glass Bridge: 12 questions, 3 stages and a boss. Space jumps and hops you forward, F scans, M mutes.');
+      TF.sys('The Glass Bridge: 12 questions, 3 stages and a boss. Space jumps, F hints, M mutes.');
     }
     function leaveZone() {
       const h = TF.hero; h.noLift = false; h.alt = 0; h.g.children[1].visible = true;
@@ -474,16 +490,17 @@
     }
 
     play.register = function () {
-      world.register(null, { specFor: newRun, referee: BRIEFING });
+      world.register(null, { specFor: newRun, referee });
       world.on('build', buildCoins);
       TF.on('enter', (prev, z) => { if (z === 'bridge') enterZone(); else if (prev === 'bridge') leaveZone(); });
+      addEventListener('keydown', (e) => { if (e.code === 'KeyS' && !e.repeat && TF.zone === 'bridge' && S && TF.talking) skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
       TF.zoneTick.bridge = (dt) => { if (play.autotick) tick(dt); };
       TF.onKey = onKey;
       if (progress.attach) progress.attach(play, TF);   // after our key handler is in place, so it can sit in front of it
       TF.setGroundProvider('bridge', (x, z) => (world.surfaceAt(x, z, now(), PHYS.EDGE) ? 0 : null));
       TF.life.push((t, dt) => frame(t, dt));
     };
-    Object.assign(play, { tick, scan, closeCard, finish, audio, world, onKey, card, progress });   // card and progress are shared with carrom-play.js
+    Object.assign(play, { tick, scan, closeCard, finish, audio, world, onKey, card, progress, flash, skipTalk });   // card and progress are shared with carrom-play.js
     Object.defineProperties(play, { state: { get: () => S }, fx: { get: () => fx }, coins: { get: () => coins } });   // live views (Object.assign would copy the getters' current values)
     return play;
   }

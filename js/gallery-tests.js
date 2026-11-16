@@ -174,6 +174,12 @@ test('pace: the estimated run (briefs + play + debriefs) is under 5:00 in every 
 // ================================================================= the aiming geometry
 const cam = E.LAYOUT.camera, ASPECT = 16 / 9;
 const entry = (lane, p, over) => Object.assign({ uid: 'e' + lane, lane, dir: E.LAYOUT.lanes ? (lane % 2 === 0 ? 1 : -1) : 1, x0: 0, popup: false, rise: 0, dur: 7, speed: 1 / 7, spawnTime: 0 - p * 7, endTime: 7 - p * 7 }, over);
+test('bullseye: the middle of the duck scores most, the edge least, and the hit reports its offset from the centre', () => {
+  const e = entry(0, 0.5), c = E.cardPose(e, 0), n = E.ndcOf(cam, ASPECT, [c.x, c.y, c.z]), h = E.hitTest([e], 0, E.rayFromNdc(cam, ASPECT, n.x, n.y));
+  assert(Math.hypot(h.dx, h.dy) < 1e-9 && E.ringFor(h.dx, h.dy).points === 100, 'dead centre is the bullseye');
+  assert.deepStrictEqual([0, 0.1, 0.15, 0.3].map((d) => E.ringFor(d, 0).points), [100, 50, 25, 10]);
+  assert(E.ringFor(0, 0.07).points < E.ringFor(0, 0.05).points && E.ringFor(0.13, 0).points < E.ringFor(0.1, 0).points, 'further out never scores more');
+});
 test('hit test: the ray from the camera through the reticle hits the card under it; a miss, a card still rising behind the barrier and a card that has left are not hit', () => {
   const e = entry(0, 0.5), c = E.cardPose(e, 0), n = E.ndcOf(cam, ASPECT, [c.x, c.y, c.z]);
   assert(Math.abs(c.x) < 1e-9 && c.state === 'moving');

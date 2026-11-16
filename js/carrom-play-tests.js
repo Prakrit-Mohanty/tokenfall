@@ -119,6 +119,13 @@ test('a perfect player: every right pocket found first time gives 15 points, thr
   console.log(`   ${specs.length} perfect runs`);
 });
 
+test('a Quick run (3 rounds): 9 points at most, and the star thresholds scale with it', () => {
+  assert.strictEqual(starsFor(9, 0, 9), 3); assert.strictEqual(starsFor(7.8, 1, 9), 3); assert.strictEqual(starsFor(7.7, 0, 9), 2); assert.strictEqual(starsFor(5.4, 0, 9), 2); assert.strictEqual(starsFor(5.3, 0, 9), 1);
+  const sp = Object.assign({}, specs[0], { rounds: [0, 1, 4].map((k) => specs[0].rounds[k]) }), run = createRun(sp);
+  for (let i = 0; i < 3; i++) { const R = run.round(); while (!R.done) R.judge(ghost(R.target())); run.advance(); }
+  assert(run.finished); assert.strictEqual(run.max, 9); assert.strictEqual(+run.total().toFixed(6), 9); assert.strictEqual(run.stars(), 3); assert.strictEqual(run.summary().max, 9);
+});
+
 test('a player who guesses wrong first: one strike per wrong answer, then right; the stars follow the points and strikes', () => {
   const spec = specs[5], run = createRun(spec);
   for (const round of spec.rounds) {

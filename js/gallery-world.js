@@ -23,7 +23,7 @@
   else root.GalleryWorld = api;
 })(this, function (E, CW) {
   const L = E.LAYOUT, STYLE = CW.STYLE;   // the same four colours as the other games: amber, green, cyan, rose
-  const HOLD = 0.6, POOL = 12, TOKEN_SECS = 0.16, FLIP_SECS = 0.36, KEEP_SECS = 0.9, ARRIVE_SECS = 0.55, RET_SPEED = 1.1, BASE_ASPECT = 16 / 9;
+  const HOLD = 0.6, POOL = 12, TOKEN_SECS = 0.3, FLIP_SECS = 0.36, KEEP_SECS = 0.9, ARRIVE_SECS = 0.55, RET_SPEED = 1.1, BASE_ASPECT = 16 / 9;
 
   // ---------------------------------------------------------------- pure
   // stall-local (x right, y up, z north from the counter) <-> the lobby: x is the world's x, world z = counter z - local z
@@ -127,13 +127,20 @@
       const dome = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), MAT.gold); dome.position.y = 0.04; dome.castShadow = true; bell.add(dome);
       const base = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.04, 14), MAT.darkWood); bell.add(base);
       const knob = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), MAT.gold); knob.position.y = 0.2; bell.add(knob); S.bell = { g: bell, dome, t: 0 };
-      const pop = new THREE.Group(); pop.position.set(ox + 1.1, 1.2, oz + 0.3); pop.scale.setScalar(1.0); scene.add(pop);   // on the counter's near edge, below the lanes' cards
-      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.065, 0.46, 10), MAT.gold); barrel.rotation.x = Math.PI / 2; barrel.position.z = -0.23; barrel.castShadow = true; pop.add(barrel);   // pointing north (-z)
-      const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.06, 10), MAT.gold); muzzle.rotation.x = Math.PI / 2; muzzle.position.z = -0.47; pop.add(muzzle);
-      const grip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.11), MAT.wood); grip.position.set(0, -0.11, 0.04); grip.rotation.x = 0.25; grip.castShadow = true; pop.add(grip);
-      const hopper = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.05, 0.14, 10, 1, true), MAT.gold); hopper.position.set(0, 0.11, -0.06); pop.add(hopper);   // a funnel the tokens drop through
-      const loaded = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.02, 12), MAT.gold); loaded.rotation.x = 1.2; loaded.position.set(0, 0.2, -0.06); pop.add(loaded);
-      S.popper = { g: pop, base: pop.position.clone() };
+      // a toy foam blaster in the lobby's amber and cyan: a chunky body, a fat barrel with a bright tip, a pump, a grip and a dart magazine; it turns to follow the reticle
+      const pop = new THREE.Group(); pop.position.set(ox + 1.1, 1.26, oz + 0.3); pop.scale.setScalar(1.25); scene.add(pop);
+      const toy = (hex) => new THREE.MeshStandardMaterial({ color: hex, roughness: 0.55 }), amber = toy(STYLE[0].hex), cyan = toy(STYLE[2].hex);
+      const part = (g, m, x, y, z, rx = 0) => { const me = new THREE.Mesh(g, m); me.position.set(x, y, z); me.rotation.x = rx; me.castShadow = true; pop.add(me); return me; };
+      part(new THREE.BoxGeometry(0.15, 0.17, 0.5), amber, 0, 0, -0.1);                                   // the body
+      part(new THREE.CylinderGeometry(0.065, 0.065, 0.34, 12), cyan, 0, 0.02, -0.5, Math.PI / 2);         // the fat barrel (pointing north, -z)
+      part(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 12), MAT.redLantern, 0, 0.02, -0.69, Math.PI / 2);   // its bright red tip
+      part(new THREE.CylinderGeometry(0.04, 0.04, 0.02, 12), MAT.lanternCap, 0, 0.02, -0.725, Math.PI / 2);   // the dark hole
+      part(new THREE.BoxGeometry(0.19, 0.1, 0.22), cyan, 0, -0.12, -0.34);                               // the pump
+      part(new THREE.BoxGeometry(0.1, 0.24, 0.12), cyan, 0, -0.18, 0.08, 0.25);                           // the grip
+      part(new THREE.BoxGeometry(0.09, 0.07, 0.24), MAT.lanternCap, 0, 0.12, -0.08);                     // the dart magazine on top
+      part(new THREE.BoxGeometry(0.03, 0.05, 0.03), amber, 0, 0.12, -0.6);                               // the front sight
+      const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.02, -0.74); pop.add(muzzle);
+      S.popper = { g: pop, base: pop.position.clone(), muzzle };
       // string lanterns along the header and across the middle, swaying a little
       const lg = new THREE.SphereGeometry(0.1, 8, 6), cg = new THREE.CylinderGeometry(0.05, 0.05, 0.04, 8);
       for (const [z, y, n] of [[-0.55, 3.02, 11], [1.2, 3.1, 9]]) {
@@ -150,40 +157,51 @@
     // ---- the pooled cards: a paper cutout on a stand, a front (the artefact) and a back (the stamp) ----
     function cardCanvas() { const c = document.createElement('canvas'); c.width = 512; c.height = 256; return c; }
     const SX = 512 / 320, SY = 256 / 220;   // the card is drawn in a 320 x 220 space so the text is not stretched
-    function paper(g, w, h) { g.fillStyle = S.tok.paper; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(0, 0, w, 6); g.fillRect(0, h - 6, w, 6); g.fillRect(0, 0, 6, h); g.fillRect(w - 6, 0, 6, h); }
-    function drawFront(slot, card) {
-      const g = slot.fc.getContext('2d'), T = S.tok; g.setTransform(SX, 0, 0, SY, 0, 0); paper(g, 320, 220);
-      g.fillStyle = T.dark; g.fillRect(6, 6, 308, 30);                                           // the header band: kind of artefact and who it is from
-      g.textBaseline = 'middle'; g.textAlign = 'left'; g.font = `700 16px ${T.font}`; g.fillStyle = T.gold; g.fillText(cardText(card)[0], 14, 21);
-      g.textAlign = 'right'; g.font = `600 15px ${T.font}`; g.fillStyle = T.paper; g.fillText(String(card.from).slice(0, 26), 308, 21);
-      let y = 56; g.textAlign = 'left'; g.fillStyle = T.dark;
-      if (card.subject) { g.font = `700 17px ${T.font}`; for (const ln of wrapLines(card.subject, 296, (s) => g.measureText(s).width).slice(0, 1)) { g.fillText(ln, 14, y); y += 22; } }
-      g.font = `600 17px ${T.font}`;
-      for (const ln of wrapLines(card.body, 296, (s) => g.measureText(s).width).slice(0, card.subject ? 6 : 7)) { g.fillText(ln, 14, y); y += 22; }
+    // a carnival duck cut out of the card (the canvas stays clear outside it): a yellow body, a head and a beak facing the way it travels, a paper plate on its chest
+    // with the scoring rings painted over the middle. 320 x 220 units are 1.1 x 0.76 m, so a ring of E.RINGS radius r is r / 0.00344 units wide, centred on the card.
+    const DUCK_YELLOW = '#ffd23f', DUCK_EDGE = '#b8741a', M_PER_UNIT = 1.1 / 320;
+    function duck(g, dir, plate) {
+      g.save(); if (dir < 0) { g.translate(320, 0); g.scale(-1, 1); }
+      const body = () => { g.beginPath(); g.ellipse(148, 124, 130, 68, 0, 0, 7); g.moveTo(262 + 40, 52); g.ellipse(262, 52, 40, 40, 0, 0, 7); g.rect(228, 64, 58, 60); g.moveTo(44, 110); g.lineTo(4, 66); g.lineTo(76, 90); g.closePath(); };
+      g.lineJoin = 'round'; g.lineWidth = 10; g.strokeStyle = DUCK_EDGE; body(); g.stroke(); g.fillStyle = DUCK_YELLOW; body(); g.fill();
+      g.fillStyle = '#ff8a1f'; g.strokeStyle = DUCK_EDGE; g.lineWidth = 4; g.beginPath(); g.ellipse(304, 60, 17, 10, 0, 0, 7); g.fill(); g.stroke();   // the beak
+      g.fillStyle = '#fff'; g.beginPath(); g.arc(268, 44, 8, 0, 7); g.fill(); g.fillStyle = '#222'; g.beginPath(); g.arc(271, 44, 4, 0, 7); g.fill();   // the eye
+      g.restore();
+      if (!plate) return;
+      g.fillStyle = S.tok.paper; g.beginPath(); g.roundRect(46, 56, 210, 126, 12); g.fill();
+      E.RINGS.slice().reverse().forEach((ring, i) => { g.globalAlpha = 0.5; g.fillStyle = i % 2 ? '#fff' : S.tok.red; g.beginPath(); g.arc(160, 110, ring.r / M_PER_UNIT, 0, 7); g.fill(); }); g.globalAlpha = 1;
+    }
+    function drawFront(slot, card, dir) {
+      const g = slot.fc.getContext('2d'), T = S.tok; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 512, 256); g.setTransform(SX, 0, 0, SY, 0, 0); duck(g, dir, true);
+      g.textBaseline = 'middle'; g.textAlign = 'left'; g.font = `700 12px ${T.font}`; g.fillStyle = T.dark; g.fillText(`${cardText(card)[0]} · ${String(card.from).slice(0, 18)}`, 54, 68);   // the full card is in the hover caption and the Tab list
+      let y = 86; g.font = `600 13px ${T.font}`;
+      const lines = wrapLines((card.subject ? card.subject + ': ' : '') + card.body, 194, (s) => g.measureText(s).width), shown = lines.slice(0, 6);
+      if (lines.length > shown.length) shown[shown.length - 1] = shown[shown.length - 1].replace(/\s*\S{0,3}$/, '') + '…';
+      for (const ln of shown) { g.fillText(ln, 54, y); y += 15; }
       slot.ft.needsUpdate = true;
     }
-    function drawBack(slot, text, tone) {
+    function drawBack(slot, text, tone, dir) {
       const g = slot.bc.getContext('2d'), T = S.tok, col = tone === 'ok' ? T.green : tone === 'rueful' ? T.amber : T.red;
       g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 512, 256); g.setTransform(-SX, 0, 0, -SY, 512, 256);   // the back is seen after a flip: drawn turned half a circle, it reads upright
-      paper(g, 320, 220); g.save(); g.translate(160, 110); g.rotate(-0.12); g.textAlign = 'center'; g.textBaseline = 'middle'; g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 5;
-      let size = 36; g.font = `700 ${size}px ${T.font}`; const lines = wrapLines(text, 250, (s) => g.measureText(s).width);
-      while ((lines.length > 2 || lines.some((s) => g.measureText(s).width > 250)) && size > 18) { size -= 3; g.font = `700 ${size}px ${T.font}`; lines.splice(0, lines.length, ...wrapLines(text, 250, (s) => g.measureText(s).width)); }
+      duck(g, dir, false); g.fillStyle = T.paper; g.beginPath(); g.roundRect(46, 56, 210, 126, 12); g.fill(); g.translate(151, 119); g.rotate(-0.12); g.textAlign = 'center'; g.textBaseline = 'middle'; g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 4;
+      let size = 30; g.font = `700 ${size}px ${T.font}`; const lines = wrapLines(text, 180, (s) => g.measureText(s).width);
+      while ((lines.length > 2 || lines.some((s) => g.measureText(s).width > 180)) && size > 14) { size -= 2; g.font = `700 ${size}px ${T.font}`; lines.splice(0, lines.length, ...wrapLines(text, 180, (s) => g.measureText(s).width)); }
       const lh = size * 1.15, w = Math.max(...lines.map((s) => g.measureText(s).width)) + 26, h = lh * lines.length + 20;
       g.globalAlpha = 0.9; g.strokeRect(-w / 2, -h / 2, w, h); g.strokeRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10);
       lines.forEach((s, i) => g.fillText(s, 0, (i - (lines.length - 1) / 2) * lh)); g.restore();
       slot.bt.needsUpdate = true;
     }
     function buildPool() {
-      const geo = new THREE.BoxGeometry(L.cardW, L.cardH, 0.025), edge = new THREE.MeshStandardMaterial({ color: new THREE.Color(S.tok.paper).multiplyScalar(0.8), roughness: 0.95 });
+      const geo = new THREE.BoxGeometry(L.cardW, L.cardH, 0.025), edge = new THREE.MeshBasicMaterial({ visible: false });   // only the two faces draw: the duck is cut out of them by alpha
       for (let i = 0; i < POOL; i++) {
         const fc = cardCanvas(), bc = cardCanvas(), ft = new THREE.CanvasTexture(fc), bt = new THREE.CanvasTexture(bc);
         for (const t of [ft, bt]) { t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; }
-        const fm = new THREE.MeshStandardMaterial({ map: ft, roughness: 0.9 }), bm = new THREE.MeshStandardMaterial({ map: bt, roughness: 0.9 });
+        const fm = new THREE.MeshStandardMaterial({ map: ft, roughness: 0.9, alphaTest: 0.5 }), bm = new THREE.MeshStandardMaterial({ map: bt, roughness: 0.9, alphaTest: 0.5 });
         const m = new THREE.Mesh(geo, [edge, edge, edge, edge, fm, bm]); m.visible = false; m.receiveShadow = true; m.userData.dyn = true; scene.add(m);
         S.pool.push({ i, m, fc, bc, ft, bt, fm, bm, uid: null }); S.free.push(i);
       }
     }
-    const acquire = (uid, card) => { const i = S.free.shift(); if (i == null) return null; const s = S.pool[i]; s.uid = uid; drawFront(s, card); s.m.visible = true; s.m.rotation.set(0, 0, 0); return s; };
+    const acquire = (uid, card, dir) => { const i = S.free.shift(); if (i == null) return null; const s = S.pool[i]; s.uid = uid; drawFront(s, card, dir); s.m.visible = true; s.m.rotation.set(0, 0, 0); return s; };
     function release(c) { if (!c.slot) return; c.slot.m.visible = false; c.slot.uid = null; S.free.push(c.slot.i); c.slot = null; }
     world.loadRound = (round) => {
       world.clearRound(); S.round = round; S.rt = 0; S.running = false;
@@ -195,7 +213,7 @@
       for (const c of S.cards.values()) release(c);
       for (const s of S.pool) { s.ft.dispose(); s.bt.dispose(); s.m.visible = false; }
       for (const [, t] of S.tags) t.el.remove(); S.tags.clear();
-      for (const t of S.tokens) t.m.visible = false; S.tokens.length = 0;
+      for (const t of S.tokens) { t.live = false; t.m.visible = false; t.trail.forEach((d) => (d.visible = false)); }   // the darts are kept: they are built once
       S.cards.clear(); S.round = null; S.hover = null; S.hold = { uid: null, t: 0, progress: 0, done: false };
     };
 
@@ -204,22 +222,34 @@
       const c = S.cards.get(uid); if (!c || c.fx || c.gone) return false;
       const stamp = o.stamp || '', tone = o.tone || (action === 'delivered' ? 'ok' : action === 'leaked' ? 'leak' : 'threat');
       if (action === 'shot') { c.fx = { kind: 'shot', t: -(c.wait || 0), stamp, tone }; c.frozen = c.slot ? c.slot.m.position.clone() : null; }
-      else { c.fx = { kind: action, t: 0, stamp, tone }; if (c.slot && action === 'leaked') drawBack(c.slot, stamp, tone); }
-      if (action === 'shot' && c.slot) drawBack(c.slot, stamp, tone);
+      else { c.fx = { kind: action, t: 0, stamp, tone }; if (c.slot && action === 'leaked') drawBack(c.slot, stamp, tone, c.e.dir); }
+      if (action === 'shot' && c.slot) drawBack(c.slot, stamp, tone, c.e.dir);
       return true;
     };
     world.gate = (lane, kind) => { const g = S.gates[lane]; if (!g) return; g.flash = 1; g.kind = kind; };
     world.ring = () => { if (S.bell) S.bell.t = 1; emit('bell'); };
+    const calm = () => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // a soft gold (good call) or red (mistake) wash over the screen, and a short slow-motion beat for a bullseye; both skipped for reduced motion
+    world.flash = (kind) => {
+      const f = S.ui && S.ui.flash; if (!f || calm()) return;
+      f.style.transition = 'none'; f.style.background = `radial-gradient(ellipse at center, transparent 45%, ${kind === 'good' ? 'rgba(255,200,80,.4)' : 'rgba(255,60,60,.42)'})`; f.style.opacity = 1; void f.offsetWidth; f.style.transition = 'opacity .4s'; f.style.opacity = 0;
+    };
+    world.slowmo = (secs) => { if (!calm()) S.slow = secs; };
     world.cameraShake = (secs, amp) => { if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; S.shake = { t: secs, d: secs, m: amp }; };
 
     // ---- shooting: a golden token from the popper to what is under the reticle ----
+    // a foam dart (cyan body, rose nose: it has to show against the warm wood) with a short fading trail: 6 of them, built once and only ever hidden, never dropped
     function tokenMesh() {
-      const face = new THREE.MeshStandardMaterial({ map: TF.TX.coin, emissive: 0xffffff, emissiveMap: TF.TX.coin, emissiveIntensity: 0.35, roughness: 0.5, metalness: 0.3 }), geo = new THREE.CylinderGeometry(0.07, 0.07, 0.02, 14);
-      for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(geo, [MAT.gold, face, face]); m.rotation.x = Math.PI / 2; m.visible = false; m.userData.dyn = true; scene.add(m); S.tokens.push({ m, t: 0, dur: 1, from: new THREE.Vector3(), to: new THREE.Vector3(), uid: null, live: false }); }
+      const body = new THREE.MeshBasicMaterial({ color: STYLE[2].hex }), nose = new THREE.MeshBasicMaterial({ color: STYLE[3].hex }), bg = new THREE.CylinderGeometry(0.055, 0.055, 0.3, 10), ng = new THREE.SphereGeometry(0.075, 10, 8), tg = new THREE.SphereGeometry(0.05, 8, 6);
+      for (let i = 0; i < 6; i++) {
+        const m = new THREE.Group(), b = new THREE.Mesh(bg, body), n = new THREE.Mesh(ng, nose); b.rotation.x = Math.PI / 2; n.position.z = 0.16; m.add(b, n); m.visible = false; m.userData.dyn = true; scene.add(m);
+        const trail = [0, 1, 2, 3].map((k) => { const t = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 - 0.11 * k })); t.scale.setScalar(1 - 0.18 * k); t.visible = false; t.userData.dyn = true; scene.add(t); return t; });
+        S.tokens.push({ m, trail, t: 0, dur: 1, from: new THREE.Vector3(), to: new THREE.Vector3(), uid: null, live: false });
+      }
       const sg = new THREE.BoxGeometry(0.035, 0.035, 0.035), sm = new THREE.MeshBasicMaterial({ color: MAT.gold.color, transparent: true });
       for (let i = 0; i < 24; i++) { const m = new THREE.Mesh(sg, sm.clone()); m.visible = false; m.userData.dyn = true; scene.add(m); S.sparks.push({ m, life: 0, v: new THREE.Vector3() }); }
     }
-    const camNow = () => fitCam(TF.camera.aspect || BASE_ASPECT);
+    const aimV = new THREE.Vector3(), camNow = () => fitCam(TF.camera.aspect || BASE_ASPECT);
     const rayAt = (nx, ny) => E.rayFromNdc(camNow(), TF.camera.aspect || BASE_ASPECT, nx, ny);
     function entriesNow() { const out = []; for (const c of S.cards.values()) if (!c.fx || c.fx.kind !== 'shot') out.push(c.e); return out; }
     function burst(p) {
@@ -230,11 +260,12 @@
       if (!S.active || !S.round) return { uid: null };
       if (!world.canShoot()) { emit('dry'); return { uid: null, dry: true }; }
       const ray = rayAt(nx, ny), hit = E.hitTest(entriesNow(), S.rt, ray), tk = S.tokens.find((t) => !t.live);
-      const L3 = hit ? [hit.x, hit.y, L.lanes[S.cards.get(hit.uid).e.lane].z] : (() => { const k = (3.0 - ray.o[2]) / ray.d[2]; return [ray.o[0] + ray.d[0] * k, ray.o[1] + ray.d[1] * k, 3.0]; })();
-      if (tk) { tk.live = true; tk.t = 0; tk.dur = TOKEN_SECS; tk.uid = hit ? hit.uid : null; tk.from.copy(S.popper.g.position).add(new THREE.Vector3(0, 0, -0.6)); tk.to.copy(V(L3)); tk.m.visible = true; }
+      const lead = hit && E.cardPose(S.cards.get(hit.uid).e, S.rt + TOKEN_SECS);   // the dart lands where the card will be, on the spot that was aimed at
+      const L3 = hit ? [lead.state === 'moving' ? lead.x + hit.dx : hit.x, hit.y, L.lanes[S.cards.get(hit.uid).e.lane].z] : (() => { const k = (3.0 - ray.o[2]) / ray.d[2]; return [ray.o[0] + ray.d[0] * k, ray.o[1] + ray.d[1] * k, 3.0]; })();
+      if (tk) { tk.live = true; tk.t = 0; tk.dur = TOKEN_SECS; tk.uid = hit ? hit.uid : null; S.popper.g.updateMatrixWorld(true); S.popper.muzzle.getWorldPosition(tk.from); tk.to.copy(V(L3)); tk.m.visible = true; }
       S.recoil = 1;
       if (hit) { const c = S.cards.get(hit.uid); c.wait = TOKEN_SECS; }
-      emit('shoot', { uid: hit ? hit.uid : null, t: S.rt, nx, ny });
+      emit('shoot', { uid: hit ? hit.uid : null, t: S.rt, nx, ny, dx: hit ? hit.dx : 0, dy: hit ? hit.dy : 0 });
       return { uid: hit ? hit.uid : null };
     };
 
@@ -341,6 +372,7 @@
     world.tick = (t, dt) => {
       if (!S.active) return;
       if (dt > 0.25) dt = 0.25;
+      if (S.slow > 0) { S.slow -= dt; dt *= 0.35; }
       if (TF.camera.aspect !== S.aspect && !S.leaving) { applyCamera(S.aspect ? 0 : 800); }   // a resized window refits the view
       S.ret = stepReticle(S.ret, S.keys, dt);
       TF.camera.updateMatrixWorld();
@@ -351,7 +383,7 @@
         if (c.gone) continue;
         const p = E.cardPose(c.e, S.rt), fx = c.fx;
         if (p.state === 'pending') continue;
-        if (!c.slot) { if (p.state === 'gone' && !fx) { if (!c.passed) { c.passed = true; emit('pass', { uid }); } c.gone = true; continue; } c.slot = acquire(uid, c.it.card); if (!c.slot) continue; }
+        if (!c.slot) { if (p.state === 'gone' && !fx) { if (!c.passed) { c.passed = true; emit('pass', { uid }); } c.gone = true; continue; } c.slot = acquire(uid, c.it.card, c.e.dir); if (!c.slot) continue; }
         const m = c.slot.m;
         if (fx && fx.kind === 'shot') {
           fx.t += dt; if (!c.frozen) c.frozen = m.position.clone();
@@ -378,8 +410,10 @@
       if (S.hold.done) { const uid = S.hold.uid; S.hold = { uid: null, t: 0, progress: 0, done: false }; S.spent = true; if (S.touch) S.touch.inspected = true; emit('inspect', { uid }); }
       // tokens in flight, sparks, the popper's turn and recoil, the bell, the gates, the lanterns
       for (const k of S.tokens) if (k.live) {
-        k.t += dt / k.dur; const q = Math.min(1, k.t); k.m.position.lerpVectors(k.from, k.to, q); k.m.position.y += 0.08 * Math.sin(Math.PI * q); k.m.rotation.z += dt * 24;
-        if (q >= 1) { k.live = false; k.m.visible = false; burst(k.to); emit('land', { uid: k.uid }); }
+        k.t += dt / k.dur; const q = Math.min(1, k.t), at = (u, out) => out.lerpVectors(k.from, k.to, u).setY(out.y + 0.15 * Math.sin(Math.PI * u));
+        at(q, k.m.position); k.m.lookAt(at(Math.min(1, q + 0.05), aimV));   // nose along the flight path
+        k.trail.forEach((d, i) => { d.visible = q > 0.04 * (i + 1); at(Math.max(0, q - 0.07 * (i + 1)), d.position); });
+        if (q >= 1) { k.live = false; k.m.visible = false; k.trail.forEach((d) => (d.visible = false)); burst(k.to); emit('land', { uid: k.uid }); }
       }
       for (const s of S.sparks) if (s.life > 0) { s.life -= dt / 0.7; s.v.y -= 6 * dt; s.m.position.addScaledVector(s.v, dt); s.m.material.opacity = Math.max(0, s.life); if (s.life <= 0) s.m.visible = false; }
       const rr = rayAt(S.ret.nx, S.ret.ny), kk = (2.2 - rr.o[2]) / rr.d[2], aim = V([rr.o[0] + rr.d[0] * kk, rr.o[1] + rr.d[1] * kk, 2.2]), pg = S.popper.g;
@@ -403,14 +437,15 @@
         .gs-ret .dot { fill: var(--gold); stroke: none; }
         .gs-ret .ring { stroke: var(--ink); stroke-width: 4; stroke-dasharray: 100; transform: rotate(-90deg); transform-origin: 50% 50%; opacity: 0; }
         .gs-ret.on circle:not(.ring) { stroke: var(--ink); } .gs-ret.hold .ring { opacity: 1; }
-        .gs-read { position: absolute; display: none; max-width: 330px; padding: 8px 12px 9px; font-size: 16px; line-height: 1.3; }
-        .gs-read b { display: block; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .1em; color: var(--gold); margin-bottom: 3px; }
+        .gs-read { position: absolute; display: none; max-width: 420px; padding: 10px 14px 11px; font-size: 20px; line-height: 1.4; }   /* the caption is the real reading surface: big */
+        .gs-flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+        .gs-read b { display: block; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .1em; color: var(--gold); margin-bottom: 3px; }
         .gs-read i { display: block; font-style: normal; font-weight: 700; } .gs-read span { display: block; }
-        .gs-tag { position: absolute; transform: translate(-50%, -100%); max-width: 300px; padding: 4px 10px 5px; font-size: 15px; line-height: 1.25; border-left: 4px solid var(--gold); background: rgba(14, 16, 26, .9); }`;
+        .gs-tag { position: absolute; transform: translate(-50%, -100%); max-width: 300px; padding: 4px 10px 5px; font-size: 17px; line-height: 1.3; border-left: 4px solid var(--gold); background: rgba(14, 16, 26, .9); }`;
       document.head.appendChild(style);
       const root = document.createElement('div'); root.className = 'gs-ui'; document.getElementById('ui').appendChild(root);
-      root.innerHTML = '<div class="gs-ret"><svg viewBox="-22 -22 44 44"><circle r="14"/><circle class="dot" r="2.2"/><circle class="ring" r="18" pathLength="100"/></svg></div><div class="panel gs-read"></div><div class="gs-tags"></div>';
-      S.ui = { root, ret: root.querySelector('.gs-ret'), ring: root.querySelector('.ring'), read: root.querySelector('.gs-read'), tags: root.querySelector('.gs-tags') };
+      root.innerHTML = '<div class="gs-ret"><svg viewBox="-22 -22 44 44"><circle r="14"/><circle class="dot" r="2.2"/><circle class="ring" r="18" pathLength="100"/></svg></div><div class="panel gs-read"></div><div class="gs-tags"></div><div class="gs-flash"></div>';
+      S.ui = { flash: root.querySelector('.gs-flash'), root, ret: root.querySelector('.gs-ret'), ring: root.querySelector('.ring'), read: root.querySelector('.gs-read'), tags: root.querySelector('.gs-tags') };
     }
 
     // ---- building, at boot ----

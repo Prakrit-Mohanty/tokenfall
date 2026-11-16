@@ -12,12 +12,13 @@
 //  One coin and a striker. The four pockets are the four answers: shoot the coin into the pocket whose answer you think is right. Pull back from the striker
 //  and let go (or arrows and Space). The striker starts on a baseline and can be moved along it (A / D), or to another baseline (Tab, or click a baseline):
 //  a hit always pushes the coin away from the striker, so a pocket is shot at from one of the two sides facing away from it.
-//  Strikes: two per round. The wrong pocket is a strike and a Concept Card ("You sank: ..."); the coin goes back to where it was. A coin that stops on the
+//  Strikes (shown as "Mistakes"): two per round. The wrong pocket is a strike and a Concept Card ("You sank: ..."); the coin goes back to where it was. A coin that stops on the
 //  board costs only time and stays where it stopped (one that ends up far from the middle is nudged back towards it).
 //  At two strikes, or when the clock runs out, a ghost shot shows the answer and the round is flagged for spaced retrieval.
 //  Points: 3 if the right pocket was found on the first shot since the last answer, 2 on the second, 1 on the third or later. A sort round (three
 //  items, one coin each in turn) averages its items; the finale averages its two questions. Items answered right before a ghost keep their points
 //  (SORT_PARTIAL_CREDIT). Stars: 3 for 13+ of 15 with at most one strike in the whole run, 2 for 9+, 1 finished.
+//  A Quick run (chosen at the start, key 1) is rounds 1, 2 and the finale: 9 points at most, and the star thresholds scale with it (run.max).
 //  "First try" for mastery means a right pocket with no strike on that answer before it; a missed shot is skill, not knowledge.
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
@@ -28,7 +29,7 @@
   const CFG = P.CFG, DEG = Math.PI / 180;
   const RULES = { MAX_STRIKES: 2, STAR3_POINTS: 13, STAR3_STRIKES: 1, STAR2_POINTS: 9, MAX_POINTS: 15, SORT_PARTIAL_CREDIT: true, COMFORT_R: 24 };
   const pointsFor = (shots) => (shots <= 1 ? 3 : shots === 2 ? 2 : 1);
-  const starsFor = (total, strikes) => (total >= RULES.STAR3_POINTS && strikes <= RULES.STAR3_STRIKES ? 3 : total >= RULES.STAR2_POINTS ? 2 : 1);
+  const starsFor = (total, strikes, max = RULES.MAX_POINTS) => { const k = max / RULES.MAX_POINTS; return total >= RULES.STAR3_POINTS * k && strikes <= RULES.STAR3_STRIKES ? 3 : total >= RULES.STAR2_POINTS * k ? 2 : 1; };
 
   // ---------------------------------------------------------------- the aim guide
   // A straight shot from the striker (on `side`, at lane position t) at `angle` degrees (0 = north, clockwise). Returns where the striker's centre is when it first
@@ -99,16 +100,16 @@
 
   // ---------------------------------------------------------------- a whole run
   function createRun(spec) {
-    const run = { spec, i: 0, rounds: spec.rounds.map(createRound), finished: false };
+    const run = { spec, i: 0, rounds: spec.rounds.map(createRound), finished: false, max: 3 * spec.rounds.length };
     run.round = () => run.rounds[run.i];
     run.total = () => run.rounds.reduce((n, r) => n + r.points(), 0);
     run.strikes = () => run.rounds.reduce((n, r) => n + r.strikes, 0);
     run.answers = () => run.rounds.flatMap((r) => r.answers);
     run.advance = () => { if (run.i < run.rounds.length - 1) { run.i++; return true; } run.finished = true; return false; };
-    run.stars = () => starsFor(run.total(), run.strikes());
+    run.stars = () => starsFor(run.total(), run.strikes(), run.max);
     run.summary = () => {
       const answers = run.answers();
-      return { stars: run.stars(), points: +run.total().toFixed(2), strikes: run.strikes(), seed: spec.seed, seen: spec.seen,
+      return { stars: run.stars(), points: +run.total().toFixed(2), max: run.max, strikes: run.strikes(), seed: spec.seed, seen: spec.seen,
         rounds: run.rounds.map((r) => ({ side: r.round.side, kind: r.round.kind, points: +r.points().toFixed(2), strikes: r.strikes, over: r.over, flagged: r.flagged() })),
         answers, knewButMissed: answers.filter((a) => a.correct && a.shots >= 3).length, flagged: run.rounds.filter((r) => r.flagged()).map((r) => r.round.questions[0].conceptId) };
     };
@@ -165,43 +166,47 @@
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
-        .cq { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 9px; text-align: center; display: none; background: rgba(10,12,20,.95); border-color: var(--gold); }
-        .cq .k { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
-        .cq .t { font-size: clamp(17px, 1.7vw, 23px); line-height: 1.2; margin: 2px 0 6px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
+        .cq { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 9px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
+        .cq .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
+        .cq .t { font-size: clamp(17px, 1.7vw, 23px); line-height: 1.35; margin: 2px 0 6px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
         .cq .it { display: inline-block; margin: 0 0 6px; padding: 2px 12px; font-size: clamp(16px, 1.5vw, 20px); color: #1a140c; background: var(--gold); }
         .cq .a { display: grid; gap: 4px; grid-template-columns: repeat(2, 1fr); text-align: left; }
-        .cq .a > div { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: 15px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cq .a > div { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: 16px; line-height: 1.3; }
         .cq .a i { font-style: normal; flex: none; font-size: 17px; }
-        .cs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 14px; line-height: 1.7; display: none; min-width: 170px; }
+        .cs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.6; display: none; min-width: 170px; }
         .cs b { color: #ffe39a; font-weight: 600; } .cs kbd, .cm kbd, .ch kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .cs .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 4px; }
         .cs .pips i { width: 15px; height: 8px; border: 1px solid rgba(243,234,214,.45); } .cs .pips i.done { border-color: transparent; background: var(--c); } .cs .pips i.cur { border-color: #ffe39a; box-shadow: 0 0 0 1px #ffe39a; }
         .cs .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .cs .clock.low { color: #ff8f7a; }
         .cs .gems { display: inline-flex; gap: 8px; vertical-align: middle; } .cg { width: 9px; height: 9px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 8px var(--gold); } .cg.hot { background: #ff7a5c; box-shadow: 0 0 8px #ff7a5c; }
-        .cm { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
-        .ch { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
-        .ch h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .ch ul { margin: 0; padding-left: 20px; } .ch li { margin: 5px 0; } .ch .go { text-align: right; font-size: 14px; color: var(--gold); margin: 10px 0 0; }
+        .cm { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.4; background: rgba(32, 22, 19,.93); }
+        .cp { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100vw - 32px)); padding: 14px 24px; display: none; font-size: 20px; line-height: 1.5; text-align: center; background: rgba(32, 22, 19,.96); }
+        .cp h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .cp p { margin: 6px 0; } .cp kbd { font: inherit; padding: 0 6px; border: 1px solid rgba(243,234,214,.5); }
+        .ch { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(32, 22, 19,.96); }
+        .ch h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .ch ul { margin: 0; padding-left: 20px; } .ch li { margin: 5px 0; } .ch .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         @media (max-width: 1100px) { .cq { width: calc(100vw - 32px); top: 70px; } .cs { top: auto; bottom: 80px; } }
-        .carrom-on .bc, .carrom-on .cq, .carrom-on .cs, .carrom-on .cm, .carrom-on .ch { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
+        .carrom-on .bc, .carrom-on .cq, .carrom-on .cs, .carrom-on .cm, .carrom-on .ch, .carrom-on .cp { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .carrom-on #chat, .carrom-on #help { display: none; }   /* the chat log and key hints sit over the pockets; the table has its own hints */`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
-      return { style, q: mk('cq'), s: mk('cs'), m: mk('cm'), h: mk('ch'), qKey: '', sKey: '' };
+      return { style, q: mk('cq'), s: mk('cs'), m: mk('cm'), h: mk('ch'), p: mk('cp'), qKey: '', sKey: '' };
     }
     const sideName = (s) => CONTENT.SIDES[s].name;
     const MARK = ['▲', '●', '◆', '■'], SLOT_CSS = [CSS.amber, CSS.green, CSS.cyan, CSS.rose];
     const cardOpen = () => !!(bridge && bridge.card && bridge.card.open);
+    const flash = (good, text) => { if (bridge && bridge.flash) bridge.flash(good, text); };   // the shared gold / red flash (bridge-play.js)
     function say(html, secs = 2.6) { A.hint = secs; hud.m.innerHTML = html; hud.m.style.display = 'block'; }
     function drawHud(dt) {
       if (!S || !hud) return;
-      const R = S.run.round(), q = R.q(), st = R.st(), talking = TF.talking, helping = hud.h.style.display === 'block', on = S.on && !talking && !helping && S.phase !== 'done';   // at the end the report has the screen
+      const R = S.run.round(), q = R.q(), st = R.st(), talking = TF.talking, helping = hud.h.style.display === 'block', on = S.on && !talking && !helping && S.phase !== 'done' && S.phase !== 'pick';   // at the end the report has the screen; before the run, the Quick / Full choice has it
+      hud.p.style.display = S.on && S.phase === 'pick' && !talking && !helping ? 'block' : 'none';
       const key = [S.run.i, R.qi, st.idx, S.phase === 'card', helping, talking].join('|');
       hud.q.style.display = on && !cardOpen() ? 'block' : 'none';
       if (key !== hud.qKey) {
         hud.qKey = key;
-        const kicker = R.round.kind === 'case' ? `FINALE · CASE FILE · shot ${R.qi + 1} of 2` : `ROUND ${S.run.i + 1} OF 5 · ${sideName(q.side).toUpperCase()}`;
+        const kicker = R.round.kind === 'case' ? `LAST ROUND · SHOT ${R.qi + 1} OF 2` : `ROUND ${S.run.i + 1} OF ${S.run.rounds.length} · ${sideName(q.side).toUpperCase()}`;
         const item = q.kind === 'sort' ? `<div class="it">Item ${st.idx + 1} of ${st.targets.length}: ${esc(st.targets[st.idx].item.text)}</div>` : '';
-        hud.q.innerHTML = `<div class="k">${esc(kicker)}</div><div class="t">${esc(q.stem)}</div>${item}<div class="a">${q.options.map((o, i) => `<div><i style="color:${SLOT_CSS[i]}">${MARK[i]}</i><span>${esc(o.text)}</span></div>`).join('')}</div>`;
+        hud.q.innerHTML = `<div class="k">${esc(kicker)}</div><div class="t">${esc(q.stem)}</div>${item}<div class="a">${q.options.map((o, i) => `<div><i style="color:${SLOT_CSS[i]}" aria-hidden="true">${MARK[i]}</i><span>${esc(o.text)}</span></div>`).join('')}</div>`;
       }
       hud.s.style.display = on || cardOpen() ? 'block' : 'none';
       const secs = Math.ceil(R.clock), sKey = [secs, R.strikes, S.run.i, S.run.total().toFixed(1), muted()].join('|');
@@ -209,18 +214,21 @@
         hud.sKey = sKey;
         const pips = S.run.rounds.map((r, i) => `<i class="${r.done ? 'done' : ''}${i === S.run.i ? ' cur' : ''}" style="--c:${CSS[CONTENT.SIDES[r.round.side].zone]}"></i>`).join('');
         const gems = Array.from({ length: RULES.MAX_STRIKES }, (_, i) => `<i class="cg ${i < R.strikes ? 'hot' : ''}"></i>`).join('');   // gold while a strike is still free, red once spent
-        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div><div class="clock ${secs <= 10 ? 'low' : ''}">${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</div>Strikes <span class="gems">${gems}</span><br>Points <b>${S.run.total().toFixed(1)}</b><br><kbd>H</kbd> help · <kbd>M</kbd> ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
+        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div><div class="clock ${secs <= 10 ? 'low' : ''}">${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</div>Mistakes <span class="gems">${gems}</span><br>Points <b>${S.run.total().toFixed(1)}</b><br><kbd>H</kbd> help · <kbd>M</kbd> sound ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
       }
       if (A.hint > 0) { A.hint -= dt; hud.m.style.display = A.hint <= 0 || !on ? 'none' : 'block'; }
-      else if (on && S.phase === 'aim' && coachSeen < 3 && !cardOpen()) { hud.m.innerHTML = 'Pull back from the striker and let go. Press <kbd>Tab</kbd> or click a baseline to shoot from another side.'; hud.m.style.display = 'block'; }
+      else if (on && S.phase === 'aim' && coachSeen < 3 && !cardOpen()) { hud.m.innerHTML = coachRule(R); hud.m.style.display = 'block'; }
       else hud.m.style.display = 'none';
     }
+    // coaching: one short rule per round for the first three runs (coachSeen counts the runs in which you took a shot)
+    const COACH = ['Pull back from the striker and let go. The coin flies away from it.', 'Press <kbd>Tab</kbd> or click a baseline to shoot from another side.', 'A wrong pocket is a mistake. Two mistakes end the round.'];
+    const coachRule = (R) => (S.run.i === 0 ? COACH[0] : R.round.kind === 'sort' ? 'Sort round: send each item to its own pocket.' : R.round.kind === 'case' ? 'Last round: two linked questions, one shot each.' : COACH[Math.min(S.run.i, 2)]);
     const COACH_KEY = 'tokenfall.carrom.coach'; let coachSeen = 0;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.h.innerHTML = '<h3>HOUSE RULES</h3><ul><li>The four pockets are the four answers. Flick the coin into the one you think is right.</li><li>Pull back from the striker and let go: the farther you pull, the harder the shot. Or <kbd>←</kbd><kbd>→</kbd> turn, hold <kbd>Space</kbd> and release. <kbd>A</kbd><kbd>D</kbd> slide the striker.</li><li>A hit pushes the coin away from the striker, so shoot from a side facing away from your pocket: <kbd>Tab</kbd> or a click on any baseline moves the striker there. The dotted line shows where the coin will go.</li><li>Wrong pocket: a strike and a Concept Card (<kbd>E</kbd> continues). Two strikes, or no time, and the ghost shows the answer. A coin that stops on the board only costs time.</li><li><kbd>M</kbd> sound · <kbd>Esc</kbd> leave (progress is kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.h.innerHTML = '<h3>HOUSE RULES</h3><ul><li>The four pockets are the four answers. Flick the coin into the one you think is right.</li><li>Pull back from the striker and let go: the farther you pull, the harder the shot. Or <kbd>←</kbd><kbd>→</kbd> turn, hold <kbd>Space</kbd> and release. <kbd>A</kbd><kbd>D</kbd> slide the striker.</li><li>A hit pushes the coin away from the striker. So shoot from a side facing away from your pocket. <kbd>Tab</kbd> or a click on a baseline moves the striker there. The dotted line shows where the coin will go.</li><li>Wrong pocket: a mistake and a Concept Card (<kbd>E</kbd> continues). Two mistakes, or no time, and the ghost shows the answer. A coin that stops on the board only costs time.</li><li><kbd>S</kbd> skips talk, cards and waits. <kbd>M</kbd> sound. <kbd>Esc</kbd> leave (progress is kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
       hud.h.style.display = on ? 'block' : 'none';
     }
     const helpOpen = () => !!hud && hud.h.style.display === 'block';
@@ -288,10 +296,17 @@
     function afterTalk(fn) { S.waitTalk = fn; }
     function startRun() {
       const r = progress.newRun(), spec = G.composeRun(G.seedFor(r.playerId, r.runIndex), r.history);
-      S = { on: true, run: createRun(spec), runInfo: r, phase: 'intro', state: null, sim: null, anim: null, cx: 50, cy: 50, prev: null, shake: { t: 0, d: 1, m: 0 }, ghost: null, waitTalk: null, brief: 0, lastSecs: -1, startedAt: Date.now(), cardOut: null, ghostCard: false, pendingNext: false, roundDone: false };
+      S = { on: true, run: createRun(spec), runInfo: r, phase: 'pick', coached: false, state: null, sim: null, anim: null, cx: 50, cy: 50, prev: null, shake: { t: 0, d: 1, m: 0 }, ghost: null, waitTalk: null, brief: 0, lastSecs: -1, startedAt: Date.now(), cardOut: null, ghostCard: false, pendingNext: false, roundDone: false };
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed, seen: spec.seen.slice() });
+      hud.p.innerHTML = '<h3>CHOOSE YOUR RUN</h3><p><kbd>1</kbd> Quick: 3 rounds, about 3 minutes</p><p><kbd>2</kbd> or <kbd>E</kbd> Full: 5 rounds</p>';
+    }
+    // the Quick / Full choice (keys 1 / 2, E = Full), then the brief: the full one on the first play, one line after that. Quick = rounds 1, 2 and the finale.
+    function pickLength(quick) {
+      const sp = S.run.spec;
+      if (quick) { sp.rounds = [sp.rounds[0], sp.rounds[1], sp.rounds[sp.rounds.length - 1]]; sp.seen = sp.rounds.flatMap((r) => r.questions.map((q) => q.variantId)).concat(sp.rerolled || []); sp.clockSeconds = sp.rounds.reduce((n, r) => n + r.clock, 0); S.run = createRun(sp); }
+      S.phase = 'intro'; hud.p.style.display = 'none';
       TF.talk('devansh', coachSeen === 0
-        ? ['Welcome to the carrom table. House rules: the pockets are the answers.', 'Shoot the coin into the pocket you think is right. Wrong pocket? A Concept Card and a strike. Two strikes and I show you how it is done.', 'Pull back from the striker and let go. Tab or a click on a baseline moves you to another side. M mutes. Esc leaves.']
+        ? ['Welcome to the carrom table. The four pockets are the four answers.', 'Shoot the coin into the pocket you think is right. A wrong pocket costs a mistake and shows a Concept Card. Two mistakes and I show you the answer.', 'Pull back from the striker and let go. Tab or a click on a baseline changes your side. S skips talk. M mutes. Esc leaves.']
         : ['Back for another? Same rules: the pockets are the answers.']);
       afterTalk(() => startRound(0));
     }
@@ -308,7 +323,7 @@
       const st = newState(A.side, A.t); P.applyShot(st, { side: A.side, strikerX: A.t, angle: A.angle, power: A.power });
       S.prev = { x: S.cx, y: S.cy }; S.state = st; S.sim = { acc: 0, events: [], power: A.power, sink: null, strikerSunk: false }; S.phase = 'rolling'; S.anim = null;
       sfx('clack', A.power); clearGuide(); A.power = 0; A.charging = false;
-      if (S.run.round().shots === 0 && coachSeen < 3) bumpCoach();
+      if (!S.coached) { S.coached = true; if (coachSeen < 3) bumpCoach(); }
     }
     const pocketXY = (p) => ({ x: P.POCKETS[p][0], y: P.POCKETS[p][1] });
     const showBodies = (st) => { const s = st.bodies[0], c = st.bodies[1]; if (s.alive) world.setStriker(s.x, s.y, true); else strikerMesh().visible = false; if (c.alive) world.setCoin(c.x, c.y, true); };
@@ -336,18 +351,26 @@
       const out = R.judge({ pocket: sim.sink }); if (!out) return;
       emit('shot', { kind: out.kind, shots: out.shots });
       if (out.kind === 'right') {
+        flash(true, out.shots === 1 ? `First shot! +${out.pts}` : '');
         sfx('chime'); world.pulse(out.pocket, true); setTimeout(() => { if (S) world.pulse(0, false); }, 1200);
         if (out.solvedQ && !out.nextQ) { roundEnd(); return; }
         S.phase = 'between'; S.brief = 1.1; S.pendingNext = true; return;
       }
       if (out.kind === 'wrong') {
-        sfx('crack'); if (!REDUCED) S.shake = { t: 0.28, d: 0.28, m: 0.012 };
-        TF.sys(`Not that pocket. Strike ${R.strikes} of ${RULES.MAX_STRIKES}.`);
-        S.phase = 'card'; S.cardOut = out; bridge.card.show(out.card); return;
+        sfx('crack'); flash(false); if (!REDUCED) S.shake = { t: 0.28, d: 0.28, m: 0.012 };
+        TF.sys(`Not that pocket. Mistake ${R.strikes} of ${RULES.MAX_STRIKES}.`);
+        S.phase = 'card'; S.cardOut = out; bridge.card.show(Object.assign({ skippable: true }, out.card, { lead: `You sank ${MARK[R.q().options.findIndex((o) => o.corner === out.pocket)]}:` })); return;   // the pocket's mark, so colour is not the only cue
       }
       // a miss: only time is lost, and the coin stays where it stopped
       S.phase = 'aim'; setBack(); aimAtCoin();
       say(S.state.first == null ? 'The striker missed the coin. Line it up and pull back again.' : sim.strikerSunk ? 'The striker fell in a pocket. Only time lost.' : 'No pocket that time. Try another angle, or another side (Tab).');
+    }
+    function skip() {   // S: jump over what is left of a debrief (the ghost shot, the answer card, the wait) to the next question or round
+      if (!S || S.phase === 'pick' || helpOpen()) return;
+      if (S.phase === 'card') closeCard();
+      if (S.phase === 'ghost') ghostDone();
+      if (S.phase === 'card' && S.ghostCard) closeCard();
+      if (S.phase === 'between' || S.phase === 'brief') S.brief = 0;
     }
     function closeCard() {
       if (!S || S.phase !== 'card') return;
@@ -360,7 +383,7 @@
     // ---- the ghost shot: the stored shot that sinks the coin in the right pocket, played on the real physics ----
     function startGhost(why) {
       const R = S.run.round(), q = R.q(); clearGuide();
-      TF.banner(why === 'timeout' ? 'Time is up' : 'Two strikes', 'Watch how it is done');
+      TF.banner(why === 'timeout' ? 'Time is up' : 'Two mistakes', 'Watch how it is done');
       emit('ghost', { why, conceptId: q.conceptId });
       S.ghost = { list: R.unsolved(), i: -1, hold: 0, rest: false }; S.phase = 'ghost'; nextGhost();
     }
@@ -388,7 +411,7 @@
       const R = S.run.round(), q = R.q(), left = R.unsolved();
       R.giveUp(); S.ghost = null; world.pulse(0, false); S.phase = 'card'; S.ghostCard = true; S.cardOut = null;
       const text = q.kind === 'pick' ? q.options.find((o) => o.correct).text : left.map((t) => `${t.item.text} → ${t.correct.text}`).join('; ');
-      bridge.card.show({ lead: left.length > 1 ? 'The answers:' : 'The answer:', text, idea: q.idea, hint: 'Continue' });
+      bridge.card.show({ skippable: true, lead: (left.length > 1 ? 'The answers' : 'The answer') + (q.kind === 'pick' ? ` ${MARK[q.options.findIndex((o) => o.correct)]}:` : ':'), text, idea: q.idea, hint: 'Continue' });
     }
 
     // ---- ending a round and the run ----
@@ -403,10 +426,10 @@
     }
     function finish() {
       S.run.finished = true; const sum = S.run.summary(); sum.seconds = Math.round((Date.now() - S.startedAt) / 1000); sum.tokens = Math.round(sum.points * 20) + 25 * (sum.stars - 1); sum.playerId = S.runInfo.playerId; sum.runIndex = S.runInfo.runIndex;   // 20 a point, and 25 for every star after the first
-      sfx('chime'); TF.banner('The table is clear', `${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)}`);
+      sfx('chime'); flash(true, sum.stars === 3 ? 'Table clear!' : ''); TF.banner('The table is clear', `${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)}`);
       emit('finish', sum); S.phase = 'done'; S.summary = sum; world.setPockets([]); coinMesh().visible = false; strikerMesh().visible = false;
       if (play.debrief) play.debrief(sum);
-      else { TF.talk('devansh', [`${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)} ${sum.points.toFixed(1)} of 15 points, ${sum.strikes} strike${sum.strikes === 1 ? '' : 's'}.`, sum.flagged.length ? 'A few ideas will come back next time. That is the point.' : 'Clean table. Come back for a different set of questions.']); afterTalk(() => leave()); }
+      else { TF.talk('devansh', [`${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)} ${sum.points.toFixed(1)} of ${sum.max} points, ${sum.strikes} mistake${sum.strikes === 1 ? '' : 's'}.`, sum.flagged.length ? 'A few ideas will come back next time. That is the point.' : 'Clean table. Come back for a different set of questions.']); afterTalk(() => leave()); }
     }
 
     // ---- leaving: Esc, or the end ----
@@ -416,7 +439,7 @@
       bridge && bridge.card && bridge.card.hide(); showHelp(false); clearGuide(); S.on = false;
       const s = S; S = null; A.charging = A.drag = false; for (const k in held) held[k] = false;
       if (fx) { fx.dispose(); fx = null; }
-      if (hud) for (const k of ['q', 's', 'm', 'h']) hud[k].style.display = 'none';
+      if (hud) for (const k of ['q', 's', 'm', 'h', 'p']) hud[k].style.display = 'none';
       document.getElementById('ui').classList.remove('carrom-on'); world.leave();
       return s;
     }
@@ -440,6 +463,8 @@
       if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
+      if (S.phase === 'pick') { if (!e.repeat && ['Digit1', 'Numpad1'].includes(e.code)) pickLength(true); else if (!e.repeat && ['Digit2', 'Numpad2', 'KeyE', 'Enter'].includes(e.code)) pickLength(false); return true; }
+      if (e.code === 'KeyS' && !e.repeat) { skip(); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else closeCard(); return true; }
       if (e.code === 'Tab' && !e.repeat) { if (canAim()) { const k = SIDE_CYCLE.indexOf(A.side); setLane(SIDE_CYCLE[(k + (e.shiftKey ? 3 : 1)) % 4], A.t); } return true; }
       held[e.code] = true;
@@ -517,6 +542,7 @@
       TF.life.push((t, dt) => frame(t, dt));
       const prev = TF.onKey; TF.onKey = (e) => (S && S.on ? onKey(e) : prev ? prev(e) : false);
       addEventListener('keyup', onKeyUp);
+      addEventListener('keydown', (e) => { if (e.code === 'KeyS' && !e.repeat && S && S.on && TF.talking && bridge && bridge.skipTalk) bridge.skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
       const el = TF.renderer.domElement; el.style.touchAction = 'none';
       el.addEventListener('pointerdown', onPointerDown); el.addEventListener('pointermove', onPointerMove); el.addEventListener('pointerup', onPointerUp); el.addEventListener('pointercancel', onPointerUp);
       addEventListener('blur', () => { A.charging = false; A.drag = false; for (const k in held) held[k] = false; });

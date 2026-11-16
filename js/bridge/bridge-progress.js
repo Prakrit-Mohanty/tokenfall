@@ -153,14 +153,14 @@
         .br { position: absolute; top: 43%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); max-height: calc(100vh - 190px); overflow-y: auto; padding: 16px 22px 14px; display: none; font-size: 17px; line-height: 1.4; background: rgba(40, 28, 24, .95); pointer-events: auto; }
         .br h3 { margin: 0; font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
         .br .sum { margin: 4px 0 10px; font-size: 18px; } .br .sum b { color: #ffe39a; font-weight: 600; }
-        .br .row { display: grid; grid-template-columns: 170px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 15px; }
+        .br .row { display: grid; grid-template-columns: 170px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 16px; }
         .br .bar { height: 11px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); } .br .bar i { display: block; height: 100%; }
-        .br .num { text-align: right; opacity: .85; font-size: 14px; }
+        .br .num { text-align: right; opacity: .85; font-size: 15px; }
         .br h4 { margin: 12px 0 4px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
-        .br ul { margin: 0; padding-left: 18px; } .br li { margin: 3px 0; } .br li small { opacity: .8; font-size: 14px; } .br .none { opacity: .8; }
-        .br .note { margin-top: 8px; font-size: 13px; opacity: .7; }
-        .br .acts { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 14px; }
-        .br button { font: inherit; color: var(--ink); background: rgba(14,16,26,.9); border: 1px solid var(--gold); padding: 4px 12px; cursor: pointer; }
+        .br ul { margin: 0; padding-left: 18px; } .br li { margin: 3px 0; } .br li small { opacity: .8; font-size: 15px; } .br .none { opacity: .8; }
+        .br .note { margin-top: 8px; font-size: 15px; opacity: .8; }
+        .br .acts { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 16px; }
+        .br button { font: inherit; color: var(--ink); background: rgba(40, 28, 24,.9); border: 1px solid var(--gold); padding: 4px 12px; cursor: pointer; }
         .br button:hover { background: rgba(217,180,106,.2); } .br kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         @media (max-width: 560px) { .br .row { grid-template-columns: 110px 1fr 66px; } }`;
       document.head.appendChild(style);
@@ -173,7 +173,7 @@
       const rev = revisitList(data), w = data.topicWeights, next = stats.slice().sort((a, b) => w[b.id] - w[a.id]).slice(0, 2).map((t) => t.name);
       const stars = summary ? '★'.repeat(summary.stars) + '☆'.repeat(3 - summary.stars) : '';
       const sum = summary
-        ? `<b>${stars}</b> · <b>${summary.tokens}</b> tokens · <b>${summary.falls}</b> knowledge fall${summary.falls === 1 ? '' : 's'}${summary.scans ? ` · <b>${summary.scans}</b> scan${summary.scans === 1 ? '' : 's'}` : ''} · ${Math.floor(summary.seconds / 60)}m ${String(summary.seconds % 60).padStart(2, '0')}s`
+        ? `<b>${stars}</b> · <b>${summary.tokens}</b> tokens · <b>${summary.falls}</b> mistake${summary.falls === 1 ? '' : 's'}${summary.scans ? ` · <b>${summary.scans}</b> hint${summary.scans === 1 ? '' : 's'}` : ''} · ${Math.floor(summary.seconds / 60)}m ${String(summary.seconds % 60).padStart(2, '0')}s`
         : `<b>${data.runs.filter((r) => r.finished).length}</b> run${data.runs.filter((r) => r.finished).length === 1 ? '' : 's'} finished · <b>${Object.values(data.concepts).filter((c) => c.mastered).length}/${C.CARDS.length}</b> concepts mastered`;
       panel.innerHTML = `<h3>REPORT CARD</h3><div class="sum">${sum}</div>`
         + stats.map((t) => `<div class="row"><span>${esc(t.name)}</span><span class="bar" role="img" aria-label="${esc(t.name)} ${Math.round(t.mastery * 100)}%"><i style="width:${Math.round(t.mastery * 100)}%;background:${ZONE_CSS[t.zone]}"></i></span><span class="num">${t.mastered}/${t.total} · ${Math.round(t.mastery * 100)}%</span></div>`).join('')
@@ -209,7 +209,7 @@
           TF.talk('Referee', [
             `Across the glass! ${'★'.repeat(summary.stars)}${'☆'.repeat(3 - summary.stars)} Fun fact: this report card is about 90 tokens long.`,
             best && worst && best !== worst ? `Steadiest ground: ${best.name}. Wobbliest: ${worst.name}. The next bridge will lean that way.` : 'Cross a few more bridges and I will tell you where you wobble.',
-            'Your report card is up. E closes it, J saves it as JSON, R brings it back.',
+            'Your report card is up. E closes it. J saves it as JSON. R brings it back.',
           ]);
         };
         const prev = TF.onKey;

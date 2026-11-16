@@ -106,39 +106,40 @@
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
-        .tq { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 9px; text-align: center; display: none; background: rgba(10,12,20,.95); border-color: var(--gold); }
-        .tq .k { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
-        .tq .t { font-size: clamp(17px, 1.7vw, 23px); line-height: 1.2; margin: 2px 0 6px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
+        .tq { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 9px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
+        .tq .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
+        .tq .t { font-size: clamp(17px, 1.7vw, 23px); line-height: 1.35; margin: 2px 0 6px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
         .tq .a { display: grid; gap: 4px; grid-template-columns: repeat(2, 1fr); text-align: left; }
         .tq.nolegend .a { display: none; }
-        .tq .a > div { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: 15px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tq .a > div { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: 16px; line-height: 1.3; }
         .tq .a > div.out { opacity: .45; text-decoration: line-through; } .tq .a i { font-style: normal; flex: none; font-size: 17px; }
-        .ts { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 14px; line-height: 1.7; display: none; min-width: 170px; }
+        .ts { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.6; display: none; min-width: 170px; }
         .ts b { color: #ffe39a; font-weight: 600; } .ts kbd, .tm kbd, .th kbd, .tg kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .ts .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 4px; }
         .ts .pips i { width: 15px; height: 8px; border: 1px solid rgba(243,234,214,.45); } .ts .pips i.done { border-color: transparent; background: var(--c); } .ts .pips i.cur { border-color: #ffe39a; box-shadow: 0 0 0 1px #ffe39a; }
         .ts .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .ts .clock.low { color: var(--hot); }
         .ts .gems { display: inline-flex; gap: 8px; vertical-align: middle; } .tgem { width: 9px; height: 9px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 8px var(--gold); } .tgem.hot { background: var(--hot); box-shadow: 0 0 8px var(--hot); }
-        .tm { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
-        .tg { position: absolute; left: 18px; bottom: 22px; width: 232px; padding: 8px 12px 9px; display: none; font-size: 14px; line-height: 1.35; background: rgba(10,12,20,.94); }
-        .tg h5 { margin: 0 0 5px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); display: flex; justify-content: space-between; } .tg h5 span { font-family: 'Pixelify Sans'; letter-spacing: .04em; color: var(--c); font-size: 15px; }
+        .tm { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.4; background: rgba(32, 22, 19,.93); }
+        .tg { position: absolute; left: 18px; bottom: 22px; width: 264px; padding: 8px 12px 9px; display: none; font-size: 16px; line-height: 1.4; background: rgba(32, 22, 19,.94); }
+        .tg h5 { margin: 0 0 5px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); display: flex; justify-content: space-between; } .tg h5 span { font-family: 'Pixelify Sans'; letter-spacing: .04em; color: var(--c); font-size: 16px; }
         .tg .bar { height: 11px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); margin-bottom: 7px; } .tg .bar i { display: block; height: 100%; background: var(--c); transition: width .08s; }
         .tg canvas { display: block; width: 112px; height: 112px; margin: 0 auto 4px; background: rgba(255,255,255,.04); border: 1px solid rgba(217,180,106,.3); } .tg p { margin: 0; opacity: .85; }
-        .th { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
-        .th h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .th ul { margin: 0; padding-left: 20px; } .th li { margin: 5px 0; } .th .go { text-align: right; font-size: 14px; color: var(--gold); margin: 10px 0 0; }
+        .th { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(32, 22, 19,.96); }
+        .th h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .th ul { margin: 0; padding-left: 20px; } .th li { margin: 5px 0; } .th .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         @media (max-width: 1100px) { .tq { width: calc(100vw - 32px); top: 70px; } .ts { top: auto; bottom: 80px; } .tg { bottom: 80px; } }
         .tower-on .tq, .tower-on .ts, .tower-on .tm, .tower-on .th, .tower-on .tg, .tower-on .tt-tag { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .tower-on #chat, .tower-on #help { display: none; }   /* the chat log and key hints sit over the tower; the tower has its own hints */`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
       const h = { style, q: mk('tq'), s: mk('ts'), m: mk('tm'), g: mk('tg'), h: mk('th'), qKey: '', sKey: '', gKey: '' };
-      h.s.style.setProperty('--hot', STYLE[3].css); h.g.innerHTML = '<h5>STABILITY <span id="tgBand">green</span></h5><div class="bar"><i id="tgFill"></i></div><canvas id="tgDiag" width="224" height="224"></canvas><p id="tgNote"></p>';
+      h.s.style.setProperty('--hot', STYLE[3].css); h.g.innerHTML = '<h5>BALANCE <span id="tgBand">steady</span></h5><div class="bar"><i id="tgFill"></i></div><canvas id="tgDiag" width="224" height="224"></canvas><p id="tgNote"></p>';
       h.gc = h.g.querySelector('#tgDiag'); h.gf = h.g.querySelector('#tgFill'); h.gb = h.g.querySelector('#tgBand'); h.gn = h.g.querySelector('#tgNote');
       return h;
     }
     const cardOpen = () => !!(bridge && bridge.card && bridge.card.open);
     const helpOpen = () => !!hud && hud.h.style.display === 'block';
     const sideName = (s) => CONTENT.SIDES[s].name;
+    const flash = (good, text) => { if (bridge && bridge.flash) bridge.flash(good, text); };   // the shared gold / red flash (bridge-play.js)
     function say(html, secs = 2.8) { S.hint = secs; hud.m.innerHTML = html; hud.m.style.display = 'block'; }
     function drawHud(dt) {
       if (!S || !hud) return;
@@ -147,7 +148,7 @@
       hud.q.style.display = on ? 'block' : 'none'; hud.q.classList.toggle('nolegend', !S.legend);
       if (key !== hud.qKey) {
         hud.qKey = key;
-        const kicker = q.kind === 'finale' ? `ROLLOUT CASE · DECISION ${run.i - 3} OF 3` : `QUESTION ${run.i + 1} OF ${run.total()} · ${sideName(q.side).toUpperCase()}`;
+        const kicker = q.kind === 'finale' ? `FINAL CASE · CHOICE ${run.i - 3} OF 3` : `QUESTION ${run.i + 1} OF ${run.total()} · ${sideName(q.side).toUpperCase()}`;
         hud.q.innerHTML = `<div class="k">${esc(kicker)}</div><div class="t">${esc(q.stem)}</div><div class="a">${q.options.map((o) => `<div class="${run.st().struck.has(o.n) ? 'out' : ''}"><i style="color:${STYLE[o.n - 1].css}">${STYLE[o.n - 1].mark}</i><b>${o.n}</b><span>${esc(o.text)}</span></div>`).join('')}</div>`;
       }
       hud.s.style.display = on || (S.phase === 'card' && cardOpen()) ? 'block' : 'none';
@@ -156,35 +157,37 @@
         hud.sKey = sKey;
         const pips = run.qs.map((st, i) => `<i class="${st.placed ? 'done' : ''}${i === run.i ? ' cur' : ''}" style="--c:${run.spec.questions[i].kind === 'finale' ? 'var(--gold)' : STYLE[SIDE_SLOT[run.spec.questions[i].side]].css}"></i>`).join('');
         const gems = Array.from({ length: RULES.MAX_WRONG }, (_, i) => `<i class="tgem ${i < run.wrong ? 'hot' : ''}"></i>`).join('');   // gold while a try is still free, red once spent
-        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div><div class="clock ${secs <= 30 ? 'low' : ''}">${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</div>Wrong tries <span class="gems">${gems}</span><br>Placed <b>${run.placed}/${run.total()}</b> · Points <b>${run.points()}</b><br><kbd>H</kbd> help · <kbd>M</kbd> ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
+        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div><div class="clock ${secs <= 30 ? 'low' : ''}">${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</div>Wrong tries <span class="gems">${gems}</span><br>Placed <b>${run.placed}/${run.total()}</b> · Points <b>${run.points()}</b><br><kbd>H</kbd> help · <kbd>M</kbd> sound ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
       }
       hud.g.style.display = on && S.phase === 'place' ? 'block' : 'none';
       if (S.hint > 0) { S.hint -= dt; hud.m.style.display = S.hint <= 0 || !on ? 'none' : 'block'; }
-      else if (on && S.phase === 'select' && coachSeen < 3 && !cardOpen()) { hud.m.innerHTML = 'Press <kbd>1</kbd>-<kbd>4</kbd> or click a block, then hold <kbd>Space</kbd> to pull it. <kbd>A</kbd><kbd>D</kbd> turn the view.'; hud.m.style.display = 'block'; }
-      else if (on && S.phase === 'place') { hud.m.innerHTML = 'Move the block with the mouse or <kbd>←</kbd><kbd>→</kbd>. <kbd>Space</kbd> or a click sets it down.'; hud.m.style.display = 'block'; }
+      else if (on && S.phase === 'select' && coachSeen < 3 && !cardOpen()) { hud.m.innerHTML = COACH[Math.min(run.i, COACH.length - 1)]; hud.m.style.display = 'block'; }
+      else if (on && S.phase === 'place') { hud.m.innerHTML = 'Move the block with the mouse or <kbd>←</kbd><kbd>→</kbd>. Then press <kbd>Space</kbd> or click to set it down.'; hud.m.style.display = 'block'; }
       else hud.m.style.display = 'none';
     }
+    // coaching: one short rule per question for the first three runs (coachSeen counts the runs in which you pulled a block)
+    const COACH = ['Press <kbd>1</kbd>-<kbd>4</kbd> or click a block. Then hold <kbd>Space</kbd> to pull it.', 'A wrong block jams and shows a card. The tower gets shakier.', 'A right block hovers. Set it down where the gauge is steady.', '<kbd>A</kbd><kbd>D</kbd> turn the view. <kbd>Tab</kbd> hides the answer list.', 'Three wrong tries bring the tower down.', 'The last three are one case. Same rules.'];
     const COACH_KEY = 'tokenfall.tower.coach'; let coachSeen = 0;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.h.innerHTML = '<h3>TOKEN TOWER</h3><ul><li>Four blocks carry four answers. Press <kbd>1</kbd>-<kbd>4</kbd> or click the block you think is right, then hold <kbd>Space</kbd> to pull it.</li><li>Right block: it slides out and hovers. Set it on top where the gauge stays green: <kbd>←</kbd><kbd>→</kbd> or the mouse, then <kbd>Space</kbd> or a click.</li><li>Wrong block: it jams and slides back, a Concept Card shows why, and the tower gets nervous. Three wrong tries in a run bring it down. A stack that tips does too.</li><li><kbd>A</kbd><kbd>D</kbd> or a drag turn the view. <kbd>Tab</kbd> hides the answer list. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>Esc</kbd> leaves (progress is kept, without mastery credit for an unfinished run).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.h.innerHTML = '<h3>TOKEN TOWER</h3><ul><li>Four blocks carry four answers. Press <kbd>1</kbd>-<kbd>4</kbd> or click the block you think is right. Then hold <kbd>Space</kbd> to pull it.</li><li>Right block: it slides out and hovers. Set it on top where the gauge stays steady. Use <kbd>←</kbd><kbd>→</kbd> or the mouse, then <kbd>Space</kbd> or a click.</li><li>Wrong block: it jams and slides back. A Concept Card shows why, and the tower gets shakier. Three wrong tries in a run bring it down. A stack that tips does too.</li><li><kbd>A</kbd><kbd>D</kbd> or a drag turn the view. <kbd>Tab</kbd> hides the answer list. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>S</kbd> skips talk and cards. <kbd>Esc</kbd> leaves (progress is kept, without mastery credit for an unfinished run).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
       hud.h.style.display = on ? 'block' : 'none';
     }
 
     // ---- the gauge: green / amber / red, and a top-down look at the weakest interface (the centre of mass against what holds it up) ----
-    const BAND_NOTE = { green: 'Well supported.', amber: 'Getting thin.', red: 'About to go.', tip: 'It will tip.' };
+    const BAND_NOTE = { green: 'Steady.', amber: 'Getting thin.', red: 'About to tip.', tip: 'It will tip.' }, BAND_WORD = { green: 'steady', amber: 'thin', red: 'risky', tip: 'TIPS' };
     function drawGauge() {
       const st = S.st, m = S.shown, band = E.band(m), c = STYLE[BAND_SLOT[band]].css;
       const key = [S.u, S.layer, Math.round(m * 100), band].join('|'); if (key === hud.gKey) return; hud.gKey = key;
-      hud.g.style.setProperty('--c', c); hud.gb.textContent = band === 'tip' ? 'TIPS' : band; hud.gf.style.width = Math.round(clamp(m / 0.6, 0.03, 1) * 100) + '%';
+      hud.g.style.setProperty('--c', c); hud.gb.textContent = `${STYLE[BAND_SLOT[band]].mark} ${BAND_WORD[band]}`;   // the mark and the word, so the colour is not the only cue hud.gf.style.width = Math.round(clamp(m / 0.6, 0.03, 1) * 100) + '%';
       const g = hud.gc.getContext('2d'), N = 224, k = N / 4.4, X = (x) => N / 2 + x * k, Z = (z) => N / 2 + z * k;   // 4.4 block widths across
       g.clearRect(0, 0, N, N); g.strokeStyle = 'rgba(243,234,214,.35)'; g.lineWidth = 2; g.strokeRect(X(-1.5), Z(-1.5), 3 * k, 3 * k);   // the tower's footprint
       if (st.hullPoints.length) { g.beginPath(); st.hullPoints.forEach((p, i) => (i ? g.lineTo(X(p[0]), Z(p[1])) : g.moveTo(X(p[0]), Z(p[1])))); g.closePath(); g.fillStyle = 'rgba(125,255,138,.22)'; g.fill(); g.lineWidth = 3; g.strokeStyle = 'rgba(125,255,138,.9)'; g.stroke(); }
       if (st.comPoint) { g.beginPath(); g.arc(X(st.comPoint[0]), Z(st.comPoint[1]), 9, 0, 6.2832); g.fillStyle = c; g.fill(); g.lineWidth = 3; g.strokeStyle = '#14100a'; g.stroke(); }
-      const w = st.weakest, where = !w ? '' : w.kind === 'block' ? `the block itself, layer ${w.layer + 1}` : `layers ${w.k + 1} and ${w.k + 2}`;
-      hud.gn.innerHTML = `${BAND_NOTE[band]} Weakest: ${esc(where)}. The dot is the weight above, the green shape is what holds it up.`;
+      const w = st.weakest, where = !w ? '' : w.kind === 'block' ? `layer ${w.layer + 1}` : `layers ${w.k + 1} and ${w.k + 2}`;
+      hud.gn.innerHTML = `${BAND_NOTE[band]} Weak spot: ${esc(where)}. The dot is the weight. The green shape is what holds it up.`;
     }
 
     // ---- flow ----
@@ -197,7 +200,7 @@
       if (quiet) { TF.banner('A new tower', 'New questions'); showQuestion(); return; }
       TF.banner('Token Tower', 'Pull the block that carries the answer');
       TF.talk('Token Tower', coachSeen === 0
-        ? ['Welcome to the Token Tower. Seven blocks, seven answers.', 'Pick the block that carries the right answer and hold Space to pull it. Wrong block? A Concept Card, and the tower gets nervous. Three wrong tries and it falls.', 'Then set your block on top, steady. A and D turn the view. Tab hides the list. M mutes. Esc leaves.']
+        ? ['Welcome to the Token Tower. Seven blocks, seven answers.', 'Pick the block with the right answer and hold Space to pull it. A wrong block shows a Concept Card and the tower gets shakier. Three wrong tries and it falls.', 'Then set your block on top, steady. A and D turn the view. Tab hides the list. S skips talk. M mutes. Esc leaves.']
         : ['Back for another tower? Same rules: pull right, stack steady.']);
       afterTalk(showQuestion);
     }
@@ -209,19 +212,20 @@
     function onPull(n) {   // the world says the hold is done: what did the pull mean?
       if (!S || S.phase !== 'select') return;
       S.phase = 'pulling'; const out = S.run.pull(n); if (!out) { S.phase = 'select'; return; }
+      if (!S.coached) { S.coached = true; bumpCoach(); }
       emit('pull', { kind: out.kind, tries: S.run.st().tries });
       world.resolvePull(out.kind === 'right', (how) => {
         if (!S) return;
         if (how === 'held') return picked(n);
-        world.mark(n); S.sinceWrong = 0; world.shake(out.level >= 2 ? 2 : 1); if (!REDUCED && out.level >= 2) world.cameraShake(0.5, 0.012);
+        flash(false); world.mark(n); S.sinceWrong = 0; world.shake(out.level >= 2 ? 2 : 1); if (!REDUCED && out.level >= 2) world.cameraShake(0.5, 0.012);
         TF.sys(`Not that block. Wrong try ${out.level} of ${RULES.MAX_WRONG}.`);
-        S.phase = 'card'; S.cardOut = out; bridge.card.show(out.card);
+        S.phase = 'card'; S.cardOut = out; bridge.card.show(Object.assign({ skippable: true }, out.card, { lead: `You pulled ${STYLE[n - 1].mark} ${n}:` }));   // the block's mark and number, so colour is not the only cue
       });
     }
     function picked(n) {   // the right block hovers over the tower
       const o = S.q.options[n - 1], block = { id: o.blockId, answerText: o.text };
       S.block = block; S.pulled = E.applyPull(S.T, block.id); S.R = E.placementRange(S.pulled, block); S.layer = S.R.layer; S.u = E.choosePlacement(S.R, 'mid'); S.phase = 'place'; hud.gKey = '';
-      world.setHeld(S.u, S.layer, o.text); updatePlace(); sfx('chime');
+      world.setHeld(S.u, S.layer, o.text); updatePlace(); sfx('chime'); flash(true, S.run.st().tries === 1 ? 'First pull!' : '');
       if (S.run.st().tries === 1) TF.sys('Right block! Set it on top, steady.'); else TF.sys('That one. Set it on top, steady.');
     }
     function updatePlace() {
@@ -243,6 +247,11 @@
       if (out.kind === 'done') { finish('done'); return; }
       run.advance(); world.clearQuestion(); S.phase = 'between'; S.brief = 0.9;
     }
+    function skip() {   // S: jump over what is left of a debrief (the card, the wait) to the next question
+      if (!S || helpOpen()) return;
+      if (S.phase === 'card') closeCard();
+      if (S.phase === 'between') S.brief = 0;
+    }
     function closeCard() {
       if (!S || S.phase !== 'card') return;
       bridge.card.hide(); const out = S.cardOut, then = S.afterCard; S.cardOut = null; S.afterCard = null;
@@ -253,7 +262,7 @@
 
     // ---- the fall ----
     function startCollapse(why) {
-      S.phase = 'collapse'; world.hideGhost(); hud.g.style.display = 'none';
+      S.phase = 'collapse'; world.hideGhost(); hud.g.style.display = 'none'; flash(false, 'It fell!');
       TF.banner('The tower fell!', why === 'tipped' ? 'The weight sat outside what holds it up' : 'Three wrong tries');
       world.collapse(S.T, S.run.spec.seed + 977 * S.run.wrong + S.run.i, () => {
         if (!S) return;
@@ -275,7 +284,7 @@
       const run = S.run; run.over = run.over || why; flush(true);
       const sum = run.summary(); sum.height = S.maxH; sum.seconds = Math.round(run.elapsed); sum.timeMs = Math.round(run.elapsed * 1000); sum.tokens = Math.round(sum.points * 15) + 25 * Math.max(0, sum.stars - 1);   // 15 a point, and 25 for every star after the first
       sum.playerId = S.runInfo.playerId; sum.runIndex = S.runInfo.runIndex; sum.why = why;
-      if (why === 'done') { sfx('chime'); TF.banner('The tower stands', `${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)}`); }
+      if (why === 'done') { sfx('chime'); flash(true, sum.stars === 3 ? 'Tower stands!' : ''); TF.banner('The tower stands', `${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)}`); }
       emit('finish', sum); S.phase = 'done'; S.summary = sum; world.clearQuestion();
       if (play.debrief) play.debrief(sum);
       else { TF.talk('Token Tower', [`${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)} ${sum.placed} of ${sum.total} placed, ${sum.wrongTries} wrong ${sum.wrongTries === 1 ? 'try' : 'tries'}.`, sum.flagged.length ? 'A few ideas will come back next time. That is the point.' : 'Come back for a different tower.']); afterTalk(() => leave()); }
@@ -301,13 +310,13 @@
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else closeCard(); return true; }
+      if (e.code === 'KeyS' && !e.repeat) { skip(); return true; }
       if (e.code === 'Tab' && !e.repeat) { S.legend = !S.legend; hud.qKey = ''; return true; }
       if (cardOpen() || helpOpen() || TF.talking || S.phase === 'collapse' || S.phase === 'done' || S.phase === 'intro') return true;   // the card has the keys
       if (S.phase === 'place') {
         if (e.code === 'Space') { if (!e.repeat) release(); return true; }
         if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { held[e.code] = true; if (!e.repeat) setU(S.u + (e.code === 'ArrowRight' ? 1 : -1) * world.screenSign(S.layer) * 0.05); return true; }
       }
-      if (S.phase === 'select' && /^Digit[1-4]$/.test(e.code) && !e.repeat) bumpCoach();
       return world.keys.onKey(e) || true;   // the world takes A/D, 1-4 and the Space hold; everything else is swallowed: no walking, no stray jumps, no camera switch
     }
     function onKeyUp(e) { held[e.code] = false; }
@@ -347,6 +356,7 @@
       TF.life.push((t, dt) => frame(t, dt));
       const prev = TF.onKey; TF.onKey = (e) => (S && S.on ? onKey(e) : prev ? prev(e) : false);
       addEventListener('keyup', onKeyUp);
+      addEventListener('keydown', (e) => { if (e.code === 'KeyS' && !e.repeat && S && S.on && TF.talking && bridge && bridge.skipTalk) bridge.skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
       TF.renderer.domElement.addEventListener('pointermove', onPointerMove);
       world.on('pull', onPull); world.on('click', () => release());
       world.on('friction', () => sfx('friction')); world.on('clunk', () => sfx('clunk')); world.on('lift', () => sfx('lift')); world.on('rumble', () => sfx('rumble'));

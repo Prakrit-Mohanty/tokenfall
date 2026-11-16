@@ -21,7 +21,7 @@
   if (isNode) module.exports = api;
   else root.KitchenPlay = api;
 })(this, function (E, C, CW) {
-  const { RUN } = C, RULES = { COMBO: 3, COACH_RUNS: 2, MSG: 2.6 };
+  const { RUN } = C, RULES = { COMBO: 3, COACH_RUNS: 3, MSG: 2.6 };
   const SLOT = { spend: 0, signal: 1, chat: 2, clean: 3 };   // the mastery-bar colours: amber, green, cyan, rose
   const KINDS = { bleed: 0, missing: 1, cutoff: 2, left: 3, overstuffed: 4, rambling: 5, tip: 6 };
   const NEED_WORDS = { line: 'one line', short: 'a short reply', full: 'a full reply' };
@@ -116,7 +116,8 @@
     const flag = flagOf(res), B = ticket.breaks, par = res.par, spent = res.spent;
     const why = { bleed: B.bleed, missing: B.missing, cutoff: B.cutoff, overstuffed: B.overstuffed, rambling: B.rambling, left: 'A ticket has a timer: trimming and cooking take time too, so pick the cheapest line that still covers the order.', tip: `The line cost ${spent} tokens against a par of ${par}: trimming what the order does not need would have saved some.` }[flag];
     const what = flag === 'left' ? 'The customer left before the order was served.' : `${res.stamp}${res.reply ? ': “' + res.reply + '”' : ''} (${spent} tokens, par ${par}; ${res.coins >= 0 ? '+' : ''}${res.coins} coins)`;
-    return { lead: 'Order:', text: ticket.request, line: null, what, breaks: `${what} ${why}`, breaksLabel: 'What happened and why:', idea: ticket.idea, ideaLabel: 'The idea:', flag };
+    const breaks = `${what} ${why}`;
+    return { lead: 'Order:', text: ticket.request, line: null, what, breaks, breaksLabel: 'What happened and why:', idea: ticket.idea, ideaLabel: 'The idea:', flag, card: { line: ticket.idea, breaks: `“${ticket.request}” ${breaks}`, breaksLabel: 'Order:' } };   // the card opens on the one-line idea, the longer text below
   }
   function debriefPicks(run, n = 4) {
     const rows = [];
@@ -167,7 +168,8 @@
     let S = null, hud = null;
     const COACH_KEY = 'tokenfall.kitchen.coach'; let coachSeen = 0;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
-    const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
+    const bumpCoach = (n = 1) => { coachSeen += n; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };   // once per play; X skips the coaching for good
+    const TIP2 = 'Lunch: wipe a pot before it holds a new customer.';   // the Warm-up has the guided first order, the Rush a banner
 
     // ---- sound: the bridge's synth and its M mute, plus the kitchen's voices (chopping, sizzle, bell, siren, steam) ----
     const audio = () => (bridge && bridge.audio) || null, muted = () => !!(audio() && audio().muted);
@@ -194,37 +196,40 @@
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
-        .kp-top { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 640px)); padding: 6px 14px 7px; text-align: center; display: none; background: rgba(10,12,20,.95); border-color: var(--gold); }
-        .kp-top .k { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); } .kp-top .row { font-size: 16px; margin-top: 3px; } .kp-top .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; }
+        .kp-top { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 640px)); padding: 6px 14px 7px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
+        .kp-top .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .kp-top .row { font-size: 16px; margin-top: 3px; } .kp-top .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; }
         .kp-top b { color: var(--gold); font-weight: 600; } .kp-top .gas { display: inline-block; width: 110px; height: 9px; vertical-align: middle; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.4); } .kp-top .gas i { display: block; height: 100%; background: var(--gold); }
-        .kp-top .rule { margin-top: 4px; font-size: 14px; color: var(--hot); } .kp-top .ribbon { margin-top: 3px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .2em; color: var(--gold); }
-        .kp-rail { position: absolute; top: 88px; left: 18px; width: 290px; display: none; } .kp-rail .t { margin: 0 0 6px; padding: 6px 10px 8px; font-size: 16px; line-height: 1.25; background: rgba(10,12,20,.93); border-left: 6px solid var(--c); }
+        .kp-top .rule { margin-top: 4px; font-size: 16px; line-height: 1.35; color: var(--hot); } .kp-top .ribbon { margin-top: 3px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .2em; color: var(--gold); }
+        .kp-rail { position: absolute; top: 88px; left: 18px; width: 290px; display: none; } .kp-rail .t { margin: 0 0 6px; padding: 6px 10px 8px; font-size: 16px; line-height: 1.35; background: rgba(32, 22, 19,.93); border-left: 6px solid var(--c); }
         .kp-rail .t.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); } .kp-rail .t b { color: var(--c); margin-right: 4px; } .kp-rail .bar { height: 6px; margin-top: 5px; background: rgba(255,255,255,.12); } .kp-rail .bar i { display: block; height: 100%; background: var(--gold); } .kp-rail .bar i.low { background: var(--hot); }
-        .kp-rail .none { padding: 6px 10px; font-size: 14px; opacity: .8; background: rgba(10,12,20,.9); } .kp-rail small { display: block; margin-top: 4px; font-size: 12px; opacity: .75; letter-spacing: .04em; }
-        .kp-carry { position: absolute; left: 18px; bottom: 22px; padding: 6px 12px; font-size: 15px; display: none; } .kp-carry b { color: var(--gold); font-weight: 600; }
-        .kp-msg { position: absolute; left: 50%; bottom: 140px; transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
-        .kp-brief { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 18px; line-height: 1.4; background: rgba(10,12,20,.96); }
-        .kp-brief .k { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: .16em; color: var(--gold); } .kp-brief ul { margin: 8px 0 8px; padding-left: 20px; } .kp-brief li { margin: 4px 0; } .kp-brief .go { text-align: right; color: var(--gold); font-size: 14px; }
-        .kp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); padding: 8px 16px 9px; display: none; font-size: 16px; line-height: 1.4; background: rgba(10,12,20,.96); border-color: var(--gold); }
-        .kp-rs h5 { margin: 0 0 4px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); } .kp-rs .bars div { display: grid; grid-template-columns: 110px 1fr 70px; gap: 8px; align-items: center; margin: 2px 0; font-size: 14px; }
-        .kp-rs .bar { height: 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); } .kp-rs .bar i { display: block; height: 100%; } .kp-rs .w { margin-top: 5px; font-size: 14px; opacity: .9; } .kp-rs .go { color: var(--gold); font-size: 14px; margin-top: 4px; }
-        .kp-read { position: absolute; right: 18px; top: 150px; width: min(420px, calc(100vw - 36px)); max-height: calc(100vh - 250px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 19px; line-height: 1.3; background: rgba(10,12,20,.96); }
-        .kp-read h5 { margin: 8px 0 5px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); } .kp-read h5:first-child { margin-top: 0; } .kp-read div.c { margin: 0 0 8px; padding-left: 8px; border-left: 3px solid var(--gold); }
-        .kp-read small { display: block; font-size: 14px; opacity: .8; } .kp-read .req { margin-bottom: 6px; } .kp-read .pot { font-size: 16px; margin: 3px 0; }
-        .kp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 18px; line-height: 1.4; background: rgba(10,12,20,.96); pointer-events: auto; }
+        .kp-rail .none { padding: 6px 10px; font-size: 16px; opacity: .8; background: rgba(32, 22, 19,.9); } .kp-rail small { display: block; margin-top: 4px; font-size: 16px; line-height: 1.35; opacity: .75; letter-spacing: .04em; }
+        .kp-carry { position: absolute; left: 18px; bottom: 22px; padding: 6px 12px; font-size: 16px; display: none; } .kp-carry b { color: var(--gold); font-weight: 600; }
+        .kp-msg { position: absolute; left: 50%; bottom: 140px; transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.4; background: rgba(32, 22, 19,.93); }
+        .kp-brief { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 18px; line-height: 1.4; background: rgba(32, 22, 19,.96); }
+        .kp-brief .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .16em; color: var(--gold); } .kp-brief ul { margin: 8px 0 8px; padding-left: 20px; } .kp-brief li { margin: 4px 0; } .kp-brief .go { text-align: right; color: var(--gold); font-size: 14px; }
+        .kp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); padding: 8px 16px 9px; display: none; font-size: 16px; line-height: 1.4; background: rgba(32, 22, 19,.96); border-color: var(--gold); }
+        .kp-rs h5 { margin: 0 0 4px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .kp-rs .bars div { display: grid; grid-template-columns: 140px 1fr 70px; gap: 8px; align-items: center; margin: 2px 0; font-size: 16px; }
+        .kp-rs .bar { height: 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); } .kp-rs .bar i { display: block; height: 100%; } .kp-rs .w { margin-top: 5px; font-size: 16px; line-height: 1.4; opacity: .9; } .kp-rs .go { color: var(--gold); font-size: 14px; margin-top: 4px; }
+        .kp-read { position: absolute; right: 18px; top: 150px; width: min(420px, calc(100vw - 36px)); max-height: calc(100vh - 250px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 19px; line-height: 1.4; background: rgba(32, 22, 19,.96); }
+        .kp-read h5 { margin: 8px 0 5px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .kp-read h5:first-child { margin-top: 0; } .kp-read div.c { margin: 0 0 8px; padding-left: 8px; border-left: 3px solid var(--gold); }
+        .kp-read small { display: block; font-size: 16px; opacity: .8; } .kp-read .req { margin-bottom: 6px; } .kp-read .pot { font-size: 16px; margin: 3px 0; }
+        .kp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 18px; line-height: 1.4; background: rgba(32, 22, 19,.96); pointer-events: auto; }
         .kp-help h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .kp-help ul { margin: 0; padding-left: 20px; } .kp-help li { margin: 5px 0; } .kp-help .go { text-align: right; font-size: 14px; margin-top: 8px; color: var(--gold); }
         .kp-top kbd, .kp-rail kbd, .kp-brief kbd, .kp-help kbd, .kp-rs kbd, .kp-msg kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
+        .kp-flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s; }
         @media (max-width: 1100px) { .kp-top { left: 330px; transform: none; width: calc(100vw - 640px); min-width: 300px; top: 12px; } .kp-rail { top: 78px; } .kp-read { top: 200px; } }
         .kitchen-on .kp-top, .kitchen-on .kp-rail, .kitchen-on .kp-msg, .kitchen-on .kp-brief, .kitchen-on .kp-rs, .kitchen-on .kp-read, .kitchen-on .kp-carry { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .kitchen-on #chat, .kitchen-on #help { display: none; }   /* the chat log and key hints sit over the kitchen; the kitchen has its own hints */`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
       const h = { style, top: mk('kp-top'), rail: mk('kp-rail'), carry: mk('kp-carry'), msg: mk('kp-msg'), brief: mk('kp-brief'), rs: mk('kp-rs'), read: mk('kp-read'), help: mk('kp-help'), keys: {} };
+      h.flash = document.createElement('div'); h.flash.className = 'kp-flash'; ui.appendChild(h.flash);
       for (const k of ['top', 'rail', 'brief', 'rs', 'read', 'msg']) h[k].style.setProperty('--hot', STYLE[3].css);
       h.rail.className = 'kp-rail'; return h;
     }
     const cardOpen = () => !!(bridge && bridge.card && bridge.card.open), helpOpen = () => !!hud && hud.help.style.display === 'block';
     const clock = (secs) => { const n = Math.max(0, Math.ceil(secs)); return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`; };
+    const flash = (good) => { if (!hud || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; const f = hud.flash; f.style.background = good ? 'rgba(217,180,106,.3)' : 'rgba(220,50,50,.32)'; f.style.opacity = 1; setTimeout(() => { f.style.opacity = 0; }, 150); };   // gold on a good dish, red on a mistake
     const say = (html, secs = RULES.MSG) => { S.hint = secs; hud.msg.innerHTML = html; hud.msg.style.display = 'block'; };
     const modalOpen = () => !!(play.modal && play.modal.open());
 
@@ -236,7 +241,7 @@
         const left = RUN.shift - run.t, ph = RUN.phases[run.phase() - 1], gas = run.st.tank, key = [Math.ceil(left), run.st.coins, gas, ph.n, run.combo >= RULES.COMBO, muted()].join('|');
         if (key !== hud.keys.top) {
           hud.keys.top = key;
-          hud.top.innerHTML = `<div class="k">SHIFT · PHASE ${ph.n} · ${ph.name.toUpperCase()}</div><div class="row"><span class="clock">${clock(left)}</span> · Coins <b>${run.st.coins}</b> · Gas <span class="gas"><i style="width:${Math.round(100 * gas / run.spec.tank)}%"></i></span> <b>${gas.toLocaleString('en-US')}</b></div>`
+          hud.top.innerHTML = `<div class="k">SHIFT · PHASE ${ph.n} · ${ph.name.toUpperCase()}</div><div class="row"><span class="clock">${clock(left)}</span> · Coins <b>${run.st.coins}</b> · Tokens left <span class="gas"><i style="width:${Math.round(100 * gas / run.spec.tank)}%"></i></span> <b>${gas.toLocaleString('en-US')}</b></div>`
             + (ph.policy === 'oldest-first' ? `<div class="rule">${esc(RUN.rushNote)}</div>` : '') + `<div class="ribbon" style="display:${run.combo >= RULES.COMBO ? 'block' : 'none'}">COMBO × ${run.combo}</div>`;
         }
       }
@@ -274,18 +279,18 @@
     const afterTalk = (fn) => { S.waitTalk = fn; };
     function startShift() {
       const r = progress.newRun(), spec = E.composeShift(E.seedFor(r.playerId, r.runIndex), r.history), run = createRun(spec);
-      S = { on: true, run, runInfo: r, phase: 'intro', briefT: 0, hint: 0, waitTalk: null, read: false, coach: coachSeen < RULES.COACH_RUNS, queue: [], rsScore: null, lastMs: 0, sizzleT: 0, phaseSeen: 1, summary: null, customerOf: {}, nextCustomer: 0 };
-      emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed }); emit('shift', { variants: [...new Set(spec.tickets.map((t) => t.variantId))] });
+      S = { on: true, run, runInfo: r, phase: 'intro', briefT: 0, hint: 0, waitTalk: null, read: false, seen: coachSeen, coach: coachSeen < RULES.COACH_RUNS, queue: [], rsScore: null, lastMs: 0, sizzleT: 0, phaseSeen: 1, summary: null, customerOf: {}, nextCustomer: 0 };
+      emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed }); bumpCoach(); emit('shift', { variants: [...new Set(spec.tickets.map((t) => t.variantId))] });
       document.getElementById('ui').classList.add('kitchen-on'); hud.keys = {}; world.busy(true);
       TF.banner('Token Brew Kitchen', 'Short-staffed: 13 orders, one tank of gas');
-      TF.talk('Ticket Rail', coachSeen === 0
+      TF.talk('Ticket Rail', S.seen === 0
         ? ["Kitchen's short-staffed. Thirteen orders, one tank of gas.", 'The pot is the model\'s context window: your chunks AND its reply share 260 tokens. Pack only what each order needs, and trim the rest at the board.', 'Cook it, serve it, and never reuse a pot that still holds another customer. Esc leaves. H is help.']
         : ['Back on the pass? Same rules: pack light, leave room for the reply, wipe between customers.']);
       afterTalk(showBrief);
     }
     function showBrief() {
       S.phase = 'brief'; S.briefT = RUN.brief;
-      hud.brief.innerHTML = `<div class="k">TOKEN BREW KITCHEN · THE SHIFT</div><ul><li>Thirteen orders in three phases: <b>Warm-up</b>, <b>Lunch</b>, <b>Rush</b>. A new ticket about every 19 seconds, three on the rail at most.</li><li>The gas tank is your token allowance: <b>${RUN.tank.toLocaleString('en-US')}</b>. Spend less than the order's par and earn a tip.</li><li>Select a ticket (<kbd>Tab</kbd>) and the pantry shows its chunks. The hero is free to walk.</li></ul><div class="go"><kbd>E</kbd> starts the shift</div>`;
+      hud.brief.innerHTML = `<div class="k">TOKEN BREW KITCHEN · THE SHIFT</div><ul><li>Thirteen orders in three phases: <b>Warm-up</b>, <b>Lunch</b>, <b>Rush</b>. A new ticket about every 19 seconds.</li>${S.seen >= 2 ? '' : `<li>The tank is your token allowance: <b>${RUN.tank.toLocaleString('en-US')}</b>. Spend less than the order's par and earn a tip.</li><li>Press <kbd>Tab</kbd> to pick a ticket. The pantry shows its chunks.</li>`}</ul><div class="go"><kbd>E</kbd> starts the shift</div>`;
       hud.brief.style.display = 'block';
     }
     function startPlay() {
@@ -306,9 +311,9 @@
     const customerFor = (tk) => { if (S.customerOf[tk.uid] == null) S.customerOf[tk.uid] = S.nextCustomer++ % 5; return S.customerOf[tk.uid]; };
     function onTick(ev) {
       for (const e of ev) {
-        if (e.type === 'spawn') { sfx('tick'); customerFor(e.ticket); if (e.ticket.phase > S.phaseSeen) { S.phaseSeen = e.ticket.phase; if (e.ticket.phase === 3) { TF.banner('Rule change', RUN.rushNote.replace('Rule change: ', '')); TF.sys(RUN.rushNote); sfx('bell'); } } }
-        else if (e.type === 'left') { sfx('burn'); const c = customerFor(e.ticket); world.stamp(c, 'Customer left', 'bad'); setTimeout(() => S && world.bubble(c, null), 3200); say('A customer left. <b>-5</b>', 2); }
-        else if (e.type === 'burn') { sfx('burn'); say('<b>BURNT.</b> A dish waited more than 10 seconds: ruined, the tokens are spent.', 3); }
+        if (e.type === 'spawn') { sfx('tick'); customerFor(e.ticket); if (e.ticket.phase > S.phaseSeen) { S.phaseSeen = e.ticket.phase; if (e.ticket.phase === 2 && S.coach) say(TIP2, 4); if (e.ticket.phase === 3) { TF.banner('Rule change', RUN.rushNote.replace('Rule change: ', '')); TF.sys(RUN.rushNote); sfx('bell'); } } }
+        else if (e.type === 'left') { sfx('burn'); const c = customerFor(e.ticket); flash(false); world.stamp(c, 'Customer left', 'bad'); setTimeout(() => S && world.bubble(c, null), 3200); say('A customer left. <b>-5</b>', 2); }
+        else if (e.type === 'burn') { sfx('burn'); flash(false); say('<b>BURNT.</b> A dish waited more than 10 seconds: ruined, the tokens are spent.', 3); }
       }
     }
     function onTap(ev) {
@@ -331,9 +336,9 @@
       const tk = S.run.st.by[r.ticket], c = customerFor(tk);
       world.stamp(c, `${r.stamp}: ${r.reply}`, r.quality === 1 ? 'ok' : r.quality > 0 ? 'meh' : 'bad'); setTimeout(() => S && world.bubble(c, null), 4200);
       sfx('stamp');
-      if (r.bleed) { sfx('siren'); world.siren(2.4); say(`<b>${esc(r.stamp)}</b> -5 coins`, 3); }
-      else if (r.quality === 1) { sfx('ding'); world.burst(0, -1.4); say(`<b>${esc(r.stamp)}</b> +${r.coins} coins`, 2); if (r.ribbon) { sfx('combo'); say(`<b>COMBO × ${S.run.combo}</b> +${r.coins} coins`, 2.2); } }
-      else say(`<b>${esc(r.stamp)}</b> ${r.coins ? '+' + r.coins + ' coins' : ''}`, 2.6);
+      if (r.bleed) { flash(false); sfx('siren'); world.siren(2.4); say(`<b>${esc(r.stamp)}</b> -5 coins`, 3); }
+      else if (r.quality === 1) { flash(true); sfx('ding'); world.burst(0, -1.4); say(`<b>${esc(r.stamp)}</b> +${r.coins} coins`, 2); if (r.ribbon) { sfx('combo'); say(`<b style="font-size:28px">COMBO × ${S.run.combo}</b> +${r.coins} coins`, 2.2); } }
+      else { if (!r.quality) flash(false); say(`<b>${esc(r.stamp)}</b> ${r.coins ? '+' + r.coins + ' coins' : ''}`, 2.6); }
     }
 
     // ---- the debrief: a few lines at the rail, the receipt, then up to 4 Concept Cards (E to continue) ----
@@ -343,8 +348,8 @@
       for (let i = 0; i < 2; i++) world.steam(i, false);
       emitAnswers(true); hud.keys = {};
       const s = S.rsScore, w = s.waste, mx = Math.max(s.tank, s.spent, s.idealTokens, 1), bar = (n, color) => `<span class="bar"><i style="width:${Math.round(100 * n / mx)}%;background:${color}"></i></span>`;
-      hud.rs.innerHTML = `<h5>THE SHIFT · ${'★'.repeat(s.stars)}${'☆'.repeat(3 - s.stars)} · ${s.coins} of ${s.ideal} coins</h5><div class="bars"><div><span>Tokens spent</span>${bar(s.spent, s.spent > s.idealTokens ? STYLE[3].css : STYLE[1].css)}<span>${s.spent}</span></div><div><span>Ideal line</span>${bar(s.idealTokens, STYLE[1].css)}<span>${s.idealTokens}</span></div><div><span>Gas tank</span>${bar(s.tank, STYLE[0].css)}<span>${s.tank}</span></div></div>`
-        + `<div class="w">Where the extra went: ${w.noise} in noise and copies · ${w.oversize} in longer replies than needed · ${w.history} in history carried · ${w.stock} in stock never used. ${s.spills} leak${s.spills === 1 ? '' : 's'}.</div><div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} ▼</div>`;
+      hud.rs.innerHTML = `<h5>THE SHIFT · ${'★'.repeat(s.stars)}${'☆'.repeat(3 - s.stars)} · ${s.coins} of ${s.ideal} coins</h5><div class="bars"><div><span>${s.spent > s.idealTokens ? STYLE[3].mark : STYLE[1].mark} Tokens spent</span>${bar(s.spent, s.spent > s.idealTokens ? STYLE[3].css : STYLE[1].css)}<span>${s.spent}</span></div><div><span>${STYLE[1].mark} Best line</span>${bar(s.idealTokens, STYLE[1].css)}<span>${s.idealTokens}</span></div><div><span>${STYLE[0].mark} Token tank</span>${bar(s.tank, STYLE[0].css)}<span>${s.tank}</span></div></div>`
+        + `<div class="w">Where the extra went: ${w.noise} in noise and copies · ${w.oversize} in longer replies than needed · ${w.history} in history carried · ${w.stock} in stock never used. ${s.spills} leak${s.spills === 1 ? '' : 's'}.</div><div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>S</kbd> skip ▼</div>`;
       hud.rs.style.display = 'block'; hud.top.style.display = hud.rail.style.display = hud.read.style.display = hud.carry.style.display = 'none'; sfx('bell');
       TF.sys(`Shift over: ${s.coins} coins, ${s.spills} leak${s.spills === 1 ? '' : 's'}, ${s.spent} tokens against an ideal ${s.idealTokens}.`);
       TF.talk('Ticket Rail', [`${'★'.repeat(s.stars)}${'☆'.repeat(3 - s.stars)} ${s.stars === 3 ? 'Light packing, room for every reply, no leaks.' : s.stars === 2 ? 'A good line. A few tokens went where they did not need to.' : s.stars === 1 ? 'You got through the rush. The tank got through you.' : 'The tickets won this one. Tomorrow is another shift.'}`, `${s.spent} tokens spent against an ideal ${s.idealTokens}. ${w.noise + w.oversize + w.history ? 'Most of the extra: ' + (w.noise >= w.oversize && w.noise >= w.history ? 'filler and copies in the pot.' : w.oversize >= w.history ? 'replies longer than the order needed.' : 'chat history paid for again.') : 'Almost none wasted.'}`]);
@@ -362,7 +367,7 @@
       if (!S || S.phase !== 'debrief') return;
       const row = S.queue.shift();
       if (!row) { hud.rs.style.display = 'none'; finish(); return; }
-      const d = describe(row.res, row.ticket); d.hint = S.queue.length ? 'Next card' : 'Continue'; bridge.card.show(d);
+      bridge.card.show(Object.assign({}, describe(row.res, row.ticket).card, { hint: S.queue.length ? 'Next card · S skips' : 'Continue' }));
     }
     function closeCard() {
       if (!S) return;
@@ -399,7 +404,7 @@
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
       if (modalOpen()) { if (['KeyE', 'Escape', 'Enter'].includes(e.code) && !e.repeat) play.modal.close(); else if (play.modal.key) play.modal.key(e); return true; }
-      if (e.code === 'Escape' && !e.repeat) {
+      if ((e.code === 'Escape' || (e.code === 'KeyS' && S.phase === 'debrief' && !helpOpen() && !TF.talking)) && !e.repeat) {
         if (helpOpen()) showHelp(false);
         else if (S.phase === 'debrief') { if (cardOpen()) bridge.card.hide(); S.queue = []; hud.rs.style.display = 'none'; finish(); }   // the shift is over and already credited: Esc skips to the summary
         else leave();
@@ -411,7 +416,7 @@
       if ((S.phase === 'debrief') && e.code === 'KeyE' && !e.repeat) { if (!TF.talking) closeCard(); return true; }
       if (S.phase === 'play') {
         if (e.code === 'KeyR' && !e.repeat) { S.read = !S.read; return true; }
-        if (e.code === 'KeyX' && !e.repeat) { S.coach = false; bumpCoach(); bumpCoach(); return true; }
+        if (e.code === 'KeyX' && !e.repeat) { S.coach = false; bumpCoach(3); return true; }
         if (e.code === 'KeyE' && helpOpen() && !e.repeat) { showHelp(false); return true; }
       }
       return false;   // the world takes E, 1-3, Tab and Esc during a shift; the hero keeps walking
@@ -451,7 +456,7 @@
       });
       world.on('cycle', (dir) => { if (S && S.phase === 'play') { S.run.select(dir); sfx('tick'); syncWorld(false); } });
       world.on('tap', onTap); world.on('work', onWork); world.on('exit', () => leave());
-      world.on('dial', () => { if (S && S.phase === 'play') { sfx('tick'); bumpCoach(); } });
+      world.on('dial', () => { if (S && S.phase === 'play') sfx('tick'); });
       TF.life.push((t, dt) => frame(t, dt));
       const prev = TF.onKey; TF.onKey = (e) => (S && S.on && onKey(e)) || (prev ? prev(e) : false);
       TF.on('enter', (a, b) => { if (a === 'kitchen' && b !== 'kitchen' && S) leave(); });
