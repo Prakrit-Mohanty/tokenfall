@@ -257,5 +257,5 @@ function buildABZ(a) {
     makeFader(compact(g), () => hero.zone === 'abz' && hero.x > bb.min.x - .6 && hero.x < bb.max.x + .6 && hero.y < bb.max.z && hero.y > bb.min.z - 8);
   }
   const [px, pz] = rot(X(-2.5), Z(15.1));
-  portal(px, pz, 0x7dff8a, 'abz', 'pune', 'Pune', { at: [AREAS.pune.cx + 28.3, AREAS.pune.cz - .7] });
+  portal(px, pz, 0x7dff8a, 'abz', 'pune', 'Pune', { at: [AREAS.pune.cx + PUNE_ABZ[0], AREAS.pune.cz + PUNE_ABZ[1] + 3.8] });
 }
