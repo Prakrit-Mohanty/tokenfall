@@ -53,49 +53,35 @@ function groundVariation(m, dry) {
   };
   return m;
 }
-// A box whose edges are chamfered, so they catch the light instead of reading as razor-sharp: same UV layout and per-face material groups as THREE.BoxGeometry. Only props get it:
-// thinner than 10 cm (decals, planks) or longer than BEVEL_MAX (buildings, slabs, walls) stay plain boxes, which also keeps the vertex count down.
-const BEVEL_MAX = 3.2;
+// Boxes have soft, rounded edges (smooth normals) to sit with the 3D chibi characters instead of reading as hard low-poly blocks. A 3x3x3-segment
+// BoxGeometry has its grid lines pulled to r from each edge, then every vertex is pushed onto a box of radius r around the inner box: same per-face
+// material groups as THREE.BoxGeometry, UVs re-laid per face. Only paper-thin boxes (decals, signs' faces) stay sharp.
 //             normal axis, sign, u axis, v axis, u direction, v direction: the faces in BoxGeometry's order (+x -x +y -y +z -z) and the way it lays its UVs out
 const BOX_FACE = [[0, 1, 2, 1, -1, -1], [0, -1, 2, 1, 1, -1], [1, 1, 0, 2, 1, 1], [1, -1, 0, 2, 1, -1], [2, 1, 0, 1, 1, -1], [2, -1, 0, 1, -1, -1]];
-function chamferBox(w, h, d, ss, b) {
-  const H = [w / 2, h / 2, d / 2], S = [w, h, d], buf = [[], [], [], [], [], []], fidx = (a, sg) => a * 2 + (sg > 0 ? 0 : 1);
-  const uvOf = (f, p) => { const [, , ua, va, ud, vd] = BOX_FACE[f], k = ss[f], u = p[ua] * ud + H[ua], v = p[va] * vd + H[va]; return k ? [u / k, (S[va] - v) / k] : [u / S[ua], 1 - v / S[va]]; };
-  const tri = (f, n, p0, p1, p2) => {
-    const e = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], g = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
-    if ((e[1] * g[2] - e[2] * g[1]) * n[0] + (e[2] * g[0] - e[0] * g[2]) * n[1] + (e[0] * g[1] - e[1] * g[0]) * n[2] < 0) [p1, p2] = [p2, p1];   // wind it to face outwards
-    for (const p of [p0, p1, p2]) buf[f].push(p[0], p[1], p[2], n[0], n[1], n[2], ...uvOf(f, p));
-  };
-  const quad = (f, n, p0, p1, p2, p3) => { tri(f, n, p0, p1, p2); tri(f, n, p0, p2, p3); };
-  const unit = (v) => { const l = Math.hypot(...v); return v.map((x) => x / l); };
-  const at = (o) => { const p = [0, 0, 0]; for (const k in o) p[k] = o[k]; return p; };
-  for (let f = 0; f < 6; f++) {   // the six faces, inset by the bevel
-    const [a, sg] = BOX_FACE[f], [a1, a2] = [0, 1, 2].filter((x) => x !== a), n = [0, 0, 0]; n[a] = sg;
-    quad(f, n, ...[[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([i, j]) => at({ [a]: sg * H[a], [a1]: i * (H[a1] - b), [a2]: j * (H[a2] - b) })));
+const PlainBox = THREE.BoxGeometry;
+function roundBox(w, h, d, ss, r) {
+  const H = [w / 2, h / 2, d / 2], S = [w, h, d], g = new PlainBox(w, h, d, 3, 3, 3);
+  const pos = g.attributes.position, nor = g.attributes.normal, uv = g.attributes.uv, p = [0, 0, 0], n = [0, 0, 0];
+  for (let k = 0; k < pos.count; k++) {
+    const f = k >> 4;   // 4x4 vertices per face, faces in order
+    for (let a = 0; a < 3; a++) { const t = Math.round((pos.array[k * 3 + a] / H[a] + 1) * 1.5); p[a] = t === 0 ? -H[a] : t === 3 ? H[a] : (t === 1 ? -1 : 1) * (H[a] - r); }
+    for (let a = 0; a < 3; a++) { const c = Math.max(-(H[a] - r), Math.min(H[a] - r, p[a])); n[a] = p[a] - c; p[a] = c; }
+    const l = Math.hypot(...n) || 1; for (let a = 0; a < 3; a++) { n[a] /= l; p[a] += n[a] * r; }
+    const [, , ua, va, ud, vd] = BOX_FACE[f], q = ss[f], u = p[ua] * ud + H[ua], v = p[va] * vd + H[va];
+    pos.setXYZ(k, ...p); nor.setXYZ(k, ...n); uv.setXY(k, ...(q ? [u / q, (S[va] - v) / q] : [u / S[ua], 1 - v / S[va]]));
   }
-  for (const [a1, a2, a3] of [[0, 1, 2], [0, 2, 1], [1, 2, 0]]) for (const s1 of [-1, 1]) for (const s2 of [-1, 1]) {   // the twelve edges, 45 degrees between their two faces
-    const f = Math.min(fidx(a1, s1), fidx(a2, s2)), n = [0, 0, 0]; n[a1] = s1; n[a2] = s2;
-    const P = (t, side) => at(side ? { [a1]: s1 * H[a1], [a2]: s2 * (H[a2] - b), [a3]: t * (H[a3] - b) } : { [a1]: s1 * (H[a1] - b), [a2]: s2 * H[a2], [a3]: t * (H[a3] - b) });
-    quad(f, unit(n), P(-1, 1), P(1, 1), P(1, 0), P(-1, 0));
-  }
-  for (const s0 of [-1, 1]) for (const s1 of [-1, 1]) for (const s2 of [-1, 1]) {   // the eight corners
-    const f = Math.min(fidx(0, s0), fidx(1, s1), fidx(2, s2)), sg = [s0, s1, s2], P = (k) => at({ 0: sg[0] * (H[0] - (k === 0 ? 0 : b)), 1: sg[1] * (H[1] - (k === 1 ? 0 : b)), 2: sg[2] * (H[2] - (k === 2 ? 0 : b)) });
-    tri(f, unit(sg), P(0), P(1), P(2));
-  }
-  const g = new THREE.BufferGeometry(), all = [].concat(...buf), pos = [], nor = [], uv = []; let start = 0;
-  for (let i = 0; i < all.length; i += 8) { pos.push(all[i], all[i + 1], all[i + 2]); nor.push(all[i + 3], all[i + 4], all[i + 5]); uv.push(all[i + 6], all[i + 7]); }
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  for (let f = 0; f < 6; f++) { const n = buf[f].length / 8; g.addGroup(start, n, f); start += n; }
   return g;
 }
 function boxGeo(w, h, d, s) {
   const ss = Array.isArray(s) ? s : [s, s, s, s, s, s], lo = Math.min(w, h, d);
-  if (lo >= 0.1 && Math.max(w, h, d) <= BEVEL_MAX) return chamferBox(w, h, d, ss, Math.min(0.035, lo * 0.18));
-  const g = new THREE.BoxGeometry(w, h, d);
+  if (lo >= 0.06) return roundBox(w, h, d, ss, Math.min(0.14, lo * 0.22));
+  const g = new PlainBox(w, h, d);
   const uv = g.attributes.uv, dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
   for (let f = 0; f < 6; f++) if (ss[f]) for (let i = 0; i < 4; i++) { const k = f * 4 + i; uv.setXY(k, uv.getX(k) * dims[f][0] / ss[f], uv.getY(k) * dims[f][1] / ss[f]); }
   return g;
 }
+// the minigame rooms build with THREE.BoxGeometry directly: give their boxes the same rounded edges (a call with segment counts is asking for a plain grid, so it keeps one)
+THREE.BoxGeometry = class extends PlainBox { constructor(w = 1, h = 1, d = 1, ...seg) { super(w, h, d, ...seg); if (!seg.length && Math.min(w, h, d) >= 0.06) return roundBox(w, h, d, [0, 0, 0, 0, 0, 0], Math.min(0.14, Math.min(w, h, d) * 0.22)); } };
 function add(mesh, parent, cast = true) { mesh.castShadow = cast; mesh.receiveShadow = true; (parent || scene).add(mesh); return mesh; }
 // box resting on y (bottom), centred on x/z
 function box(w, h, d, m, x, y, z, o = {}) {

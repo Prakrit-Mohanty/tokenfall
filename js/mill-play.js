@@ -8,7 +8,7 @@
 //   install(TF)                builds the HUD and the game on mill-world.js, takes over the Control Desk's E (TF.mill.open) and the keys
 //
 // THE GAME
-//  A conveyor belt in the Data Archive. Five shifts: the four sides in a seeded order, then the finale "Rush hour" (four waves, the bin plates flip between them). Each shift: a brief
+//  A conveyor belt in the Data Archive. Three short shifts: two of the sides in a seeded order, then the finale "Rush hour" (four waves, the bin plates flip between them). Each shift: a brief
 //  (the SAMPLE house policy and the four bins), about 40 s of belt, a debrief of up to 3 Concept Cards (E to continue). Crates ride past four bins; route each one to the bin the policy says
 //  (drag it onto a bin, click it then click a bin, or Tab to select and 1-4). Hold Space to brake (3 s a shift). A crate that reaches the pit is dropped.
 //  The ladder: bins run from the most permissive (1) to the strictest (4). A lower bin than the right one is TOO LAX (a gap of 2 or more is a SPILL); a higher one is TOO STRICT. After the 6th
@@ -198,24 +198,15 @@
     // ---- flow ----
     const afterTalk = (fn) => { S.waitTalk = fn; };
     function startRun(quiet) {
-      const r = progress.newRun(), spec = E.composeRun(E.seedFor(r.playerId, r.runIndex), r.history);
-      S = { on: true, seen: coachSeen, coach: coachSeen < 3, quick: false, run: createRun(spec), runInfo: r, phase: 'intro', briefT: 0, hint: 0, waitTalk: null, read: false, combo: 0, landing: {}, queue: [], rsScore: null, humT: 0, endT: 0, summary: null, legend: SIDES.doors.bins, wave: 0, policy: '', flips: [], changes: [] };
+      const r = progress.newRun(), spec = E.shorten(E.composeRun(E.seedFor(r.playerId, r.runIndex), r.history));
+      S = { on: true, seen: coachSeen, coach: coachSeen < 3, run: createRun(spec), runInfo: r, phase: 'intro', briefT: 0, hint: 0, waitTalk: null, read: false, combo: 0, landing: {}, queue: [], rsScore: null, humT: 0, endT: 0, summary: null, legend: SIDES.doors.bins, wave: 0, policy: '', flips: [], changes: [] };
       world.state.rate = relaxed ? RUN.relaxed : 1; emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed }); bumpCoach();
       if (quiet) { TF.banner('A new shift', 'New crates'); beginShift(0); return; }
       TF.banner('Token Mill', 'Route every crate to the right bin');
       TF.talk('Control Desk', S.seen === 0
         ? ['Welcome to the Token Mill. Crates come down one belt.', 'Read the rule on the board. Send each crate to the bin it names. Too lax is unsafe. Too strict is wasteful.', 'Space slows the belt. R reads crates in big text. Esc leaves. The rules are a sample: security and legal will replace them.']
         : ['Back on the floor? Same rules: read, route, brake if you must.']);
-      afterTalk(showPick);
-    }
-    // Quick: the first two shifts and the finale (3 shifts, about 3 minutes); Full: all five. Keys 1 / 2, E = Full.
-    function showPick() {
-      S.phase = 'pick'; hud.brief.innerHTML = `<div class="k">HOW LONG?</div><div class="t"><kbd>1</kbd> Quick: 3 shifts, about 3 min<br><kbd>2</kbd> Full: 5 shifts, about 4-5 min</div><p class="go"><kbd>E</kbd> Full ▼</p>`; hud.brief.style.display = 'block';
-    }
-    function pick(q) {
-      if (!S || S.phase !== 'pick') return;
-      if (q) { const sp = S.run.spec; sp.shifts = sp.shifts.filter((x, i) => i < 2 || i === sp.shifts.length - 1); sp.estSeconds = E.estimateSeconds(sp); S.quick = true; }
-      hud.brief.style.display = 'none'; beginShift(0);
+      afterTalk(() => beginShift(0));
     }
     function beginShift(i) {
       const run = S.run, R = run.begin(i), sh = R.sh;
@@ -271,14 +262,13 @@
     function closeCard() {
       if (!S) return;
       if (S.phase === 'brief') { startPlay(); return; }
-      if (S.phase === 'pick') { pick(false); return; }
       if (S.phase !== 'debrief') return;
       if (cardOpen()) bridge.card.hide();
       nextCard();
     }
     function finish() {
       const run = S.run, sum = run.score(true);
-      Object.assign(sum, { seed: run.spec.seed, playerId: S.runInfo.playerId, runIndex: S.runInfo.runIndex, timeMs: Math.round(run.elapsed * 1000), why: 'done', relaxed, quick: S.quick,
+      Object.assign(sum, { seed: run.spec.seed, playerId: S.runInfo.playerId, runIndex: S.runInfo.runIndex, timeMs: Math.round(run.elapsed * 1000), why: 'done', relaxed,
         clean: Object.fromEntries(Object.entries(sum.perConcept).map(([id, c]) => [id, c.cleanVariants])) });
       S.phase = 'done'; S.summary = sum; world.clearShift(); hud.rs.style.display = 'none'; hud.legend.style.display = 'none'; sfx('bell');
       TF.banner('Shift over', `${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)}`);
@@ -310,7 +300,6 @@
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else if (!TF.talking) closeCard(); return true; }
       if (e.code === 'KeyR' && !e.repeat) { if (S.phase === 'play') S.read = !S.read; return true; }
-      if (S.phase === 'pick' && /^Digit[12]$/.test(e.code) && !e.repeat && !TF.talking && !helpOpen()) { pick(e.code === 'Digit1'); return true; }
       if (e.code === 'KeyS' && !e.repeat && S.phase === 'debrief' && !helpOpen() && !TF.talking) { S.queue.length = 0; if (cardOpen()) bridge.card.hide(); nextCard(); return true; }
       if (cardOpen() || helpOpen() || TF.talking || S.phase !== 'play') return true;   // the card has the keys
       return world.keys.onKey(e) || true;   // the world takes Tab, 1-4 and Space; everything else is swallowed: no walking, no stray jumps, no camera switch

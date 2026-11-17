@@ -11,6 +11,7 @@ function canvasTex(w, h, draw, opts = {}) {
   t.minFilter = opts.nearest ? THREE.NearestFilter : opts.smooth ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter; if (opts.smooth) t.generateMipmaps = false;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.anisotropy = 8;
+  if (Math.max(w, h) <= 64 && w * h > 256) { SOFTEN.push(t); if (softened) softenTextures(); }   // after boot (a minigame room): at once
   return t;
 }
 const rgb = (c, f = 1) => `rgb(${Math.max(0, Math.min(255, c[0] * f)) | 0},${Math.max(0, Math.min(255, c[1] * f)) | 0},${Math.max(0, Math.min(255, c[2] * f)) | 0})`;
@@ -22,6 +23,21 @@ function noiseFill(g, w, h, base, amt, chance = 1, rng = rnd) {
 let decorSeed = 424242;
 const decorRandom = () => (decorSeed = (decorSeed * 16807) % 2147483647) / 2147483647;
 const TEXTURE_REFINES = [];
+// the small surface textures are pixel art; softenTextures() (once the world is built) repaints each one larger and smoothed, so the world has the soft,
+// painted look of the 3D characters instead of grainy pixels. Done after the build because some textures are drawn into others while it runs.
+const SOFTEN = [];
+let softened = false;
+function softenTextures() {
+  softened = true;
+  for (const t of SOFTEN) {
+    const c = t.image, W = c.width, H = c.height, k = Math.max(2, Math.min(4, Math.round(192 / Math.max(W, H))));
+    const o = document.createElement('canvas'); o.width = W * k; o.height = H * k;
+    const g = o.getContext('2d'); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.filter = `blur(${(k * .45).toFixed(2)}px)`;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) g.drawImage(c, dx * o.width, dy * o.height, o.width, o.height);   // tiled, so the blur wraps and the repeat stays seamless
+    t.image = o; t.magFilter = THREE.LinearFilter; if (t.minFilter === THREE.NearestFilter) t.minFilter = THREE.LinearMipmapLinearFilter; t.needsUpdate = true;
+  }
+  SOFTEN.length = 0;
+}
 // queues a sharper redraw (w x h) of a texture; applyTextureRefines() swaps it in once the world exists
 function refineTexture(tex, w, h, draw) { TEXTURE_REFINES.push({ tex, w, h, draw }); return tex; }
 function applyTextureRefines() {
@@ -58,8 +74,8 @@ function stoneTex(base, mortar, rowH = [5, 8], wid = [6, 12], size = 64, rng = r
 }
 const TX = {};
 function buildTextures() {
-  TX.cobble = stoneTex([168, 156, 132], [78, 70, 60]);
-  TX.flag = refineTexture(stoneTex([150, 146, 140], [70, 66, 62], [10, 14], [10, 18]), 80, 80, (g, W, H) => g.drawImage(stoneTex([150, 146, 140], [70, 66, 62], [12, 18], [12, 22], 80, decorRandom).image, 0, 0));
+  TX.cobble = stoneTex([192, 160, 120], [96, 72, 54]);
+  TX.flag = refineTexture(stoneTex([190, 164, 134], [92, 72, 58], [10, 14], [10, 18]), 80, 80, (g, W, H) => g.drawImage(stoneTex([190, 164, 134], [92, 72, 58], [12, 18], [12, 22], 80, decorRandom).image, 0, 0));
   TX.stoneWall = stoneTex([138, 132, 122], [60, 56, 52], [6, 9], [9, 16], 32);
   TX.grass = canvasTex(64, 64, (g, W, H) => {
     noiseFill(g, W, H, [104, 122, 84], .08);
@@ -132,15 +148,15 @@ function buildTextures() {
     for (let y = 2; y < H - 1; y += 2) { const x0 = 2 + (rnd() * 4 | 0); g.fillStyle = rnd() < .3 ? '#ffd27a' : '#7fe6ff'; g.fillRect(x0, y, 4 + (rnd() * 20 | 0), 1); }
   }, { nearest: true });
   TX.paver = refineTexture(canvasTex(64, 64, (g, W, H) => {
-    g.fillStyle = rgb([128, 122, 112]); g.fillRect(0, 0, W, H);
+    g.fillStyle = rgb([156, 118, 86]); g.fillRect(0, 0, W, H);
     for (let r = 0; r < 8; r++) for (let c = -1; c < 4; c++) {
-      const x0 = c * 16 + (r % 2) * 8, y0 = r * 8, v = (rnd() - .5) * 16, b = [182 + v, 174 + v, 160 + v - rnd() * 8];
+      const x0 = c * 16 + (r % 2) * 8, y0 = r * 8, v = (rnd() - .5) * 26, b = [214 + v, 176 + v * .8, 134 + v * .6 - rnd() * 8];
       for (let i = 1; i < 16; i++) for (let j = 1; j < 8; j++) { const x = x0 + i; if (x < 0 || x >= W) continue; P(g, x, y0 + j, b, (j === 1 ? 1.05 : j === 7 ? .9 : 1) * (1 + (rnd() - .5) * .05)); }
     }
   }), 96, 96, (g, W, H) => {
-    g.fillStyle = rgb([128, 122, 112]); g.fillRect(0, 0, W, H);
+    g.fillStyle = rgb([156, 118, 86]); g.fillRect(0, 0, W, H);
     for (let r = 0; r < 8; r++) for (let c = -1; c < 4; c++) {
-      const x0 = c * 24 + (r % 2) * 12, y0 = r * 12, v = (decorRandom() - .5) * 16, b = [182 + v, 174 + v, 160 + v - decorRandom() * 8];
+      const x0 = c * 24 + (r % 2) * 12, y0 = r * 12, v = (decorRandom() - .5) * 26, b = [214 + v, 176 + v * .8, 134 + v * .6 - decorRandom() * 8];
       for (let i = 1; i < 24; i++) for (let j = 1; j < 12; j++) { const x = x0 + i; if (x < 0 || x >= W) continue; P(g, x, y0 + j, b, (j === 1 ? 1.06 : j === 11 ? .88 : i === 1 ? 1.03 : i === 23 ? .94 : 1) * (1 + (decorRandom() - .5) * .05)); }
     }
   });

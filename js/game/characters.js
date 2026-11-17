@@ -2,31 +2,41 @@
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
 // ================= characters =================
-const SHEET_W = 456, SHEET_H = 2880, CW = 76, CH = 80, SPU = .0235;
-const spriteGeo = new THREE.PlaneGeometry(CW * SPU, CH * SPU); spriteGeo.translate(0, (CH / 2 - 77.6) * SPU * -1, 0);
+// every character in js/sprites/chars-data.js shares one cell layout and standing height, so one size rule fits them all: FIG_H is how tall they stand (before CHAR_SCALE)
+const [SHEET_W, SHEET_H] = CHAR_SHEET_SIZE, CW = CHARS.aditya.cell.w, CH = CHARS.aditya.cell.h, FIG_H = 1.6, SPU = FIG_H / CHARS.aditya.standHeight;   // SPU: world units per sprite px
+const spriteGeo = new THREE.PlaneGeometry(CW * SPU, CH * SPU); spriteGeo.translate(0, (CHARS.aditya.anchor.y - CH / 2) * SPU, 0);   // feet on the origin
 const blobGeo = new THREE.PlaneGeometry(1.1, .55);
 const CHAR_SCALE = 1.1;   // the sprites were a touch small beside the 3D world
 let sheetTex;
 const chars = [];
 const tagsEl = document.getElementById('tags');
+let npcLooks = 0;   // NPCs without a model of their own take turns: Aditya, Sudhanshu, Aditya...
 function makeChar(name, x, z, opt = {}) {
-  const c = new SpriteCharacter(ADITYA, null, { x, y: z, speed: opt.speed || 3.3, scale: 1 });
-  const t = sheetTex.clone(); t.needsUpdate = true; t.repeat.set(CW / SHEET_W, CH / SHEET_H);
-  const mat = new THREE.MeshStandardMaterial({ map: t, alphaTest: .5, roughness: 1, metalness: 0, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .28 });
-  // a thin dark outline drawn into the transparent texel next to an opaque one, so a flat pixel sprite holds its own against the 3D scene
+  const look = opt.look || (opt.me ? 'aditya' : ['aditya', 'sudhanshu'][npcLooks++ % 2]);
+  const c = new SpriteCharacter(CHARS[look], null, { x, y: z, speed: opt.speed || 3.3, scale: 1 });
+  // one GPU copy of the sheet for everyone: each character only tells the shader which cell of it to show (uCell = u, v, width, height)
+  const t = sheetTex, cell = { value: new THREE.Vector4() };
+  const useCell = (sh) => { sh.uniforms.uCell = cell; return 'uniform vec4 uCell;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\nvUv = uCell.xy + uv * uCell.zw;'); };
+  const mat = new THREE.MeshStandardMaterial({ map: t, alphaTest: .5, roughness: 1, metalness: 0, emissive: 0xffffff, emissiveMap: t });   // syncChar sets the emissive each frame: a fill tinted by the scene's own sky light
+  // a thin dark outline drawn into the transparent texel next to an opaque one, so the render holds its own against the 3D scene
   mat.onBeforeCompile = (sh) => {
-    sh.uniforms.uTexel = { value: new THREE.Vector2(1 / SHEET_W, 1 / SHEET_H) };
-    sh.fragmentShader = 'uniform vec2 uTexel;\n' + sh.fragmentShader.replace('#include <map_fragment>', `vec4 sc = texture2D(map, vUv);
+    sh.uniforms.uTexel = { value: new THREE.Vector2(1.67 / SHEET_W, 1.67 / SHEET_H) };   // ~1 screen px of outline at the size they're drawn
+    sh.vertexShader = 'varying vec2 vLocal;\n' + useCell(sh).replace('#include <uv_vertex>', '#include <uv_vertex>\nvLocal = uv;');
+    sh.fragmentShader = 'uniform vec2 uTexel;\nvarying vec2 vLocal;\n' + sh.fragmentShader.replace('#include <map_fragment>', `vec4 sc = texture2D(map, vUv);
       float nb = max(max(texture2D(map, vUv + vec2(uTexel.x, 0.)).a, texture2D(map, vUv - vec2(uTexel.x, 0.)).a), max(texture2D(map, vUv + vec2(0., uTexel.y)).a, texture2D(map, vUv - vec2(0., uTexel.y)).a));
       if (sc.a < .5 && nb >= .5) sc = vec4(.2, .13, .1, 1.);
-      diffuseColor *= sc;`);
+      sc.rgb *= mix(.88, 1., smoothstep(0., .3, vLocal.y));   // contact occlusion: a little darker toward the ground
+      diffuseColor *= sc;`).replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+      // the card is flat, so give it the normal of a rounded body (view space): the sun, the moon and the lamps then shade its sides and top the way they shade the world
+      normal = normalize(vec3(clamp((vLocal.x - .5) * 3.2, -1., 1.) * .85, (vLocal.y - .5) * .9 + .3, 1.));`);
   };
   const mesh = new THREE.Mesh(spriteGeo, mat); mesh.castShadow = true; mesh.scale.setScalar(CHAR_SCALE);
   mesh.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t, alphaTest: .5 });
+  mesh.customDepthMaterial.onBeforeCompile = (sh) => { sh.vertexShader = useCell(sh); };
   const g = new THREE.Group(), tilt = new THREE.Group(); g.userData.dyn = true; tilt.rotation.x = .28; tilt.add(mesh); g.add(tilt);
-  const sh = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({ map: TX.blob, transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = .025; sh.scale.setScalar(CHAR_SCALE * .9); sh.material.opacity = .7; g.add(sh);
+  const sh = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({ map: TX.blob, transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.y = .025; sh.scale.setScalar(CHAR_SCALE * 1.5); sh.material.opacity = .9; g.add(sh);
   scene.add(g);
-  Object.assign(c, { name, g, mesh, tex: t, zone: opt.zone || 'lobby', wait: 0, target: null, stuck: 0 });
+  Object.assign(c, { name, g, mesh, cell, zone: opt.zone || 'lobby', wait: 0, target: null, stuck: 0 });
   c.tag = document.createElement('div'); c.tag.className = 'tag' + (opt.me ? ' me' : ''); c.tag.textContent = name; tagsEl.appendChild(c.tag);
   c.bubble = null;
   chars.push(c); return c;
@@ -42,19 +52,27 @@ function stepChar(c, dt) {
 }
 function syncChar(c) {
   const f = c.frame();
-  c.tex.offset.set(f.col * CW / SHEET_W, 1 - (f.row + 1) * CH / SHEET_H);
+  c.mesh.material.emissive.copy(hemi.color).multiplyScalar(hemi.intensity * .3);   // the render's own baked shading shows through, in the colour and strength of the sky light, so it follows the hour like the ground does
+  c.cell.value.set(f.col * CW / SHEET_W, 1 - (f.row + 1) * CH / SHEET_H, CW / SHEET_W, CH / SHEET_H);
   c.g.position.set(c.x, 0, c.y);
-  c.mesh.position.y = (c.noLift ? 0 : f.lift * .4 * SPU) + (c.alt || 0);
+  // a little life: lean into the direction of travel, breathe when still, squash on the beat of each step
+  const vx = c.x - (c.px ?? c.x), vz = c.y - (c.py ?? c.y); c.px = c.x; c.py = c.y;
+  const lean = c.leanX = (c.leanX || 0) + (Math.max(-1, Math.min(1, vx * 40)) - (c.leanX || 0)) * .2, fwd = c.leanZ = (c.leanZ || 0) + (Math.max(-1, Math.min(1, vz * 40)) - (c.leanZ || 0)) * .2;
+  const beat = c.moving ? Math.abs(Math.sin(f.col / 11 * Math.PI * 2)) : Math.sin(performance.now() / 700) * .5;
+  c.mesh.rotation.z = -lean * .07; c.mesh.rotation.x = fwd * .06;
+  c.mesh.scale.set(CHAR_SCALE * (1 - beat * .008), CHAR_SCALE * (1 + beat * .018), CHAR_SCALE);
+  c.mesh.position.y = (c.noLift ? 0 : f.lift * .6 * SPU) + (c.alt || 0);
 }
 
 // ================= NPCs =================
-const NPC_NAMES = ['rosa_j', 'chaiwala', 'pixelpriya', 'bobby5'];
+const NPC_NAMES = ['rosa_j', 'chaiwala', 'pixelpriya', 'bobby5', 'sudhanshu'];   // a name with its own model in CHARS wears it; the rest take turns
 const CHATTER = ['anyone tried the Prompt Lab yet?', 'the pond is so calm today', 'brb grabbing chai', 'what\'s a token again? 😅', 'Data Archive looks huge', 'meet at the signpost!', 'gg everyone', 'who\'s doing the quiz later?', 'I named my koi Claude'];
 const NPC_TALK = {
   rosa_j: ['Hey! First day in TokenFall?', 'Tip: a model reads text in little pieces called tokens. That\'s where the name comes from!'],
   chaiwala: ['Chai? No? More for me.', 'I heard the Prompt Lab teaches you to ask models better questions.'],
   pixelpriya: ['I\'m trying to visit all three areas today.', 'Pune is my favourite. The Calfus office is there.'],
   bobby5: ['brb, afk', '...oh, you\'re still here. Did you read the notice board?'],
+  sudhanshu: ['Aditya! Good to see you in TokenFall.', 'Tip: give a model the context you\'d give a new teammate. It can\'t read your mind, only your prompt.'],
 };
 let npcs = [];
 const CHATTER_OFFICE = ['who booked the Prompt Lab again?', 'chai break in 5?', 'the carrom queen is MINE', 'standup in the Token Room', 'love the marigolds', 'anyone seen my charger?'];

@@ -94,16 +94,16 @@ _ready.forEach(f => f(TF));
 // ================= boot =================
 const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel'), document.fonts.load('24px "Press Start 2P"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImg = new Image();
-const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.ADITYA_SHEET; });
+const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.CHAR_SHEET; });
 Promise.all([fontsReady, sheetReady]).then(() => {
   buildTextures(); buildMaterials();
-  const soft = document.createElement('canvas'); soft.width = sheetImg.naturalWidth; soft.height = sheetImg.naturalHeight; { const g = soft.getContext('2d'); g.filter = 'saturate(.88) contrast(.94) brightness(1.07)'; g.drawImage(sheetImg, 0, 0); }
-  sheetTex = new THREE.Texture(soft); sheetTex.magFilter = sheetTex.minFilter = THREE.NearestFilter; sheetTex.generateMipmaps = false; sheetTex.needsUpdate = true;
+  // full-res cells are drawn a little smaller than life: mipmaps keep them from shimmering as they move
+  sheetTex = new THREE.Texture(sheetImg); sheetTex.magFilter = THREE.LinearFilter; sheetTex.minFilter = THREE.LinearMipmapLinearFilter; sheetTex.anisotropy = 4; sheetTex.needsUpdate = true;
   LOBBY.build(); buildAreas(); mergeStatic(); buildDust(); buildLife();
-  applyTextureRefines();
+  applyTextureRefines(); softenTextures();
   hero = makeChar('aditya', LOBBY.spawn[0], LOBBY.spawn[1], { me: true });
   hero.dir = LOBBY.spawnDir; hero.zone = 'lobby';
-  npcs = NPC_NAMES.map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2 }); c.wait = Math.random() * 3000; return c; });
+  npcs = NPC_NAMES.map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2, look: CHARS[n] ? n : undefined }); c.wait = Math.random() * 3000; return c; });
   for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['ananya.r', 288, 9.2], ['kabir_m', 296, 6.4], ['sneha.d', 318, 2]]) { const c = makeChar(n, x, z, { speed: 1.9, zone: 'pune' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['sana.k', 7.4, 298.6], ['arjun_p', -.3, 291.6]]) { const c = makeChar(n, x, z, { speed: 2.1, zone: 'abz' }); c.wait = Math.random() * 3000; npcs.push(c); }

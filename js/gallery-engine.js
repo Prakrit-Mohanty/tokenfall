@@ -126,6 +126,22 @@
     spec.estSeconds = estimateSeconds(spec);
     return spec;
   }
+  // the short run: the first two sides and the finale, cut to 8 cards each with the threat ratio kept (a calmer 24 cards, not 52)
+  const SHORT = { rounds: [0, 1, 4], cards: 8 };
+  function shorten(spec) {
+    const cut = (r) => {
+      const items = r.items.slice(); let threats = items.filter((i) => i.shoot).length;
+      while (items.length > SHORT.cards) {
+        const dropThreat = threats * 2 > items.length, at = items.map((i) => !!i.shoot).lastIndexOf(dropThreat);
+        items.splice(at, 1); if (dropThreat) threats--;
+      }
+      const round = Object.assign({}, r, { items, threats, ammo: threats + RUN.ammoExtra });
+      round.schedule = scheduleRound(round); round.playSec = playSecOf(round.schedule);
+      return round;
+    };
+    spec.rounds = SHORT.rounds.map((i) => cut(spec.rounds[i])); spec.estSeconds = estimateSeconds(spec);
+    return spec;
+  }
   // a fresh draw for round i: the same side (or the finale), none of the pairs any round of the run already uses; the other rounds are untouched
   function rerollRound(spec, i, history) {
     const s = clone(spec), old = s.rounds[i], n = ((s.rerolls = s.rerolls || {})[i] = (s.rerolls[i] || 0) + 1), tag = ':reroll' + n, ctx = context(history || { runs: [{ items: [...s.avoid] }] });
@@ -289,6 +305,6 @@
     return out;
   }
 
-  return { LAYOUT, SIDE_IDS, PAIRS, ITEM, seedFor, composeRun, rerollRound, scheduleRound, estimateSeconds, maxOnScreen, twinPairs, countTraps, conceptWeight, context,
+  return { LAYOUT, SIDE_IDS, PAIRS, ITEM, seedFor, composeRun, shorten, rerollRound, scheduleRound, estimateSeconds, maxOnScreen, twinPairs, countTraps, conceptWeight, context,
     cardPose, progress, hitTest, RINGS, ringFor, rayFromNdc, ndcOf, judge, entryFor, playRound, scoreRound, scoreRun, starsFor, debriefPicks, GAP, POP_RISE };
 });

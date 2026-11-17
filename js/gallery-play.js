@@ -8,7 +8,7 @@
 //   install(TF)                builds the HUD and the game on gallery-world.js, takes over the stall's E (TF.stall.open) and the keys
 //
 // THE GAME
-//  A carnival stall on the south lawn. Five rounds: the four sides in a seeded order, then the finale "Rush hour". Each round: a brief (about 8 s, E starts it), about 40 s of play,
+//  A carnival stall on the south lawn. Three short rounds: two of the sides in a seeded order, then the finale "Rush hour". Each round: a brief (about 8 s, E starts it), about 40 s of play,
 //  then a debrief of up to 3 Concept Cards (E to continue). Paper cards slide along three shelves towards ticket windows. Shoot the threats (click, tap or Space; arrow keys move the
 //  reticle), spare the real ones (let them pass: delivered), and inspect a card first when it matters (hold F, right button or a long press, about 0.6 s: one magnifier charge, five a run).
 //  A shot that hits nothing still costs a token. A threat that reaches the ticket window is a leak; a real card that is shot is friendly fire.
@@ -199,23 +199,16 @@
     // ---- flow ----
     const afterTalk = (fn) => { S.waitTalk = fn; };
     function startRun(quiet) {
-      const r = progress.newRun(), spec = E.composeRun(E.seedFor(r.playerId, r.runIndex), r.history);
+      const r = progress.newRun(), spec = E.shorten(E.composeRun(E.seedFor(r.playerId, r.runIndex), r.history));
       S = { on: true, coach: coachSeen < 3, oneLine: coachSeen >= 2, run: createRun(spec), runInfo: r, phase: 'intro', world, briefT: 0, hint: 0, waitTalk: null, read: false, combo: 0, inspectText: {}, landing: {}, rsScore: null, queue: [], murmurT: 0, endT: 0, summary: null };
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed });
-      if (quiet) { TF.banner('A new row', 'New cards'); if (quick) trim(); beginRound(0); return; }
+      if (quiet) { TF.banner('A new row', 'New cards'); beginRound(0); return; }
       TF.banner('Spot Shot', 'Shoot the threats, spare the real');
       TF.talk('Spot Shot', coachSeen === 0
-        ? ['Step right up! Five rounds at the Spot Shot stall, one foam blaster. Hit the bullseye on a duck for the most points.', 'Shoot the fakes, scams and poisoned inputs. Spare the real ones: just let them pass. Not sure? Hold F on a card to inspect it. You get five checks for the whole run.', 'Click or press Space to shoot, arrow keys move the reticle. Tab lists the cards in big text. M mutes. Esc leaves.']
+        ? ['Step right up! Three short rounds at the Spot Shot stall, one foam blaster. Hit the bullseye on a duck for the most points.', 'Shoot the fakes, scams and poisoned inputs. Spare the real ones: just let them pass. Not sure? Hold F on a card to inspect it. You get five checks for the whole run.', 'Click or press Space to shoot, arrow keys move the reticle. Tab lists the cards in big text. M mutes. Esc leaves.']
         : ['Back at the stall? Same rules: shoot the threats, spare the real, inspect when it matters.']);
-      bumpCoach(); afterTalk(choose);
+      bumpCoach(); afterTalk(() => { hud.brief.style.display = 'none'; beginRound(0); });
     }
-    // Quick: the first two sides and the finale (3 rounds, about 3 minutes); Full: all five. Keys 1 / 2, E = Full.
-    let quick = false;
-    const trim = () => { const sp = S.run.spec; sp.rounds = [0, 1, 4].map((i) => sp.rounds[i]); sp.estSeconds = E.estimateSeconds(sp); };
-    function choose() {
-      S.phase = 'pick'; hud.brief.innerHTML = `<div class="k">HOW LONG?</div><div class="t"><kbd>1</kbd> Quick: 3 rounds, about 3 min<br><kbd>2</kbd> Full: 5 rounds, about 4 min</div><p class="go"><kbd>E</kbd> Full ▼</p>`; hud.brief.style.display = 'block';
-    }
-    function pick(q) { quick = q; hud.brief.style.display = 'none'; if (q) trim(); beginRound(0); }
     function beginRound(i) {
       const run = S.run, R = run.begin(i), r = R.r;
       world.clearRound(); world.loadRound(r); world.run(false); S.combo = 0; S.phase = 'brief'; S.inspectText = {}; S.landing = {}; S.hint = 0; S.read = false; S.endT = 0; hud.topKey = hud.statKey = hud.readKey = '';
@@ -277,7 +270,6 @@
     }
     function closeCard() {
       if (!S) return;
-      if (S.phase === 'pick') { pick(false); return; }
       if (S.phase === 'brief') { startPlay(); return; }
       if (S.phase !== 'debrief') return;
       if (cardOpen()) bridge.card.hide();
@@ -317,7 +309,6 @@
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else if (!TF.talking) closeCard(); return true; }
-      if (S.phase === 'pick' && (e.code === 'Digit1' || e.code === 'Digit2') && !e.repeat) { pick(e.code === 'Digit1'); return true; }
       if (e.code === 'KeyS' && !e.repeat && S.phase === 'debrief' && !helpOpen()) { S.queue.length = 0; if (cardOpen()) bridge.card.hide(); nextCard(); return true; }
       if (e.code === 'Tab') { if (!e.repeat && S.phase === 'play') S.read = !S.read; return true; }
       if (cardOpen() || helpOpen() || TF.talking || S.phase !== 'play') return true;   // the card has the keys

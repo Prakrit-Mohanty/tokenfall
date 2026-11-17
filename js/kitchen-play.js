@@ -11,7 +11,7 @@
 //   install(TF)                builds the HUD and the game on kitchen-world.js: E at the Ticket Rail starts a shift, the world's E / 1-3 / Tab work the stations, R reads, H helps, M mutes
 //
 // THE GAME
-//  One shift of 4:15 in the Token Brew kitchen: a skippable 12 s briefing, 13 orders in three phases (Warm-up, Lunch, Rush), a debrief of about 25 s. Tickets arrive about every 19 s, three on
+//  One shift of about 3:15 in the Token Brew kitchen: a skippable 12 s briefing, 8 orders in three phases (Warm-up, Lunch, Rush), a debrief of about 25 s. Tickets arrive about every 19 s, three on
 //  the rail at most; the pantry shows the SELECTED ticket's chunks. Grab chunks, trim them (chopping board = summary, sieve = excerpt), load a pot (260 tokens: the prompt AND the reply live in
 //  it), set the dial (one line 20, short 50, full 120), cook, serve at the pass. The gas tank is the shift's token allowance. A pot that still holds another customer's order LEAKS it (wipe it
 //  first). In the Rush phase a full pot pops its oldest items out. Esc leaves the shift: what was served is kept as partial attempts, with no mastery credit.
@@ -238,7 +238,7 @@
       const run = S.run, inShift = S.phase === 'play', shown = S.on && !TF.talking && !helpOpen() && !cardOpen();
       hud.top.style.display = shown && inShift ? 'block' : 'none';
       if (inShift) {
-        const left = RUN.shift - run.t, ph = RUN.phases[run.phase() - 1], gas = run.st.tank, key = [Math.ceil(left), run.st.coins, gas, ph.n, run.combo >= RULES.COMBO, muted()].join('|');
+        const left = run.spec.shift - run.t, ph = RUN.phases[run.phase() - 1], gas = run.st.tank, key = [Math.ceil(left), run.st.coins, gas, ph.n, run.combo >= RULES.COMBO, muted()].join('|');
         if (key !== hud.keys.top) {
           hud.keys.top = key;
           hud.top.innerHTML = `<div class="k">SHIFT · PHASE ${ph.n} · ${ph.name.toUpperCase()}</div><div class="row"><span class="clock">${clock(left)}</span> · Coins <b>${run.st.coins}</b> · Tokens left <span class="gas"><i style="width:${Math.round(100 * gas / run.spec.tank)}%"></i></span> <b>${gas.toLocaleString('en-US')}</b></div>`
@@ -278,19 +278,19 @@
     // ---- flow ----
     const afterTalk = (fn) => { S.waitTalk = fn; };
     function startShift() {
-      const r = progress.newRun(), spec = E.composeShift(E.seedFor(r.playerId, r.runIndex), r.history), run = createRun(spec);
+      const r = progress.newRun(), spec = E.shorten(E.composeShift(E.seedFor(r.playerId, r.runIndex), r.history)), run = createRun(spec);
       S = { on: true, run, runInfo: r, phase: 'intro', briefT: 0, hint: 0, waitTalk: null, read: false, seen: coachSeen, coach: coachSeen < RULES.COACH_RUNS, queue: [], rsScore: null, lastMs: 0, sizzleT: 0, phaseSeen: 1, summary: null, customerOf: {}, nextCustomer: 0 };
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed }); bumpCoach(); emit('shift', { variants: [...new Set(spec.tickets.map((t) => t.variantId))] });
       document.getElementById('ui').classList.add('kitchen-on'); hud.keys = {}; world.busy(true);
-      TF.banner('Token Brew Kitchen', 'Short-staffed: 13 orders, one tank of gas');
+      TF.banner('Token Brew Kitchen', 'Short-staffed: 8 orders, one tank of gas');
       TF.talk('Ticket Rail', S.seen === 0
-        ? ["Kitchen's short-staffed. Thirteen orders, one tank of gas.", 'The pot is the model\'s context window: your chunks AND its reply share 260 tokens. Pack only what each order needs, and trim the rest at the board.', 'Cook it, serve it, and never reuse a pot that still holds another customer. Esc leaves. H is help.']
+        ? ["Kitchen's short-staffed. Eight orders, one tank of gas.", 'The pot is the model\'s context window: your chunks AND its reply share 260 tokens. Pack only what each order needs, and trim the rest at the board.', 'Cook it, serve it, and never reuse a pot that still holds another customer. Esc leaves. H is help.']
         : ['Back on the pass? Same rules: pack light, leave room for the reply, wipe between customers.']);
       afterTalk(showBrief);
     }
     function showBrief() {
       S.phase = 'brief'; S.briefT = RUN.brief;
-      hud.brief.innerHTML = `<div class="k">TOKEN BREW KITCHEN · THE SHIFT</div><ul><li>Thirteen orders in three phases: <b>Warm-up</b>, <b>Lunch</b>, <b>Rush</b>. A new ticket about every 19 seconds.</li>${S.seen >= 2 ? '' : `<li>The tank is your token allowance: <b>${RUN.tank.toLocaleString('en-US')}</b>. Spend less than the order's par and earn a tip.</li><li>Press <kbd>Tab</kbd> to pick a ticket. The pantry shows its chunks.</li>`}</ul><div class="go"><kbd>E</kbd> starts the shift</div>`;
+      hud.brief.innerHTML = `<div class="k">TOKEN BREW KITCHEN · THE SHIFT</div><ul><li>Eight orders in three phases: <b>Warm-up</b>, <b>Lunch</b>, <b>Rush</b>. A new ticket about every 19 seconds.</li>${S.seen >= 2 ? '' : `<li>The tank is your token allowance: <b>${RUN.tank.toLocaleString('en-US')}</b>. Spend less than the order's par and earn a tip.</li><li>Press <kbd>Tab</kbd> to pick a ticket. The pantry shows its chunks.</li>`}</ul><div class="go"><kbd>E</kbd> starts the shift</div>`;
       hud.brief.style.display = 'block';
     }
     function startPlay() {
@@ -343,7 +343,7 @@
 
     // ---- the debrief: a few lines at the rail, the receipt, then up to 4 Concept Cards (E to continue) ----
     function endShift() {
-      const run = S.run; run.advance(0); E.advance(run.st, RUN.shift); S.phase = 'debrief'; world.setPlaying(false); world.carry(null); world.floor.clear();
+      const run = S.run; run.advance(0); E.advance(run.st, run.spec.shift); S.phase = 'debrief'; world.setPlaying(false); world.carry(null); world.floor.clear();
       S.rsScore = summary(run); S.queue = debriefPicks(run, 4);
       for (let i = 0; i < 2; i++) world.steam(i, false);
       emitAnswers(true); hud.keys = {};

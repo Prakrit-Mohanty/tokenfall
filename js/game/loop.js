@@ -114,7 +114,7 @@ function toScreen(x, y, z) { proj.set(x, y, z).project(camera); return [(proj.x 
 function drawUI(dt) {
   for (const c of chars) {
     const show = c.zone === zone;
-    const [sx, sy, vis] = toScreen(c.x, 1.78 * CHAR_SCALE + .06 + c.mesh.position.y, c.y);
+    const [sx, sy, vis] = toScreen(c.x, (FIG_H + .1) * CHAR_SCALE + .06 + c.mesh.position.y, c.y);
     c.tag.style.display = show && vis && !dialog ? 'block' : 'none';
     c.tag.style.left = sx + 'px'; c.tag.style.top = sy + 'px';
     if (c.bubble) {

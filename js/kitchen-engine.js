@@ -232,13 +232,27 @@
 
   // spawn times: the first nine tickets are evenly spaced; phase 3 opens with K9's first ticket, its second spawns `gap` seconds later, the other two are spaced between
   function schedule(tickets) {
-    tickets.forEach((t, i) => { if (i < 9) t.spawn = +(i * SPAWN.early).toFixed(2); t.ttl = RUN.phases[t.phase - 1].ticket; });
+    const early = tickets.filter((t) => t.phase < 3).length;   // nine in a full shift
+    tickets.forEach((t, i) => { if (i < early) t.spawn = +(i * SPAWN.early).toFixed(2); t.ttl = RUN.phases[t.phase - 1].ticket; });
     const a = tickets.find((t) => t.concept === 'K9' && t.chainRole === 'first'), b = tickets.find((t) => t.concept === 'K9' && t.chainRole === 'second');
-    a.spawn = +(9 * SPAWN.early).toFixed(2); b.spawn = +(a.spawn + b.gap).toFixed(2);
+    a.spawn = +(early * SPAWN.early).toFixed(2); b.spawn = +(a.spawn + b.gap).toFixed(2);
     const mid = tickets.filter((t) => t.phase === 3 && t !== a && t !== b);
     mid.forEach((t, k) => { t.spawn = +(a.spawn + b.gap * (k + 1) / (mid.length + 1)).toFixed(2); });
     tickets.sort((x, y) => x.spawn - y.spawn || x.idx - y.idx); tickets.forEach((t, i) => { t.idx = i; });
     return tickets;
+  }
+
+  // the short shift: 8 orders, not 13. Phase 1 keeps one of each of K1, K2, K7; phase 2 the K5 chain; phase 3 the K9 chain and the rush ticket. The clock ends with the last ticket's timer.
+  function shorten(spec) {
+    const seen = new Set(), drop = (t) => {
+      if ((t.phase === 2 && t.concept !== 'K5') || (t.phase === 3 && !t.rush && t.concept !== 'K9')) return true;
+      if (t.phase === 1) { if (seen.has(t.concept)) return true; seen.add(t.concept); }
+      return false;
+    };
+    spec.tickets = schedule(spec.tickets.filter((t) => !drop(t)).sort((x, y) => x.idx - y.idx));
+    spec.shift = Math.ceil(Math.max(...spec.tickets.map((t) => t.spawn + t.ttl)));
+    spec.plans = planShift(spec);
+    return spec;
   }
 
   // a fresh draw for the unit that holds ticket i (a K5 / K9 chain moves as one): the same concept, another variant, every other ticket stays
@@ -439,5 +453,5 @@
   }
   const estimateSeconds = () => RUN.brief + RUN.shift + RUN.debrief;
 
-  return { RULES, SPAWN, STAT, LAYOUT, STAMPS, seedFor, context, eligible, composeShift, rerollOrder, schedule, solveIdeal, planShift, residueOf, sameLine, fairR, spearman, newState, advance, act, fillOf, price, judgeDish, scoreOrder, scoreShift, starsFor, playActions, estimateSeconds, IDEAL_TOTAL };
+  return { RULES, SPAWN, STAT, LAYOUT, STAMPS, seedFor, context, eligible, composeShift, shorten, rerollOrder, schedule, solveIdeal, planShift, residueOf, sameLine, fairR, spearman, newState, advance, act, fillOf, price, judgeDish, scoreOrder, scoreShift, starsFor, playActions, estimateSeconds, IDEAL_TOTAL };
 });

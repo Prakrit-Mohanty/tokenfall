@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sudhanshu 3D · Tokenfall</title>
+<style>
+  html,body{margin:0;background:#15131D;color:#EDE9F7;font-family:system-ui,sans-serif}
+  main{max-width:900px;margin:0 auto;padding:24px 16px}
+  h1{font-size:24px;margin:0 0 4px} p{margin:0 0 16px;color:#A9A3BC}
+</style>
+</head>
+<body>
+<main>
+  <h1>Sudhanshu · 3D</h1>
+  <p>Arrows/WASD walk · Shift run · Space jump · E celebrate · Z nap</p>
+  <div id="stage"></div>
+</main>
+<script src="js/sudhanshu3d.js"></script>
+<script>
+  Sudhanshu3D.mount(document.getElementById('stage'), { src: 'sprites/sudhanshu3d.webp' });
+</script>
+</body>
+</html>

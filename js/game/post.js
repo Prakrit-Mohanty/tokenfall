@@ -59,7 +59,7 @@ const final = fsPass(`uniform sampler2D tColor, tDepth, tBloom; uniform vec2 res
     c=mix(c,c*hiTint,smoothstep(.45,1.,L)*.45);          // warm highlights
     // a light cel shading, kept gentle so the lighting still reads as natural, then the thin ink line
     float Lc=dot(c,vec3(.299,.587,.114)), Lq=(floor(Lc*4.)+smoothstep(.3,.7,fract(Lc*4.)))/4.;
-    c*=mix(1.,clamp(Lq/max(Lc,.03),.7,1.3),.22*sketch);
+    c*=mix(1.,clamp(Lq/max(Lc,.03),.7,1.3),.07*sketch);   // only a whisper of banding: the characters are smooth-shaded, so the world is too
     c=mix(vec3(dot(c,vec3(.299,.587,.114))),c,1.+.03*sketch);
     c=mix(c,vec3(.2,.13,.17),clamp(edge*lineAmt*sketch,0.,.8));
     vec2 v=vUv-.5; c*=1.-dot(v,v)*vig;

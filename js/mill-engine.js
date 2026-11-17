@@ -205,6 +205,25 @@
     return { spec: s, shift: r.shift };
   }
 
+  // the short run: the first two shifts and the finale, cut to 8 crates each (a calmer 24, not 62); a shift loses crates from its fullest bin, the finale two from every wave
+  function shorten(spec) {
+    const cut = (sh) => {
+      let crates = sh.crates.slice(), waves = sh.waves;
+      if (sh.kind === 'finale') {
+        const drop = new Set(); waves = sh.waves.map((w) => { const gone = w.uids.slice(2); gone.forEach((u) => drop.add(u)); return Object.assign({}, w, { size: 2, uids: w.uids.slice(0, 2) }); });
+        crates = crates.filter((c) => !drop.has(c.uid));
+      } else while (crates.length > 8) {
+        const n = (b) => crates.filter((c) => c.bin === b.id).length, fullest = sh.bins.reduce((a, b) => (n(b) > n(a) ? b : a));
+        crates.splice(crates.map((c) => c.bin).lastIndexOf(fullest.id), 1);
+      }
+      const base = Object.assign({}, sh, { concepts: [...new Set(crates.map((c) => c.conceptId))] });
+      if (waves) base.waves = waves; else base.counts = sh.bins.map((b) => crates.filter((c) => c.bin === b.id).length);
+      return finishShift(base, crates);
+    };
+    spec.shifts = [0, 1, spec.shifts.length - 1].map((i) => cut(spec.shifts[i])); spec.estSeconds = estimateSeconds(spec);
+    return spec;
+  }
+
   // ---------------------------------------------------------------- the schedule: a crate enters the zone every `spacing` belt seconds; in the finale the new wave waits 1.2 s more
   function scheduleShift(shift) {
     const out = []; let t = 0;
@@ -305,6 +324,6 @@
     return out;
   }
 
-  return { STAT, ZONE, SPEED, FINALE_DESK, SIDE_IDS, UNITS, ITEM, binXs, seedFor, composeRun, rerollShift, scheduleShift, plateFlips, estimateSeconds, maxInZone, twinPairs, countTraps, context, corr, normalizeBrakes, beltClock, cratePos, inZone, binAt,
+  return { STAT, ZONE, SPEED, FINALE_DESK, SIDE_IDS, UNITS, ITEM, binXs, seedFor, composeRun, shorten, rerollShift, scheduleShift, plateFlips, estimateSeconds, maxInZone, twinPairs, countTraps, context, corr, normalizeBrakes, beltClock, cratePos, inZone, binAt,
     judge, entryFor, deskState, playShift, scoreShift, scoreRun, starsFor, debriefPicks, rankOf, beltSecOf };
 });

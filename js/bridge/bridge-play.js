@@ -89,7 +89,7 @@
     function newRun() {
       const r = progress.newRun();
       if (r.runIndex >= 2) referee.splice(0, referee.length, BRIEF_SHORT);
-      S = { playerId: r.playerId, runIndex: r.runIndex, spec: G.composeRun(G.seedFor(r.playerId, r.runIndex), r.history), started: false, finished: false, startedAt: 0,
+      S = { playerId: r.playerId, runIndex: r.runIndex, spec: G.shorten(G.composeRun(G.seedFor(r.playerId, r.runIndex), r.history)), started: false, finished: false, startedAt: 0,
         falls: 0, scans: 0, tokens: 0, streak: 0, best: 0, cp: 0, rows: {}, taken: new Set(), lock: null, breakT: 0, pending: null, card: null,
         fallHandled: false, motor: createMotor(), jumpQ: false, standId: null, standRect: null, shake: { t: 0, d: 1, m: 0 }, scanned: {}, answers: [] };
       return S.spec;
@@ -478,7 +478,7 @@
       hud = hud || makeHud(); fx = makeFx();   // the coins were built by the world's build event, which fires first
       const h = TF.hero; h.noLift = true; h.alt = 0; hud.qKey = hud.sKey = hud.kKey = ''; hud.c.style.display = 'none'; hud.h.style.display = 'none';
       if (coachSeen === 0) setTimeout(() => { if (TF.zone === 'bridge') showHelp(true); }, 900);   // the very first visit opens the how-to-play panel
-      TF.sys('The Glass Bridge: 12 questions, 3 stages and a boss. Space jumps, F hints, M mutes.');
+      TF.sys('The Glass Bridge: 8 questions, 3 stages and a boss. Space jumps, F hints, M mutes.');
     }
     function leaveZone() {
       const h = TF.hero; h.noLift = false; h.alt = 0; h.g.children[1].visible = true;
