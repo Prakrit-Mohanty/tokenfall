@@ -12,7 +12,7 @@ npm run dev
 
 Then open http://127.0.0.1:8765/. Opening `index.html` directly from disk works too.
 
-Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `archive`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?board=sample` fills the leaderboard with sample rows.
+Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `airport`, `us`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?board=sample` fills the leaderboard with sample rows.
 
 ## Layout
 
@@ -35,7 +35,9 @@ js/game/            the game, one file per system (classic scripts sharing one g
   office-kit.js       shared office pieces: desks, meeting rooms, sofas, garlands, faders
   office-hq.js        Calfus HQ office (zone "lab")
   office-abz.js       ABZ office (zone "abz"), 15th floor
-  build-areas.js      builds the offices and the Data Archive, then Pune
+  build-areas.js      builds the HQ and ABZ offices, the airport, the US office, then Pune
+  airport.js          Pune Airport (lobby's west gate): check-in, departures board, Gate 7 to the US office
+  office-us.js        Calfus US office, Pleasanton: window desks, logo wall, ping-pong, kitchen, meeting rooms
   city.js             city pieces: apartments, bus stop, traffic lanes and signals
   pune.js             Pune: main road, Crescent Bay, the park, ABZ, khau galli, bike taxi
   effects.js          static batching, ambient life, dust, sun/sky

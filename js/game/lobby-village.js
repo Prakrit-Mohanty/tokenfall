@@ -1,5 +1,5 @@
 // TokenFall: the village lobby. A paved plaza with the coin fountain in a reflecting pool and four roads out: west past the
-// food stalls to the Data Archive, east past Token Brew to Pune, south past the pond to the Glass Bridge, north over the river
+// food stalls to the airport, east past Token Brew to Pune, south past the pond to the Glass Bridge, north over the river
 // to HQ. Modern homes ring the plaza; holo signs, info screens, an EV bay, the Prompt Lab pavilion and a few robots add the AI era.
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
@@ -44,7 +44,7 @@ const V_HOMES = [
 const V_EXTRA_PATHS = [[0, -42.2, 5, 9.4], [5.15, 26, 5.1, 1.8], [32.4, -6, 5.6, 3]];
 const V_FENCES = [[-14, -4, -14, -9.5], [14.5, 4, 14.5, 7.5], [-14.5, 4, -14.5, 9], [-34, -4.2, -38, -4.2], [29.5, 4.2, 31, 4.2]];
 const V_LAMPS = [[-11.4, -9.4, 1], [11.4, 9.4, 1], [-11.4, 9.4, 0], [11.4, -9.4, 0], [-3.6, -14, 0], [3.6, -17, 1], [-3.6, 16, 1], [3.6, 30, 0], [-16, -3.6, 1], [-30, 3.6, 0], [16, 3.6, 1], [30, -3.6, 0], [-3.6, -28.5, 0], [3.6, 35, 0]];
-const V_HOLOS = [[0, -10.8, 0, '▲ HQ'], [-12.8, 0, Math.PI / 2, '◀ DATA ARCHIVE'], [12.8, 0, -Math.PI / 2, 'PUNE ▶'], [0, 10.8, Math.PI, '▼ GLASS BRIDGE']];
+const V_HOLOS = [[0, -10.8, 0, '▲ HQ'], [-12.8, 0, Math.PI / 2, '◀ AIRPORT'], [12.8, 0, -Math.PI / 2, 'PUNE ▶'], [0, 10.8, Math.PI, '▼ GLASS BRIDGE']];
 const V_AI_TIPS = ['AI tip: an AI can sound sure of itself and still be wrong. Check answers that matter.', 'AI tip: give it context. "Summarise this for a new joiner" beats "summarise this".', 'AI tip: never paste passwords or private customer data into a chatbot.'];
 
 const vInRect = (r, x, z, m = 0) => x > r[0] - m && x < r[2] + m && z > r[1] - m && z < r[3] + m;
@@ -487,10 +487,10 @@ function buildVillageLobby() {
   for (const f of V_FENCES) vFence(...f);
   for (const [x, z] of [[-12.6, 3.6], [12.6, -3.6], [4.6, -10.8]]) pot(x, z);
   for (const [x, z, ry, text] of V_HOLOS) vHolo(x, z, ry, text);
-  vTotem(-5.6, 11.4, 'WELCOME', ['▲ HQ', '◀ Archive', 'Pune ▶', '▼ Glass Bridge'], 'Directory', ['Welcome to TokenFall!', 'West, past the food stalls: the Data Archive. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'The leaderboard by the plaza shows who has the most correct answers.']);
+  vTotem(-5.6, 11.4, 'WELCOME', ['▲ HQ', '◀ Airport', 'Pune ▶', '▼ Glass Bridge'], 'Directory', ['Welcome to TokenFall!', 'West, past the food stalls: the airport, with flights to the Calfus US office in Pleasanton. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'The leaderboard by the plaza shows who has the most correct answers.']);
   vTotem(5.6, 11.4, 'AI TIP', ['Sounding sure is not the same as being right.'], 'AI Tips', V_AI_TIPS);
 
-  gate(-40, 0, Math.PI / 2, 'Data Archive', 0xffb347, 'lobby', 'archive');
+  gate(-40, 0, Math.PI / 2, 'Airport', 0xffb347, 'lobby', 'airport');
   gate(40, 0, Math.PI / 2, 'Pune', 0x7dff8a, 'lobby', 'pune');
   gate(0, 40, 0, 'The Glass Bridge', 0xffd27a, 'lobby', 'bridge'); sparkles(0, 40, 0xffd27a, 34, 1.3, 3.6);
   ledSign(['▼ The Glass Bridge'], '#ffe39a', 0, 5.4, 40, 3.8, .55);
@@ -507,7 +507,7 @@ function buildVillageLobby() {
 
 const VILLAGE = {
   build: buildVillageLobby, spawn: V_SPAWN, spawnDir: 'up', npcBounds: [-11, -9, 11, 9],
-  returns: { archive: [-37, 0], pune: [37, 0], bridge: [0, 37] },
+  returns: { airport: [-37, 0], pune: [37, 0], bridge: [0, 37] },
   petals: [[-10.6, -8.6], [-17, 12]], lightPoles: [],
   dof: { farStart: 14, farRange: 50, edgeBlur: .25 },
   minigameSpots: V_GAME_SPOTS,

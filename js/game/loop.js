@@ -7,7 +7,7 @@ const locName = document.getElementById('locName'), locSub = document.getElement
 function setZone(z) {
   const prevZone = zone; zone = z;
   for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) { l.intensity = k === z ? l.userData.base : 0; l.visible = k === z; }
-  const indoor = z === 'lab' || z === 'abz';
+  const indoor = z === 'lab' || z === 'abz' || z === 'us' || z === 'airport';
   scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
   sun.intensity = indoor ? .5 : 1.3; hemi.intensity = indoor ? .5 : .58;
   hemi.color.set(indoor ? 0xe8e4dc : 0xcfdcff);
@@ -26,7 +26,7 @@ function travel(p) {
   setTimeout(() => {
     const to = p.to;
     if (p.at) { hero.x = p.at[0]; hero.y = p.at[1]; hero.dir = 'down'; }
-    else if (to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = AREAS[p.zone].retDir || (p.zone === 'lab' ? 'down' : p.zone === 'archive' ? 'right' : 'left'); }
+    else if (to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = AREAS[p.zone].retDir || (p.zone === 'lab' ? 'down' : p.zone === 'airport' ? 'right' : 'left'); }
     else { const a = AREAS[to], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.dir = 'up'; }
     setZone(to); hero.zone = to; armed = false;
     snapCamera();

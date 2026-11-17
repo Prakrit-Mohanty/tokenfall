@@ -40,7 +40,7 @@ function syncChar(c) {
 
 // ================= NPCs =================
 const NPC_NAMES = ['rosa_j', 'chaiwala', 'pixelpriya', 'bobby5'];
-const CHATTER = ['anyone tried the Prompt Lab yet?', 'the pond is so calm today', 'brb grabbing chai', 'what\'s a token again? 😅', 'Data Archive looks huge', 'meet at the signpost!', 'gg everyone', 'who\'s doing the quiz later?', 'I named my koi Claude'];
+const CHATTER = ['anyone tried the Prompt Lab yet?', 'the pond is so calm today', 'brb grabbing chai', 'what\'s a token again? 😅', 'who\'s flying to Pleasanton?', 'meet at the signpost!', 'gg everyone', 'who\'s doing the quiz later?', 'I named my koi Claude'];
 const NPC_TALK = {
   rosa_j: ['Hey! First day in TokenFall?', 'Tip: a model reads text in little pieces called tokens. That\'s where the name comes from!'],
   chaiwala: ['Chai? No? More for me.', 'I heard the Prompt Lab teaches you to ask models better questions.'],
