@@ -5,7 +5,7 @@
 
 const VAI_TOKENS = ['to', 'ken', 'Fall', 'AI', 'pro', 'mpt', 'da', 'ta', '##', 'ing'];
 const VAI_TICKER = '   TOKENFALL NEWS  ·  Tokens are chunks of text, not whole words  ·  An AI can sound sure and still be wrong  ·  Never paste passwords into a chatbot  ·  Leaderboard: most correct answers wins  ·  Prompt Lab opening soon  ·';
-const VAI_GREETER_LINES = ['Hi! I\'m TOKEN-1, the lobby helper. 🤖', 'I work a bit like a chatbot: I guess the next word, one token at a time.', 'So I can be wrong while sounding very sure. Double-check answers that matter!', 'Head south to the Glass Bridge: only the right answers hold your weight.'];
+const VAI_TOKEN1 = { parts: null };
 
 const vaiShell = () => vOnce('vaiShell', () => new THREE.MeshStandardMaterial({ color: 0xeeeae2, roughness: .45 }));
 function vaiFace(eyes) { const t = ledTex([eyes], '#8fe8ff', 32, 16); return std(t, 0, { emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 1.3 }); }
@@ -42,7 +42,7 @@ function vaiNeuralNet(x, z) {
   INTER.push({ x, z: z + 1.7, r: 1.7, label: 'Neural Net', verb: 'Look', act: () => talk('Neural Net', ['A tiny neural network made of light: inputs on the left, a hidden layer, answers on the right.', 'Each glowing wire is a weight. Training nudges millions, even billions, of them until the answers come out right.', 'This one has 9 nodes. The models behind chatbots have billions of weights.']) });
 }
 
-// TOKEN-1: a hovering helper robot by the spawn point that turns to look at you
+// TOKEN-1's body, built by the spawn point; token1.js takes the parts and drives it (follows you, reacts to the minigames)
 function vaiGreeter(x, z) {
   const g = new THREE.Group(); g.userData.dyn = true; g.position.set(x, 0, z); scene.add(g);
   const body = new THREE.Group(); g.add(body);
@@ -52,16 +52,7 @@ function vaiGreeter(x, z) {
   box(.04, .3, .04, MAT.metal, 0, .25, 0, { p: head }); const tip = box(.12, .12, .12, glowStrip(0xffb347), 0, .55, 0, { p: head, cast: false });
   const arms = [-1, 1].map((s) => { const a = new THREE.Group(); a.position.set(s * .43, 1.05, 0); body.add(a); box(.14, .5, .14, vaiShell(), 0, -.5, 0, { p: a }); return a; });
   const disc = add(new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, .06, 20), vGlow(V_LED)), g, false); disc.position.y = .03;
-  anim.push((t) => {
-    body.position.y = .12 + Math.sin(t * 2.2) * .06;
-    const dx = hero.x - x, dz = hero.y - z, near = Math.hypot(dx, dz) < 8;
-    const want = near ? Math.atan2(dx, dz) : Math.sin(t * .4) * .6;
-    g.rotation.y += Math.atan2(Math.sin(want - g.rotation.y), Math.cos(want - g.rotation.y)) * .06;
-    arms[1].rotation.z = near ? .6 + Math.sin(t * 8) * .5 : .1; arms[0].rotation.z = -.1;
-    tip.visible = Math.sin(t * 5) > -.3;
-  });
-  colCirc(x, z, .45);
-  INTER.push({ x, z: z + 1.3, r: 1.6, label: 'TOKEN-1', verb: 'Talk', act: () => talk('TOKEN-1', VAI_GREETER_LINES) });
+  VAI_TOKEN1.parts = { g, body, head, arms, tip };
 }
 
 // word pieces drifting up from the coin, the way a model reads text: in tokens

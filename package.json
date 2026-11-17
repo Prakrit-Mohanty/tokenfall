@@ -4,6 +4,6 @@
   "description": "HD-2D pixel-art game set in the Calfus offices, for learning AI literacy",
   "scripts": {
     "dev": "python3 tools/dev-server.py",
-    "test": "node js/bridge/bridge-tests.js && node js/carrom-tests.js && node js/jenga-tests.js && node js/gallery-tests.js"
+    "test": "node js/bridge/bridge-tests.js && node js/carrom-tests.js && node js/jenga-tests.js && node js/gallery-tests.js && node js/game/game-events-tests.js && node js/game/token1-meter-tests.js && node js/game/token1-follow-tests.js && node js/game/token1-lines-tests.js"
   }
 }

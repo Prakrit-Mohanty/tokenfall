@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/game.css?v=2">
+<link rel="stylesheet" href="css/token1.css?v=2">
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -55,11 +56,19 @@
 <script src="js/gallery-world.js?v=2"></script>
 <script src="js/gallery-play.js?v=2"></script>
 <script src="js/gallery-progress.js?v=2"></script>
+<script src="js/game/game-events.js?v=2"></script>
+<script src="js/game/token1-meter.js?v=2"></script>
+<script src="js/game/token1-follow.js?v=2"></script>
+<script src="js/game/token1-lines.js?v=2"></script>
+<script src="js/game/token1-ui.js?v=2"></script>
+<script src="js/game/token1.js?v=2"></script>
 <script>
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => BridgePlay.install(TF));
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => { CarromWorld.install(TF); CarromPlay.install(TF); CarromProgress.install(TF); });
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => { JengaWorld.install(TF); JengaPlay.install(TF); JengaProgress.install(TF); });
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => { GalleryWorld.install(TF); GalleryPlay.install(TF); GalleryProgress.install(TF); });
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => GameEvents.install(TF));
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => Token1.install(TF));
 </script>
 <script src="js/game/setup.js?v=2"></script>
 <script src="js/game/textures.js?v=2"></script>

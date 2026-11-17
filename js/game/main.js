@@ -12,8 +12,9 @@ const TF = window.TokenFall = {
   canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
   gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,
   get hero() { return hero; }, get zone() { return zone; }, get talking() { return !!dialog; }, get traveling() { return traveling; },
-  zoneTick: {}, zoneEnv: {}, ground: {}, onKey: null, _on: { boot: [], enter: [] },
+  zoneTick: {}, zoneEnv: {}, ground: {}, onKey: null, _on: { boot: [], enter: [], game: [] },
   on(evt, fn) { this._on[evt].push(fn); return fn; },
+  fire(evt, e) { this._on[evt].forEach(f => f(e)); },
   boot() { this._on.boot.forEach(f => f()); },
   // called from setZone: per-zone fog/background/sun/hemi (defaults restored for zones without an env), then listeners
   enter(prev, z) {

@@ -19,6 +19,7 @@ Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `airport`, `us`) sta
 ```
 index.html          page shell: HUD markup and the script list (load order matters)
 css/game.css        HUD and UI styles
+css/token1.css      TOKEN-1 portrait, accuracy ring, speech bubble, cards and toasts
 launcher/           start screen (retro PC → menu); start.js holds the game until Enter, ?zone= / ?at= skip it
 js/game/            the game, one file per system (classic scripts sharing one global scope)
   setup.js            renderer, scene, camera views, seeded random
@@ -28,7 +29,14 @@ js/game/            the game, one file per system (classic scripts sharing one g
   buildings.js        lobby buildings, gates, Crescent Bay (Calfus), the ABZ tower, bikes, street lights
   portals.js          water and the teleporter pads
   lobby-village.js    the lobby: a village of homes, plaza, roads, river, pond, the minigame lawn
-  village-ai.js       AI set pieces: TOKEN-1, neural-net sculpture, ticker, model servers, art wall, robot dog
+  village-ai.js       AI set pieces: TOKEN-1's body, neural-net sculpture, ticker, model servers, art wall, robot dog
+  game-events.js      minigame start / answer / end, re-fired as TokenFall.on('game')
+  token1.js           TOKEN-1: waits by the spawn until you accept its mission, then follows you; accuracy meter
+                      (right +3, wrong -2) is the final score, saved in the browser
+  token1-meter.js     the accuracy meter, its five repair stages and save/load (pure, tested)
+  token1-follow.js    follow steering: slot behind the hero, wall sliding, snap when far or stuck, small while walking (pure, tested)
+  token1-lines.js     TOKEN-1's script: first-meeting dialogue, mission card, per-game how-to and its wrong "tips" (tested)
+  token1-ui.js        TOKEN-1's HUD portrait, speech bubble, welcome/help cards, result toasts, fly-off to the HUD
   village-robots.js   robot arm, barista, chess table, sweeper, parcel lockers
   leaderboard.js      most-correct-answers board; games report through TokenFall.leaderboard.set
   areas.js            AREAS registry + placeholder shell
