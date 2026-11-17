@@ -19,6 +19,7 @@ Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `airport`, `us`) sta
 ```
 index.html          page shell: HUD markup and the script list (load order matters)
 css/game.css        HUD and UI styles
+music/              background tracks (royalty-free); music.js TRACKS maps zones to them
 css/token1.css      TOKEN-1 portrait, accuracy ring, speech bubble, cards and toasts
 launcher/           start screen (retro PC → menu); start.js holds the game until Enter, ?zone= / ?at= skip it
 js/game/            the game, one file per system (classic scripts sharing one global scope)
@@ -35,6 +36,7 @@ js/game/            the game, one file per system (classic scripts sharing one g
                       (right +3, wrong -2) is the final score, saved in the browser
   token1-meter.js     the accuracy meter, its five repair stages and save/load (pure, tested)
   token1-follow.js    follow steering: slot behind the hero, wall sliding, snap when far or stuck, small while walking (pure, tested)
+  music.js            background music: per-zone track (default everywhere for now), ducked in minigames, M toggles
   token1-lines.js     TOKEN-1's script: first-meeting dialogue, mission card, per-game how-to and its wrong "tips" (tested)
   token1-ui.js        TOKEN-1's HUD portrait, speech bubble, welcome/help cards, result toasts, fly-off to the HUD
   village-robots.js   robot arm, barista, chess table, sweeper, parcel lockers

@@ -17,7 +17,7 @@
   <div id="loc" class="panel"><div class="gem"></div><div><span id="locName">TokenFall Lobby</span><small id="locSub">Main Plaza</small></div></div>
   <div id="party" class="panel"><h4><span>LOBBY</span><span id="count">5 / 20</span></h4><div id="plist"></div></div>
   <div id="chat"><div id="log" class="panel"></div><input id="chatIn" maxlength="80" placeholder="Press Enter to chat"></div>
-  <div id="help"><kbd>WASD</kbd> move &nbsp;<kbd>Shift</kbd> run &nbsp;<kbd>Space</kbd> jump<br><kbd>E</kbd> interact &nbsp;<kbd>V</kbd> view &nbsp;<kbd>Enter</kbd> chat</div>
+  <div id="help"><kbd>WASD</kbd> move &nbsp;<kbd>Shift</kbd> run &nbsp;<kbd>Space</kbd> jump<br><kbd>E</kbd> interact &nbsp;<kbd>V</kbd> view &nbsp;<kbd>M</kbd> music &nbsp;<kbd>Enter</kbd> chat</div>
   <div id="dialog" class="panel"><div class="name"></div><div class="text"></div><div class="next">▼</div></div>
   <div id="banner"><div class="line"></div><div class="t"></div><div class="s"></div><div class="line"></div></div>
   <div id="fade"></div>
@@ -62,6 +62,7 @@
 <script src="js/game/token1-lines.js?v=2"></script>
 <script src="js/game/token1-ui.js?v=2"></script>
 <script src="js/game/token1.js?v=2"></script>
+<script src="js/game/music.js?v=2"></script>
 <script>
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => BridgePlay.install(TF));
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => { CarromWorld.install(TF); CarromPlay.install(TF); CarromProgress.install(TF); });
@@ -69,6 +70,7 @@
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => { GalleryWorld.install(TF); GalleryPlay.install(TF); GalleryProgress.install(TF); });
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => GameEvents.install(TF));
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => Token1.install(TF));
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => Music.install(TF));
 </script>
 <script src="js/game/setup.js?v=2"></script>
 <script src="js/game/textures.js?v=2"></script>
