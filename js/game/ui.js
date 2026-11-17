@@ -42,3 +42,15 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+
+// ================= large text =================
+// L scales every HUD panel up by a fifth (css/game.css: #ui.big > .panel); the choice is remembered. A capture listener, so it works inside every minigame, which swallows its own keys.
+(() => {
+  const ui = document.getElementById('ui'), KEY = 'tokenfall.bigtext';
+  const set = (on) => { ui.classList.toggle('big', on); try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {} };
+  try { if (localStorage.getItem(KEY) === '1') ui.classList.add('big'); } catch (e) {}
+  addEventListener('keydown', (e) => {
+    if (e.code !== 'KeyL' || e.repeat || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName)) return;
+    set(!ui.classList.contains('big')); showBanner('Large text', ui.classList.contains('big') ? 'On (L to switch off)' : 'Off');
+  }, true);
+})();

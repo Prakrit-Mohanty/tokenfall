@@ -105,6 +105,6 @@ test('trade-off: one line that always explains it ("Shooting everything tanks ac
   for (const [c, a] of [[1, 1], [0.7, 0.7], [0.5, 0.9], [0.9, 0.4], [0, null]]) { const l = t(c, a); assert(l.endsWith(P.TRADE) && !/\n/.test(l)); }
   assert(/steady/i.test(t(0.9, 0.9)) && /fair/i.test(t(0.7, 0.7)) && /slipped/i.test(t(0.5, 0.9)) && /trigger/i.test(t(0.9, 0.4)) && /slipped/i.test(t(0, null)));
   assert.strictEqual(P.TRADE, 'Shooting everything tanks accuracy; shooting nothing tanks catch rate.');
-  assert(/Stopped 4 of 5 threats \(80%\) · accuracy 80% · 1 slipped through · 1 real shot · 3 tokens left/.test(P.roundLine({ stopped: 4, threats: 5, catchRate: 0.8, accuracy: 0.8, leaks: 1, friendly: 1, ammoLeft: 3 })));
+  assert(/Stopped 4 of 5 threats \(80%\) · accuracy 80% · 1 missed · 1 real cards hit · 3 tokens left · 250 points/.test(P.roundLine({ stopped: 4, threats: 5, catchRate: 0.8, accuracy: 0.8, leaks: 1, friendly: 1, ammoLeft: 3, points: 250 })));
 });
 done();

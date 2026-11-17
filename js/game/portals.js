@@ -47,8 +47,9 @@ function portal(x, z, color, zone, to, label, o = {}) {
   pointLight(zone, color, .6, 5, x, 1.6, z);
   PORTALS.push({ x, z, to, label, zone, ...o });
 }
-// instanced crossed-quad scatter (grass tufts, flowers)
-function scatter(texture, count, size, pick) {
+// instanced crossed-quad scatter (grass tufts, flowers). GREEN_MATS lets the time of day tint and lift them; jit varies each instance's green so no two tufts match
+const GREEN_MATS = [];
+function scatter(texture, count, size, pick, jit = false) {
   const geo = new THREE.PlaneGeometry(size, size * .8); geo.translate(0, size * .4, 0);
   const g2 = geo.clone(); g2.rotateY(Math.PI / 2);
   const merged = new THREE.BufferGeometry();
@@ -57,19 +58,19 @@ function scatter(texture, count, size, pick) {
     merged.setAttribute(k, new THREE.BufferAttribute(arr, a.itemSize));
   }
   const ia = geo.index.array, idx = [...ia, ...Array.from(ia, i => i + 4)]; merged.setIndex(idx);
-  const m = new THREE.MeshStandardMaterial({ map: texture, alphaTest: .5, side: THREE.DoubleSide, roughness: 1 });
+  const m = new THREE.MeshStandardMaterial({ map: texture, emissiveMap: texture, emissive: 0x000000, alphaTest: .5, side: THREE.DoubleSide, roughness: 1 }); GREEN_MATS.push(m);
   m.onBeforeCompile = sh => {
     sh.uniforms.uT = timeU;
     sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       vec2 ip = instanceMatrix[3].xz;
-      float sway = (sin(uT * 1.7 + ip.x * .45 + ip.y * .3) + .5 * sin(uT * 3.1 + ip.x)) * .09 * position.y / ${(size * .8).toFixed(2)};
+      float sway = (sin(uT * 1.7 + ip.x * .45 + ip.y * .3) + .5 * sin(uT * 3.1 + ip.x)) * .055 * position.y / ${(size * .8).toFixed(2)};
       transformed.x += sway; transformed.z += sway * .5;`);
   };
-  const im = new THREE.InstancedMesh(merged, m, count), d = new THREE.Object3D();
+  const im = new THREE.InstancedMesh(merged, m, count), d = new THREE.Object3D(), c = new THREE.Color();
   let n = 0;
   for (let tries = 0; n < count && tries < count * 20; tries++) {
     const p = pick(); if (!p) continue;
-    d.position.set(p[0], p[2] || 0, p[1]); d.rotation.y = rnd() * 3; d.scale.setScalar(rr(.7, 1.3)); d.updateMatrix(); im.setMatrixAt(n++, d.matrix);
+    d.position.set(p[0], p[2] || 0, p[1]); d.rotation.y = rnd() * 3; d.scale.setScalar(rr(.7, 1.3)); d.updateMatrix(); if (jit) im.setColorAt(n, c.setRGB(rr(.8, 1), rr(.9, 1), rr(.7, 1))); im.setMatrixAt(n++, d.matrix);
   }
   im.count = n; im.receiveShadow = true; scene.add(im);
 }

@@ -5,7 +5,8 @@
 
 const V_PLAZA = [-12, -10, 12, 10];
 const V_ROADS = [[-2.6, -30.5, 2.6, -10], [-2.6, 10, 2.6, 46], [-46, -2.6, -12, 2.6], [12, -2.6, 46, 2.6]];
-const V_RIVER = [-80, -37.5, 80, -30.5];
+const V_ISLAND = 53;   // the lobby is a floating island: its lawn, its river and its tufts end here, 7 m beyond where the hero can walk (dreamworld.js dresses the edge)
+const V_RIVER = [-V_ISLAND, -37.5, V_ISLAND, -30.5];
 const V_POND = [25, 25, 8];
 const V_MOW = [-43, 6, -35, 14];
 const V_GAMES_LAWN = [-28.2, -9, -16.9, -2.6];
@@ -27,7 +28,7 @@ const V_HOMES = [
   { x: -19, z: -12.5, w: 9, d: 7, wall: 0xf2efe8, style: 'flat', solar: true, label: ['Home', '#9dff9f'], labelRight: true, inter: ['Home', 'Knock', ['Nobody\'s home right now.', 'A note on the door: “Moving in soon — your own space in TokenFall!”']] },
   { x: -32, z: -13, w: 8, d: 7, wall: 0xe8e2d6, style: 'mono', storeys: 2, clad: true, flue: true },
   { x: -26, z: -25, w: 10, d: 8, wall: 0xefe6d8, style: 'gable', storeys: 2, led: true },
-  { x: 20, z: -13, w: 10, d: 7, wall: 0xd9cfbf, style: 'flat', cafe: true, label: ['TOKEN BREW', '#ffd27a'], inter: ['Token Brew', 'Order', ['One masala chai, coming up! ☕', 'Fun fact: this sentence is about 12 tokens long.']] },
+  { x: 20, z: -13, w: 10, d: 7, wall: 0xd9cfbf, style: 'flat', cafe: true, label: ['TOKEN BREW', '#ffd27a'], inter: ['Token Brew', 'Order', ['One masala chai, coming up! ☕', 'Fun fact: this sentence is about 12 tokens long.', 'Kitchen\'s short-staffed. Want a shift? Take the staff door at the right-hand end of my front wall: look for the twinkle and the board.']] },
   { x: 33, z: -13, w: 8, d: 7, wall: 0xf2efe8, style: 'mono', solar: true },
   { x: 12.5, z: -24, w: 8, d: 7, ry: -Math.PI / 2, wall: 0xc8c2b8, style: 'flat', storeys: 2, clad: true },
   { x: 28, z: -25, w: 10, d: 8, wall: 0xe8e2d6, style: 'gable', flue: true },
@@ -65,6 +66,8 @@ function vDoorPath(c) {
   return null;
 }
 const V_PATHS = [...V_HOMES.map(vDoorPath).filter(Boolean), ...V_EXTRA_PATHS];
+// the Prompt Kitchen's staff door is Token Brew's own door: where it is, where to stand, where the hero comes back out (kitchen-world.js adds the board, the twinkle and the prompt)
+V_GAME_SPOTS.kitchen = (() => { const d = vDoor(V_HOMES.find((h) => h.cafe)); return { door: [d.x, d.z], dir: [d.dirX, d.dirZ], stand: [d.x + d.dirX * 1.4, d.z + d.dirZ * 1.4], ret: [d.x + d.dirX * 2.1, d.z + d.dirZ * 2.1] }; })();
 const vPaved = (x, z, m = 0) => vInRect(V_PLAZA, x, z, m) || V_ROADS.some((r) => vInRect(r, x, z, m)) || V_PATHS.some(([px, pz, w, d]) => vInRect([px - w / 2, pz - d / 2, px + w / 2, pz + d / 2], x, z, m));
 const vWater = (x, z, m = 0) => vInRect(V_RIVER, x, z, m) || Math.hypot(x - V_POND[0], z - V_POND[1]) < V_POND[2] + m;
 const vClear = (x, z, m) => !vPaved(x, z, m) && !vWater(x, z, m) && !vInRect(V_MOW, x, z, m) && !vInRect(V_GAMES_LAWN, x, z, m) && !(walkable(x, z) && blocked(x, z, m));
@@ -141,6 +144,13 @@ function vHome(c) {
   gbox(g, mw, H - .3, d, wallM, mx, .3, 0);
   gbox(g, sw, sideH, d - .6, sideM, sx, .3, -.3);
 
+  if (!cafe) {   // ivy hanging from the eave at both ends of the front, dotted with blossoms (from the separate decor sequence)
+    for (const k of [-1, 1]) for (let v = 0; v < 2; v++) {
+      const len = 1.1 + decorRandom() * 1.5, vx = mx + k * (mw / 2 - .16 - v * .26), leafM = decorRandom() < .3 ? MAT.leafLav : MAT.leafB;
+      gbox(g, .24, len, .05, leafM, vx, H - len, d / 2 + .06, { cast: false });
+      for (let b = 0; b < 3; b++) gbox(g, .09, .09, .09, MAT.blossom, vx + (decorRandom() - .5) * .2, H - decorRandom() * len, d / 2 + .1, { cast: false });
+    }
+  }
   const glassW = cafe ? mw - .4 : mw * .7;
   gbox(g, glassW, 2.4, .1, MAT.glassLit, mx, .35, d / 2 + .03, { cast: false });
   for (const k of [-.5, 0, .5]) gbox(g, .08, 2.4, .14, MAT.metal, mx + k * glassW, .35, d / 2 + .04);
@@ -168,7 +178,12 @@ function vHome(c) {
     const lx = labelRight ? w / 2 - .5 : -w / 2 + .9, lz = d / 2 + 1.6, wx = x + cs * lx + s * lz, wz = z - s * lx + cs * lz;
     ledSign([label[0]], label[1], wx, 1.7, wz, 2.6, .55, ry); box(.1, 1.45, .1, MAT.metal, wx, 0, wz); colCirc(wx, wz, .2);
   }
-  if (inter) { const [name, verb, lines] = inter; INTER.push({ x: door.x + door.dirX * 1.4, z: door.z + door.dirZ * 1.4, r: 1.7, label: name, verb, act: () => talk(name, lines) }); }
+  if (inter) {
+    const [name, verb, lines] = inter;
+    // the cafe's counter is its glass front; its own door is the way into the Prompt Kitchen (kitchen-world.js), so the two prompts are a few metres apart
+    const at = cafe ? { x: x + cs * mx + s * (d / 2 + 1.4), z: z - s * mx + cs * (d / 2 + 1.4) } : { x: door.x + door.dirX * 1.4, z: door.z + door.dirZ * 1.4 };
+    INTER.push({ x: at.x, z: at.z, r: 1.7, label: name, verb, act: () => talk(name, lines) });
+  }
 }
 
 // chimney and flue smoke: chunky puffs that rise and fade
@@ -187,15 +202,15 @@ function vSmokePoints() {
 }
 
 function vGround() {
-  plane(240, 240, MAT.grass, 0, 0, 0, 2);
+  plane(2 * V_ISLAND, 2 * V_ISLAND, MAT.grass, 0, 0, 0, 2);
   plane(24, 20, MAT.paver, 0, .014, 0, 2);
   for (const [x0, z0, x1, z1] of V_ROADS) {
     const w = x1 - x0, d = z1 - z0, alongX = w > d;
     plane(w, d, MAT.paver, (x0 + x1) / 2, .012, (z0 + z1) / 2, 3);
     for (const s of [-1, 1]) box(alongX ? w : .3, .1, alongX ? .3 : d, MAT.concrete, alongX ? (x0 + x1) / 2 : (s < 0 ? x0 : x1), 0, alongX ? (s < 0 ? z0 : z1) : (z0 + z1) / 2, { cast: false });
   }
-  for (const [x, z, w, d] of V_PATHS) plane(w, d, MAT.concrete, x, .013, z, 1.5);
-  const ring = new THREE.Mesh(new THREE.RingGeometry(5.4, 5.8, 48), MAT.concrete); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .016, 0); ring.receiveShadow = true; scene.add(ring);
+  for (const [x, z, w, d] of V_PATHS) plane(w, d, MAT.patch, x, .013, z, 2);   // door paths: patchwork quilt, stitched
+  const ring = new THREE.Mesh(new THREE.RingGeometry(5.4, 5.8, 48), MAT.patch); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .016, 0); ring.receiveShadow = true; scene.add(ring);
   // LED lines round the plaza edge, open where the roads leave it
   const [px0, pz0, px1, pz1] = V_PLAZA, led = vGlow(V_LED_COOL);
   for (const z of [pz0 + .15, pz1 - .15]) for (const [a, b] of [[px0, -2.6], [2.6, px1]]) box(b - a, .03, .08, led, (a + b) / 2, .015, z, { cast: false });
@@ -248,7 +263,7 @@ function vRiverAndBridge() {
     box(.05, .04, w + 1.4, vGlow(V_LED_COOL), s * 2.38, .22, zc, { cast: false });
     colBox(s * 2.45 - .12, z0 - .7, s * 2.45 + .12, z1 + .7);
   }
-  for (let i = 0; i < 160; i++) { const x = rr(-60, 60), z = (rnd() < .5 ? z0 : z1) + rr(-.5, .5); if (Math.abs(x) > 3.4) box(.06, rr(.7, 1.5), .06, MAT.leafB, x, 0, z, { cast: false }); }
+  for (let i = 0; i < 160; i++) { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = (rnd() < .5 ? z0 : z1) + rr(-.5, .5); if (Math.abs(x) > 3.4) box(.06, rr(.7, 1.5), .06, MAT.leafB, x, 0, z, { cast: false }); }
 }
 
 function vPond() {
@@ -292,7 +307,7 @@ function vStage() {
   for (const z of [z0 + 1, z1 - 1]) box(.7, 1.2, .7, MAT.metal, x0 + .6, .7, z);
   colBox(x0 - .3, z0, x1, z1);
   for (const [x, h] of [[-6.2, .3], [-5.3, .5]]) { box(.75, h, z1 - z0 - 1.6, MAT.concrete, x, 0, mz); box(.7, .06, z1 - z0 - 1.7, MAT.wood, x, h, mz); colBox(x - .38, z0 + .8, x + .38, z1 - .8); }
-  pointLight('lobby', 0xe6f0ff, 1.2, 8, x1 - .6, 3.2, mz);
+  pointLight('lobby', 0xffe2b8, 1.2, 8, x1 - .6, 3.2, mz);
   INTER.push({ x: -4, z: mz, r: 1.8, label: 'Stage', verb: 'Read', act: () => talk('TokenFall Talks', ['This Friday: "Why does my chatbot sound so sure?" Confidence is not the same as being right.', 'Next week: open mic. Bring your best prompt.']) });
 }
 
@@ -324,7 +339,7 @@ function vLamp(x, z, lit) {
   box(.3, .14, .3, MAT.concrete, x, 0, z); box(.1, 4.2, .1, MAT.metal, x, .14, z);
   box(.9, .08, .1, MAT.metal, x + .4, 4.26, z); box(.7, .1, .34, MAT.metal, x + .75, 4.2, z); box(.6, .03, .28, vGlow(V_LED_COOL), x + .75, 4.17, z, { cast: false });
   colCirc(x, z, .2);
-  if (lit) pointLight('lobby', 0xe6f0ff, 1.6, 9, x + .75, 3.9, z + .1);
+  if (lit) pointLight('lobby', 0xffe2b8, 1.6, 9, x + .75, 3.9, z + .1);
 }
 function vPathLights() {
   for (const [x0, z0, x1, z1] of V_ROADS) {
@@ -406,7 +421,7 @@ function vPromptLab() {
   gbox(g, 4, .08, .9, MAT.wood, 0, .95, -1.4); for (const dx of [-1.6, 1.6]) gbox(g, .1, .75, .8, MAT.metal, dx, .2, -1.4);
   for (const dx of [-1.3, 0, 1.3]) { gbox(g, .9, .55, .05, MAT.screen, dx, 1.12, -1.7, { cast: false }); const st = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .5, 10), MAT.metal), g); st.position.set(dx, .45, -.6); }
   const sign = ledSign(['PROMPT LAB'], '#8fe8ff', 0, 0, 0, 2.6, .45); g.add(sign); sign.position.set(0, H + .55, d / 2 + .62);
-  pointLight('lobby', 0xe6f0ff, .9, 6, x, 2.4, z);
+  pointLight('lobby', 0xffe2b8, .9, 6, x, 2.4, z);
   colBox(...vFootprint(x, z, w + .2, d + .2, -Math.PI / 2));
   INTER.push({ x: x - d / 2 - 1.4, z, r: 1.6, label: 'Prompt Lab', verb: 'Peek', act: () => talk('Prompt Lab', ['The doors are glass, the screens are on, the chairs are empty.', 'A sign: “Opening soon — practise writing clear prompts and spotting made-up answers.”']) });
 }
@@ -460,11 +475,20 @@ function vFoliage() {
 }
 
 function vGrass() {
-  const lawn = () => { const x = rr(-60, 60), z = rr(-60, 60); return vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)) ? null : [x, z]; };
-  scatter(TX.grassTuft, 6000, .6, lawn);
-  const fern = canvasTex(16, 16, (g) => { for (const [x, c] of [[4, '#4f8a34'], [8, '#5f9a3a'], [12, '#4f8a34']]) { g.fillStyle = c; for (let y = 2; y < 16; y++) { g.fillRect(x, y, 1, 1); if (y % 2) { g.fillRect(x - 2, y, 2, 1); g.fillRect(x + 1, y, 2, 1); } } } }, { nearest: true });
-  scatter(fern, 900, .9, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 2.5) && !vPaved(x, z, .6) && !vWater(x, z, .2) && !blocked(x, z, -.1) ? [x, z] : null; });
-  TX.flowers.forEach((ft) => scatter(ft, 160, .5, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 1.8) && !vPaved(x, z, .5) && !vWater(x, z) && !blocked(x, z, -.1) ? [x, z] : null; }));
+  // greenery gathers in lush patches and thins out between them
+  const patch = (x, z, o = 0) => { const v = .5 + .5 * Math.sin((x + o) * .21 + Math.sin(z * .17) * 2) * Math.sin(z * .19 + (x + o) * .07); return v * v; };
+  const lawn = (o) => () => { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = rr(-V_ISLAND + 1, V_ISLAND - 1); return vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)) || rnd() > .12 + .9 * patch(x, z, o) ? null : [x, z]; };
+  scatter(TX.grassTuft, 2300, .6, lawn(0), true);
+  scatter(TX.clover, 700, .5, lawn(31), true);
+  const fern = canvasTex(32, 32, (g, W, H) => {   // three arching fronds with rounded leaflets
+    g.fillStyle = '#6c9658';
+    for (const [lean, s] of [[-9, .9], [0, 1.1], [9, .9]]) for (let k = 1; k <= 7; k++) {
+      const t = k / 8, x = 16 + lean * t * t * 1.4, y = H - 2 - 26 * s * t, a = lean * .04 * k;
+      for (const side of [-1, 1]) { g.beginPath(); g.ellipse(x + side * 3, y, 3.4 * (1 - t * .5), 1.5, side * .5 + a, 0, 7); g.fill(); }
+    }
+  }, { smooth: true });
+  scatter(fern, 240, .62, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 2.5) && !vPaved(x, z, .6) && !vWater(x, z, .2) && !blocked(x, z, -.1) ? [x, z] : null; }, true);
+  TX.flowers.forEach((ft, i) => scatter(ft, 160, .5, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 1.8) && !vPaved(x, z, .5) && !vWater(x, z) && !blocked(x, z, -.1) && rnd() < .15 + .9 * patch(x, z, 60 + i * 23) ? [x, z] : null; }));
 }
 
 function buildVillageLobby() {
@@ -487,7 +511,7 @@ function buildVillageLobby() {
   for (const f of V_FENCES) vFence(...f);
   for (const [x, z] of [[-12.6, 3.6], [12.6, -3.6], [4.6, -10.8]]) pot(x, z);
   for (const [x, z, ry, text] of V_HOLOS) vHolo(x, z, ry, text);
-  vTotem(-5.6, 11.4, 'WELCOME', ['▲ HQ', '◀ Airport', 'Pune ▶', '▼ Glass Bridge'], 'Directory', ['Welcome to TokenFall!', 'West, past the food stalls: the airport, with flights to the Calfus US office in Pleasanton. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'The leaderboard by the plaza shows who has the most correct answers.']);
+  vTotem(-5.6, 11.4, 'WELCOME', ['▲ HQ', '◀ Airport', 'Pune ▶', '▼ Glass Bridge'], 'Directory', ['Welcome to TokenFall!', 'West, past the food stalls: the airport, with flights to the Calfus US office in Pleasanton. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'The belt is running in Baggage Sorting at the airport! Token Mill: read the policy, route each crate to the right bin, and mind the pit. The policies on the board are a sample.', 'Token Brew is short-staffed! Take a shift in the kitchen, through the staff door at the cafe: pack the pot light, leave room for the reply, never reuse a pot between customers.', 'The leaderboard by the plaza shows who has the most correct answers.']);
   vTotem(5.6, 11.4, 'AI TIP', ['Sounding sure is not the same as being right.'], 'AI Tips', V_AI_TIPS);
 
   gate(-40, 0, Math.PI / 2, 'Airport', 0xffb347, 'lobby', 'airport');

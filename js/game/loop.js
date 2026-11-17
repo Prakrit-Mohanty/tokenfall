@@ -9,8 +9,8 @@ function setZone(z) {
   for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) { l.intensity = k === z ? l.userData.base : 0; l.visible = k === z; }
   const indoor = z === 'lab' || z === 'abz' || z === 'us' || z === 'airport';
   scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
-  sun.intensity = indoor ? .5 : 1.3; hemi.intensity = indoor ? .5 : .58;
-  hemi.color.set(indoor ? 0xe8e4dc : 0xcfdcff);
+  sun.intensity = indoor ? .42 : 1.1; hemi.intensity = indoor ? .6 : .6;
+  hemi.color.set(indoor ? 0xf0dcc4 : 0xf2dfc6);
   const dof = (z === 'lobby' && LOBBY.dof) || (z === 'pune' && PUNE_DOF) || DOF_DEFAULT;
   final.u.farStart.value = dof.farStart; final.u.farRange.value = dof.farRange; final.u.edgeBlur.value = dof.edgeBlur;
   TF.enter(prevZone, z);
@@ -114,7 +114,7 @@ function toScreen(x, y, z) { proj.set(x, y, z).project(camera); return [(proj.x 
 function drawUI(dt) {
   for (const c of chars) {
     const show = c.zone === zone;
-    const [sx, sy, vis] = toScreen(c.x, 1.78 + c.mesh.position.y, c.y);
+    const [sx, sy, vis] = toScreen(c.x, (FIG_H + .1) * CHAR_SCALE + .06 + c.mesh.position.y, c.y);
     c.tag.style.display = show && vis && !dialog ? 'block' : 'none';
     c.tag.style.left = sx + 'px'; c.tag.style.top = sy + 'px';
     if (c.bubble) {

@@ -12,7 +12,7 @@ npm run dev
 
 Then open http://127.0.0.1:8765/. Opening `index.html` directly from disk works too.
 
-Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `airport`, `us`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?board=sample` fills the leaderboard with sample rows.
+Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `airport`, `us`, `archive` (the airport's baggage hall), `kitchen`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?board=sample` fills the leaderboard with sample rows.
 
 ## Layout
 
@@ -60,6 +60,8 @@ js/bridge/          The Glass Bridge minigame (plugs in through window.TokenFall
 js/carrom-*.js      House Rules Carrom (HQ carrom table)
 js/jenga-*.js       Token Tower (lobby, by Home)
 js/gallery-*.js     Spot Shot (lobby, by Home)
+js/mill-*.js        Token Mill (Data Archive: a conveyor of crates to route by a sample policy)
+js/kitchen-*.js     Prompt Kitchen (Token Brew's staff door: token saving and context management; kitchen-bots.js is test-only)
                     every minigame's tests: npm test
 launcher/           the retro-PC start screen
 js/sprites/         sprite player + Aditya's sheet

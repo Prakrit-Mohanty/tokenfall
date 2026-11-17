@@ -94,7 +94,8 @@ class SpriteCharacter {
     let lift = 0;
     if (this.anim === 'jump' && this.oneShot) {
       const jt = this.oneShot.t;
-      if (jt > 80 && jt < 460) lift = Math.sin((jt - 80) / 380 * Math.PI) * this.data.jumpHeight;
+      const [j0, j1] = this.data.jumpAir || [80, 460];
+      if (jt > j0 && jt < j1) lift = Math.sin((jt - j0) / (j1 - j0) * Math.PI) * this.data.jumpHeight;
     }
     if (this.anim === 'emote' && this.oneShot) lift = Math.abs(Math.sin(this.oneShot.t / 1000 * Math.PI * 3)) * 14;
     if (this.anim === 'ride') lift = (Math.floor(this.t / 80) % 2) ? 1 : 0;

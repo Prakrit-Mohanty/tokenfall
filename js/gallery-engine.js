@@ -126,6 +126,22 @@
     spec.estSeconds = estimateSeconds(spec);
     return spec;
   }
+  // the short run: the first two sides and the finale, cut to 8 cards each with the threat ratio kept (a calmer 24 cards, not 52)
+  const SHORT = { rounds: [0, 1, 4], cards: 8 };
+  function shorten(spec) {
+    const cut = (r) => {
+      const items = r.items.slice(); let threats = items.filter((i) => i.shoot).length;
+      while (items.length > SHORT.cards) {
+        const dropThreat = threats * 2 > items.length, at = items.map((i) => !!i.shoot).lastIndexOf(dropThreat);
+        items.splice(at, 1); if (dropThreat) threats--;
+      }
+      const round = Object.assign({}, r, { items, threats, ammo: threats + RUN.ammoExtra });
+      round.schedule = scheduleRound(round); round.playSec = playSecOf(round.schedule);
+      return round;
+    };
+    spec.rounds = SHORT.rounds.map((i) => cut(spec.rounds[i])); spec.estSeconds = estimateSeconds(spec);
+    return spec;
+  }
   // a fresh draw for round i: the same side (or the finale), none of the pairs any round of the run already uses; the other rounds are untouched
   function rerollRound(spec, i, history) {
     const s = clone(spec), old = s.rounds[i], n = ((s.rerolls = s.rerolls || {})[i] = (s.rerolls[i] || 0) + 1), tag = ':reroll' + n, ctx = context(history || { runs: [{ items: [...s.avoid] }] });
@@ -211,10 +227,14 @@
       const c = cardPose(e, t); if (c.state !== 'moving') continue;
       const k = (c.z - ray.o[2]) / ray.d[2]; if (!(k > 0)) continue;
       const x = ray.o[0] + ray.d[0] * k, y = ray.o[1] + ray.d[1] * k;
-      if (Math.abs(x - c.x) <= LAYOUT.cardW / 2 + LAYOUT.pad && Math.abs(y - c.y) <= LAYOUT.cardH / 2 + LAYOUT.pad && (!best || k < best.k)) best = { uid: e.uid, k, x, y };
+      if (Math.abs(x - c.x) <= LAYOUT.cardW / 2 + LAYOUT.pad && Math.abs(y - c.y) <= LAYOUT.cardH / 2 + LAYOUT.pad && (!best || k < best.k)) best = { uid: e.uid, k, x, y, dx: x - c.x, dy: y - c.y };
     }
     return best;
   }
+
+  // the bullseye painted on every duck: points by distance (metres) from the card's centre, so the middle is worth more than the edge
+  const RINGS = [{ r: 0.06, points: 100, name: 'BULLSEYE' }, { r: 0.12, points: 50, name: 'INNER RING' }, { r: 0.18, points: 25, name: 'OUTER RING' }], EDGE = { points: 10, name: 'GLANCING HIT' };
+  const ringFor = (dx, dy) => RINGS.find((g) => Math.hypot(dx, dy) <= g.r) || EDGE;
 
   // ---------------------------------------------------------------- judging
   // action: 'shot', or 'delivered' / 'leaked' for a card that reached the counter (the two are one event seen from each side: a threat that gets through is a leak, a legit card is delivered).
@@ -254,7 +274,7 @@
     const threats = entries.filter((e) => e.shoot), shots = entries.filter((e) => e.action === 'shot'), stopped = threats.filter((e) => e.action === 'shot');
     return { threats: threats.length, stopped: stopped.length, catchRate: threats.length ? stopped.length / threats.length : 1, shotsAtCards: shots.length, correctShots: stopped.length,
       accuracy: shots.length ? stopped.length / shots.length : null, leaks: threats.length - stopped.length, friendly: shots.length - stopped.length, delivered: entries.filter((e) => !e.shoot && e.action === 'delivered').length,
-      lucky: entries.filter((e) => e.lucky).length, trapsInspected: entries.filter((e) => e.kind === 'trap' && e.correct && e.inspected).length };
+      points: entries.reduce((n, e) => n + (e.points || 0), 0), lucky: entries.filter((e) => e.lucky).length, trapsInspected: entries.filter((e) => e.kind === 'trap' && e.correct && e.inspected).length };
   }
   const scoreRound = (log) => Object.assign(tally(log.entries), { index: log.index, kind: log.kind, side: log.side, emptyShots: log.shots.filter((s) => !s.uid).length, ammoLeft: log.ammoLeft, ammoStart: log.ammoStart });
   // 3 stars: catch rate and accuracy both at least 85% and at least 3 traps correctly inspected; 2: both at least 65%; 1: finished. An unfinished run (Esc) earns none. No shots at cards = no accuracy.
@@ -285,6 +305,6 @@
     return out;
   }
 
-  return { LAYOUT, SIDE_IDS, PAIRS, ITEM, seedFor, composeRun, rerollRound, scheduleRound, estimateSeconds, maxOnScreen, twinPairs, countTraps, conceptWeight, context,
-    cardPose, progress, hitTest, rayFromNdc, ndcOf, judge, entryFor, playRound, scoreRound, scoreRun, starsFor, debriefPicks, GAP, POP_RISE };
+  return { LAYOUT, SIDE_IDS, PAIRS, ITEM, seedFor, composeRun, shorten, rerollRound, scheduleRound, estimateSeconds, maxOnScreen, twinPairs, countTraps, conceptWeight, context,
+    cardPose, progress, hitTest, RINGS, ringFor, rayFromNdc, ndcOf, judge, entryFor, playRound, scoreRound, scoreRun, starsFor, debriefPicks, GAP, POP_RISE };
 });

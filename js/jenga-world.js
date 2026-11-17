@@ -225,7 +225,7 @@
       const style = document.createElement('style');
       style.textContent = `
         .tt-tags { position: absolute; inset: 0; pointer-events: none; display: none; font-variant-ligatures: none; }
-        .tt-tag { position: absolute; transform: translate(-50%, 0); padding: 3px 10px 4px; font-size: 16px; line-height: 1.2; white-space: nowrap; background: rgba(14, 16, 26, .86); border-left-width: 5px; pointer-events: auto; cursor: pointer; }
+        .tt-tag { position: absolute; transform: translate(-50%, 0); padding: 3px 10px 4px; font-size: 16px; line-height: 1.2; white-space: nowrap; background: rgba(40, 28, 24, .86); border-left-width: 5px; pointer-events: auto; cursor: pointer; }
         .tt-tag b { font-weight: 700; margin-right: 6px; } .tt-tag i { font-style: normal; margin-right: 4px; }
         .tt-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
         .tt-tag.out { opacity: .5; text-decoration: line-through; cursor: default; }

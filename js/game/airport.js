@@ -5,6 +5,8 @@
 
 const AIRPORT_HALF = [16, 10];
 const AIRPORT_GATE = [12, -6.6];
+const AIRPORT_BAGGAGE = [-13.4, 3];
+const AIRPORT_BAGGAGE_EXIT = { to: 'airport', label: 'Back to Departures', at: [AREAS.airport.cx + AIRPORT_BAGGAGE[0] + 2.4, AREAS.airport.cz + AIRPORT_BAGGAGE[1]] };
 
 function airportPlane(x, z) {
   const white = new THREE.MeshStandardMaterial({ color: 0xf2f2ee, roughness: .4 }), teal = new THREE.MeshStandardMaterial({ color: 0x2aa59a, roughness: .5 });
@@ -60,6 +62,11 @@ function buildAirport(a) {
     ledSign(['GATE 7', 'SFO  ->  Pleasanton, CA'], '#9dff9f', X(gx), 3.6, Z(-hz) + .35, 3.4, .9, 0, [256, 72]);
     portal(X(gx), Z(gz), 0x2aa59a, 'airport', 'us', 'Board · Pleasanton');
     INTER.push({ x: X(gx - 3), z: Z(gz + 4.4), r: 1.5, label: 'Gate 7', verb: 'Ask', act: () => talk('Gate 7', ['"Boarding for San Francisco, onward to Pleasanton."', 'Walk through the glowing door to board.']) });
+    // Baggage Sorting: a door in the west wall to the Token Mill hall
+    const [bx, bz] = AIRPORT_BAGGAGE;
+    box(.2, 3, 2.6, MAT.charcoal, X(-hx) + .2, 0, Z(bz)); box(.1, 2.6, 2.1, MAT.glassLit, X(-hx) + .32, .1, Z(bz), { cast: false });
+    ledSign(['BAGGAGE SORTING', 'Token Mill'], '#ffd27a', X(-hx) + .4, 3.5, Z(bz), 3.2, .8, Math.PI / 2, [256, 64]);
+    portal(X(bx), Z(bz), 0xffb347, 'airport', 'archive', 'Baggage Sorting · Token Mill');
     // back to the lobby at the entrance
     box(5, 3, .2, MAT.glassLit, cx, 0, Z(hz) - .1, { cast: false }); ledSign(['EXIT · TokenFall'], '#d6ecff', cx, 3.4, Z(hz) - .2, 3.4, .5);
     portal(cx, Z(hz - 2.4), a.color, 'airport', 'lobby', 'TokenFall Lobby');

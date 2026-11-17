@@ -2,10 +2,16 @@
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
 // ================= setup =================
+// round things look round, to match the smooth 3D characters: anything built with 6+ sides gets at least `min` (fewer is a deliberate shape: a pyramid roof, a prism)
+const smoother = (C, at) => class extends C { constructor(...a) { for (const [i, m] of at) if (a[i] === undefined || (a[i] >= 6 && a[i] < m)) a[i] = m; super(...a); } };
+THREE.CylinderGeometry = smoother(THREE.CylinderGeometry, [[3, 28]]);
+THREE.ConeGeometry = smoother(THREE.ConeGeometry, [[2, 28]]);
+THREE.SphereGeometry = smoother(THREE.SphereGeometry, [[1, 28], [2, 18]]);
+THREE.TorusGeometry = smoother(THREE.TorusGeometry, [[2, 14], [3, 40]]);
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;   // PCF honours shadow.radius (PCFSoft ignores it): soft-edged shadows like the characters' render
 const PR = Math.min(window.devicePixelRatio || 1, 1.5);
 let resScale = 1, ftAcc = 0, ftN = 0;   // drops render resolution if the machine can't keep up
 

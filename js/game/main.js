@@ -7,8 +7,8 @@ const LOBBY = VILLAGE;
 if (LOBBY.npcBounds) NPC_BOUNDS.lobby = LOBBY.npcBounds;
 
 const TF = window.TokenFall = {
-  THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, rnd, rr, timeU, keys, post: final.u,
-  INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life, leaderboard: LEADERBOARD_API, get lobbySpots() { return LOBBY.minigameSpots || {}; },
+  THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, GREEN_MATS, rnd, rr, timeU, keys, post: final.u, charScale: CHAR_SCALE, skyU, SUN_DIR, shaftMat, get dust() { return dust; },
+  INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life, mergeStatic, leaderboard: LEADERBOARD_API, get lobbySpots() { return LOBBY.minigameSpots || {}; },
   canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
   gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,
   get hero() { return hero; }, get zone() { return zone; }, get talking() { return !!dialog; }, get traveling() { return traveling; },
@@ -55,7 +55,7 @@ Object.defineProperty(TF, 'locked', { get: () => playerLocked });
 // re-focused and softened for the close view; cameraRestore(ms): eases back to the follow camera (0 = at once). Runs in 'life', after the follow
 // camera has been placed and before the frame is drawn, so it composes with anything else that nudges the camera (the bridge's shake).
 const camFx = { on: false, mode: '', t: 0, dur: 1, from: null, to: null, cur: null };
-const camEase = (k) => k * k * (3 - 2 * k), camRes = () => Math.max(4, rtScene.height / 105);
+const camEase = (k) => k * k * (3 - 2 * k), camRes = () => Math.max(4, rtScene.height / 135);
 function camApply(p, l, fov, soften) {
   camera.position.copy(p); camera.lookAt(l);
   if (Math.abs(camera.fov - fov) > 1e-4) { camera.fov = fov; camera.updateProjectionMatrix(); }
@@ -93,17 +93,18 @@ window.TokenFallReady = { push(f) { f(TF); } };
 _ready.forEach(f => f(TF));
 
 // ================= boot =================
-const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
+const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel'), document.fonts.load('24px "Press Start 2P"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImg = new Image();
-const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.ADITYA_SHEET; });
+const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.CHAR_SHEET; });
 Promise.all([fontsReady, sheetReady]).then(() => {
   buildTextures(); buildMaterials();
-  sheetTex = new THREE.Texture(sheetImg); sheetTex.magFilter = sheetTex.minFilter = THREE.NearestFilter; sheetTex.generateMipmaps = false; sheetTex.needsUpdate = true;
+  // full-res cells are drawn a little smaller than life: mipmaps keep them from shimmering as they move
+  sheetTex = new THREE.Texture(sheetImg); sheetTex.magFilter = THREE.LinearFilter; sheetTex.minFilter = THREE.LinearMipmapLinearFilter; sheetTex.anisotropy = 4; sheetTex.needsUpdate = true;
   LOBBY.build(); buildAreas(); mergeStatic(); buildDust(); buildLife();
-  applyTextureRefines();
+  applyTextureRefines(); softenTextures();
   hero = makeChar('aditya', LOBBY.spawn[0], LOBBY.spawn[1], { me: true });
   hero.dir = LOBBY.spawnDir; hero.zone = 'lobby';
-  npcs = NPC_NAMES.map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2 }); c.wait = Math.random() * 3000; return c; });
+  npcs = NPC_NAMES.map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2, look: CHARS[n] ? n : undefined }); c.wait = Math.random() * 3000; return c; });
   for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['ananya.r', 288, 9.2], ['kabir_m', 296, 6.4], ['sneha.d', 318, 2]]) { const c = makeChar(n, x, z, { speed: 1.9, zone: 'pune' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['sana.k', 7.4, 298.6], ['arjun_p', -.3, 291.6]]) { const c = makeChar(n, x, z, { speed: 2.1, zone: 'abz' }); c.wait = Math.random() * 3000; npcs.push(c); }

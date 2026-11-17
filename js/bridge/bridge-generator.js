@@ -177,6 +177,18 @@
     };
   }
 
+  // ---- the short run: 8 questions (2 + 2 + 1 across the stages, then the 3-part boss) instead of 12 ----
+  function shorten(spec) {
+    const per = [2, 2, 1], keep = new Set(spec.boss.rowIds), inter = spec.sequence.filter((x) => x.type === 'interlude');
+    spec.stages.forEach((st, si) => { st.rowIds = st.rowIds.slice(0, per[si]); st.rowIds.forEach((id) => keep.add(id)); });
+    spec.rows = spec.rows.filter((r) => keep.has(r.id)); spec.seen = spec.rows.map((r) => r.variantId);
+    spec.sequence = [{ type: 'start' }];
+    spec.stages.forEach((st, si) => spec.sequence.push({ type: 'row', row: st.rowIds[0] }, inter[si], ...(st.rowIds[1] ? [{ type: 'row', row: st.rowIds[1] }] : []), { type: 'checkpoint' }));
+    spec.boss.rowIds.forEach((id) => spec.sequence.push({ type: 'row', row: id }));
+    spec.sequence.push({ type: 'end' });
+    return spec;
+  }
+
   // ---- after a fall: same concept, different variant, re-shuffled ----
   const layoutKey = (r) => r.stem + '|' + r.tiles.map((t) => t.text).join('|');
   function rerollRow(spec, rowIndex) {
@@ -230,5 +242,5 @@
   }
 
   // the seeded-choice helpers below are also what carrom-generator.js builds on (history shape, anti-repeat and weighting included)
-  return { STAGES, INTERLUDES, hash32, mulberry32, seedFor, composeRun, rerollRow, insertBonusRow, pick, shuffle, weightedPick, sampleParams, fill, conceptWeight, recentInfo, eligibleVariants, pickVariant };
+  return { STAGES, INTERLUDES, hash32, mulberry32, seedFor, composeRun, shorten, rerollRow, insertBonusRow, pick, shuffle, weightedPick, sampleParams, fill, conceptWeight, recentInfo, eligibleVariants, pickVariant };
 });

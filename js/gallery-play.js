@@ -1,14 +1,14 @@
 // Spot Shot — gameplay. Browser: window.GalleryPlay. Node: require('./gallery-play.js') (the pure rules).
 //
 // Pure (tested in Node, no DOM):
-//   createRun(spec) -> run     the rules of a run: tokens (threats + 2 a round), the five magnifier charges, judging every card, the combo, the round logs, the score
+//   createRun(spec) -> run     the rules of a run: tokens (threats + 2 a round), the five checks, judging every card, the combo, the round logs, the score
 //   describe(entry, idea)      the debrief Concept Card for one card: what you did, the tell, the idea
 //   tradeoff(score)            the one-line trade-off: shooting everything tanks accuracy, shooting nothing tanks catch rate
 // Browser:
 //   install(TF)                builds the HUD and the game on gallery-world.js, takes over the stall's E (TF.stall.open) and the keys
 //
 // THE GAME
-//  A carnival stall on the south lawn. Five rounds: the four sides in a seeded order, then the finale "Rush hour". Each round: a brief (about 8 s, E starts it), about 40 s of play,
+//  A carnival stall on the south lawn. Three short rounds: two of the sides in a seeded order, then the finale "Rush hour". Each round: a brief (about 8 s, E starts it), about 40 s of play,
 //  then a debrief of up to 3 Concept Cards (E to continue). Paper cards slide along three shelves towards ticket windows. Shoot the threats (click, tap or Space; arrow keys move the
 //  reticle), spare the real ones (let them pass: delivered), and inspect a card first when it matters (hold F, right button or a long press, about 0.6 s: one magnifier charge, five a run).
 //  A shot that hits nothing still costs a token. A threat that reaches the ticket window is a leak; a real card that is shot is friendly fire.
@@ -35,12 +35,13 @@
     run.canInspect = () => !!run.round && !run.round.closed && run.charges > 0;
     const settle = (R, entry) => { R.done.set(entry.uid, entry); R.combo = entry.correct ? R.combo + 1 : 0; R.bestCombo = Math.max(R.bestCombo, R.combo); return entry.correct && R.combo % RULES.COMBO === 0; };   // the ribbon: 3 right calls in a row
     // uid: the card the shot hit (the world's hit test decides), or null. A shot that hits nothing still costs a token; with none left it does nothing.
-    run.shoot = (uid, t) => {
+    run.shoot = (uid, t, off) => {
       const R = run.round; if (!R || R.closed) return { kind: 'none' };
       if (R.ammo <= 0) { R.dry++; return { kind: 'dry' }; }
       R.ammo--; const hit = uid && R.byUid[uid] && !R.done.has(uid) ? uid : null; R.shots.push({ t, uid: hit });
       if (!hit) return { kind: 'miss', ammo: R.ammo };
-      const entry = E.entryFor(R.byUid[hit], 'shot', R.inspected.has(hit), t), ribbon = settle(R, entry);
+      const entry = E.entryFor(R.byUid[hit], 'shot', R.inspected.has(hit), t), ribbon = settle(R, entry), ring = E.ringFor(off ? off.dx : 0, off ? off.dy : 0);
+      entry.ring = ring.name; entry.points = entry.shoot ? ring.points : 0;   // dead centre scores most; a real card shot scores nothing
       return { kind: 'hit', entry, ribbon, ammo: R.ammo };
     };
     // a card reached the ticket window and nobody shot it: a threat leaks, a real card is delivered
@@ -76,7 +77,7 @@
     const verdict = s.accuracy != null && s.accuracy < 0.65 ? 'Quick on the trigger.' : s.catchRate < 0.65 ? 'Too many slipped through.' : s.catchRate >= 0.85 && s.accuracy != null && s.accuracy >= 0.85 ? 'A steady balance.' : 'A fair balance.';
     return `${verdict} ${TRADE}`;
   }
-  const roundLine = (s) => `Stopped ${s.stopped} of ${s.threats} threats (${Math.round(100 * s.catchRate)}%) · accuracy ${s.accuracy == null ? '–' : Math.round(100 * s.accuracy) + '%'} · ${s.leaks} slipped through · ${s.friendly} real shot · ${s.ammoLeft} tokens left`;
+  const roundLine = (s) => `Stopped ${s.stopped} of ${s.threats} threats (${Math.round(100 * s.catchRate)}%) · accuracy ${s.accuracy == null ? '–' : Math.round(100 * s.accuracy) + '%'} · ${s.leaks} missed · ${s.friendly} real cards hit · ${s.ammoLeft} tokens left · ${s.points || 0} points`;
 
   // ================================================================ the browser game
   function create(TF, world, opts = {}) {
@@ -115,23 +116,23 @@
       const style = document.createElement('style');
       style.textContent = `
         .gp-top { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 640px)); padding: 6px 14px 8px; text-align: center; display: none; background: rgba(10,12,20,.95); border-color: var(--gold); }
-        .gp-top .k { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
+        .gp-top .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
         .gp-top .t { font-size: clamp(16px, 1.5vw, 20px); line-height: 1.25; margin: 2px 0 4px; color: var(--ink); }
         .gp-top .pips { display: flex; gap: 4px; justify-content: center; } .gp-top .pips i { width: 26px; height: 7px; border: 1px solid rgba(243,234,214,.45); }
         .gp-top .pips i.done { border-color: transparent; background: var(--c); } .gp-top .pips i.cur { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
-        .gp-top .ribbon { display: none; margin-top: 4px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .2em; color: var(--gold); } .gp-top .ribbon.on { display: block; }
-        .gp-stat { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 14px; line-height: 1.75; display: none; min-width: 190px; }
+        .gp-top .ribbon { display: none; margin-top: 4px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .2em; color: var(--gold); } .gp-top .ribbon.on { display: block; }
+        .gp-stat { position: absolute; bottom: 14px; left: 18px; text-align: left; padding: 7px 12px; font-size: 14px; line-height: 1.75; display: none; min-width: 190px; }
         .gp-stat .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .gp-stat .clock.low { color: var(--hot); } .gp-stat b { color: var(--gold); font-weight: 600; }
-        .gp-stat .gems { display: inline-flex; gap: 6px; vertical-align: middle; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
+        .gp-stat .gems { display: inline-flex; gap: 6px; vertical-align: middle; flex-wrap: wrap; justify-content: flex-start; max-width: 130px; }
         .gp-gem { width: 9px; height: 9px; background: var(--c); transform: rotate(45deg); box-shadow: 0 0 8px var(--c); } .gp-gem.off { background: transparent; box-shadow: none; border: 1px solid rgba(243,234,214,.35); }
         .gp-stat kbd, .gp-msg kbd, .gp-brief kbd, .gp-help kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .gp-msg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(620px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
         .gp-brief { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; text-align: center; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
-        .gp-brief .k { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: .16em; color: var(--gold); } .gp-brief .t { font-size: 24px; margin: 8px 0; line-height: 1.25; } .gp-brief .m { font-size: 15px; opacity: .85; } .gp-brief .go { margin: 10px 0 0; font-size: 14px; color: var(--gold); text-align: right; }
+        .gp-brief .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .16em; color: var(--gold); } .gp-brief .t { font-size: 24px; margin: 8px 0; line-height: 1.25; } .gp-brief .m { font-size: 15px; opacity: .85; } .gp-brief .go { margin: 10px 0 0; font-size: 14px; color: var(--gold); text-align: right; }
         .gp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); padding: 8px 16px 9px; text-align: center; display: none; font-size: 16px; line-height: 1.4; background: rgba(10,12,20,.96); border-color: var(--gold); }
-        .gp-rs h5 { margin: 0 0 3px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); } .gp-rs .go { color: var(--gold); font-size: 14px; margin-top: 3px; }
+        .gp-rs h5 { margin: 0 0 3px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .gp-rs .go { color: var(--gold); font-size: 14px; margin-top: 3px; }
         .gp-read { position: absolute; left: 18px; top: 90px; width: min(380px, calc(100vw - 36px)); max-height: calc(100vh - 220px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 20px; line-height: 1.3; background: rgba(10,12,20,.96); pointer-events: auto; }
-        .gp-read h5 { margin: 0 0 6px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); } .gp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); }
+        .gp-read h5 { margin: 0 0 6px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .gp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); }
         .gp-read small { display: block; font-size: 14px; letter-spacing: .04em; color: var(--gold); } .gp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
         .gp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
         .gp-help h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .gp-help ul { margin: 0; padding-left: 20px; } .gp-help li { margin: 5px 0; } .gp-help .go { text-align: right; font-size: 14px; color: var(--gold); margin: 10px 0 0; }
@@ -168,15 +169,15 @@
       hud.stat.style.display = shown && inRound ? 'block' : 'none';
       if (inRound) {
         const left = Math.max(0, Math.ceil(r.playSec - S.world.t)), sc = S.phase === 'debrief' ? S.rsScore : null, entries = [...R.done.values()];
-        const leaks = entries.filter((e) => e.event === 'leak').length, fr = entries.filter((e) => e.event === 'friendly').length;
-        const key = [left, R.ammo, leaks, fr, run.charges, S.phase, muted(), !!sc].join('|');
+        const pts = entries.reduce((n, e) => n + (e.points || 0), 0), leaks = entries.filter((e) => e.event === 'leak').length, fr = entries.filter((e) => e.event === 'friendly').length;
+        const key = [left, pts, R.ammo, leaks, fr, run.charges, S.phase, muted(), !!sc].join('|');
         if (key !== hud.statKey) {
           hud.statKey = key;
-          hud.stat.innerHTML = `<div class="clock ${left <= 8 && S.phase === 'play' ? 'low' : ''}">${S.phase === 'play' ? clock(left) : 'DONE'}</div>Tokens <span class="gems">${gems(R.ammo, R.ammoStart, 'var(--gold)')}</span><br>Slipped through <span class="gems">${gems(leaks, 0, STYLE[3].css)}</span><br>Friendly fire <span class="gems">${gems(fr, 0, STYLE[0].css)}</span><br>Magnifier <span class="gems">${gems(run.charges, RULES.MAGNIFIER, STYLE[2].css)}</span><br><kbd>H</kbd> help · <kbd>Tab</kbd> read · <kbd>M</kbd> ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
+          hud.stat.innerHTML = `<div class="clock ${left <= 8 && S.phase === 'play' ? 'low' : ''}">${S.phase === 'play' ? clock(left) : 'DONE'}</div>Points <b>${pts}</b><br>Tokens <span class="gems">${gems(R.ammo, R.ammoStart, 'var(--gold)')}</span><br>${STYLE[3].mark} Missed threats <span class="gems">${gems(leaks, 0, STYLE[3].css)}</span><br>${STYLE[0].mark} Real cards hit <span class="gems">${gems(fr, 0, STYLE[0].css)}</span><br>${STYLE[2].mark} Checks left <span class="gems">${gems(run.charges, RULES.MAGNIFIER, STYLE[2].css)}</span><br><kbd>H</kbd> help · <kbd>Tab</kbd> read · <kbd>M</kbd> ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
         }
       }
       if (S.hint > 0) { S.hint -= dt; hud.msg.style.display = S.hint <= 0 || !shown ? 'none' : 'block'; }
-      else if (shown && S.phase === 'play' && coachSeen < 3 && !cardOpen()) { hud.msg.innerHTML = 'Click or <kbd>Space</kbd> shoots a threat. Spare the real ones: let them pass. Hold <kbd>F</kbd> (or the right button) on a card to inspect it.'; hud.msg.style.display = 'block'; }
+      else if (shown && S.phase === 'play' && S.coach && run.i < 3 && !cardOpen()) { hud.msg.innerHTML = COACH[run.i]; hud.msg.style.display = 'block'; }
       else hud.msg.style.display = 'none';
       // the reading panel (Tab): every card on screen, in large text, left to right
       hud.read.style.display = shown && S.read && S.phase === 'play' ? 'block' : 'none';
@@ -188,31 +189,32 @@
         }
       }
     }
+    const COACH = ['Click or <kbd>Space</kbd> to shoot a threat. Aim for the bullseye: the middle scores most. Let real ones pass.', 'Not sure about a card? Hold <kbd>F</kbd> on it to check it. You get 5 checks a run.', 'Three right calls in a row make a combo.'];
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.help.innerHTML = '<h3>SPOT SHOT</h3><ul><li>Paper cards slide along three shelves towards the ticket windows. <b>Shoot the threats</b> (fakes, scams, poisoned inputs) with a click, a tap or <kbd>Space</kbd>; <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move the reticle.</li><li><b>Spare the real ones:</b> let them pass and they are delivered. Shooting a real card is friendly fire. A threat that reaches the window is a leak.</li><li>Each round gives threats + 2 tokens, and a shot that hits nothing still costs one. <b>Inspect</b> a card (hold <kbd>F</kbd>, the right button or a long press, about 0.6 s) to read its verification line: five magnifier charges for the whole run.</li><li>Some cards are traps: they look the wrong way round. A right call on a trap you did not inspect is a lucky shot and never counts towards mastery.</li><li><kbd>Tab</kbd> lists the cards in big text. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>Esc</kbd> leaves (finished rounds are kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.help.innerHTML = '<h3>SPOT SHOT</h3><ul><li>Paper ducks, each wearing a card, slide along three shelves towards the ticket windows. <b>Aim for the bullseye</b>: dead centre scores 100, the rings 50 and 25, the edge only 10. <b>Shoot the threats</b> (fakes, scams, poisoned inputs) with a click, a tap or <kbd>Space</kbd>; <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move the reticle.</li><li><b>Spare the real ones:</b> let them pass and they are delivered. Shooting a real card is friendly fire. A threat that reaches the window is a leak.</li><li>Each round gives threats + 2 tokens, and a shot that hits nothing still costs one. <b>Inspect</b> a card (hold <kbd>F</kbd>, the right button or a long press, about 0.6 s) to read its verification line: five checks for the whole run.</li><li>Some cards are traps: they look the wrong way round. A right call on a trap you did not inspect is a lucky shot and never counts towards mastery.</li><li><kbd>Tab</kbd> lists the cards in big text. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>Esc</kbd> leaves (finished rounds are kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
       hud.help.style.display = on ? 'block' : 'none';
     }
 
     // ---- flow ----
     const afterTalk = (fn) => { S.waitTalk = fn; };
     function startRun(quiet) {
-      const r = progress.newRun(), spec = E.composeRun(E.seedFor(r.playerId, r.runIndex), r.history);
-      S = { on: true, run: createRun(spec), runInfo: r, phase: 'intro', world, briefT: 0, hint: 0, waitTalk: null, read: false, combo: 0, inspectText: {}, landing: {}, rsScore: null, queue: [], murmurT: 0, endT: 0, summary: null };
+      const r = progress.newRun(), spec = E.shorten(E.composeRun(E.seedFor(r.playerId, r.runIndex), r.history));
+      S = { on: true, coach: coachSeen < 3, oneLine: coachSeen >= 2, run: createRun(spec), runInfo: r, phase: 'intro', world, briefT: 0, hint: 0, waitTalk: null, read: false, combo: 0, inspectText: {}, landing: {}, rsScore: null, queue: [], murmurT: 0, endT: 0, summary: null };
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed });
       if (quiet) { TF.banner('A new row', 'New cards'); beginRound(0); return; }
       TF.banner('Spot Shot', 'Shoot the threats, spare the real');
       TF.talk('Spot Shot', coachSeen === 0
-        ? ['Step right up! Five rounds at the Spot Shot stall, one token popper.', 'Shoot the fakes, scams and poisoned inputs. Spare the real ones: just let them pass. Not sure? Hold F on a card to inspect it. You get five magnifier charges for the whole run.', 'Click or press Space to shoot, arrow keys move the reticle. Tab lists the cards in big text. M mutes. Esc leaves.']
+        ? ['Step right up! Three short rounds at the Spot Shot stall, one foam blaster. Hit the bullseye on a duck for the most points.', 'Shoot the fakes, scams and poisoned inputs. Spare the real ones: just let them pass. Not sure? Hold F on a card to inspect it. You get five checks for the whole run.', 'Click or press Space to shoot, arrow keys move the reticle. Tab lists the cards in big text. M mutes. Esc leaves.']
         : ['Back at the stall? Same rules: shoot the threats, spare the real, inspect when it matters.']);
-      afterTalk(() => beginRound(0));
+      bumpCoach(); afterTalk(() => { hud.brief.style.display = 'none'; beginRound(0); });
     }
     function beginRound(i) {
       const run = S.run, R = run.begin(i), r = R.r;
       world.clearRound(); world.loadRound(r); world.run(false); S.combo = 0; S.phase = 'brief'; S.inspectText = {}; S.landing = {}; S.hint = 0; S.read = false; S.endT = 0; hud.topKey = hud.statKey = hud.readKey = '';
       emit('round', { index: i, items: r.items.map((c) => c.itemId) });
       if (r.kind === 'finale') { TF.banner(r.banner[0], r.banner[1]); hud.brief.style.display = 'none'; S.briefT = 3; return; }
-      hud.brief.innerHTML = `<div class="k">ROUND ${i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}</div><div class="t">${esc(r.brief)}</div><div class="m">${R.ammoStart} tokens this round · ${run.charges} magnifier charge${run.charges === 1 ? '' : 's'} left</div><p class="go"><kbd>E</kbd> Start ▼</p>`;
+      hud.brief.innerHTML = `<div class="k">ROUND ${i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}</div><div class="t">${esc(r.brief)}</div>${S.oneLine ? '' : `<div class="m">${R.ammoStart} tokens this round · ${run.charges} check${run.charges === 1 ? '' : 's'} left</div>`}<p class="go"><kbd>E</kbd> Start ▼</p>`;
       hud.brief.style.display = 'block'; S.briefT = 8;
     }
     function startPlay() {
@@ -222,11 +224,12 @@
     // ---- the world's events ----
     function onShoot(ev) {
       if (!S || S.phase !== 'play') return;
-      const res = S.run.shoot(ev.uid, world.t); if (res.kind === 'miss') { S.landing.miss = true; return; }
+      const res = S.run.shoot(ev.uid, world.t, ev); if (res.kind === 'miss') { S.landing.miss = true; return; }
       if (res.kind !== 'hit') return;
       const e = res.entry; S.landing[e.uid] = e; S.combo = S.run.round.combo;
       world.resolve(e.uid, 'shot', { stamp: e.stamp, tone: e.shoot ? 'threat' : 'rueful' });
-      if (!e.shoot) say(`That one was real. <b>${esc(e.stamp)}</b>: friendly fire.`);
+      if (!e.shoot) { world.flash('bad'); say(`That one was real: <b>${esc(e.stamp)}</b>`); } else world.flash('good');
+      if (e.points) { say(`<b>+${e.points}</b> ${esc(e.ring)}`, 1.4); if (e.points >= 100) { world.slowmo(0.4); sfx('combo'); } }
       if (res.ribbon) { sfx('combo'); say(`<b>COMBO × ${S.combo}</b>`, 1.6); }
     }
     function onLand(ev) {
@@ -238,7 +241,7 @@
       if (!S || S.phase !== 'play') return;
       const res = S.run.pass(ev.uid, world.t); if (!res) return;
       const e = res.entry, c = world.state.cards.get(ev.uid), lane = c ? c.e.lane : 0; S.combo = S.run.round.combo;
-      if (res.kind === 'leak') { world.resolve(ev.uid, 'leaked', { stamp: 'SLIPPED THROUGH', tone: 'leak' }); world.gate(lane, 'leak'); world.cameraShake(0.3, 0.04); sfx('leak'); say('A threat slipped through.', 1.8); }
+      if (res.kind === 'leak') { world.flash('bad'); world.resolve(ev.uid, 'leaked', { stamp: 'SLIPPED THROUGH', tone: 'leak' }); world.gate(lane, 'leak'); world.cameraShake(0.3, 0.04); sfx('leak'); say('A threat got past you.', 1.8); }
       else { world.resolve(ev.uid, 'delivered', { tone: 'ok' }); world.gate(lane, 'ok'); sfx('ding'); }
       if (res.ribbon) { sfx('combo'); say(`<b>COMBO × ${S.combo}</b>`, 1.6); }
     }
@@ -253,9 +256,9 @@
     function endRound() {
       const run = S.run, log = run.finishRound(world.t), sc = E.scoreRound(log);
       for (const e of log.entries) emit('answer', { credit: true, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, shoot: e.shoot, action: e.action, correct: e.correct, lucky: e.lucky, inspected: e.inspected });
-      S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 3); S.queueN = S.queue.length; world.run(false); S.read = false; hud.statKey = '';
+      S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 2); S.queueN = S.queue.length; world.run(false); S.read = false; hud.statKey = '';
       const name = sideName(log.side);
-      hud.rs.innerHTML = `<h5>ROUND ${run.i + 1} · ${esc(name.toUpperCase())}</h5>${esc(roundLine(sc))}<div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} ▼</div>`; hud.rs.style.display = 'block';
+      hud.rs.innerHTML = `<h5>ROUND ${run.i + 1} · ${esc(name.toUpperCase())}</h5>${esc(roundLine(sc))}<div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>S</kbd> skip ▼</div>`; hud.rs.style.display = 'block';
       sfx('chime'); TF.sys(`Round ${run.i + 1}: stopped ${sc.stopped} of ${sc.threats} threats, accuracy ${sc.accuracy == null ? '–' : Math.round(100 * sc.accuracy) + '%'}.`);
     }
     function nextCard() {
@@ -306,9 +309,9 @@
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else if (!TF.talking) closeCard(); return true; }
+      if (e.code === 'KeyS' && !e.repeat && S.phase === 'debrief' && !helpOpen()) { S.queue.length = 0; if (cardOpen()) bridge.card.hide(); nextCard(); return true; }
       if (e.code === 'Tab') { if (!e.repeat && S.phase === 'play') S.read = !S.read; return true; }
       if (cardOpen() || helpOpen() || TF.talking || S.phase !== 'play') return true;   // the card has the keys
-      if (e.code === 'Space') bumpCoach();
       return world.keys.onKey(e) || true;   // the world takes the arrows, Space and F; everything else is swallowed: no walking, no stray jumps, no camera switch
     }
 

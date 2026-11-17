@@ -47,7 +47,7 @@
     return Object.keys(d.concepts).map((id) => Object.assign({ id }, d.concepts[id])).filter((c) => CARD[c.id] && !c.mastered && (c.attempts || c.partial))
       .sort((a, b) => b.strikes - a.strikes || b.attempts - a.attempts || a.id.localeCompare(b.id)).slice(0, n)
       .map((c) => ({ id: c.id, title: CARD[c.id].title, side: sideOfCard(CARD[c.id]), sideName: C.SIDES[sideOfCard(CARD[c.id])].name, idea: CARD[c.id].idea, strikes: c.strikes, attempts: c.attempts,
-        note: c.strikes ? `${c.strikes} strike${c.strikes === 1 ? '' : 's'}` : 'right first time, not proven yet' }));
+        note: c.strikes ? `${c.strikes} mistake${c.strikes === 1 ? '' : 's'}` : 'right first time, not proven yet' }));
   }
   // what the generator reads: the same shape as the bridge's history (falls = strikes), so weights and anti-repeat work the same way in both games
   const historyFor = (d) => ({
@@ -120,17 +120,17 @@
     function makePanel() {
       const style = document.createElement('style');
       style.textContent = `
-        .cr { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); max-height: calc(100vh - 110px); overflow-y: auto; padding: 16px 22px 14px; display: none; font-size: 17px; line-height: 1.4; background: rgba(14, 16, 26, .96); pointer-events: auto; font-variant-ligatures: none; }
+        .cr { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); max-height: calc(100vh - 110px); overflow-y: auto; padding: 16px 22px 14px; display: none; font-size: 17px; line-height: 1.4; background: rgba(40, 28, 24, .96); pointer-events: auto; font-variant-ligatures: none; }
         .cr h3 { margin: 0; font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
         .cr .sum { margin: 4px 0 10px; font-size: 18px; } .cr .sum b { color: #ffe39a; font-weight: 600; }
-        .cr .row { display: grid; grid-template-columns: 190px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 15px; }
+        .cr .row { display: grid; grid-template-columns: 190px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 16px; }
         .cr .bar { height: 11px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); } .cr .bar i { display: block; height: 100%; }
-        .cr .num { text-align: right; opacity: .85; font-size: 14px; }
+        .cr .num { text-align: right; opacity: .85; font-size: 15px; }
         .cr h4 { margin: 12px 0 4px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
-        .cr ul { margin: 0; padding-left: 18px; } .cr li { margin: 3px 0; } .cr li small { opacity: .8; font-size: 14px; } .cr .none { opacity: .8; }
-        .cr .stat { margin-top: 8px; font-size: 15px; } .cr .note { margin-top: 8px; font-size: 13px; opacity: .72; }
-        .cr .acts { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 14px; }
-        .cr button { font: inherit; color: var(--ink); background: rgba(14,16,26,.9); border: 1px solid var(--gold); padding: 4px 12px; cursor: pointer; } .cr button:hover { background: rgba(217,180,106,.2); }
+        .cr ul { margin: 0; padding-left: 18px; } .cr li { margin: 3px 0; } .cr li small { opacity: .8; font-size: 15px; } .cr .none { opacity: .8; }
+        .cr .stat { margin-top: 8px; font-size: 16px; } .cr .note { margin-top: 8px; font-size: 15px; opacity: .8; }
+        .cr .acts { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 16px; }
+        .cr button { font: inherit; color: var(--ink); background: rgba(40, 28, 24,.9); border: 1px solid var(--gold); padding: 4px 12px; cursor: pointer; } .cr button:hover { background: rgba(217,180,106,.2); }
         .cr kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         @media (max-width: 560px) { .cr .row { grid-template-columns: 110px 1fr 66px; } }`;
       document.head.appendChild(style);
@@ -142,7 +142,7 @@
       const d = data(), stats = sideStats(d), rev = revisitList(d, 3), br = shared ? bridgeTopicsMastered(shared.data) : { mastered: 0, total: Object.keys(BC.TOPICS).length };
       const stars = '★'.repeat(sum.stars) + '☆'.repeat(3 - sum.stars), min = Math.floor(sum.seconds / 60), sec = String(sum.seconds % 60).padStart(2, '0');
       const knew = sum.answers.filter((a) => a.correct && a.firstTry).length, slow = sum.answers.filter((a) => a.correct && a.shots >= 3).length, total = sum.answers.filter((a) => a.correct).length;
-      panel.innerHTML = `<h3>TABLE REPORT</h3><div class="sum"><b>${stars}</b> · <b>${sum.points.toFixed(1)}</b> of 15 points · <b>${sum.tokens}</b> tokens banked · <b>${sum.strikes}</b> strike${sum.strikes === 1 ? '' : 's'} · ${min}m ${sec}s</div>`
+      panel.innerHTML = `<h3>TABLE REPORT</h3><div class="sum"><b>${stars}</b> · <b>${sum.points.toFixed(1)}</b> of ${sum.max || 15} points · <b>${sum.tokens}</b> tokens banked · <b>${sum.strikes}</b> mistake${sum.strikes === 1 ? '' : 's'} · ${min}m ${sec}s</div>`
         + stats.map((t) => `<div class="row"><span>${esc(t.name)}</span><span class="bar" role="img" aria-label="${esc(t.name)} ${Math.round(t.mastery * 100)}%"><i style="width:${Math.round(t.mastery * 100)}%;background:${ZONE_CSS[t.zone]}"></i></span><span class="num">${t.mastered}/${t.total} · ${Math.round(t.mastery * 100)}%</span></div>`).join('')
         + `<div class="stat">Knew it first time: <b>${knew}</b> of ${total} · Knew it, missed the shot (3+ shots): <b>${slow}</b></div>`
         + '<h4>REVISIT</h4>' + (rev.length ? `<ul>${rev.map((r) => `<li><b>${esc(r.title)}</b> <small>(${esc(r.sideName)}: ${esc(r.note)})</small><br><small>${esc(r.idea)}</small></li>`).join('')}</ul>` : '<div class="none">Nothing to revisit yet. Keep playing.</div>')
@@ -171,9 +171,9 @@
           last = sum; open(sum);
           const st = sideStats(data()).filter((s) => s.attempts), best = st.slice().sort((a, b) => b.mastery - a.mastery)[0], worst = st.slice().sort((a, b) => a.mastery - b.mastery)[0];
           TF.talk('devansh', [
-            `${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)} ${sum.points.toFixed(1)} of 15, and ${sum.tokens} tokens in the bank.`,
+            `${'★'.repeat(sum.stars)}${'☆'.repeat(3 - sum.stars)} ${sum.points.toFixed(1)} of ${sum.max || 15}, and ${sum.tokens} tokens in the bank.`,
             best && worst && best !== worst ? `Steadiest: ${best.name}. Wobbliest: ${worst.name}. The next game leans that way.` : 'Play a few more and I will tell you where you wobble.',
-            'The report is on the table. E closes it, J saves everything as JSON.',
+            'The report is on the table. E closes it. J saves everything as JSON.',
           ]);
         };
       },
