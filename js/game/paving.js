@@ -16,7 +16,7 @@ uniform sampler2D uPaveGrain;
 varying vec3 vGW;
 varying vec4 vA, vB;   // the cell under this pixel (ids in B are whole numbers: round them after interpolation, or the hash turns rounding dust into noise): A = its shape (a box: centre x, z, half x, z; a ring sector: mid radius, mid angle, half width, half arc), B = kind, role, id
 varying vec2 vC;       // a ring sector's centre
-varying vec3 vD;       // a curve that cuts this stone: x, z, radius (0 = none)
+varying vec3 vD, vE;   // the curves that cut this stone (a stone can sit on two, the fountain's and the planter's): x, z, radius (0 = none)
 float pvH(vec2 p){ vec3 q = fract(vec3(p.xyx) * .1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }   // a hash that stays clean at big world coordinates
 float pvN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(pvH(i), pvH(i + vec2(1., 0.)), f.x), mix(pvH(i + vec2(0., 1.)), pvH(i + vec2(1., 1.)), f.x), f.y); }
 float pvBox(vec2 q, vec2 b, float r){ vec2 d = abs(q) - (b - r); return length(max(d, 0.)) + min(max(d.x, d.y), 0.) - r; }   // rounded box: < 0 inside
@@ -60,10 +60,13 @@ const PAVING_MAP = `#include <map_fragment>
   float pvD = pvBase ? 1. : pvBox(pvQ, pvHalf, RAD);           // < 0 on the stone, > 0 in the joint
   vec2 pvNo = pvBase ? vec2(0.) : pvOut(pvQ, pvHalf, RAD);
   if (pvPolar) pvNo = pvNo.x * pvTg + pvNo.y * pvRh;           // a wedge's edges face along the rings, not along the axes
-  if (vD.z > 0.) {   // a stone a curve cuts (the fountain's accent line, a planter's collar): gone inside the curve, cut along it outside, by a rounded intersection so the cut corners are soft like the rest
-    vec2 pvCd = pvP - vD.xy; float pvCr = length(pvCd); if (pvCr < vD.z) discard;
-    float pvA = vD.z + GAP * .5 - pvCr;
-    if (pvA > -.3) { vec2 w = vec2(pvD, pvA) + RAD; if (pvA > pvD) pvNo = -pvCd / max(pvCr, 1e-4); pvD = min(max(w.x, w.y), 0.) + length(max(w, 0.)) - RAD; }
+  for (int k = 0; k < 2; k++) {   // a stone a curve cuts (the fountain's accent line, a planter's collar): gone inside the curve, cut along it outside, by a rounded intersection so the cut corners are soft like the rest
+    vec3 pvV = k == 0 ? vD : vE;
+    if (pvV.z > 0.) {
+      vec2 pvCd = pvP - pvV.xy; float pvCr = length(pvCd); if (pvCr < pvV.z) discard;
+      float pvA = pvV.z + GAP * .5 - pvCr;
+      if (pvA > -.3) { vec2 w = vec2(pvD, pvA) + RAD; if (pvA > pvD) pvNo = -pvCd / max(pvCr, 1e-4); pvD = min(max(w.x, w.y), 0.) + length(max(w, 0.)) - RAD; }
+    }
   }
   float pvGm = pvBase ? 1. : smoothstep(-pvFw * .75, pvFw * .75, pvD) * clamp(GAP / (1.5 * pvFw), .15, 1.);   // joint coverage, anti-aliased; a thin joint thins out instead of going grey at a distance
   const vec2 PV_L = vec2(-.7071, -.7071);                    // the light for the bevel: from the top-left of the screen
@@ -121,8 +124,8 @@ function pavingMaterial() {
       uDapple: U.uDapple, uTree: U.uTree, uRim: U.uRim, uSunH: U.uSunH, uNight: U.uNight, uFount: U.uFount,
       uPvBase: U.col.base, uPvLight: U.col.light, uPvDeep: U.col.deep, uPvSage: U.col.sage, uPvBlue: U.col.blue, uPvBlush: U.col.blush, uPvTaupe: U.col.taupe, uPvMoss: U.col.moss,
     });
-    sh.vertexShader = 'attribute vec4 aA, aB; attribute vec2 aC; attribute vec3 aD; varying vec4 vA, vB; varying vec2 vC; varying vec3 vD; varying vec3 vGW;\n'
-      + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGW = (modelMatrix * vec4(transformed, 1.)).xyz; vA = aA; vB = aB; vC = aC; vD = aD;');
+    sh.vertexShader = 'attribute vec4 aA, aB; attribute vec2 aC; attribute vec3 aD, aE; varying vec4 vA, vB; varying vec2 vC; varying vec3 vD, vE; varying vec3 vGW;\n'
+      + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGW = (modelMatrix * vec4(transformed, 1.)).xyz; vA = aA; vB = aB; vC = aC; vD = aD; vE = aE;');
     sh.fragmentShader = PAVING_GLSL + "\n" + sh.fragmentShader
       .replace('#include <map_fragment>', PAVING_MAP)
       .replace('#include <roughnessmap_fragment>', PAVING_ROUGH).replace('#include <emissivemap_fragment>', PAVING_EMIT)
@@ -134,17 +137,17 @@ function pavingMaterial() {
 // The lobby's paving as one mesh: a grout base under each area, a cell per stone, and the fountain's rings. Each vertex carries its cell (see the shader), so the cells need no texture and never repeat.
 // y: the paving's height (the old planes sat at .012 to .014). The mesh is marked dyn so mergeStatic leaves its extra vertex data alone.
 function buildPaving(layout, fountain, y = .014) {
-  const pos = [], nor = [], A = [], B = [], C = [], D = [], idx = [];
-  const vert = (x, z, yy, a, b, c, d) => { pos.push(x, yy, z); nor.push(0, 1, 0); A.push(...a); B.push(...b); C.push(...c); D.push(...d); return pos.length / 3 - 1; };
+  const pos = [], nor = [], A = [], B = [], C = [], D = [], E = [], idx = [];
+  const vert = (x, z, yy, a, b, c, d, e = [0, 0, 0]) => { pos.push(x, yy, z); nor.push(0, 1, 0); A.push(...a); B.push(...b); C.push(...c); D.push(...d); E.push(...e); return pos.length / 3 - 1; };
   const tri = (i, j, k) => {   // wound so the face points up, whatever order the corners came in
     const [ax, az, bx, bz, cx, cz] = [pos[i * 3], pos[i * 3 + 2], pos[j * 3], pos[j * 3 + 2], pos[k * 3], pos[k * 3 + 2]];
     if ((bz - az) * (cx - ax) - (bx - ax) * (cz - az) > 0) idx.push(i, j, k); else idx.push(i, k, j);
   };
-  const quad = (x0, z0, x1, z1, yy, a, b, d) => { const v = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]].map(([x, z]) => vert(x, z, yy, a, b, [0, 0], d)); tri(v[0], v[1], v[2]); tri(v[0], v[2], v[3]); };
+  const quad = (x0, z0, x1, z1, yy, a, b, d, e) => { const v = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]].map(([x, z]) => vert(x, z, yy, a, b, [0, 0], d, e)); tri(v[0], v[1], v[2]); tri(v[0], v[2], v[3]); };
   const none = [0, 0, 0];
   for (const R of layout.areas) quad(R[0], R[1], R[2], R[3], y - .002, [0, 0, 1, 1], [4, 0, 0, 0], none);   // the grout every stone sits on
   for (const c of layout.cells) {
-    if (c.k === 'r') quad(c.x0, c.z0, c.x1, c.z1, y, [(c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (c.x1 - c.x0) / 2, (c.z1 - c.z0) / 2], [0, c.role, c.id[0], c.id[1]], c.cut ? [c.cut.x, c.cut.z, c.cut.R] : none);
+    if (c.k === 'r') quad(c.x0, c.z0, c.x1, c.z1, y, [(c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (c.x1 - c.x0) / 2, (c.z1 - c.z0) / 2], [0, c.role, c.id[0], c.id[1]], c.cut ? [c.cut.x, c.cut.z, c.cut.R] : none, c.cut2 ? [c.cut2.x, c.cut2.z, c.cut2.R] : none);
     else {
       const m = Math.max(2, Math.ceil((c.t1 - c.t0) * c.r1 / .12)), a = [(c.r0 + c.r1) / 2, (c.t0 + c.t1) / 2, (c.r1 - c.r0) / 2, (c.t1 - c.t0) / 2], b = [1, c.role, c.id[0], c.id[1]], ring = [];
       for (let i = 0; i <= m; i++) { const t = c.t0 + (c.t1 - c.t0) * i / m, cs = Math.cos(t), sn = Math.sin(t); ring.push([vert(c.cx + c.r0 * cs, c.cz + c.r0 * sn, y, a, b, [c.cx, c.cz], none), vert(c.cx + c.r1 * cs, c.cz + c.r1 * sn, y, a, b, [c.cx, c.cz], none)]); }
@@ -156,7 +159,7 @@ function buildPaving(layout, fountain, y = .014) {
   for (let i = 0; i <= seg; i++) { const t = i / seg * Math.PI * 2, cs = Math.cos(t), sn = Math.sin(t); fr.push([vert(fx + f0 * cs, fz + f0 * sn, y, [0, 0, 1, 1], [3, 0, 0, 0], [0, 0], none), vert(fx + f1 * cs, fz + f1 * sn, y, [0, 0, 1, 1], [3, 0, 0, 0], [0, 0], none)]); }
   for (let i = 0; i < seg; i++) { tri(fr[i][0], fr[i][1], fr[i + 1][1]); tri(fr[i][0], fr[i + 1][1], fr[i + 1][0]); }
   const g = new THREE.BufferGeometry(), f32 = (arr, n) => new THREE.BufferAttribute(new Float32Array(arr), n);
-  g.setAttribute('position', f32(pos, 3)); g.setAttribute('normal', f32(nor, 3)); g.setAttribute('aA', f32(A, 4)); g.setAttribute('aB', f32(B, 4)); g.setAttribute('aC', f32(C, 2)); g.setAttribute('aD', f32(D, 3));
+  g.setAttribute('position', f32(pos, 3)); g.setAttribute('normal', f32(nor, 3)); g.setAttribute('aA', f32(A, 4)); g.setAttribute('aB', f32(B, 4)); g.setAttribute('aC', f32(C, 2)); g.setAttribute('aD', f32(D, 3)); g.setAttribute('aE', f32(E, 3));
   g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx), 1));
   const mesh = new THREE.Mesh(g, MAT.paverLobby); mesh.receiveShadow = true; mesh.frustumCulled = false; mesh.userData.dyn = true; scene.add(mesh);
   return mesh;

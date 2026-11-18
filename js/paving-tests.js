@@ -88,5 +88,14 @@ test('curves are cut on purpose: a cut stone always leaves a piece worth standin
 test('the layout is the same every time', () => {
   assert.deepStrictEqual(JSON.stringify(pavingLayout(PLAN)), JSON.stringify(L));
 });
+test('a stone that two curves bite carries both cuts (else it is drawn over the fountain rings)', () => {
+  for (const c of rects) {
+    const cuts = [c.cut, c.cut2].filter(Boolean);
+    for (const d of L.discs) {
+      const nx = Math.max(c.x0, Math.min(d.x, c.x1)), nz = Math.max(c.z0, Math.min(d.z, c.z1));
+      if (Math.hypot(nx - d.x, nz - d.z) < d.R - E) assert(cuts.some((k) => Math.abs(k.x - d.x) < E && Math.abs(k.z - d.z) < E), `a stone the curve at ${d.x}, ${d.z} bites has no cut for it`);
+    }
+  }
+});
 console.log(`   ${L.cells.length} stones (${rects.length} straight, ${L.cells.length - rects.length} curved); cut radii ${L.discs.map((d) => d.R.toFixed(2)).join(', ')}`);
 done();

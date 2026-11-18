@@ -172,7 +172,7 @@ function pavingLayout(plan) {
   const plaza = []; plazaCells(plan.plaza, areas, plaza, chosen);
   for (const d of chosen) {
     discs.push({ x: d.x, z: d.z, R: d.R });
-    for (let i = plaza.length - 1; i >= 0; i--) { const c = plaza[i], h = plDiscHits([c], d, d.R)[0]; if (h && h.far <= d.R + 1e-6) plaza.splice(i, 1); else if (h) c.cut = { x: d.x, z: d.z, R: d.R }; }   // wholly inside: dropped; bitten: cut by the curve
+    for (let i = plaza.length - 1; i >= 0; i--) { const c = plaza[i], h = plDiscHits([c], d, d.R)[0]; if (h && h.far <= d.R + 1e-6) plaza.splice(i, 1); else if (h) c[c.cut ? 'cut2' : 'cut'] = { x: d.x, z: d.z, R: d.R }; }   // wholly inside: dropped; bitten: cut by the curve
     if (!d.ringless) plRings(d, cells);   // a ringless curve (the fountain) has its own paving: the field is only cut round it
   }
   cells.push(...plaza);
