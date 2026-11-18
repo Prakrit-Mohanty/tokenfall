@@ -159,7 +159,7 @@
   function create(TF, opts = {}) {
     const { THREE, MAT, scene } = TF;
     const CX = 0, CZ = 700;   // a free spot: the lobby, Archive, Pune, the Calfus office and ABZ already take (0,0), (-300,0), (300,0), (0,-300) and (0,300)
-    const ENV = { fog: 0x2d2a3a, near: 26, far: 88, sun: 0.62, hemi: 0.66, hemiColor: 0xcfdcff };   // more even: less sun, more sky
+    const ENV = { fog: parseInt(PAL.plum.slice(1), 16), near: 26, far: 88, sun: 0.62, hemi: 0.66, hemiColor: 0xcfdcff };   // more even: less sun, more sky
     const state = { anims: [], origin: 'lobby', kiosk: null, spec: null, specFor: null, broken: new Set(), linked: new Set(), links: {}, listeners: { build: [], dispose: [] }, layout: null, root: null, reg: null, tiles: {}, textures: [], mats: [], light: null, mist: [], tokens: null, color: new THREE.Color(ZONE_HEX.amber), debug: !!opts.debug };
     const txSet = new Set(Object.values(TF.TX).flat());
     const texCache = new Map();   // tile textures survive a rebuild (a bonus row rebuilds the course), and identical answers share one
@@ -195,7 +195,7 @@
         g.textAlign = 'left'; g.textBaseline = 'middle';
         let size = 32, lines;
         for (; size >= 12; size--) {
-          g.font = `600 ${size}px "Pixelify Sans", monospace`;
+          g.font = `600 ${size}px ${SIGN_FONT}`;
           lines = []; let line = '';
           for (const w of text.split(' ')) { const t = line ? line + ' ' + w : w; if (line && g.measureText(t).width > 200) { lines.push(line); line = w; } else line = t; }
           lines.push(line);
@@ -229,9 +229,9 @@
 
     function rowSignTexture(label, hex, icon, topic) {
       const t = TF.canvasTex(256, 64, (g) => {
-        g.fillStyle = '#15171d'; g.fillRect(0, 0, 256, 64);
-        g.fillStyle = '#2c303a'; g.fillRect(0, 0, 256, 3); g.fillRect(0, 61, 256, 3);
-        g.font = '600 30px "Pixelify Sans", monospace'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = cssOf(hex);
+        g.fillStyle = PAL.plum; g.fillRect(0, 0, 256, 64);
+        g.fillStyle = PAL.plum; g.fillRect(0, 0, 256, 3); g.fillRect(0, 61, 256, 3);
+        g.font = `600 30px ${SIGN_FONT}`; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillStyle = cssOf(hex);
         g.fillText(label, 14, 33);
         if (icon) { g.fillStyle = cssOf(hex); icon.forEach((row, y) => [...row].forEach((c, x) => c === '#' && g.fillRect(196 + x * 5, 12 + y * 5, 5, 5))); }
       });

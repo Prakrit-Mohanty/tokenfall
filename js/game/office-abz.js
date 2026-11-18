@@ -94,7 +94,7 @@ function buildABZ(a) {
     const horiz = y0 === y1, a0 = horiz ? X(x0) : Z(y0), dc = door == null ? null : (horiz ? X(door) : Z(door)) - a0;
     gwall(X(x0), Z(y0), X(x1), Z(y1), dc == null ? [] : [[dc - .6, dc + .6]]);
   };
-  const plate = (name, x, y, z, ry) => signBoard(name, x, y, z, 1.3, .32, ry, { size: 16, bg: '#18191c', edge: '#2c2e33', color: '#f3ead6', w: 170, h: 42 });
+  const plate = (name, x, y, z, ry) => signBoard(name, x, y, z, 1.3, .32, ry, { size: 16, bg: PAL.plum, w: 170, h: 42 });
   const sitAt = (x, z, ry, m = chairM) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g); chair(0, 0, 1, g, m); };
   // meeting table: long (along z or x) with chairs down both sides, or round with four chairs
   const mtable = (x, z, len, alongZ, per) => {
@@ -142,7 +142,7 @@ function buildABZ(a) {
     colBox(x - .7, z - .45, x + .7, z + 1);
   }
   box(.38, .9, .38, MAT.white, X(4.05), 0, Z(9.2)); const jug = add(new THREE.Mesh(new THREE.CylinderGeometry(.15, .15, .42, 12), new THREE.MeshStandardMaterial({ color: 0x2f4f9e, roughness: .3 }))); jug.position.set(X(4.05), 1.11, Z(9.2)); colCirc(X(4.05), Z(9.2), .3);
-  const art = canvasTex(32, 40, (g, W, Hh) => { g.fillStyle = '#f2efe8'; g.fillRect(0, 0, W, Hh); for (let i = 0; i < 14; i++) { g.fillStyle = ['#3a8fb8', '#c83a3a', '#2a2a40', '#6ab06a', '#8a4ab0'][i % 5]; g.globalAlpha = .7; g.beginPath(); g.arc(6 + rnd() * 20, 8 + rnd() * 24, 2 + rnd() * 5, 0, 6.3); g.fill(); } g.globalAlpha = 1; });
+  const art = canvasTex(32, 40, (g, W, Hh) => { g.fillStyle = '#f2efe8'; g.fillRect(0, 0, W, Hh); for (let i = 0; i < 14; i++) { g.fillStyle = ['#3a8fb8', '#c83a3a', PAL.plum, '#6ab06a', '#8a4ab0'][i % 5]; g.globalAlpha = .7; g.beginPath(); g.arc(6 + rnd() * 20, 8 + rnd() * 24, 2 + rnd() * 5, 0, 6.3); g.fill(); } g.globalAlpha = 1; });
   const artM = new THREE.MeshStandardMaterial({ map: art });
   const pic = new THREE.Mesh(new THREE.BoxGeometry(.04, 1.1, .9), [artM, black, black, black, black, black]); pic.position.set(X(0) + .04, 1.8, Z(9.6)); add(pic);
   plate('Pantry', X(4.29) + .1, 2.6, Z(9.9), Math.PI / 2);

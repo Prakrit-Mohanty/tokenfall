@@ -8,6 +8,7 @@ const V_ROADS = [[-2.6, -30.5, 2.6, -10], [-2.6, 10, 2.6, 46], [-46, -2.6, -12, 
 const V_ISLAND = 53;   // the lobby is a floating island: its lawn, its river and its tufts end here, 7 m beyond where the hero can walk (dreamworld.js dresses the edge)
 const V_RIVER = [-V_ISLAND, -37.5, V_ISLAND, -30.5];
 const V_POND = [25, 25, 8];
+const V_PLANTER = [8.4, 6.4, 1.8];   // the round planter bed on the plaza (x, z, radius): the paving makes room for it
 const V_MOW = [-43, 6, -35, 14];
 const V_GAMES_LAWN = [-28.2, -9, -16.9, -2.6];
 const V_GAME_SPOTS = { tower: [[-26, -6.5]], stall: [[-20.5, -4.6]] };
@@ -25,22 +26,22 @@ const V_STALLS = [
 const V_BOT_CYCLE = 54;
 const V_BOT_DOCK = [38.9, -3.5];
 const V_HOMES = [
-  { x: -19, z: -12.5, w: 9, d: 7, wall: 0xf2efe8, style: 'flat', solar: true, label: ['Home', '#9dff9f'], labelRight: true, inter: ['Home', 'Knock', ['Nobody\'s home right now.', 'A note on the door: “Moving in soon — your own space in TokenFall!”']] },
-  { x: -32, z: -13, w: 8, d: 7, wall: 0xe8e2d6, style: 'mono', storeys: 2, clad: true, flue: true },
-  { x: -26, z: -25, w: 10, d: 8, wall: 0xefe6d8, style: 'gable', storeys: 2, led: true },
-  { x: 20, z: -13, w: 10, d: 7, wall: 0xd9cfbf, style: 'flat', cafe: true, label: ['TOKEN BREW', '#ffd27a'], inter: ['Token Brew', 'Order', ['One masala chai, coming up! ☕', 'Fun fact: this sentence is about 12 tokens long.', 'Kitchen\'s short-staffed. Want a shift? Take the staff door at the right-hand end of my front wall: look for the twinkle and the board.']] },
-  { x: 33, z: -13, w: 8, d: 7, wall: 0xf2efe8, style: 'mono', solar: true },
-  { x: 12.5, z: -24, w: 8, d: 7, ry: -Math.PI / 2, wall: 0xc8c2b8, style: 'flat', storeys: 2, clad: true },
-  { x: 28, z: -25, w: 10, d: 8, wall: 0xe8e2d6, style: 'gable', flue: true },
-  { x: -10.5, z: 21, w: 8, d: 7, ry: Math.PI / 2, wall: 0xefe6d8, style: 'mono', led: true },
-  { x: -10.5, z: 33, w: 8, d: 7, ry: Math.PI / 2, wall: 0xf2efe8, style: 'flat', solar: true, clad: true },
-  { x: -27, z: 21, w: 10, d: 8, wall: 0xd9cfbf, style: 'mono', storeys: 2, solar: true },
-  { x: -33, z: 35, w: 9, d: 7, ry: Math.PI, wall: 0xe8e2d6, style: 'gable', flue: true },
-  { x: 10.5, z: 15, w: 8, d: 7, ry: -Math.PI / 2, wall: 0xf2efe8, style: 'flat', led: true },
-  { x: 27, z: 9.5, w: 9, d: 7, ry: Math.PI, wall: 0xefe6d8, style: 'mono', clad: true, solar: true },
-  { x: 38, z: 12, w: 8, d: 7, ry: Math.PI, wall: 0xc8c2b8, style: 'gable' },
-  { x: 39, z: 32, w: 9, d: 7, ry: -Math.PI / 2, wall: 0xf2efe8, style: 'flat', solar: true },
-  { x: 10.5, z: 38, w: 8, d: 7, ry: -Math.PI / 2, wall: 0xd9cfbf, style: 'mono', clad: true, flue: true },
+  { x: -19, z: -12.5, w: 9, d: 7, wall: PAL.peach, style: 'flat', solar: true, label: ['Home', '#9dff9f'], labelRight: true, inter: ['Home', 'Knock', ['Nobody\'s home right now.', 'A note on the door: “Moving in soon — your own space in TokenFall!”']] },
+  { x: -32, z: -13, w: 8, d: 7, wall: PAL.mint, style: 'mono', storeys: 2, clad: true, flue: true },
+  { x: -26, z: -25, w: 10, d: 8, wall: PAL.butter, style: 'gable', storeys: 2, led: true },
+  { x: 20, z: -13, w: 10, d: 7, wall: PAL.sky, style: 'flat', cafe: true, label: ['TOKEN BREW', '#ffd27a'], inter: ['Token Brew', 'Order', ['One masala chai, coming up! ☕', 'Fun fact: this sentence is about 12 tokens long.', 'Kitchen\'s short-staffed. Want a shift? Take the staff door at the right-hand end of my front wall: look for the twinkle and the board.']] },
+  { x: 33, z: -13, w: 8, d: 7, wall: PAL.blush, style: 'mono', solar: true },
+  { x: 12.5, z: -24, w: 8, d: 7, ry: -Math.PI / 2, wall: PAL.cream, style: 'flat', storeys: 2, clad: true },
+  { x: 28, z: -25, w: 10, d: 8, wall: PAL.lilac, style: 'gable', flue: true },
+  { x: -10.5, z: 21, w: 8, d: 7, ry: Math.PI / 2, wall: PAL.sage, style: 'mono', led: true },
+  { x: -10.5, z: 33, w: 8, d: 7, ry: Math.PI / 2, wall: PAL.peach, style: 'flat', solar: true, clad: true },
+  { x: -27, z: 21, w: 10, d: 8, wall: PAL.mint, style: 'mono', storeys: 2, solar: true },
+  { x: -33, z: 35, w: 9, d: 7, ry: Math.PI, wall: PAL.butter, style: 'gable', flue: true },
+  { x: 10.5, z: 15, w: 8, d: 7, ry: -Math.PI / 2, wall: PAL.sky, style: 'flat', led: true },
+  { x: 27, z: 9.5, w: 9, d: 7, ry: Math.PI, wall: PAL.blush, style: 'mono', clad: true, solar: true },
+  { x: 38, z: 12, w: 8, d: 7, ry: Math.PI, wall: PAL.cream, style: 'gable' },
+  { x: 39, z: 32, w: 9, d: 7, ry: -Math.PI / 2, wall: PAL.lilac, style: 'flat', solar: true },
+  { x: 10.5, z: 38, w: 8, d: 7, ry: -Math.PI / 2, wall: PAL.sage, style: 'mono', clad: true, flue: true },
 ];
 const V_EXTRA_PATHS = [[0, -42.2, 5, 9.4], [5.15, 26, 5.1, 1.8], [32.4, -6, 5.6, 3]];
 const V_FENCES = [[-14, -4, -14, -9.5], [14.5, 4, 14.5, 7.5], [-14.5, 4, -14.5, 9], [-34, -4.2, -38, -4.2], [29.5, 4.2, 31, 4.2]];
@@ -77,7 +78,7 @@ const vOnce = (key, make) => vCache[key] || (vCache[key] = make());
 const vTint = (tex, s, color, side) => vOnce(tex.uuid + color + (side || ''), () => std(tex, s, { color, ...(side ? { side } : {}) }));
 const vGlass = () => vOnce('glass', () => new THREE.MeshStandardMaterial({ color: 0xcfeef0, transparent: true, opacity: .26, roughness: .05, depthWrite: false }));
 const vGlow = (color) => vOnce('glow' + color, () => glowStrip(color));
-const vMetalRoof = () => vOnce('metalRoof', () => new THREE.MeshStandardMaterial({ color: 0x3e434c, roughness: .45, metalness: .35 }));
+const vMetalRoof = () => vOnce('metalRoof', () => new THREE.MeshStandardMaterial({ color: PAL.coral, roughness: .7, metalness: 0 }));   // a soft terracotta roof (it was dark metal)
 const vLitDouble = () => vOnce('litDouble', () => { const m = MAT.glassLit.clone(); m.side = THREE.DoubleSide; return m; });
 
 // a box inside a rotated group: world colliders are added separately by the caller
@@ -105,10 +106,12 @@ function vGable(g, w, d, wallH, rise, roofM, wallM) {
   return { ang, half };
 }
 
-function vPane(g, x, y, z, w, h, ry = 0) {
+function vPane(g, x, y, z, w, h, ry = 0, flowers = false) {
   const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.y = ry; g.add(p);
-  gbox(p, w + .12, h + .12, .08, MAT.metal, 0, -.06, 0);
+  gbox(p, w + .26, h + .26, .1, MAT.trim, 0, -.13, 0);
   gbox(p, w, h, .1, MAT.glassLit, 0, 0, .01, { cast: false });
+  gbox(p, w + .44, .1, .26, MAT.trim, 0, -.2, .08, { cast: false });   // the sill
+  if (flowers) flowerBox(0, -.62, .22, w, p);
 }
 
 function vRoof(g, c, H, mw, mx, sw, sx, sideH) {
@@ -153,9 +156,10 @@ function vHome(c) {
   }
   const glassW = cafe ? mw - .4 : mw * .7;
   gbox(g, glassW, 2.4, .1, MAT.glassLit, mx, .35, d / 2 + .03, { cast: false });
-  for (const k of [-.5, 0, .5]) gbox(g, .08, 2.4, .14, MAT.metal, mx + k * glassW, .35, d / 2 + .04);
-  gbox(g, glassW + .1, .1, .16, MAT.metal, mx, 2.75, d / 2 + .04);
-  if (storeys > 1) vPane(g, mx, 4.6, d / 2 + .03, mw * .8, .9);
+  for (const k of [-.5, 0, .5]) gbox(g, .12, 2.4, .16, MAT.trim, mx + k * glassW, .35, d / 2 + .04);
+  gbox(g, glassW + .3, .16, .2, MAT.trim, mx, 2.75, d / 2 + .04);
+  for (const k of [-1, 1]) gbox(g, .26, H - .3, .26, MAT.trim, mx + k * mw / 2, .3, d / 2);   // cream corner pilasters
+  if (storeys > 1) vPane(g, mx, 4.6, d / 2 + .03, mw * .8, .9, 0, true);
   for (const s of [-1, 1]) for (let f = 0; f < storeys; f++) vPane(g, s * (w / 2 + .03), 1.9 + f * 3, s > 0 ? -.3 : 0, 1.3, 1.3, s * Math.PI / 2);
   if (cafe) {
     gbox(g, glassW + .6, .08, 1.6, MAT.awning, mx, 2.95, d / 2 + .75);
@@ -166,6 +170,7 @@ function vHome(c) {
   gbox(g, 1.1, 2.3, .12, MAT.darkWood, sx, .3, doorZ + .02); gbox(g, .05, .8, .06, MAT.warmGlow, sx + .38, 1.1, doorZ + .1, { cast: false });
   gbox(g, .14, .34, .1, MAT.warmGlow, sx - .8, 2, doorZ + .06, { cast: false });
   gbox(g, 1.6, .15, .7, MAT.concrete, sx, 0, doorZ + .35);
+  gbox(g, 1.5, .14, .2, MAT.trim, sx, 2.62, doorZ + .02); for (const k of [-1, 1]) gbox(g, .15, 2.4, .2, MAT.trim, sx + k * .62, .3, doorZ + .02);   // the door surround
   if (!cafe) { gbox(g, 1.9, .45, .5, MAT.concrete, mx, 0, d / 2 + .5); gbox(g, 1.8, .4, .4, MAT.hedge, mx, .45, d / 2 + .5, { cast: false }); }
 
   const eave = vRoof(g, c, H, mw, mx, sw, sx, sideH);
@@ -202,51 +207,87 @@ function vSmokePoints() {
 }
 
 function vGround() {
+  PAVE_U.uPlaza.value.set(...V_PLAZA); PAVE_U.uFount.value.set(0, 0); PAVE_U.uWalk.value[0].set(0, V_ROADS[0][1], 0, V_ROADS[1][3]); PAVE_U.uWalk.value[1].set(V_ROADS[2][0], 0, V_ROADS[3][2], 0);   // the border band, the fountain's rings of stone (paving.js: the inlay band is cut from the field's own stone), and the stone worn pale along the two roads
   plane(2 * V_ISLAND, 2 * V_ISLAND, MAT.grass, 0, 0, 0, 2);
-  plane(24, 20, MAT.paver, 0, .014, 0, 2);
-  for (const [x0, z0, x1, z1] of V_ROADS) {
-    const w = x1 - x0, d = z1 - z0, alongX = w > d;
-    plane(w, d, MAT.paver, (x0 + x1) / 2, .012, (z0 + z1) / 2, 3);
-    for (const s of [-1, 1]) box(alongX ? w : .3, .1, alongX ? .3 : d, MAT.concrete, alongX ? (x0 + x1) / 2 : (s < 0 ? x0 : x1), 0, alongX ? (s < 0 ? z0 : z1) : (z0 + z1) / 2, { cast: false });
-  }
-  for (const [x, z, w, d] of V_PATHS) plane(w, d, MAT.patch, x, .013, z, 2);   // door paths: patchwork quilt, stitched
-  const ring = new THREE.Mesh(new THREE.RingGeometry(5.4, 5.8, 48), MAT.patch); ring.rotation.x = -Math.PI / 2; ring.position.set(0, .016, 0); ring.receiveShadow = true; scene.add(ring);
+  // the paving: every area lays its own whole stones from its own edges (paving-layout.js), the fountain keeps its rings (paving.js), and the field is cut round the fountain's accent line and the planter
+  const FO = 6.95;   // where the fountain's rings end (paving.js FO)
+  const plan = {
+    plaza: V_PLAZA, roads: V_ROADS, paths: V_PATHS, bothEnds: [V_EXTRA_PATHS[0]],   // bothEnds: the path between the bridge and HQ's door is open at both ends
+    discs: [{ x: 0, z: 0, Rs: [FO], r0: 3.6, outerW: .6, ringless: true }, { x: V_PLANTER[0], z: V_PLANTER[1], Rs: [2.55, 2.6, 2.65, 2.7, 2.75, 2.8, 2.85, 2.9, 2.95, 3, 3.05, 3.1], r0: V_PLANTER[2] - .05, outerW: .6 }],
+  };
+  const layout = pavingLayout(plan);
+  buildPaving(layout, [0, 0, 3.6, FO]);
+  // the kerbs: one style along the paving's whole outline (kerb.js): flush against its edge on the grass side, round at every outside corner, mitred at every inside corner, stopping only where the paving carries on
+  // (a road's far end, a path's door end). The same carved stone as the fountain's bowls.
+  const kp = kerbPlan(layout.areas, plan);
+  buildKerbs(kerbChains(kp.areas, kp.open), stoneRoundMaterial({ c: [0, 0], n: 0 }));
   // LED lines round the plaza edge, open where the roads leave it
   const [px0, pz0, px1, pz1] = V_PLAZA, led = vGlow(V_LED_COOL);
   for (const z of [pz0 + .15, pz1 - .15]) for (const [a, b] of [[px0, -2.6], [2.6, px1]]) box(b - a, .03, .08, led, (a + b) / 2, .015, z, { cast: false });
   for (const x of [px0 + .15, px1 - .15]) for (const [a, b] of [[pz0, -2.6], [2.6, pz1]]) box(.08, .03, b - a, led, x, .015, (a + b) / 2, { cast: false });
 }
 
-// the centrepiece: a two-tier fountain with arcing jets and the Calfus coin floating above it
+// the centrepiece: a hollow stone basin holding a two-bowl fountain, with the Calfus coin floating above it.
+// One lathe profile per piece, so the lip, bowls and stem are smooth curves (no stacked cylinders, nothing poking through anything)
+const arc = (cx, cy, r, a0, a1, n = 12) => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
+const curve = (pts, n = 14) => new THREE.SplineCurve(pts.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(n).map(p => [p.x, p.y]);
+function lathe(pts, mat, seg = 96) {   // pts are [radius, height], walked so that the surface faces to the right of the walk (outwards going up)
+  const g = new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg), uv = g.attributes.uv, p = g.attributes.position;
+  // the lathe's own V runs by point index, which squeezes short stretches of the profile; take it from height + radius so the tile keeps one scale everywhere
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 8, (p.getY(i) + Math.hypot(p.getX(i), p.getZ(i))) * 1.2);
+  return add(new THREE.Mesh(g, mat));
+}
+function waterDisc(r, y) { const w = new THREE.Mesh(new THREE.CircleGeometry(r, 96), waterMat); w.rotation.x = -Math.PI / 2; w.position.y = y; scene.add(w); return w; }
+function goldRing(r, y, tube = .035) { const m = add(new THREE.Mesh(new THREE.TorusGeometry(r, tube, 8, 96), MAT.gold), null, false); m.rotation.x = Math.PI / 2; m.position.y = y; return m; }
+
 function tokenFountain(fx, fz) {
-  const basin = add(new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.35, .5, 36), MAT.stone)); basin.position.set(fx, .25, fz);
-  const pool = new THREE.Mesh(new THREE.CircleGeometry(2, 36), waterMat); pool.rotation.x = -Math.PI / 2; pool.position.set(fx, .51, fz); scene.add(pool);
-  const tier = add(new THREE.Mesh(new THREE.CylinderGeometry(.65, .85, 1, 20), MAT.stone)); tier.position.set(fx, .5, fz);
-  const top = new THREE.Mesh(new THREE.CircleGeometry(.56, 20), waterMat); top.rotation.x = -Math.PI / 2; top.position.set(fx, 1.01, fz); scene.add(top);
-  const JETS = 12, DROPS = 8, pos = new Float32Array(JETS * DROPS * 3), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const jets = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xcdeeff, size: .085, transparent: true, opacity: .85 })); jets.userData.dyn = true; jets.frustumCulled = false; scene.add(jets);
+  const root = new THREE.Group(); root.position.set(fx, 0, fz); scene.add(root);
+  const mount = (o) => { scene.remove(o); root.add(o); return o; };
+  // basin: low step, wall, a rounded coping, then the inside wall down to the floor
+  // stone like the paving: the basin is 24 stones round in courses .35 high (their joints line up with the paving's 24 wedges), the bowls and stem one carved block
+  const basinStone = stoneRoundMaterial({ c: [fx, fz], n: 24, h: .35, y0: .2, rows: [3.1, 3.5, 3.72] }), carvedStone = stoneRoundMaterial({ c: [fx, fz], n: 0 });
+  mount(lathe([[3.72, 0], [3.72, .1], [3.56, .14], [3.5, .2], [3.5, .55], ...arc(3.3, .55, .2, 0, Math.PI), [3.1, .3], [2.95, .2], [0, .2]], basinStone));
+  mount(waterDisc(3.13, .47));
+  // pedestal, lower bowl, stem, upper bowl (one profile; the inner surfaces hold the bowl water)
+  mount(lathe([[1.05, .2], [1.05, .28], [.9, .36], [.5, .44], [.34, .56], [.3, .85],
+    ...curve([[.3, .85], [.7, .92], [1.15, 1.04], [1.45, 1.2], [1.52, 1.28]], 14), ...arc(1.45, 1.28, .07, 0, Math.PI, 6),
+    ...curve([[1.38, 1.28], [1.22, 1.17], [.9, 1.08], [.55, 1.03], [.3, 1.02]], 14), [.26, 1.2], [.26, 1.4],
+    ...curve([[.26, 1.4], [.5, 1.43], [.75, 1.52], [.9, 1.66], [.96, 1.72]], 12), ...arc(.9, 1.72, .06, 0, Math.PI, 6),
+    ...curve([[.84, 1.72], [.72, 1.62], [.5, 1.55], [0, 1.52]], 10)], carvedStone));
+  mount(waterDisc(1.28, 1.19)); mount(waterDisc(.78, 1.63));
+  for (const [r, y] of [[1.45, 1.35], [.9, 1.78]]) mount(goldRing(r, y, .04));   // a gold ring along each bowl's crest
+  for (const [r, y] of [[3.1, .56]]) {   // one thin highlight at the water's edge; nothing glows outside the rim
+    const led = new THREE.Mesh(new THREE.TorusGeometry(r, .035, 6, 128), vGlow(V_LED)); led.rotation.x = Math.PI / 2; led.position.y = y; mount(led); }
+
+  // water: soft round drops on arcs. Each stream is [jets, drops per jet, r0, y0, r1, y1, lift, speed]: a drop flies from (r0, y0) to (r1, y1) bulging up by `lift`
+  const STREAMS = [[6, 8, .05, 1.66, .35, 1.66, .4, .7], [16, 4, .9, 1.72, 1.14, 1.2, .04, .5], [10, 16, 1.45, 1.3, 2.75, .48, .55, .75], [10, 8, 1.45, 1.3, 2.15, .48, .3, .6]];
+  const N = STREAMS.reduce((n, [j, d]) => n + j * d, 0), pos = new Float32Array(N * 3), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const drop = canvasTex(32, 32, (g) => { const r = g.createRadialGradient(16, 16, 0, 16, 16, 16); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.45, 'rgba(235,250,255,.85)'); r.addColorStop(1, 'rgba(235,250,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 32, 32); }, { smooth: true });
+  const jets = new THREE.Points(geo, new THREE.PointsMaterial({ map: drop, color: 0xffffff, size: .32, transparent: true, opacity: 1, depthWrite: false, fog: false, toneMapped: false }));
+  jets.userData.dyn = true; jets.frustumCulled = false; root.add(jets);
+  const RIP = 10, ripples = Array.from({ length: RIP }, (_, j) => {   // rings spreading from where the long arcs land
+    const m = new THREE.Mesh(new THREE.RingGeometry(.85, 1, 32), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, fog: false }));
+    const a = (j + .5) / RIP * Math.PI * 2; m.rotation.x = -Math.PI / 2; m.position.set(Math.cos(a) * 2.75, .485, Math.sin(a) * 2.75); m.userData.dyn = true; root.add(m); return m;
+  });
   anim.push(t => {
-    for (let j = 0; j < JETS; j++) for (let k = 0; k < DROPS; k++) {
-      const a = j / JETS * 6.283, u = (t * .9 + k / DROPS + j * .13) % 1, r = .6 + u * 1.25, i = (j * DROPS + k) * 3;
-      pos[i] = fx + Math.cos(a) * r; pos[i + 1] = 1 + Math.sin(u * Math.PI) * .8 - u * .45; pos[i + 2] = fz + Math.sin(a) * r;
+    let i = 0;
+    for (const [J, D, r0, y0, r1, y1, lift, sp] of STREAMS) for (let j = 0; j < J; j++) for (let k = 0; k < D; k++, i += 3) {
+      const a = j / J * Math.PI * 2 + r0 * 2, u = (t * sp + k / D + j * .13) % 1, r = r0 + (r1 - r0) * u;
+      pos[i] = Math.cos(a) * r; pos[i + 1] = y0 + (y1 - y0) * u + lift * 4 * u * (1 - u); pos[i + 2] = Math.sin(a) * r;
     }
     geo.attributes.position.needsUpdate = true;
+    ripples.forEach((m, j) => { const k = (t * .7 + j * .37) % 1; m.scale.setScalar(.12 + k * .6); m.material.opacity = (1 - k) * (1 - k) * .8; });
   });
+
   const coinFace = std(TX.coin, 0, { emissive: 0xffffff, emissiveMap: TX.coin, emissiveIntensity: .35, roughness: .5, metalness: .3 });
-  const coin = add(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .18, 32), [MAT.gold, coinFace, coinFace])); coin.rotation.x = Math.PI / 2;
-  const coinG = new THREE.Group(); coinG.add(coin); scene.add(coinG); coinG.userData.dyn = true;
-  anim.push(t => { coinG.position.set(fx, 2.8 + Math.sin(t * 1.4) * .15, fz); coinG.rotation.y = t * .7; });
-  colCirc(fx, fz, 2.45);
+  const coin = add(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .18, 96), [MAT.gold, coinFace, coinFace])); coin.rotation.x = Math.PI / 2;
+  const coinG = new THREE.Group(); coinG.add(coin); coinG.scale.setScalar(.88); scene.add(coinG); coinG.userData.dyn = true;
+  anim.push(t => { coinG.position.set(fx, 2.95 + Math.sin(t * 1.4) * .12, fz); coinG.rotation.y = t * .7; });
+  colCirc(fx, fz, 3.75);
   INTER.push({ x: fx, z: fz + 3, r: 1.5, label: 'The Token', verb: 'Inspect', act: () => talk('The Token', ['A giant golden token hovers over the fountain.', 'Models don\'t read words — they read tokens: small chunks of text.', '“TokenFall” might be 3 tokens. Or 2. It depends on the model!', 'Rumour: the glass bridge south of here only holds up the right answer.']) });
 }
 
-// the coin fountain stands in a round reflecting pool with a cyan LED rim
-function vFountain() {
-  const rim = add(new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.7, .42, 48), MAT.concrete)); rim.position.set(0, .21, 0);
-  const pool = new THREE.Mesh(new THREE.CircleGeometry(3.38, 48), waterMat); pool.rotation.x = -Math.PI / 2; pool.position.set(0, .4, 0); scene.add(pool);
-  const led = new THREE.Mesh(new THREE.TorusGeometry(3.62, .04, 4, 64), vGlow(V_LED)); led.rotation.x = -Math.PI / 2; led.position.set(0, .43, 0); scene.add(led);
-  tokenFountain(0, 0); COL[COL.length - 1].r = 3.7;
-}
+function vFountain() { tokenFountain(0, 0); }
 
 function vRiverAndBridge() {
   const [x0, z0, x1, z1] = V_RIVER, zc = (z0 + z1) / 2, w = z1 - z0;
@@ -263,7 +304,7 @@ function vRiverAndBridge() {
     box(.05, .04, w + 1.4, vGlow(V_LED_COOL), s * 2.38, .22, zc, { cast: false });
     colBox(s * 2.45 - .12, z0 - .7, s * 2.45 + .12, z1 + .7);
   }
-  for (let i = 0; i < 160; i++) { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = (rnd() < .5 ? z0 : z1) + rr(-.5, .5); if (Math.abs(x) > 3.4) box(.06, rr(.7, 1.5), .06, MAT.leafB, x, 0, z, { cast: false }); }
+  for (let i = 0; i < 70; i++) { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = (rnd() < .5 ? z0 : z1) + rr(-.5, .5); if (Math.abs(x) > 3.4) box(.06, rr(.7, 1.5), .06, MAT.leafB, x, 0, z, { cast: false }); }
 }
 
 function vPond() {
@@ -272,7 +313,7 @@ function vPond() {
   const water = new THREE.Mesh(new THREE.CircleGeometry(r, 40), waterMat); water.rotation.x = -Math.PI / 2; water.position.set(px, .05, pz); scene.add(water);
   colCirc(px, pz, r - .2);
   for (let i = 0; i < 22; i++) { const a = rnd() * 6.283, d = rr(1.2, r - 1); const p = add(new THREE.Mesh(new THREE.CircleGeometry(rr(.3, .55), 10, .4, 5.6), MAT.leafA), null, false); p.rotation.x = -Math.PI / 2; p.position.set(px + Math.cos(a) * d, .07, pz + Math.sin(a) * d); }
-  for (let i = 0; i < 120; i++) { const a = rnd() * 6.283, d = r + rr(-.4, .8), x = px + Math.cos(a) * d, zz = pz + Math.sin(a) * d; if (!(x < px - r + 1.5 && Math.abs(zz - pz) < 1.6)) box(.06, rr(.8, 1.6), .06, MAT.leafB, x, 0, zz, { cast: false }); }
+  for (let i = 0; i < 50; i++) { const a = rnd() * 6.283, d = r + rr(-.4, .8), x = px + Math.cos(a) * d, zz = pz + Math.sin(a) * d; if (!(x < px - r + 1.5 && Math.abs(zz - pz) < 1.6)) box(.06, rr(.8, 1.6), .06, MAT.leafB, x, 0, zz, { cast: false }); }
   for (let i = 0; i < 9; i++) { const a = rnd() * 6.283, m = add(new THREE.Mesh(jitterSphere(rr(.35, .7), 1), MAT.stone)); m.position.set(px + Math.cos(a) * (r + .6), .15, pz + Math.sin(a) * (r + .6)); }
   box(6, .16, 1.8, MAT.wood, px - r + 2.6, .1, pz);
   for (const dx of [0, 2.6, 5.2]) for (const s of [-1, 1]) box(.16, .9, .16, MAT.darkWood, px - r + dx, -.4, pz + s * .85);
@@ -291,8 +332,8 @@ function vStall(x, z, ry, name, colour, lines) {
   for (let i = 0; i < 3; i++) { const p = add(new THREE.Mesh(new THREE.CylinderGeometry(.13, .11, .22, 10), MAT.metal), g); p.position.set(-.8 + i * .8, 1.19, .1); }
   gbox(g, .5, .32, .04, MAT.screen, 1.1, 1.08, .66, { cast: false });
   const s = Math.sin(ry), c = Math.cos(ry);
-  signBoard(name, x - s * .7, 2.95, z - c * .7, 2.6, .44, ry, { size: 18, bg: '#2a1a12', edge: '#120a06', color: '#ffe3a0', w: 220, h: 40 });
-  colBox(...vFootprint(x, z, 3.3, 1.9, ry));
+  signBoard(name, x - s * .7, 2.95, z - c * .7, 2.6, .44, ry, { size: 18, bg: colour, w: 220, h: 40 });
+  colBox(...vFootprint(x, z, 3.3, 1.9, ry)); contact(x, z, 2.2, 1.5, ry);
   INTER.push({ x: x + s * 1.7, z: z + c * 1.7, r: 1.4, label: name, verb: 'Order', act: () => talk(name, lines) });
 }
 
@@ -338,7 +379,7 @@ function vFence(x0, z0, x1, z1) {
 function vLamp(x, z, lit) {
   box(.3, .14, .3, MAT.concrete, x, 0, z); box(.1, 4.2, .1, MAT.metal, x, .14, z);
   box(.9, .08, .1, MAT.metal, x + .4, 4.26, z); box(.7, .1, .34, MAT.metal, x + .75, 4.2, z); box(.6, .03, .28, vGlow(V_LED_COOL), x + .75, 4.17, z, { cast: false });
-  colCirc(x, z, .2);
+  colCirc(x, z, .2); contact(x, z, .75); lampPool(x + .75, z + .1, 3.6, lit ? 1 : .5);
   if (lit) pointLight('lobby', 0xffe2b8, 1.6, 9, x + .75, 3.9, z + .1);
 }
 function vPathLights() {
@@ -354,7 +395,7 @@ function vPathLights() {
 
 // a hologram: cyan text floating over a small emitter, readable from both sides
 function vHolo(x, z, ry, text) {
-  const tex = canvasTex(160, 32, (g) => { g.font = '600 18px "Pixelify Sans", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(143,232,255,.22)'; g.fillRect(0, 4, 160, 24); g.fillStyle = '#bff4ff'; g.fillText(text, 80, 17); }, { nearest: true });
+  const tex = canvasTex(160, 32, (g) => { g.font = `600 18px ${SIGN_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(143,232,255,.22)'; g.fillRect(0, 4, 160, 24); g.fillStyle = '#bff4ff'; g.fillText(text, 80, 17); }, { nearest: true });
   const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false });
   const g = new THREE.Group(); g.userData.dyn = true; scene.add(g);
   for (const s of [0, Math.PI]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(3, .6), m); p.rotation.y = s; g.add(p); }
@@ -364,9 +405,9 @@ function vHolo(x, z, ry, text) {
 
 // an info screen's face: a cyan title, then the body word-wrapped and shrunk until every line fits the screen
 function vTotemTex(title, body) {
-  const W = 128, H = 160, pad = 8, font = (px) => `600 ${px}px "Pixelify Sans", monospace`;
+  const W = 128, H = 160, pad = 8, font = (px) => `600 ${px}px ${SIGN_FONT}`;
   return canvasTex(W, H, (g) => {
-    g.fillStyle = '#15171d'; g.fillRect(0, 0, W, H); g.fillStyle = '#2c303a'; g.fillRect(0, 0, W, 3); g.fillRect(0, H - 3, W, 3);
+    g.fillStyle = PAL.plum; g.fillRect(0, 0, W, H); g.fillStyle = PAL.paint; g.fillRect(0, 0, W, 3); g.fillRect(0, H - 3, W, 3);
     g.textAlign = 'center'; g.textBaseline = 'middle';
     let tp = 22; g.font = font(tp); while (tp > 10 && g.measureText(title).width > W - pad * 2) g.font = font(--tp);
     g.fillStyle = '#8fe8ff'; g.fillText(title, W / 2, 22);
@@ -384,17 +425,14 @@ function vTotem(x, z, title, body, name, talkLines) {
   const t = vTotemTex(title, body), m = new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 1.4, roughness: .5 });
   const scr = add(new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.6), m), null, false); scr.position.set(x, 1.4, z + .12);
   box(1.3, .05, .05, vGlow(V_LED), x, 2.3, z + .1, { cast: false });
-  colBox(x - .7, z - .15, x + .7, z + .15);
+  colBox(x - .7, z - .15, x + .7, z + .15); contact(x, z, 1.15, .6);
   INTER.push({ x, z: z + 1.2, r: 1.4, label: name, verb: 'Read', act: () => talk(name, talkLines) });
 }
 
 function vEvBay() {
   const ch = (x, z) => { box(.4, 1.5, .3, MAT.metal, x, 0, z); box(.3, .3, .04, MAT.screen, x, 1, z + .16, { cast: false }); box(.42, .06, .32, vGlow(V_LED), x, 1.5, z, { cast: false }); colBox(x - .25, z - .2, x + .25, z + .2); };
   ch(29.9, -7.2);
-  const g = vGroup(32.3, -6.2, Math.PI / 2), paint = new THREE.MeshStandardMaterial({ color: 0x2f8f8a, roughness: .35, metalness: .4 });
-  gbox(g, 1.8, .55, 4, paint, 0, .3, 0); gbox(g, 1.6, .5, 2.2, paint, 0, .85, -.2); gbox(g, 1.62, .38, 2.22, vGlass(), 0, .9, -.2, { cast: false });
-  for (const sx of [-.85, .85]) for (const sz of [-1.3, 1.3]) { const w = add(new THREE.Mesh(new THREE.CylinderGeometry(.32, .32, .22, 10), MAT.metal), g); w.rotation.z = Math.PI / 2; w.position.set(sx, .32, sz); }
-  gbox(g, 1.4, .08, .05, vGlow(0xfff0c0), 0, .55, 2.01, { cast: false }); gbox(g, 1.4, .08, .05, vGlow(0xff3020), 0, .55, -2.01, { cast: false });
+  carBody(vGroup(32.3, -6.2, Math.PI / 2), PAL.teal);
   const cable = new THREE.MeshStandardMaterial({ color: V_LED, emissive: V_LED, emissiveIntensity: 1 });
   box(.06, .06, 1.4, cable, 30.4, .9, -6.6, { cast: false }).userData.dyn = true;
   anim.push((t) => { cable.emissiveIntensity = .6 + (Math.sin(t * 4) * .5 + .5) * 1.4; });
@@ -468,30 +506,62 @@ function vFoliage() {
     if ((edge || rnd() < .3) && vClear(x, z, .7)) { bush(x, z, rr(.7, 1.1), leaves[rnd() * 3 | 0]); n++; }
   }
   for (let i = 0; i < 30; i++) { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); if (vClear(x, z, .8)) { const m = add(new THREE.Mesh(jitterSphere(rr(.4, .9), 1), MAT.stone)); m.position.set(x, .2, z); colCirc(x, z, .5); } }
-  for (const [x, z] of [[8.4, 6.4]]) {
-    const bed = add(new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.85, .45, 24), MAT.concrete)); bed.position.set(x, .22, z);
+  for (const [x, z] of [V_PLANTER]) {
+    // a lathe, so the rim has the kerb's rounded top edge (radius .07, in the same steps)
+    const bed = lathe([[1.85, 0], [1.8, .38], ...arc(1.73, .38, .07, 0, Math.PI / 2, 6), [0, .45]], stoneRoundMaterial({ c: [x, z], n: 12, h: .45, y0: 0, rows: [.9, 1.35, 1.8] }), 24); bed.position.set(x, 0, z);
     bush(x - .4, z + .1, 1, MAT.leafC); tree(x + .3, z - .2, .7, MAT.blossom, false); colCirc(x, z, 1.9);
   }
 }
 
-function vGrass() {
-  // greenery gathers in lush patches and thins out between them
-  const patch = (x, z, o = 0) => { const v = .5 + .5 * Math.sin((x + o) * .21 + Math.sin(z * .17) * 2) * Math.sin(z * .19 + (x + o) * .07); return v * v; };
-  const lawn = (o) => () => { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = rr(-V_ISLAND + 1, V_ISLAND - 1); return vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)) || rnd() > .12 + .9 * patch(x, z, o) ? null : [x, z]; };
-  scatter(TX.grassTuft, 2300, .6, lawn(0), true);
-  scatter(TX.clover, 700, .5, lawn(31), true);
-  const fern = canvasTex(32, 32, (g, W, H) => {   // three arching fronds with rounded leaflets
-    g.fillStyle = '#6c9658';
-    for (const [lean, s] of [[-9, .9], [0, 1.1], [9, .9]]) for (let k = 1; k <= 7; k++) {
-      const t = k / 8, x = 16 + lean * t * t * 1.4, y = H - 2 - 26 * s * t, a = lean * .04 * k;
-      for (const side of [-1, 1]) { g.beginPath(); g.ellipse(x + side * 3, y, 3.4 * (1 - t * .5), 1.5, side * .5 + a, 0, 7); g.fill(); }
+function vGrass(edgeAt) {
+  // Clumps sit where something meets the lawn: just off a path, a wall, a fence, a trunk or a prop (the shade map says where), in small deliberate groups at least 2.4 m apart, with open grass between.
+  // Each group is two blade clumps; every third one also has clover, a flower colour (cream, blush, butter, lilac in turn) or a fern. About half the count the lawn had before.
+  const open = (x, z) => !(vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)));
+  const spots = [];
+  for (let i = 0; i < 9000 && spots.length < 110; i++) {
+    const x = rr(-V_ISLAND + 2, V_ISLAND - 2), z = rr(-V_ISLAND + 2, V_ISLAND - 2), e = edgeAt(x, z);
+    if (e < .3 || e > .85 || !open(x, z) || spots.some((q) => (q[0] - x) ** 2 + (q[1] - z) ** 2 < 5.8)) continue;
+    spots.push([x, z]);
+  }
+  // pick(): `per` plants close round each spot in turn (a few stay put if the ground there is not open)
+  const around = (pts, per, spread) => { let k = 0; return () => { const m = pts[(k++ / per | 0) % pts.length]; if (!m) return null; const a = rnd() * 6.283, d = spread * Math.sqrt(rnd()), x = m[0] + Math.cos(a) * d, z = m[1] + Math.sin(a) * d; return open(x, z) ? [x, z] : null; }; };
+  const every = (n, r) => spots.filter((_, i) => i % n === r);
+  scatter(TX.grassTuft, spots.length * 2, .75, around(spots, 2, .55), true, true);
+  scatter(TX.clover, every(3, 1).length * 2, .45, around(every(3, 1), 2, .5), true);
+  scatter(TX.fern, every(3, 2).length, .6, around(every(3, 2), 1, .3), true, true);
+  const fl = every(3, 0); TX.flowers.forEach((ft, c) => { const pts = fl.filter((_, i) => i % 4 === c); scatter(ft, pts.length * 4, .5, around(pts, 4, .5)); });
+}
+
+// Soft shade where the lawn meets something: paths and the plaza, walls, trunks and posts (every collider), the river and pond. Baked once, after the lobby is dressed, into the map the grass shader reads
+// (GRASS_U.uEdge, geometry.js): 1 at the edge, easing to 0 a metre or two out, so detail and shade gather there and the open middle stays calm.
+function vGrassShade() {
+  const N = 384, S = 2 * V_ISLAND, k = N / S, a = new Float32Array(N * N);
+  const splat = (x0, z0, x1, z1, R, amp, dist) => {   // dist(x, z): how far a point is from the shape (0 inside); x0..z1 is its bounding box
+    const i0 = Math.max(0, Math.floor((x0 - R + V_ISLAND) * k)), i1 = Math.min(N - 1, Math.ceil((x1 + R + V_ISLAND) * k));
+    const j0 = Math.max(0, Math.floor((z0 - R + V_ISLAND) * k)), j1 = Math.min(N - 1, Math.ceil((z1 + R + V_ISLAND) * k));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const t = 1 - dist((i + .5) / k - V_ISLAND, (j + .5) / k - V_ISLAND) / R;
+      if (t > 0) a[j * N + i] = Math.max(a[j * N + i], amp * t * t * (3 - 2 * t));
     }
-  }, { smooth: true });
-  scatter(fern, 240, .62, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 2.5) && !vPaved(x, z, .6) && !vWater(x, z, .2) && !blocked(x, z, -.1) ? [x, z] : null; }, true);
-  TX.flowers.forEach((ft, i) => scatter(ft, 160, .5, () => { const x = rr(-V_HALF, V_HALF), z = rr(-V_HALF, V_HALF); return vPaved(x, z, 1.8) && !vPaved(x, z, .5) && !vWater(x, z) && !blocked(x, z, -.1) && rnd() < .15 + .9 * patch(x, z, 60 + i * 23) ? [x, z] : null; }));
+  };
+  const rect = (x0, z0, x1, z1, R, amp) => splat(x0, z0, x1, z1, R, amp, (x, z) => Math.hypot(Math.max(x0 - x, 0, x - x1), Math.max(z0 - z, 0, z - z1)));
+  const disc = (cx, cz, r, R, amp) => splat(cx - r, cz - r, cx + r, cz + r, R, amp, (x, z) => Math.max(0, Math.hypot(x - cx, z - cz) - r));
+  rect(...V_PLAZA, 1.7, 1); for (const r of V_ROADS) rect(...r, 1.7, 1);
+  for (const [px, pz, w, d] of V_PATHS) rect(px - w / 2, pz - d / 2, px + w / 2, pz + d / 2, 1.4, .9);
+  rect(...V_RIVER, 1.3, .8); disc(V_POND[0], V_POND[1], V_POND[2], 1.3, .8);
+  for (const c of COL) {
+    if (c.r !== undefined) disc(c.x, c.z, c.r, 1.1, .85);
+    else if (c.ex !== undefined) disc(c.ex, c.ez, Math.min(c.rx, c.rz), 1.1 + Math.abs(c.rx - c.rz), .85);
+    else rect(c.x0, c.z0, c.x1, c.z1, Math.min(c.x1 - c.x0, c.z1 - c.z0) > 3 ? 1.8 : 1.1, c.x1 - c.x0 > 3 ? 1 : .85);
+  }
+  const px = new Uint8Array(N * N * 4); for (let i = 0; i < N * N; i++) px[i * 4] = Math.round(255 * a[i]);
+  const tex = new THREE.DataTexture(px, N, N, THREE.RGBAFormat); tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.needsUpdate = true;
+  GRASS_U.uEdge.value = tex; GRASS_U.uBox.value.set(-V_ISLAND, -V_ISLAND, S);
+  return (x, z) => { const i = Math.floor((x + V_ISLAND) * k), j = Math.floor((z + V_ISLAND) * k); return i < 0 || j < 0 || i >= N || j >= N ? 0 : a[j * N + i]; };   // the shade at a point, 0-1
 }
 
 function buildVillageLobby() {
+  contactOn = true;   // props.js: record contact shading and lamp pools while the lobby builds
   vGround();
   WALK.push([-V_HALF, -47.5, V_HALF, V_HALF]);
   vRiverAndBridge();
@@ -523,7 +593,8 @@ function buildVillageLobby() {
   vRobots();
   vFoliage();
   vSmokePoints();
-  vGrass();
+  vGrass(vGrassShade());
+  flushContacts();
   if (new URLSearchParams(location.search).get('board') === 'sample') useSampleBoard();
   // everything built after the lobby continues from a fixed seed, so redesigning the lobby never reshuffles the other zones
   seed = SEED_AFTER_LOBBY;

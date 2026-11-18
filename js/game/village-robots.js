@@ -74,14 +74,14 @@ function robotBarista(x, z) {
     for (let i = 0; i < 5; i++) { const f = (t * .6 + i / 5) % 1; sp.setXYZ(i, cup.position.x + Math.sin(t * 2 + i) * .03, cup.position.y + .08 + f * .35, cup.position.z); }
     sp.needsUpdate = true; steam.visible = u >= 4.4;
   });
-  colBox(x - 1.25, z - .35, x + 1.25, z + .35);
+  colBox(x - 1.25, z - .35, x + 1.25, z + .35); contact(x, z, 1.85, .85);
 }
 
 // two arms play chess on a plaza table: each turn one arm picks up a piece and sets it on a free square
 function robotChess(x, z) {
   const g = vGroup(x, z), top = .78, sq = .1;
   gbox(g, 1.6, .06, 1, MAT.wood, 0, top - .06, 0); gbox(g, .12, top - .06, .12, MAT.metal, 0, 0, 0); gbox(g, .7, .04, .7, MAT.metal, 0, 0, 0);
-  const boardTex = canvasTex(8, 8, (c) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { c.fillStyle = (i + j) % 2 ? '#3a2e24' : '#e8dcc4'; c.fillRect(i, j, 1, 1); } }, { nearest: true });
+  const boardTex = canvasTex(8, 8, (c) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { c.fillStyle = (i + j) % 2 ? PAL.woodDeep : '#e8dcc4'; c.fillRect(i, j, 1, 1); } }, { nearest: true });
   const board = new THREE.Mesh(new THREE.PlaneGeometry(sq * 8, sq * 8), std(boardTex, 0)); board.rotation.x = -Math.PI / 2; board.position.y = top + .002; g.add(board);
   const sqPos = (i, j) => new THREE.Vector3((i - 3.5) * sq, top, (j - 3.5) * sq);
   const light = vOnce('chessW', () => new THREE.MeshStandardMaterial({ color: 0xf4efe6, roughness: .4 })), dark = vOnce('chessB', () => new THREE.MeshStandardMaterial({ color: 0x23262c, roughness: .4 }));
@@ -116,7 +116,7 @@ function robotChess(x, z) {
     else if (f >= .75) p.position.copy(move.to).add(new THREE.Vector3(0, .04, 0));
   });
   for (const s of [-1, 1]) { const st = add(new THREE.Mesh(new THREE.CylinderGeometry(.13, .15, .06, 10), MAT.metal), g); st.position.set(s * .62, top - .09, 0); }
-  colCirc(x, z, .95);
+  colCirc(x, z, .95); contact(x, z, 1.3, 1.0);
 }
 
 // a round sweeper robot with spinning brushes, working up and down the south road
@@ -137,19 +137,19 @@ function robotSweeper(x, z0, z1) {
 function smartLockers(x, z) {
   const g = vGroup(x, z), w = 3, h = 2.1;
   gbox(g, w + .2, .15, .8, MAT.concrete, 0, 0, 0); gbox(g, w, h, .6, MAT.metal, 0, .15, 0);
-  const doorMat = vOnce('lockerDoor', () => new THREE.MeshStandardMaterial({ color: 0x5a616c, roughness: .4, metalness: .3 }));
+  const doorMats = ['mint', 'sky', 'peach', 'lilac'].map((n) => vOnce('locker_' + n, () => new THREE.MeshStandardMaterial({ color: PAL[n], roughness: .6 })));   // a pastel door per column
   let open = null;
   for (let c = 0; c < 4; c++) for (let r = 0; r < 3; r++) {
     const dx = -w / 2 + .38 + c * .75, dy = .3 + r * .62;
     if (c === 1 && r === 0) {
       const hinge = new THREE.Group(); hinge.position.set(dx - .34, dy, .31); hinge.userData.dyn = true; g.add(hinge);
-      box(.68, .56, .04, doorMat, .34, 0, 0, { p: hinge }); box(.04, .04, .02, vGlow(0x7dff8a), .58, .26, .03, { p: hinge, cast: false });
+      box(.68, .56, .04, doorMats[c], .34, 0, 0, { p: hinge }); box(.04, .04, .02, vGlow(0x7dff8a), .58, .26, .03, { p: hinge, cast: false });
       open = hinge; continue;
     }
-    gbox(g, .68, .56, .04, doorMat, dx, dy, .31); gbox(g, .04, .04, .02, vGlow(V_LED), dx + .24, dy + .26, .34, { cast: false });
+    gbox(g, .68, .56, .04, doorMats[c], dx, dy, .31); gbox(g, .04, .04, .02, vGlow(V_LED), dx + .24, dy + .26, .34, { cast: false });
   }
   const sign = ledSign(['SMART LOCKERS'], '#8fe8ff', 0, 0, 0, 2.2, .36); g.add(sign); sign.position.set(0, h + .4, .2);
   gbox(g, w, .05, .05, vGlow(V_LED), 0, h + .13, .31, { cast: false });
   anim.push((t) => { const u = t % V_BOT_CYCLE, f = u < 21 ? 0 : u < 22 ? u - 21 : u < 26 ? 1 : u < 27 ? 27 - u : 0; open.rotation.y = -f * 1.6; });
-  colBox(x - w / 2 - .1, z - .4, x + w / 2 + .1, z + .4);
+  colBox(x - w / 2 - .1, z - .4, x + w / 2 + .1, z + .4); contact(x, z, w / 2 + .5, 1.05);
 }

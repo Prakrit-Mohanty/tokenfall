@@ -41,6 +41,13 @@ function travel(p) {
 const camTarget = new THREE.Vector3(), tmp = new THREE.Vector3();
 function snapCamera() { camTarget.set(hero.x, CAM_VIEWS[camView].y, hero.y); camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget); }
 
+// V: ease between the two views (offset and field of view) instead of cutting; held cameras (a minigame's) and reduced motion cut at once
+function setCamView(i) {
+  camView = i; const v = CAM_VIEWS[i], ms = camFx.on ? 0 : 520;
+  tween(CAM_OFF, { x: v.off.x, y: v.off.y, z: v.off.z }, ms);
+  tween(camera, { fov: v.fov }, ms, { onUpdate: () => camera.updateProjectionMatrix() });
+}
+
 // ================= main loop =================
 let hero, nearest = null, nearP = null, last = performance.now(), T = 0, chatterT = 4000;
 function frame(now) {
@@ -48,8 +55,9 @@ function frame(now) {
   if (!document.hidden) { ftAcc += raw; ftN++; }
   if (ftAcc > 2500) {
     const avg = ftAcc / ftN; ftAcc = ftN = 0;
-    if (avg > 24 && resScale > .55) { resScale -= .15; resize(); } else if (avg < 12 && resScale < 1) { resScale = Math.min(1, resScale + .15); resize(); }
+    if (avg > 24 && resScale > .55) { resScale -= .15; resize(); } else if (avg < 12 && resScale < RES_MAX) { resScale = Math.min(RES_MAX, resScale + .15); resize(); }
   } T += dt / 1000; timeU.value = T; final.u.time.value = T % 100;
+  anime.engine.update();   // every tween (daylight, camera view, the leaderboard card) steps here, on the frame it is drawn
   // hero
   const typing = document.activeElement === chatIn;
   hero.setInput(dialog || traveling || typing || playerLocked ? { up: false, down: false, left: false, right: false, run: false } : {

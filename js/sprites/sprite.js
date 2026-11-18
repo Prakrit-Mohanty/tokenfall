@@ -17,6 +17,8 @@ class SpriteCharacter {
     this.y = opts.y ?? 0;
     this.dir = opts.dir ?? 'down';
     this.speed = opts.speed ?? 200;   // walk speed, px per second (at scale 1)
+    this.animRef = opts.animRef ?? this.speed;   // the walk speed the walk cycle was drawn for: frames play faster or slower than that, so feet never skate
+    this.mult = 1;         // speed multiplier now (eases toward walk / run / crouch, so a run builds up instead of snapping)
     this.scale = opts.scale ?? 1;
     this.input = { up: false, down: false, left: false, right: false, run: false };
     this.moving = false;
@@ -57,9 +59,10 @@ class SpriteCharacter {
       if (this.pose === 'faint' || (this.pose === 'crouch' && !this.has('sneak'))) this.pose = null;
       if (this.oneShot && this.oneShot.name !== 'jump') this.oneShot = null;
       const ride = i.run && this.has('ride');
-      const mult = this.pose === 'crouch' ? 0.45 : i.run ? (ride ? 2.6 : 1.8) : 1;
+      const want = this.pose === 'crouch' ? 0.45 : i.run ? (ride ? 2.6 : 1.8) : 1;
+      this.mult += (want - this.mult) * Math.min(1, dt / 160);
       const len = Math.hypot(dx, dy);
-      const v = this.speed * this.scale * mult * dt / 1000;
+      const v = this.speed * this.scale * this.mult * dt / 1000;
       this.x += dx / len * v;
       this.y += dy / len * v;
       this.dir = dx !== 0 ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
@@ -68,7 +71,7 @@ class SpriteCharacter {
         this.x = Math.max(m, Math.min(bounds.width - m, this.x));
         this.y = Math.max(170 * this.scale, Math.min(bounds.height - 10 * this.scale, this.y));
       }
-    }
+    } else this.mult = 1;   // from a standstill every move starts at walking pace
     if (this.oneShot) {
       this.oneShot.t += dt;
       if (this.oneShot.t >= this.oneShot.until) this.oneShot = null;
@@ -80,7 +83,10 @@ class SpriteCharacter {
     else if (this.pose === 'crouch') next = this.moving ? 'sneak' : 'crouch';
     else if (this.moving) next = i.run ? (this.has('ride') ? 'ride' : 'run') : 'walk';
     else next = 'idle';
-    if (next !== this.anim) { this.anim = next; this.t = 0; } else this.t += dt;
+    // a gait's frames advance with the ground actually covered: each gait was drawn for animRef times its multiplier
+    const gait = { walk: 1, run: 1.8, ride: 2.6, sneak: 0.45 }[next];
+    const rate = gait && this.moving ? Math.max(0.6, Math.min(1.6, this.speed * this.mult / (this.animRef * gait))) : 1;
+    if (next !== this.anim) { this.anim = next; this.t = 0; } else this.t += dt * rate;
   }
 
   /** current { row, col, lift } — useful if you render with CSS or a game engine */

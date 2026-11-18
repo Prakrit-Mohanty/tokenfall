@@ -69,45 +69,45 @@
       const F = N * FRAME, U = (N - 2 * F) / 100, X = (v) => F + v * U;
       let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);   // a fixed grain, the same every time
       const arrow = (x, y, dx, dy, s) => { const a = Math.atan2(dy, dx), p = (k, d) => [x + Math.cos(a + k) * d * s, y + Math.sin(a + k) * d * s]; g.beginPath(); g.moveTo(x, y); g.lineTo(...p(2.7, 1.5)); g.lineTo(...p(-2.7, 1.5)); g.closePath(); g.fill(); };
-      g.fillStyle = '#17120f'; g.fillRect(0, 0, N, N);   // frame: black wood with a faint grain
+      g.fillStyle = PAL.brown; g.fillRect(0, 0, N, N);   // frame: black wood with a faint grain
       g.strokeStyle = 'rgba(255,255,255,.035)'; g.lineWidth = 1;
       for (let k = 0; k < 260; k++) { const v = rnd() * N, w = rnd() * F; g.beginPath(); g.moveTo(v, w); g.lineTo(v + (rnd() - 0.5) * 40, w + 3); g.stroke(); g.beginPath(); g.moveTo(w, v); g.lineTo(w + 3, v + (rnd() - 0.5) * 40); g.stroke(); g.beginPath(); g.moveTo(v, N - w); g.lineTo(v + (rnd() - 0.5) * 40, N - w - 3); g.stroke(); g.beginPath(); g.moveTo(N - w, v); g.lineTo(N - w - 3, v + (rnd() - 0.5) * 40); g.stroke(); }
       g.strokeStyle = '#cdb98c'; g.lineWidth = N * 0.0025; g.strokeRect(F * 0.55, F * 0.55, N - F * 1.1, N - F * 1.1);   // a thin inlay round the frame
       const surf = g.createRadialGradient(N / 2, N / 2, N * 0.05, N / 2, N / 2, N * 0.55); surf.addColorStop(0, '#d8bc8e'); surf.addColorStop(1, '#c4a174');   // playing surface: pale varnished wood
       g.fillStyle = surf; g.fillRect(F, F, N - 2 * F, N - 2 * F);
       for (let k = 0; k < 520; k++) { const x = F + rnd() * (N - 2 * F), y = F + rnd() * (N - 2 * F); g.strokeStyle = `rgba(120,80,40,${0.04 + rnd() * 0.06})`; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (rnd() - 0.5) * 6, y + 30 + rnd() * 90); g.stroke(); }
-      g.strokeStyle = '#2a1d12'; g.lineWidth = N * 0.003; g.strokeRect(F + 1, F + 1, N - 2 * F - 2, N - 2 * F - 2);
+      g.strokeStyle = PAL.brown; g.lineWidth = N * 0.003; g.strokeRect(F + 1, F + 1, N - 2 * F - 2, N - 2 * F - 2);
       // the baselines: the south one is where the striker starts (y = BASE_Y); the same drawing turned for the other three sides
       for (let side = 0; side < 4; side++) {
         g.save(); g.translate(N / 2, N / 2); g.rotate((side * Math.PI) / 2); g.translate(-N / 2, -N / 2);
         const y0 = CFG.BASE_Y - 3.6, y1 = CFG.BASE_Y + 3.6;
-        g.strokeStyle = '#17120f'; g.lineWidth = U * 0.55; g.beginPath(); g.moveTo(X(CFG.X_MIN), X(y1)); g.lineTo(X(CFG.X_MAX), X(y1)); g.stroke();
+        g.strokeStyle = PAL.brown; g.lineWidth = U * 0.55; g.beginPath(); g.moveTo(X(CFG.X_MIN), X(y1)); g.lineTo(X(CFG.X_MAX), X(y1)); g.stroke();
         g.lineWidth = U * 0.28; g.beginPath(); g.moveTo(X(CFG.X_MIN), X(y0)); g.lineTo(X(CFG.X_MAX), X(y0)); g.stroke();
         for (const bx of [CFG.X_MIN, CFG.X_MAX]) {   // the end discs: red, outlined
-          g.beginPath(); g.arc(X(bx), X(CFG.BASE_Y), U * 3.5, 0, 6.2832); g.fillStyle = '#d42f2b'; g.fill(); g.lineWidth = U * 0.3; g.strokeStyle = '#17120f'; g.stroke();
+          g.beginPath(); g.arc(X(bx), X(CFG.BASE_Y), U * 3.5, 0, 6.2832); g.fillStyle = '#d42f2b'; g.fill(); g.lineWidth = U * 0.3; g.strokeStyle = PAL.brown; g.stroke();
         }
         g.restore();
       }
       // the diagonals: a line out to each pocket with an arrowhead, and a curved double arrow round its inner end
       for (let c = 0; c < 4; c++) {
         g.save(); g.translate(N / 2, N / 2); g.rotate((c * Math.PI) / 2); g.translate(-N / 2, -N / 2);
-        g.strokeStyle = '#2a1d12'; g.fillStyle = '#2a1d12'; g.lineWidth = U * 0.22;
+        g.strokeStyle = PAL.brown; g.fillStyle = PAL.brown; g.lineWidth = U * 0.22;
         g.beginPath(); g.moveTo(X(9), X(9)); g.lineTo(X(35), X(35)); g.stroke(); arrow(X(9), X(9), -1, -1, U * 1.1);
         g.beginPath(); g.arc(X(33.5), X(36.5), U * 4.4, 0.35, 5.55); g.stroke();
         arrow(X(33.5) + Math.cos(0.35) * U * 4.4, X(36.5) + Math.sin(0.35) * U * 4.4, 0.9, 0.3, U * 0.9); arrow(X(33.5) + Math.cos(5.55) * U * 4.4, X(36.5) + Math.sin(5.55) * U * 4.4, 0.3, -0.9, U * 0.9);
         g.restore();
       }
       // the centre: a circle, an eight-point star (long dark diagonals, short red axes) and a red heart
-      g.strokeStyle = '#2a1d12'; g.lineWidth = U * 0.25; g.beginPath(); g.arc(X(50), X(50), U * 11.4, 0, 6.2832); g.stroke(); g.beginPath(); g.arc(X(50), X(50), U * 10.4, 0, 6.2832); g.stroke();
+      g.strokeStyle = PAL.brown; g.lineWidth = U * 0.25; g.beginPath(); g.arc(X(50), X(50), U * 11.4, 0, 6.2832); g.stroke(); g.beginPath(); g.arc(X(50), X(50), U * 10.4, 0, 6.2832); g.stroke();
       const kite = (ang, len, half, col) => { g.save(); g.translate(X(50), X(50)); g.rotate(ang); g.fillStyle = col; g.beginPath(); g.moveTo(0, 0); g.lineTo(len * U * 0.28, half * U); g.lineTo(len * U, 0); g.lineTo(len * U * 0.28, -half * U); g.closePath(); g.fill(); g.restore(); };
       for (let k = 0; k < 4; k++) kite(k * Math.PI / 2, 9.4, 1.1, '#c8302c');
-      for (let k = 0; k < 4; k++) kite(Math.PI / 4 + k * Math.PI / 2, 10.2, 1.6, '#17120f');
-      g.beginPath(); g.arc(X(50), X(50), U * 2.6, 0, 6.2832); g.fillStyle = '#d42f2b'; g.fill(); g.lineWidth = U * 0.3; g.strokeStyle = '#17120f'; g.stroke();
+      for (let k = 0; k < 4; k++) kite(Math.PI / 4 + k * Math.PI / 2, 10.2, 1.6, PAL.brown);
+      g.beginPath(); g.arc(X(50), X(50), U * 2.6, 0, 6.2832); g.fillStyle = '#d42f2b'; g.fill(); g.lineWidth = U * 0.3; g.strokeStyle = PAL.brown; g.stroke();
       // pockets: a plain dark hole with a thin brass lip, tucked into the corners exactly where the physics puts them
       for (const [cx, cy] of P.POCKETS) {
-        g.beginPath(); g.arc(X(cx), X(cy), U * (CFG.R_POCKET + 0.6), 0, 6.2832); g.fillStyle = '#3b2c1c'; g.fill();
+        g.beginPath(); g.arc(X(cx), X(cy), U * (CFG.R_POCKET + 0.6), 0, 6.2832); g.fillStyle = PAL.brown; g.fill();
         g.beginPath(); g.arc(X(cx), X(cy), U * (CFG.R_POCKET + 0.15), 0, 6.2832); g.fillStyle = '#a98f58'; g.fill();
-        const hole = g.createRadialGradient(X(cx), X(cy), U, X(cx), X(cy), U * CFG.R_POCKET); hole.addColorStop(0, '#0d0a07'); hole.addColorStop(1, '#241a11');
+        const hole = g.createRadialGradient(X(cx), X(cy), U, X(cx), X(cy), U * CFG.R_POCKET); hole.addColorStop(0, PAL.plum); hole.addColorStop(1, PAL.brown);
         g.beginPath(); g.arc(X(cx), X(cy), U * (CFG.R_POCKET - 0.5), 0, 6.2832); g.fillStyle = hole; g.fill();
       }
       for (const [x, y] of [[0, 0], [N - F, 0], [0, N - F], [N - F, N - F]]) {   // grey corner brackets over the frame corners
@@ -165,7 +165,7 @@
     function pieces() {
       const u = S.m.u, geo = new THREE.CylinderGeometry(R * u, R * u, 0.0062, 24), edge = (hex) => new THREE.MeshStandardMaterial({ color: hex, roughness: 0.5 });
       const face = (base, rim) => new THREE.MeshStandardMaterial({ map: TF.canvasTex(64, 64, (g) => rings(g, base, rim), { nearest: false }), roughness: 0.45 });
-      const rest = { black: [edge(0x1d1b18), face('#26231f', '#4a453d')], cream: [edge(0xe2cc9c), face('#ecd9b0', '#fff4d6')], queen: [edge(0xb02824), face('#c8302c', '#e86a60')] };
+      const rest = { black: [edge(0x1d1b18), face(PAL.plum, '#4a453d')], cream: [edge(0xe2cc9c), face('#ecd9b0', '#fff4d6')], queen: [edge(0xb02824), face('#c8302c', '#e86a60')] };
       // the striker: ivory, with a star on its face
       S.striker = mesh(new THREE.CylinderGeometry(CFG.R_STRIKER * u, CFG.R_STRIKER * u, 0.0085, 28), [edge(0xf1ead8), new THREE.MeshStandardMaterial({
         map: TF.canvasTex(64, 64, (g) => {
