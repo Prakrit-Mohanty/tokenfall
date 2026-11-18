@@ -89,7 +89,7 @@ class SpriteCharacter {
     if (next !== this.anim) { this.anim = next; this.t = 0; } else this.t += dt * rate;
   }
 
-  /** current { row, col, lift } — useful if you render with CSS or a game engine */
+  /** current { row, start, col, lift } — useful if you render with CSS or a game engine */
   frame() {
     const a = this.data.animations[this.anim + '_' + this.dir] || this.data.animations['idle_' + this.dir];
     let t = this.oneShot ? this.oneShot.t : this.t;
@@ -105,7 +105,7 @@ class SpriteCharacter {
     }
     if (this.anim === 'emote' && this.oneShot) lift = Math.abs(Math.sin(this.oneShot.t / 1000 * Math.PI * 3)) * 14;
     if (this.anim === 'ride') lift = (Math.floor(this.t / 80) % 2) ? 1 : 0;
-    return { row: a.row, col, lift };
+    return { row: a.row, start: a.start, col, lift };
   }
 
   draw(ctx, scale = this.scale) {

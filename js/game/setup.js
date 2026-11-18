@@ -22,7 +22,7 @@ const FOG = 0xdde5ea;   // neutral cool haze until Daylight applies the mood
 scene.background = new THREE.Color(FOG);
 scene.fog = new THREE.Fog(FOG, 34, 95);
 // two camera views, V switches: a low over-the-shoulder third person (default) and the original high overview
-const CAM_VIEWS = [{ off: new THREE.Vector3(0, 3.6, 7), fov: 48, y: 1.4 }, { off: new THREE.Vector3(0, 10.5, 24.5), fov: 26, y: .9 }];
+const CAM_VIEWS = [{ off: new THREE.Vector3(0, 3.6, 7), fov: 48, y: 1.35 }, { off: new THREE.Vector3(0, 10.5, 24.5), fov: 26, y: .87 }];   // y: the look-at height, about four fifths up the hero (head at CHAR_TOP in characters.js ~1.65 m; it was 1.4 / .9 for a 1.7 m one)
 let camView = 0;
 const camera = new THREE.PerspectiveCamera(CAM_VIEWS[0].fov, 16 / 9, .5, 220);
 const CAM_OFF = CAM_VIEWS[0].off.clone();

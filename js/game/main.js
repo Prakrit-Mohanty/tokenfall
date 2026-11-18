@@ -94,12 +94,15 @@ _ready.forEach(f => f(TF));
 
 // ================= boot =================
 const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('600 24px Fredoka'), document.fonts.load('700 20px Cinzel'), document.fonts.load('24px "Press Start 2P"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
-const sheetImg = new Image();
-const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.CHAR_SHEET; });
+const sheetImgs = {}, auxImgs = {}, sheetReady = Promise.all([[window.CHAR_SHEETS, sheetImgs], [window.CHAR_AUX, auxImgs]].flatMap(([srcs, into]) => Object.entries(srcs).map(([id, src]) => new Promise(r => { const im = into[id] = new Image(); im.onload = r; im.src = src; }))));
 Promise.all([fontsReady, sheetReady]).then(() => {
   buildTextures(); buildMaterials();
-  // full-res cells are drawn a little smaller than life: mipmaps keep them from shimmering as they move
-  sheetTex = new THREE.Texture(sheetImg); sheetTex.magFilter = THREE.LinearFilter; sheetTex.minFilter = THREE.LinearMipmapLinearFilter; sheetTex.anisotropy = 4; sheetTex.needsUpdate = true;
+  // premultiplied alpha + mipmaps + anisotropy: no dark or light fringe at the edge, no shimmer when a figure is far or turns
+  for (const [id, im] of Object.entries(sheetImgs)) {
+    const t = sheetTex[id] = new THREE.Texture(im); t.premultiplyAlpha = true; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy()); t.needsUpdate = true;
+    const a = auxTex[id] = new THREE.Texture(auxImgs[id]); a.magFilter = a.minFilter = THREE.LinearFilter; a.generateMipmaps = false; a.needsUpdate = true;   // data, not colour: never premultiplied, never mipmapped
+  }
   LOBBY.build(); buildAreas(); mergeStatic(); buildDust(); buildLife();
   applyTextureRefines(); softenTextures();
   hero = makeChar('aditya', LOBBY.spawn[0], LOBBY.spawn[1], { me: true });

@@ -73,6 +73,7 @@ function frame(now) {
   }
   chatterT -= dt;
   if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone && !c.mute); if (here.length) { const pool = zone === 'lab' || zone === 'abz' ? CHATTER_OFFICE : CHATTER; say(here[Math.random() * here.length | 0], pool[Math.random() * pool.length | 0]); } }
+  charLightsFrame();
   for (const c of chars) syncChar(c);
   // portals
   let nearPortal = false, bestP = 3.4; nearP = null;
@@ -89,7 +90,7 @@ function frame(now) {
   for (const c of npcs) {
     if (c.zone !== zone) continue;
     const d = Math.hypot(hero.x - c.x, hero.y - c.y);
-    if (d < 1.5 && d < best) { best = d; nearest = { x: c.x, z: c.y, label: c.name, verb: 'Talk', act: () => { c.wait = 4000; c.setInput({}); c.dir = Math.abs(hero.x - c.x) > Math.abs(hero.y - c.y) ? (hero.x > c.x ? 'right' : 'left') : (hero.y > c.y ? 'down' : 'up'); talk(c.name, NPC_TALK[c.name]); } }; }
+    if (d < 1.5 && d < best) { best = d; nearest = { x: c.x, y: charHead(c).y + .75, z: c.y, label: c.name, verb: 'Talk', act: () => { c.wait = 4000; c.setInput({}); c.dir = Math.abs(hero.x - c.x) > Math.abs(hero.y - c.y) ? (hero.x > c.x ? 'right' : 'left') : (hero.y > c.y ? 'down' : 'up'); talk(c.name, NPC_TALK[c.name]); } }; }
   }
   if (playerLocked) { nearest = null; nearP = null; }
   // camera follows with a little lag
@@ -122,7 +123,7 @@ function toScreen(x, y, z) { proj.set(x, y, z).project(camera); return [(proj.x 
 function drawUI(dt) {
   for (const c of chars) {
     const show = c.zone === zone;
-    const [sx, sy, vis] = toScreen(c.x, (FIG_H + .1) * CHAR_SCALE + .06 + c.mesh.position.y, c.y);
+    const hd = charHead(c), [sx, sy, vis] = toScreen(c.x, hd.y + .17, hd.z);
     c.tag.style.display = show && vis && !dialog ? 'block' : 'none';
     c.tag.style.left = sx + 'px'; c.tag.style.top = sy + 'px';
     if (c.bubble) {
@@ -132,11 +133,11 @@ function drawUI(dt) {
     }
   }
   if (nearest && !dialog && !traveling) {
-    const [sx, sy] = toScreen(nearest.x, 2.4, nearest.z);
+    const [sx, sy] = toScreen(nearest.x, nearest.y ?? PROMPT_Y, nearest.z);
     promptEl.innerHTML = `<kbd>E</kbd>${esc(nearest.verb)} · ${esc(nearest.label)}`;
     promptEl.style.display = 'block'; promptEl.style.left = sx + 'px'; promptEl.style.top = sy + 'px';
   } else if (nearP && !dialog && !traveling) {   // portals say where they go when you walk up to them
-    const [sx, sy] = toScreen(nearP.x, 2.1, nearP.z);
+    const [sx, sy] = toScreen(nearP.x, PORTAL_Y, nearP.z);
     promptEl.innerHTML = `Step in · ${esc(nearP.label)}`;
     promptEl.style.display = 'block'; promptEl.style.left = sx + 'px'; promptEl.style.top = sy + 'px';
   } else promptEl.style.display = 'none';

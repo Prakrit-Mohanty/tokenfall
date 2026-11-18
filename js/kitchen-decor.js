@@ -193,12 +193,9 @@
       const ring = new THREE.Mesh(new THREE.RingGeometry(0.46, 0.62, 28), new THREE.MeshBasicMaterial({ color: PAL.lemon, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
       ring.rotation.x = -PI / 2; ring.position.y = 0.05; ring.visible = false; ring.renderOrder = 2; TF.hero.g.add(ring); D.ring = ring;
     };
-    // the player's character is a small sprite: bigger in here, so it reads from the steep view (its shadow with it)
-    D.hero = (on) => {
-      const h = TF.hero, k = on ? D.HERO : TF.charScale || 1; if (!h || !h.mesh) return; h.mesh.scale.setScalar(k);
-      const sh = h.g.children.find((c) => c.isMesh && c !== h.mesh && c.rotation.x < -1); if (sh) sh.scale.setScalar(k);
-    };
-    D.HERO = 1.45;
+    // the player's character is small under this steep camera: bigger in here (its blob and name tag follow, via characters.js's sizeK)
+    D.hero = (on) => { if (TF.hero) TF.hero.sizeK = on ? D.HERO : 1; };
+    D.HERO = 1.5;
     D.tick = (t, sec, on) => {
       if (D.belt) { D.belt.material.map.offset.x += sec * 0.55; }
       for (const c of D.cakes) { c.position.x -= sec * 0.275; if (c.position.x < A.cx - BELT / 2) c.position.x += BELT; }

@@ -23,7 +23,7 @@
   else root.KitchenWorld = api;
 })(this, function (E, C, CW, MW) {
   const { RUN } = C, STYLE = CW.STYLE, L0 = E.LAYOUT, BASE_ASPECT = 16 / 9, TAP = 0.2;
-  const CARRY_Y = 3.0;   // the carried chunk floats this high over the (scaled-up) hero
+  const CARRY_Y = 3.0;   // the carried chunk floats this high over the hero (head at ~1.65 m)
   const POOL = { chunks: 10, cards: 3, crates: 6, gauges: 2 };   // pooled chunk meshes (carry 1, floor 6, stock shelf 3), ticket cards, pantry labels, pot gauges
   const ZONE = { cx: 600, cz: 0 };
   // the staff door is the Token Brew cafe's own door. The lobby places it (TF.lobbySpots.kitchen = { door, dir, stand, ret }: the door's face, which way it faces, where to stand, where the hero
