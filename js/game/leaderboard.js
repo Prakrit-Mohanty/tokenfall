@@ -32,9 +32,9 @@ function fitText(g, text, max) {
 
 function drawBoardScreen() {
   const c = board.tex.image, g = c.getContext('2d'), W = c.width, H = c.height;
-  g.fillStyle = '#15171d'; g.fillRect(0, 0, W, H);
-  g.fillStyle = '#b8452e'; g.fillRect(0, 0, W, 22);
-  g.font = '600 13px "Pixelify Sans", monospace'; g.textBaseline = 'middle';
+  g.fillStyle = PAL.plum; g.fillRect(0, 0, W, H);
+  g.fillStyle = PAL.coral; g.fillRect(0, 0, W, 22);
+  g.font = `600 13px ${SIGN_FONT}`; g.textBaseline = 'middle';
   g.fillStyle = '#fff3dc'; g.textAlign = 'left'; g.fillText('MOST CORRECT ANSWERS', 8, 12);
   if (board.sample) { g.textAlign = 'right'; g.fillStyle = '#ffd27a'; g.fillText('SAMPLE', W - 8, 12); }
 
@@ -47,9 +47,9 @@ function drawBoardScreen() {
 
   rankRows(board.rows).slice(0, BOARD_TOP).forEach(({ rank, name, correct }, i) => {
     const y = 36 + i * 19;
-    g.fillStyle = ['#f2b53a', '#cfd5dc', '#e0a878'][rank - 1] || '#3a4a6b';
+    g.fillStyle = ['#f2b53a', '#cfd5dc', '#e0a878'][rank - 1] || PAL.periwinkle;
     g.fillRect(8, y - 7, 16, 14);
-    g.fillStyle = rank <= 3 ? '#15171d' : '#fff3dc'; g.textAlign = 'center'; g.fillText(rank, 16, y + 1);
+    g.fillStyle = rank <= 3 ? PAL.brown : '#fff3dc'; g.textAlign = 'center'; g.fillText(rank, 16, y + 1);
     g.fillStyle = '#fff3dc'; g.textAlign = 'left'; g.fillText(fitText(g, name, W - 80), 32, y + 1);
     g.fillStyle = '#8fe8ff'; g.textAlign = 'right'; g.fillText(correct, W - 8, y + 1);
   });

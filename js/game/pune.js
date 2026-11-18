@@ -18,26 +18,19 @@ const PUNE_TAXI_STANDS = { cb: [5, 8.6], abz: [80, 8.6] };
 const PUNE_TAXI_BAY = PUNE_MZ - 5.05;
 const PUNE_DOF = { farStart: 14, farRange: 50, edgeBlur: .25 };
 const PUNE_WALLS = [0xf2ece0, 0xf3e3b8, 0xf2d2cc, 0xd8e6ee, 0xe8e2d6, 0xf0dcc0];
-const PUNE_FOOD = [['Amruttulya Chai', 0xb8543c, ['Cutting chai, ₹12. Strong enough to fix any bug.', 'The tea master says his recipe has never been "retrained".']], ['Vada Pav', 0xc98a3a, ['Two vada pav with garlic chutney!', 'A model would call this "two tokens of happiness".']], ['Misal House', 0xa8432c, ['Misal pav, extra tarri.', 'Spice level: "are you sure?"']], ['Juice Centre', 0x4a9a5e, ['Sugarcane juice, fresh.', 'The menu changes with the season, unlike some training data.']], ['Bhel & Pani Puri', 0xd96a8a, ['Pani puri, six pieces. Pace yourself.', 'Fun fact: nobody has ever eaten just one.']], ['Bakery', 0x8a6a3a, ['Shrewsbury-style biscuits, still warm.', 'Fresh batch every hour. Fresher than most chatbots\' knowledge.']], ['Momos', 0x6a5a8a, ['Steamed momos with red chutney.', 'Eight per plate, counted carefully.']], ['Kulfi', 0x3f6f9f, ['Malai kulfi on a stick.', 'It melts faster than a deadline.']]];
+const PUNE_FOOD = [['Amruttulya Chai', 0xb8543c, ['Cutting chai, ₹12. Strong enough to fix any bug.', 'The tea master says his recipe has never been "retrained".']], ['Vada Pav', 0xc98a3a, ['Two vada pav with garlic chutney!', 'A model would call this "two tokens of happiness".']], ['Misal House', 0xa8432c, ['Misal pav, extra tarri.', 'Spice level: "are you sure?"']], ['Juice Centre', PAL.leaf, ['Sugarcane juice, fresh.', 'The menu changes with the season, unlike some training data.']], ['Bhel & Pani Puri', PAL.rose, ['Pani puri, six pieces. Pace yourself.', 'Fun fact: nobody has ever eaten just one.']], ['Bakery', 0x8a6a3a, ['Shrewsbury-style biscuits, still warm.', 'Fresh batch every hour. Fresher than most chatbots\' knowledge.']], ['Momos', 0x6a5a8a, ['Steamed momos with red chutney.', 'Eight per plate, counted carefully.']], ['Kulfi', 0x3f6f9f, ['Malai kulfi on a stick.', 'It melts faster than a deadline.']]];
 
 const pMats = {};
 const pOnce = (key, make) => pMats[key] || (pMats[key] = make());
 
 // ---------------------------------------------------------------- materials drawn for Pune (pixel textures, like the rest of the game)
 function puneMaterials() {
-  const brick = pOnce('brick', () => std(canvasTex(32, 32, (g) => {
-    g.fillStyle = '#6e4a3a'; g.fillRect(0, 0, 32, 32);
-    const tone = () => ['#a8664a', '#b8745a', '#9a5a40', '#ad6e52'][rnd() * 4 | 0];
-    for (let by = 0; by < 32; by += 8) for (let bx = 0; bx < 32; bx += 8) {
-      const horiz = ((bx + by) / 8) % 2 === 0;
-      for (let k = 0; k < 2; k++) { g.fillStyle = tone(); horiz ? g.fillRect(bx, by + k * 4, 7, 3) : g.fillRect(bx + k * 4, by, 3, 7); }
-    }
-  }, { nearest: true }), 1));
+  const brick = pOnce('brick', () => MAT.paver);   // footpaths are the one shared path material (the pastel tile)
   const granite = pOnce('granite', () => std(canvasTex(32, 16, (g) => {
-    g.fillStyle = '#2a2a30'; g.fillRect(0, 0, 32, 16);
-    for (let y = 0; y < 16; y += 8) for (let x = (y / 8) * 4; x < 36; x += 8) { g.fillStyle = ['#1c1c21', '#222228', '#26262c'][rnd() * 3 | 0]; g.fillRect(x - 4, y, 7, 7); }
-    for (const x of [6, 22]) { g.fillStyle = '#5c5c64'; g.fillRect(x, 2, 2, 5); g.fillRect(x + 4, 10, 2, 5); }
-  }, { nearest: true }), 1.2, { roughness: .35, metalness: .1 }));
+    g.fillStyle = PAL.paint; g.fillRect(0, 0, 32, 16);
+    for (let y = 0; y < 16; y += 8) for (let x = (y / 8) * 4; x < 36; x += 8) { g.fillStyle = [PAL.paint, PAL.paintLight, PAL.plum][rnd() * 3 | 0]; g.fillRect(x - 4, y, 7, 7); }
+    for (const x of [6, 22]) { g.fillStyle = PAL.paintLight; g.fillRect(x, 2, 2, 5); g.fillRect(x + 4, 10, 2, 5); }
+  }, { nearest: false }), 1.2, { roughness: .7, metalness: 0 }));
   const concrete = pOnce('roadConcrete', () => { const m = std(TX.concrete, 2, { roughness: .9 }); m.color.setRGB(.74, .74, .72); return m; });
   const tabebuia = pOnce('tabebuia', () => std(canvasTex(16, 16, (g) => {
     g.fillStyle = '#e88ab0'; g.fillRect(0, 0, 16, 16);
@@ -55,12 +48,12 @@ function puneGround(cx, cz, M) {
   box(rl, .01, .05, joint, cx + rm, .02, cz + PUNE_MZ, { cast: false });
   const runs = [[x0, PUNE_RX - 3], [PUNE_RX + 3, PUNE_RX2 - 3], [PUNE_RX2 + 3, x1]];
   for (const [a, b] of runs) {
-    for (const z of [PUNE_MZ - 7.5, PUNE_MZ + 7.5]) plane(b - a, 3, M.brick, cx + (a + b) / 2, .024, cz + z, 1);
+    for (const z of [PUNE_MZ - 7.5, PUNE_MZ + 7.5]) plane(b - a, 3, M.brick, cx + (a + b) / 2, .024, cz + z, 3);
     for (const z of [PUNE_MZ - 6.1, PUNE_MZ + 6.1]) box(b - a, .16, .22, MAT.concrete, cx + (a + b) / 2, 0, cz + z, { cast: false });
   }
   for (const sx of [PUNE_RX, PUNE_RX2]) {
     plane(6, 230, M.concrete, cx + sx, .021, cz - 5, 2);
-    for (const s of [-3.9, 3.9]) for (const [z0, z1] of [[-120, PUNE_MZ - 6], [PUNE_MZ + 6, 110]]) plane(1.8, z1 - z0, M.brick, cx + sx + s, .025, cz + (z0 + z1) / 2, 1);
+    for (const s of [-3.9, 3.9]) for (const [z0, z1] of [[-120, PUNE_MZ - 6], [PUNE_MZ + 6, 110]]) plane(1.8, z1 - z0, M.brick, cx + sx + s, .025, cz + (z0 + z1) / 2, 3);
   }
   const yb = pOnce('yb', () => std(canvasTex(8, 2, (g) => { for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#1c1c20' : '#f2c418'; g.fillRect(i, 0, 1, 2); } }, { nearest: true }), 1));
   for (const x of [36, 118]) box(.6, .08, 11.6, yb, cx + x, .02, cz + PUNE_MZ, { cast: false });
@@ -95,9 +88,9 @@ function puneBlock(x, front, w, d, h, { facing = -1, shops = true } = {}) {
     box(w + .3, .5, .06, MAT.metal, x, y, front + f * .82, { cast: false });
     for (let k = 0; k < Math.floor(w / 2.2); k++) {
       const wx = x - w / 2 + 1.1 + k * 2.2;
-      box(.9, 1.1, .06, rnd() < .4 ? MAT.glassLit : MAT.glass, wx, y - 1.7, front + f * .03, { cast: false, s: 0 });
+      framedWindow(wx, y - 1.7, front, .9, 1.1, rnd() < .4 ? MAT.glassLit : MAT.glass, f, decorRandom() < .3);
       if (rnd() < .3) box(.7, .45, .35, MAT.white, wx + .9, y - 1.2, front + f * .2);
-      if (rnd() < .22) box(.5, .45, .03, pOnce('laundry' + (k % 4), () => new THREE.MeshStandardMaterial({ color: [0xc0392b, 0x2f6fb6, 0xf2c418, 0xe8e6e0][k % 4], roughness: 1 })), wx, y - .05 - .45, front + f * .84, { cast: false });
+      if (rnd() < .22) box(.5, .45, .03, pOnce('laundry' + (k % 4), () => new THREE.MeshStandardMaterial({ color: [PAL.coral, PAL.sky, PAL.gold, 0xe8e6e0][k % 4], roughness: 1 })), wx, y - .05 - .45, front + f * .84, { cast: false });
     }
   }
   for (let k = 0; k < 2; k++) { const t = add(new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .9, 10), MAT.charcoal)); t.position.set(x - w / 4 + k * w / 2, h + .45, front - f * d / 2); }
@@ -116,7 +109,7 @@ function puneBlock(x, front, w, d, h, { facing = -1, shops = true } = {}) {
 // the north side between the two junctions: a glass office tower on a plaza, and a mixed-use block with shops
 function puneTowers(cx, cz, M) {
   const front = cz + 4;
-  plane(30, 6, M.brick, cx + 37, .022, front + 3, 1);
+  plane(30, 6, M.brick, cx + 37, .022, front + 3, 3);
   officeBlock(cx + 30, front - 8, 15, 16, 30, { floors: 9, fins: 2.5, front: MAT.glass, side: MAT.cladding });
   ledSign(['SKYLINE TOWER'], '#d6ecff', cx + 30, 3.6, front + .1, 3.6, .5);
   for (const x of [24, 36]) { box(1.8, .5, 1.8, MAT.concrete, cx + x, 0, front + 2.6); bush(cx + x, front + 2.6, .9, MAT.leafA); colBox(cx + x - .9, front + 1.7, cx + x + .9, front + 3.5); }
@@ -204,8 +197,8 @@ function puneFiller(x, z, w, d, h, M) {
 
 function puneCityFill(cx, cz, M) {
   for (const [axis, at, a, b] of PUNE_BACK_STREETS) {
-    if (axis === 'x') { plane(b - a, 10, M.concrete, cx + (a + b) / 2, .019, cz + at, 2); for (const s of [-4.1, 4.1]) plane(b - a, 1.8, M.brick, cx + (a + b) / 2, .022, cz + at + s, 1); }
-    else { plane(10, b - a, M.concrete, cx + at, .019, cz + (a + b) / 2, 2); for (const s of [-4.1, 4.1]) plane(1.8, b - a, M.brick, cx + at + s, .022, cz + (a + b) / 2, 1); }
+    if (axis === 'x') { plane(b - a, 10, M.concrete, cx + (a + b) / 2, .019, cz + at, 2); for (const s of [-4.1, 4.1]) plane(b - a, 1.8, M.brick, cx + (a + b) / 2, .022, cz + at + s, 3); }
+    else { plane(10, b - a, M.concrete, cx + at, .019, cz + (a + b) / 2, 2); for (const s of [-4.1, 4.1]) plane(1.8, b - a, M.brick, cx + at + s, .022, cz + (a + b) / 2, 3); }
   }
   const streets = PUNE_BACK_STREETS.map(([axis, at]) => (axis === 'x' ? [-1e9, at - 6, 1e9, at + 6] : [at - 6, -1e9, at + 6, 1e9]))
     .concat([PUNE_RX, PUNE_RX2].map((sx) => [sx - 6, -1e9, sx + 6, 1e9]), [[-1e9, PUNE_MZ - 9, 1e9, PUNE_MZ + 9]]);
@@ -258,7 +251,7 @@ function puneParking(cx, cz, asphalt) {
   for (const z of [-8, -5.2, -2.4, .4, 3.2]) box(4.8, .015, .1, MAT.white, cx - 18.3, .02, cz + z, { cast: false });
   const BA = Math.PI * .75;
   for (const x of [-17.2, -15.2, -13.2, -11.2, -9.2]) box(.08, .015, 2.6, MAT.white, cx + x, .02, cz + 3.2, { ry: BA, cast: false });
-  car(cx - 18.3, cz - 6.6, -Math.PI / 2, 0xe8e8ec); car(cx - 18.3, cz - 3.8, -Math.PI / 2, 0xb02a2a); car(cx - 18.3, cz - 1, -Math.PI / 2, 0x55595f);
+  car(cx - 18.3, cz - 6.6, -Math.PI / 2, 0xe8e8ec); car(cx - 18.3, cz - 3.8, -Math.PI / 2, PAL.coral); car(cx - 18.3, cz - 1, -Math.PI / 2, PAL.paint);
   const BIKES = [['r15', -16.2, 'Yamaha R15M', 'A Yamaha R15M in metallic grey, with blue wheels and gold forks.'],
     ['vstrom', -14.2, 'Suzuki V-Strom', 'A yellow Suzuki V-Strom SX, ready for a long ride.'],
     ['avenger', -12.2, 'Bajaj Avenger', 'A black Bajaj Avenger cruiser, all chrome and low seat.'],
@@ -278,17 +271,17 @@ function puneStreet(cx, cz) {
   }
   busStop(cx + 112, nz - .6);
   const parked = (x, z, ry, c) => { const a = autoRickshaw(c); a.position.set(x, 0, z); a.rotation.y = ry; colBox(x - 1.5, z - .75, x + 1.5, z + .75); };
-  for (const x of [26, 29.3, 44, 47.3]) parked(cx + x, cz + PUNE_MZ - 5.35, Math.PI / 2, rnd() < .85 ? 0xf2c418 : 0x3a8a4a);
-  for (const x of [-36, -32.7, -20, -16.7, 70, 73.3, 92]) parked(cx + x, cz + PUNE_MZ + 5.35, -Math.PI / 2, rnd() < .85 ? 0xf2c418 : 0x3a8a4a);
+  for (const x of [26, 29.3, 44, 47.3]) parked(cx + x, cz + PUNE_MZ - 5.35, Math.PI / 2, rnd() < .85 ? PAL.gold : PAL.sage);
+  for (const x of [-36, -32.7, -20, -16.7, 70, 73.3, 92]) parked(cx + x, cz + PUNE_MZ + 5.35, -Math.PI / 2, rnd() < .85 ? PAL.gold : PAL.sage);
   bins(cx + 104, nz - .9); bins(cx - 6, sz + 1);
   const M = cz + PUNE_MZ, J1 = cx + PUNE_RX, J2 = cx + PUNE_RX2, [x0, x1] = PUNE_LANE_X, L = PUNE_LANES;
   trafficLights(J1, M, 4.6, 6.7); trafficLights(J2, M, 4.6, 6.7);
   const eastStops = [J1 - 6.8, J2 - 6.8], westStops = [J1 + 6.8, J2 + 6.8];
-  lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, 'car', 0x55595f], [cx + 40, 'auto', 0xf2c418], [cx + 100, 'car', 0xd8d4c8], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, 'scooter', 0x2a4f9e]]);
-  lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, 'car', 0x2a4f9e], [cx + 70, 'car', 0xb02a2a], [cx + 125, 'auto', 0x3a8a4a], [cx + 30, 'scooter', 0xc0392b], [cx + 100, 'car', 0xe8e8ec]]);
-  lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, 'car', 0xe8e8ec], [cx + 20, 'auto', 0xf2c418], [cx + 80, 'car', 0x55595f], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, 'car', 0xd8d4c8]]);
-  lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', 0x3a8a4a], [cx - 20, 'car', 0x3a7a5a], [cx + 50, 'car', 0x8a2a5a], [cx + 130, 'scooter', 0xe8e6e0], [cx + 15, 'scooter', 0x3f8a4a]]);
-  for (const [J, cars] of [[J1, [[cz - 40, 'car', 0xe8e8ec], [cz + 40, 'auto', 0xf2c418]]], [J2, [[cz - 20, 'auto', 0xf2c418], [cz + 55, 'car', 0x2a4f9e]]]]) {
+  lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, 'car', PAL.paint], [cx + 40, 'auto', PAL.gold], [cx + 100, 'car', 0xd8d4c8], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, 'scooter', PAL.periwinkle]]);
+  lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, 'car', PAL.periwinkle], [cx + 70, 'car', PAL.coral], [cx + 125, 'auto', PAL.sage], [cx + 30, 'scooter', PAL.coral], [cx + 100, 'car', 0xe8e8ec]]);
+  lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, 'car', 0xe8e8ec], [cx + 20, 'auto', PAL.gold], [cx + 80, 'car', PAL.paint], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, 'car', 0xd8d4c8]]);
+  lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', PAL.sage], [cx - 20, 'car', 0x3a7a5a], [cx + 50, 'car', 0x8a2a5a], [cx + 130, 'scooter', 0xe8e6e0], [cx + 15, 'scooter', 0x3f8a4a]]);
+  for (const [J, cars] of [[J1, [[cz - 40, 'car', 0xe8e8ec], [cz + 40, 'auto', PAL.gold]]], [J2, [[cz - 20, 'auto', PAL.gold], [cz + 55, 'car', PAL.periwinkle]]]]) {
     lane('z', J - 1.5, 1, cz - 70, cz + 80, M - 6.8, 'ns', cars);
     lane('z', J + 1.5, -1, cz + 80, cz - 70, M + 6.8, 'ns', cars.map(([s, k, c]) => [s + 30, k, c ^ 0x202020]));
   }
@@ -296,7 +289,7 @@ function puneStreet(cx, cz) {
 }
 
 // ---------------------------------------------------------------- street life: trees, carts, parked two-wheelers, poles and wires, billboards
-const PUNE_CARTS = [[106.8, 8.4, 'Vada Pav Cart', 0xc98a3a, ['Hot vada pav, ₹20. The bus-stop special.', 'The chutney recipe is a family secret. Not even the model knows it.']], [26, 23.6, 'Fruit Cart', 0x4a9a5e, ['Mangoes, bananas, chikoo.', 'Priced per dozen, haggled per piece.']], [86, 23.6, 'Coconut Water', 0x5f8a3a, ['One tender coconut, cut fresh.', 'Nature\'s electrolyte. No prompt needed.']], [-36, 23.6, 'Flower Stall', 0xd96a8a, ['Mogra and marigold garlands.', 'They smell better than any generated description of them.']]];
+const PUNE_CARTS = [[106.8, 8.4, 'Vada Pav Cart', 0xc98a3a, ['Hot vada pav, ₹20. The bus-stop special.', 'The chutney recipe is a family secret. Not even the model knows it.']], [26, 23.6, 'Fruit Cart', PAL.leaf, ['Mangoes, bananas, chikoo.', 'Priced per dozen, haggled per piece.']], [86, 23.6, 'Coconut Water', 0x5f8a3a, ['One tender coconut, cut fresh.', 'Nature\'s electrolyte. No prompt needed.']], [-36, 23.6, 'Flower Stall', PAL.rose, ['Mogra and marigold garlands.', 'They smell better than any generated description of them.']]];
 const PUNE_BILLBOARDS = [[-27, 8.2, ['LEARN AI', 'one token at a time']], [124, 8.2, ['CHAI BREAK?', 'Amruttulya, 2 min ->']]];
 
 function puneTreeRows(cx, cz, M) {
@@ -314,14 +307,14 @@ function puneCart(cx, cz, [x, z, name, colour, lines]) {
   for (const s of [-1, 1]) { const w = add(new THREE.Mesh(new THREE.CylinderGeometry(.32, .32, .08, 12), MAT.charcoal)); w.rotation.x = Math.PI / 2; w.position.set(px + s * .5, .32, pz + s * .45); }
   box(.05, 2.2, .05, MAT.metal, px + .6, 1.15, pz);
   const u = add(new THREE.Mesh(new THREE.ConeGeometry(1.1, .5, 8, 1, true), umb)); u.position.set(px + .6, 3.4, pz);
-  for (let k = 0; k < 6; k++) { const b = add(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), new THREE.MeshStandardMaterial({ color: [0xf2c418, 0xe8476a, 0x9ad36a, 0xf2a03a][k % 4] }))); b.position.set(px - .55 + k * .22, 1.27, pz + (k % 2 ? .15 : -.15)); }
+  for (let k = 0; k < 6; k++) { const b = add(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), new THREE.MeshStandardMaterial({ color: [PAL.gold, 0xe8476a, 0x9ad36a, 0xf2a03a][k % 4] }))); b.position.set(px - .55 + k * .22, 1.27, pz + (k % 2 ? .15 : -.15)); }
   signBoard(name, px, 1.55, pz + .46, 1.5, .32, 0, { size: 16, bg: '#2a1a12', color: '#ffe3a0', w: 180, h: 36 });
   colBox(px - .9, pz - .5, px + .9, pz + .5);
   INTER.push({ x: px, z: pz + (z < PUNE_MZ ? 1 : -1), r: 1.8, label: name, verb: 'Buy', act: () => talk(name, lines) });
 }
 
 function puneParkedTwoWheelers(cx, cz) {
-  const colours = [0x1c1c20, 0xe8e6e0, 0xc0392b, 0x2a4f9e, 0x8a8a90];
+  const colours = [0x1c1c20, 0xe8e6e0, PAL.coral, PAL.periwinkle, 0x8a8a90];
   for (let k = 0; k < 8; k++) { const s = scooter(colours[(k * 3) % 5]); s.position.set(cx + 41.5 + k * 1.1, 0, cz + PUNE_MZ + 7.9); s.rotation.y = Math.PI * .9; }
   colBox(cx + 40.9, cz + PUNE_MZ + 7.2, cx + 49.8, cz + PUNE_MZ + 8.6);
   for (let k = 0; k < 6; k++) { const s = scooter(colours[(k * 2 + 1) % 5]); s.position.set(cx + 88 + k * 1.1, 0, cz + PUNE_MZ - 7.9); s.rotation.y = Math.PI * .1; }
@@ -352,7 +345,7 @@ function puneBillboards(cx, cz) {
 
 // ---------------------------------------------------------------- the bike taxi, a road user like any other
 function bikeTaxiModel() {
-  const g = scooter(0xf2c418, { rider: true, jacket: 0xf2c418, helmet: 0xf2c418 }); g.userData.dyn = true;
+  const g = scooter(PAL.gold, { rider: true, jacket: PAL.gold, helmet: PAL.gold }); g.userData.dyn = true;
   return g;
 }
 
@@ -367,7 +360,7 @@ function bikeTaxi(cx, cz) {
     stands[k] = [cx + x, cz + z];
     box(.12, 2.2, .12, MAT.metal, cx + x - 1.4, 0, cz + z - .4); colCirc(cx + x - 1.4, cz + z - .4, .15);
     ledSign(['BIKE TAXI'], '#ffd27a', cx + x - 1.4, 2.5, cz + z - .4, 1.8, .4);
-    box(3, .015, 1.2, new THREE.MeshStandardMaterial({ color: 0xf2c418, roughness: .9 }), cx + x, .03, cz + PUNE_TAXI_BAY, { cast: false });
+    box(3, .015, 1.2, new THREE.MeshStandardMaterial({ color: PAL.gold, roughness: .9 }), cx + x, .03, cz + PUNE_TAXI_BAY, { cast: false });
   }
   const S = { at: 'cb', mode: 'idle', path: null, s: 0, v: 0, dest: null, model: g };
   const park = (k) => { const [x] = stands[k]; g.position.set(x, 0, cz + PUNE_TAXI_BAY); g.rotation.y = k === 'cb' ? Math.PI / 2 : -Math.PI / 2; };

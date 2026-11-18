@@ -70,7 +70,7 @@ function buildOffice(a) {
   box(.9, 2.2, .06, MAT.slat, X(3.4), 0, Z(1.6) + .03, { p: herWc });
   makeFader(compact(herWc), () => hero.zone === 'lab' && hero.x > X(.8) && hero.x < X(5.8) && hero.y < Z(1.6) && hero.y > Z(-9));
   colBox(WX, Z(-1.2), X(5.3), Z(1.6));
-  signBoard('TOILETS', WX - .12, 2.55, Z(2.33), 1.1, .3, Math.PI / 2, { size: 18, bg: '#1d2b4a', edge: '#0e1628', color: '#ffffff', w: 150, h: 40 });
+  signBoard('TOILETS', WX - .12, 2.55, Z(2.33), 1.1, .3, Math.PI / 2, { size: 18, bg: PAL.plum, w: 150, h: 40 });
   INTER.push({ x: WX - .4, z: Z(2.33), r: 1.2, label: 'Toilets', verb: 'Read', act: () => talk('Toilets', ['Women\'s on the left, men\'s on the right.', 'Wash your hands. The models are not the only thing that can catch a bug.']) });
   // waiting area: tile wall and planter ahead of the lift, plants by the stairs
   const PZ = Z(5.25) + .35, PW = L(3.3), PC = X(-.5);

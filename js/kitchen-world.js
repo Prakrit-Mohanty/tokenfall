@@ -195,7 +195,7 @@
     const local = () => ({ x: TF.hero.x - S.A.cx, z: TF.hero.y - S.A.cz });
 
     // ---- the signs, gauges and cards are drawn in the kitchen's candy colours (the same palette as kitchen-decor.js) ----
-    const tokens = () => ({ paper: '#f4e6cc', gold: '#e59a2e', dark: '#3d2f3d', wood: '#e6c36e', red: '#c4544f', font: '"Trebuchet MS", "Arial Rounded MT Bold", Arial, sans-serif' });
+    const tokens = () => ({ paper: '#f4e6cc', gold: '#e59a2e', dark: PAL.plum, wood: '#e6c36e', red: '#c4544f', font: '"Trebuchet MS", "Arial Rounded MT Bold", Arial, sans-serif' });
 
     // ---- dynamic textures: drawn when the kitchen is entered, freed when it is left ----
     function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; const tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; return { c, g: c.getContext('2d'), tex, w, h }; }
@@ -504,7 +504,7 @@
     }
     world.build = () => {
       S.spot = doorSpot(TF.lobbySpots && TF.lobbySpots.kitchen);
-      const a = TF.registerZone('kitchen', { cx: ZONE.cx, cz: ZONE.cz, name: 'Token Brew Kitchen', sub: 'Staff only', color: STYLE[0].hex, ret: S.spot ? S.spot.ret : [0, 0], retDir: S.spot ? S.spot.retDir : 'down', spawn: [L0.start.x, L0.start.z], env: { sun: 0.55, hemi: 0.78, hemiColor: 0xf6dfc4, fog: 0x3b2c35, near: 80, far: 190 } });
+      const a = TF.registerZone('kitchen', { cx: ZONE.cx, cz: ZONE.cz, name: 'Token Brew Kitchen', sub: 'Staff only', color: STYLE[0].hex, ret: S.spot ? S.spot.ret : [0, 0], retDir: S.spot ? S.spot.retDir : 'down', spawn: [L0.start.x, L0.start.z], env: { sun: 0.55, hemi: 0.78, hemiColor: 0xf6dfc4, fog: parseInt(PAL.plum.slice(1), 16), near: 80, far: 190 } });
       S.A = a; S.tok = tokens(); makeUi(); build(); buildLive(); S.built = true;
     };
     return world;

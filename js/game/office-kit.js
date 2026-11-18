@@ -82,11 +82,11 @@ function officeMaterials() {
     }
   }, { nearest: true });
   T.walnut = canvasTex(32, 32, (g, W, H) => { for (let x = 0; x < W; x++) { const b = 1 + Math.sin(x * .9) * .06 + (rnd() - .5) * .08; for (let y = 0; y < H; y++) P(g, x, y, [122, 76, 42], b * (1 + (rnd() - .5) * .05)); } });
-  T.slat = canvasTex(16, 16, (g, W, H) => { for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) P(g, x, y, [72, 45, 30], x % 4 === 0 ? .5 : 1 + (rnd() - .5) * .08); }, { nearest: true });
+  T.slat = canvasTex(16, 16, (g, W, H) => { for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) P(g, x, y, palRGB(PAL.woodDeep, .96), x % 4 === 0 ? .72 : 1 + (rnd() - .5) * .08); }, { nearest: true });
   const weave = (base, amt) => (g, W, H) => { noiseFill(g, W, H, base, amt, 1, decorRandom); for (let y = 0; y < H; y += 2) for (let x = (y / 2) % 2; x < W; x += 2) P(g, x, y, base, .94); };
   T.felt = refineTexture(canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [204, 180, 142], .08)), 32, 32, weave([204, 180, 142], .08));
   T.fabric = refineTexture(canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [158, 158, 152], .1)), 32, 32, weave([158, 158, 152], .1));
-  T.navy = refineTexture(canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, [50, 66, 98], .12)), 32, 32, weave([50, 66, 98], .12));
+  T.navy = refineTexture(canvasTex(16, 16, (g, W, H) => noiseFill(g, W, H, palRGB(PAL.periwinkle, .78), .1)), 32, 32, weave(palRGB(PAL.periwinkle, .78), .1));
   T.window = refineTexture(canvasTex(32, 32, (g, W, H) => {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       let c;
@@ -111,7 +111,7 @@ function officeMaterials() {
         P(g, xx, yy, tone, (dy < -r * .3 ? 1.22 : dy > r * .45 ? .8 : 1) * (1 + (decorRandom() - .5) * .12));
       }
     }
-    g.fillStyle = '#404246'; g.fillRect(0, 0, 1, H); g.fillRect(0, 34, W, 1);
+    g.fillStyle = PAL.plum; g.fillRect(0, 0, 1, H); g.fillRect(0, 34, W, 1);
   });
   T.exit = canvasTex(32, 64, (g, W, H) => {
     noiseFill(g, W, H, [112, 114, 116], .05);
@@ -122,9 +122,9 @@ function officeMaterials() {
   }, { nearest: true });
   T.carrom = canvasTex(32, 32, (g, W, H) => {
     noiseFill(g, W, H, [230, 204, 156], .05);
-    g.fillStyle = '#5a3418'; g.fillRect(0, 0, W, 3); g.fillRect(0, H - 3, W, 3); g.fillRect(0, 0, 3, H); g.fillRect(W - 3, 0, 3, H);
+    g.fillStyle = PAL.brown; g.fillRect(0, 0, W, 3); g.fillRect(0, H - 3, W, 3); g.fillRect(0, 0, 3, H); g.fillRect(W - 3, 0, 3, H);
     g.fillStyle = '#111'; for (const [x, y] of [[3, 3], [26, 3], [3, 26], [26, 26]]) g.fillRect(x, y, 3, 3);
-    g.fillStyle = '#b8322a'; g.fillRect(14, 14, 4, 4); g.fillStyle = '#3a2a1a';
+    g.fillStyle = '#b8322a'; g.fillRect(14, 14, 4, 4); g.fillStyle = PAL.brown;
     for (const k of [7, 24]) { g.fillRect(7, k, 18, 1); g.fillRect(k, 7, 1, 18); }
   }, { nearest: true });
   T.lotusR = lotusTex('#d8443a', '#f2c14e'); T.lotusB = lotusTex('#2d4f8e', '#9ec4ff');
@@ -141,7 +141,7 @@ function officeMaterials() {
   MAT.navy2 = std(T.navy, 1, { side: THREE.DoubleSide }); MAT.navy2.color.setRGB(1.45, 1.45, 1.5);
   MAT.navy3 = std(T.navy, 1); MAT.navy3.color.setRGB(1.3, 1.3, 1.35);
   MAT.white = new THREE.MeshStandardMaterial({ color: 0xe9e7e1, roughness: .6 });
-  MAT.charcoal = new THREE.MeshStandardMaterial({ color: 0x26282c, roughness: .7 });
+  MAT.charcoal = new THREE.MeshStandardMaterial({ color: PAL.plum, roughness: .8 });
   MAT.chrome = new THREE.MeshStandardMaterial({ color: 0xc4c8cc, roughness: .25, metalness: .8 });
   MAT.window = std(T.window, 2, { emissive: 0xffffff, emissiveMap: T.window, emissiveIntensity: .55 });
   MAT.pane = new THREE.MeshStandardMaterial({ color: 0xd2e8ee, transparent: true, opacity: .16, roughness: .05, depthWrite: false });
@@ -153,16 +153,16 @@ function officeMaterials() {
   MAT.pink = new THREE.MeshStandardMaterial({ color: 0xe8a596, roughness: .7 });
   MAT.exit = std(T.exit, 0, { emissive: 0xffffff, emissiveMap: T.exit, emissiveIntensity: .15 });
   T.marble = canvasTex(32, 32, (g, W, H) => {
-    noiseFill(g, W, H, [30, 30, 33], .12);
-    for (let v = 0; v < 3; v++) { let x = rnd() * W, y = 0; while (y < H) { P(g, (x | 0 + W) % W, y | 0, [150, 150, 154], 1 - rnd() * .3); x += (rnd() - .4) * 1.6; y += .7; } }
+    noiseFill(g, W, H, palRGB(PAL.blush, 1.02), .06);   // soft rose marble, was near-black
+    for (let v = 0; v < 3; v++) { let x = rnd() * W, y = 0; while (y < H) { P(g, (x | 0 + W) % W, y | 0, palRGB(PAL.stoneDeep, .85), 1 - rnd() * .3); x += (rnd() - .4) * 1.6; y += .7; } }
   });
   MAT.marble = std(T.marble, 1, { roughness: .3, metalness: .1 });
   MAT.steel = new THREE.MeshStandardMaterial({ color: 0xb9bdc2, roughness: .3, metalness: .7 });
-  MAT.elecSign = std(canvasTex(48, 16, g => { g.fillStyle = '#c0281c'; g.fillRect(0, 0, 48, 16); g.fillStyle = '#fff'; g.font = '600 7px "Pixelify Sans", monospace'; g.textBaseline = 'middle'; g.fillText('ELECTRICAL', 3, 5); g.fillText('ROOM', 3, 12); g.fillStyle = '#ffd23a'; g.fillRect(38, 4, 6, 8); }), 0);
+  MAT.elecSign = std(canvasTex(48, 16, g => { g.fillStyle = '#c0281c'; g.fillRect(0, 0, 48, 16); g.fillStyle = '#fff'; g.font = `600 7px ${SIGN_FONT}`; g.textBaseline = 'middle'; g.fillText('ELECTRICAL', 3, 5); g.fillText('ROOM', 3, 12); g.fillStyle = '#ffd23a'; g.fillRect(38, 4, 6, 8); }), 0);
   MAT.carrom = std(T.carrom, 0);
-  MAT.greenTile = std(canvasTex(16, 16, g => { g.fillStyle = '#efe8d8'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#2e7a5a'; g.beginPath(); g.moveTo(8, 1); g.lineTo(15, 8); g.lineTo(8, 15); g.lineTo(1, 8); g.fill(); g.fillStyle = '#1d1d1d'; for (const [x, y] of [[0, 0], [15, 0], [0, 15], [15, 15]]) g.fillRect(x, y, 1, 1); }, { nearest: true }), 0);
+  MAT.greenTile = std(canvasTex(16, 16, g => { g.fillStyle = '#efe8d8'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#2e7a5a'; g.beginPath(); g.moveTo(8, 1); g.lineTo(15, 8); g.lineTo(8, 15); g.lineTo(1, 8); g.fill(); g.fillStyle = PAL.plum; for (const [x, y] of [[0, 0], [15, 0], [0, 15], [15, 15]]) g.fillRect(x, y, 1, 1); }, { nearest: true }), 0);
   MAT.greenTile.map.repeat.set(12, 1);
-  MAT.cabinet = new THREE.MeshStandardMaterial({ color: 0x1c1d20, roughness: .15, metalness: .3 });
+  MAT.cabinet = new THREE.MeshStandardMaterial({ color: PAL.paint, roughness: .7, metalness: 0 });
   MAT.yellowBoard = new THREE.MeshStandardMaterial({ color: 0xf2c418, roughness: .7 });
   MAT.lotusR = new THREE.MeshStandardMaterial({ map: T.lotusR, alphaTest: .5, side: THREE.DoubleSide, emissive: 0xffffff, emissiveMap: T.lotusR, emissiveIntensity: .3 });
   MAT.lotusB = new THREE.MeshStandardMaterial({ map: T.lotusB, alphaTest: .5, side: THREE.DoubleSide, emissive: 0xffffff, emissiveMap: T.lotusB, emissiveIntensity: .3 });
@@ -173,11 +173,11 @@ function screenTextures() {
   const R = decorRandom, scr = (bg, draw) => canvasTex(32, 20, g => { g.fillStyle = bg; g.fillRect(0, 0, 32, 20); draw(g); }, { nearest: true });
   const px = (g, c, x, y, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
   return [
-    scr('#1b2430', g => { for (let y = 0; y < 20; y++) { const ind = 2 + (R() * 3 | 0) * 2; px(g, '#3a4a5c', 0, y, 1); px(g, ['#7fe6ff', '#ffd27a', '#c39bff', '#8ee07a'][R() * 4 | 0], ind, y, 3 + (R() * 14 | 0)); } }),
+    scr(PAL.plum, g => { for (let y = 0; y < 20; y++) { const ind = 2 + (R() * 3 | 0) * 2; px(g, '#3a4a5c', 0, y, 1); px(g, ['#7fe6ff', '#ffd27a', '#c39bff', '#8ee07a'][R() * 4 | 0], ind, y, 3 + (R() * 14 | 0)); } }),
     scr('#f4f6f2', g => { for (let y = 0; y < 20; y += 3) px(g, '#c8d2c4', 0, y, 32); for (let x = 0; x < 32; x += 8) px(g, '#c8d2c4', x, 0, 1, 20); px(g, '#2f8a4e', 0, 0, 32, 2); for (let i = 0; i < 18; i++) px(g, '#6b7a6a', 1 + (R() * 4 | 0) * 8, 4 + (R() * 5 | 0) * 3, 3 + (R() * 3 | 0)); }),
-    scr('#f2f0f6', g => { px(g, '#3f2d5c', 0, 0, 7, 20); for (let y = 2; y < 18; y += 3) px(g, '#9a86c4', 1, y, 4); for (let y = 2; y < 18; y += 4) { px(g, ['#e08a6a', '#6ab0e0', '#8ac46a'][R() * 3 | 0], 9, y, 2, 2); px(g, '#6a6874', 12, y, 6 + (R() * 13 | 0)); px(g, '#a8a6b0', 12, y + 1, 4 + (R() * 9 | 0)); } }),
-    scr('#1d2028', g => { px(g, '#2a2e38', 1, 1, 30, 18); for (let i = 0; i < 6; i++) { const h = 3 + (R() * 11 | 0); px(g, ['#5fc0b0', '#ffb347', '#7fa8ff'][i % 3], 3 + i * 4, 17 - h, 3, h); } let y = 9; for (let x = 2; x < 30; x++) { y = Math.max(3, Math.min(8, y + (R() * 3 | 0) - 1)); px(g, '#ff6f91', x, y); } }),
-    scr('#14161c', g => { for (const [x, y, c] of [[1, 1, '#4a6a8a'], [17, 1, '#6a5a4a'], [1, 11, '#5a7a5a'], [17, 11, '#7a5a6a']]) { px(g, c, x, y, 14, 8); px(g, '#e8c8a8', x + 5, y + 2, 4, 4); px(g, '#2a2a30', x + 4, y + 6, 6, 2); } px(g, '#6ee07a', 0, 0, 16, 1); px(g, '#6ee07a', 0, 0, 1, 10); }),
+    scr('#f2f0f6', g => { px(g, PAL.plum, 0, 0, 7, 20); for (let y = 2; y < 18; y += 3) px(g, '#9a86c4', 1, y, 4); for (let y = 2; y < 18; y += 4) { px(g, ['#e08a6a', '#6ab0e0', '#8ac46a'][R() * 3 | 0], 9, y, 2, 2); px(g, '#6a6874', 12, y, 6 + (R() * 13 | 0)); px(g, '#a8a6b0', 12, y + 1, 4 + (R() * 9 | 0)); } }),
+    scr(PAL.plum, g => { px(g, PAL.plum, 1, 1, 30, 18); for (let i = 0; i < 6; i++) { const h = 3 + (R() * 11 | 0); px(g, ['#5fc0b0', '#ffb347', '#7fa8ff'][i % 3], 3 + i * 4, 17 - h, 3, h); } let y = 9; for (let x = 2; x < 30; x++) { y = Math.max(3, Math.min(8, y + (R() * 3 | 0) - 1)); px(g, '#ff6f91', x, y); } }),
+    scr(PAL.plum, g => { for (const [x, y, c] of [[1, 1, '#4a6a8a'], [17, 1, '#6a5a4a'], [1, 11, '#5a7a5a'], [17, 11, '#7a5a6a']]) { px(g, c, x, y, 14, 8); px(g, '#e8c8a8', x + 5, y + 2, 4, 4); px(g, PAL.plum, x + 4, y + 6, 6, 2); } px(g, '#6ee07a', 0, 0, 16, 1); px(g, '#6ee07a', 0, 0, 1, 10); }),
     scr('#fbfaf6', g => { px(g, '#2d5fa8', 4, 2, 18, 2); for (let y = 6; y < 19; y += 2) px(g, '#8a8a94', 4, y, 18 + (R() * 7 | 0) - (y % 6 === 0 ? 6 : 0)); px(g, '#e4e2dc', 26, 2, 5, 16); }),
   ];
 }
@@ -272,7 +272,7 @@ function room(x0, z0, x1, z1, front, name, lines, o = {}) {
     }
     else { put(0, len, 0, H, MAT.walnut, .2); col(0, len); }
   }
-  g.add(signBoard(name, plate[0], plate[1], plate[2], 1.15, .36, plate[3], { size: 17, bg: '#4a2c18', edge: '#2a180c', color: '#f6e3b4', w: 160, h: 52 }));
+  g.add(signBoard(name, plate[0], plate[1], plate[2], 1.15, .36, plate[3], { size: 17, bg: PAL.brown, w: 160, h: 52 }));
   // inside: round table, four chairs, a TV on the wall facing the door
   const tx = (x0 + x1) / 2, tz = czr;
   const W = x1 - x0, D = z1 - z0;

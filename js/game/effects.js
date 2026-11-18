@@ -99,19 +99,19 @@ function buildDust() {
 }
 
 // ================= lights =================
-const hemi = new THREE.HemisphereLight(0xf2dfc6, 0x6b5238, .6); scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffc488, 1.1);
-sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 90 });   // tighter: crisper shadows near the camera
+const hemi = new THREE.HemisphereLight(0xdfe6ee, 0x8a8b7c, .6); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff6ec, 1.1);
+sun.castShadow = true; sun.shadow.mapSize.set(3072, 3072);
+Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20, near: 1, far: 90 });   // a 40 m square round the player at 3072 px: ~77 px per metre (it was 43); groundlife.js snaps it to the texel grid
 sun.shadow.bias = -.0006; sun.shadow.normalBias = .03; sun.shadow.radius = 3.2;   // a wider blur kernel: soft shadow edges instead of hard ones
 scene.add(sun, sun.target);
 const SUN_DIR = new THREE.Vector3(-26, 19, 14);   // low, late-afternoon sun: long warm shadows
 // gradient sky dome around the camera: horizon matches the fog, blue overhead, a soft glow around the sun
-const skyU = { horizon: { value: new THREE.Color(FOG) }, sunDir: { value: new THREE.Vector3() }, time: timeU, zenith: { value: new THREE.Color(.5, .6, .78) }, sunCol: { value: new THREE.Color(1, .78, .5) }, cloudCol: { value: new THREE.Color(1, .96, .92) }, stars: { value: 0 } };   // zenith, sunCol and stars: the time of day (daylight.js)
+const skyU = { horizon: { value: new THREE.Color(FOG) }, sunDir: { value: new THREE.Vector3() }, time: timeU, zenith: { value: new THREE.Color(.5, .6, .78) }, sunCol: { value: new THREE.Color(1, .78, .5) }, cloudCol: { value: new THREE.Color(1, .96, .92) }, cloudShade: { value: new THREE.Vector3(.95, .92, 1.03) }, stars: { value: 0 } };   // zenith, sunCol and stars: the time of day (daylight.js)
 const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.ShaderMaterial({
   uniforms: skyU, side: THREE.BackSide, depthWrite: false, fog: false,
   vertexShader: 'varying vec3 vD; void main(){ vD=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-  fragmentShader: `uniform vec3 horizon, sunDir, zenith, sunCol, cloudCol; uniform float time, stars; varying vec3 vD;
+  fragmentShader: `uniform vec3 horizon, sunDir, zenith, sunCol, cloudCol, cloudShade; uniform float time, stars; varying vec3 vD;
     float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
     float noise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
       return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y); }
@@ -124,10 +124,10 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.Shad
       // night: a moon where the sun was, and a few posterised stars
       vec2 sq=floor(vD.xz/(h+.12)*90.); float sh=hash(sq);
       c+=sunCol*pow(s,900.)*3.*stars + vec3(.9,.93,1.)*step(.993,sh)*stars*smoothstep(.06,.35,h)*(.6+.4*sin(time*2.+sh*60.));
-      // painted clouds: soft, layered and drifting, lit on the sun side and shaded in lavender underneath
+      // painted clouds: soft, layered and drifting, lit on the sun side and shaded underneath in the mood's cloudShade tint (lavender; faintly warm at morning)
       vec2 q=vD.xz/(h+.2)*1.5+vec2(time*.005,time*.0015);
       float n=fbm(q), cover=smoothstep(.46,.78,n), under=smoothstep(.52,.92,fbm(q*1.6+vec2(3.1,time*.002)));
-      vec3 lit=mix(vec3(1.,.96,.92),sunCol,.3)*mix(vec3(1.),cloudCol,.6), shade=mix(lit*.8,horizon,.4)*vec3(.95,.92,1.03);
+      vec3 lit=mix(vec3(1.,.96,.92),sunCol,.3)*mix(vec3(1.),cloudCol,.6), shade=mix(lit*.8,horizon,.4)*cloudShade;
       float fade=smoothstep(.01,.26,h)*day;
       c=mix(c,mix(lit,shade,under*.75),cover*fade*.92);
       gl_FragColor=vec4(c,1.); }`,

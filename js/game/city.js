@@ -15,7 +15,7 @@ function apartment(x, z, w, d, h) {
   for (let i = 1; i < floors; i++) {
     const y = i * h / floors;
     box(w + .3, .14, .9, MAT.concrete, x, y - .07, front + .4);
-    for (let k = 0; k < Math.floor(w / 2.2); k++) box(.9, 1.1, .06, rnd() < .35 ? MAT.glassLit : MAT.glass, x - w / 2 + 1.1 + k * 2.2, y - 1.7, front + .03, { cast: false, s: 0 });
+    for (let k = 0; k < Math.floor(w / 2.2); k++) framedWindow(x - w / 2 + 1.1 + k * 2.2, y - 1.7, front, .9, 1.1, rnd() < .35 ? MAT.glassLit : MAT.glass, 1, decorRandom() < .3);
   }
   for (let k = 0; k < 2; k++) { const t = add(new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .9, 10), MAT.charcoal || MAT.metal)); t.position.set(x - w / 4 + k * w / 2, h + .45, z); }
 }
@@ -30,7 +30,7 @@ function busStop(x, z) {
 }
 
 function bins(x, z) {
-  for (const [dx, lid] of [[0, 0x2aa05a], [.55, 0x2f7de0]]) {
+  for (const [dx, lid] of [[0, PAL.sage], [.55, PAL.sky]]) {
     const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.22, .2, .7, 12), MAT.metal)); b.position.set(x + dx, .35, z);
     const l = add(new THREE.Mesh(new THREE.CylinderGeometry(.23, .23, .05, 12), new THREE.MeshStandardMaterial({ color: lid }))); l.position.set(x + dx, .72, z);
   }
@@ -74,7 +74,7 @@ function scooter(color, o = {}) {
 function lane(axis, fixed, d, from, to, stopAt, light, cars) {
   const L = { axis, fixed, d, from, to, stopAt, light, cars: [] };
   for (const [s, kind, color] of cars) {
-    const g = kind === 'auto' ? autoRickshaw(color) : kind === 'scooter' ? scooter(color, { rider: true, jacket: [0x2a3a5a, 0x8a2a2a, 0x3f6a3a, 0x5a5a62][rnd() * 4 | 0], helmet: [0x1c1c20, 0xe8e6e0, 0xc0392b][rnd() * 3 | 0] }) : car(0, 0, 0, color, { collide: false });
+    const g = kind === 'auto' ? autoRickshaw(color) : kind === 'scooter' ? scooter(color, { rider: true, jacket: [0x2a3a5a, PAL.coral, 0x3f6a3a, PAL.paint][rnd() * 4 | 0], helmet: [0x1c1c20, 0xe8e6e0, PAL.coral][rnd() * 3 | 0] }) : car(0, 0, 0, color, { collide: false });
     g.userData.dyn = true; compact(g);
     g.rotation.y = axis === 'z' ? (d > 0 ? 0 : Math.PI) : (d > 0 ? Math.PI / 2 : -Math.PI / 2);
     const v = { g, s, v: 0, cruise: kind === 'auto' ? 4.2 : kind === 'scooter' ? 6.2 : 5.5, len: kind === 'auto' ? 2.8 : kind === 'scooter' ? 1.9 : 4.4 };

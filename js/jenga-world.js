@@ -147,7 +147,7 @@
       else if (st.glyph === 'circle') g.arc(cx, cy, r * 0.85, 0, 6.2832);
       else if (st.glyph === 'diamond') { g.moveTo(cx, cy - r); g.lineTo(cx + r * 0.85, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r * 0.85, cy); g.closePath(); }
       else g.rect(cx - r * 0.75, cy - r * 0.75, r * 1.5, r * 1.5);
-      g.fill(); g.font = '700 40px "Pixelify Sans", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#f3ead6'; g.fillText(String(n), 64, 100);
+      g.fill(); g.font = `700 40px ${SIGN_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#f3ead6'; g.fillText(String(n), 64, 100);
     }
     function glyphs(on) {   // the four glyph-and-number decals exist only while the tower is up
       S.shells.forEach((s, k) => {
@@ -173,8 +173,8 @@
       for (const b of want) {
         if (S.engr.has(b.id)) continue;
         const tex = TF.canvasTex(256, 64, (g) => {
-          g.clearRect(0, 0, 256, 64); g.font = '600 26px "Pixelify Sans", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
-          let s = 26; while (g.measureText(b.answerText).width > 236 && s > 12) { s -= 2; g.font = `600 ${s}px "Pixelify Sans", monospace`; }
+          g.clearRect(0, 0, 256, 64); g.font = `600 26px ${SIGN_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+          let s = 26; while (g.measureText(b.answerText).width > 236 && s > 12) { s -= 2; g.font = `600 ${s}px ${SIGN_FONT}`; }
           g.fillStyle = 'rgba(255,235,190,.35)'; g.fillText(b.answerText, 128, 34); g.fillStyle = 'rgba(52,30,14,.92)'; g.fillText(b.answerText, 128, 32);
         }, { nearest: false });
         const m = new THREE.Mesh(new THREE.PlaneGeometry(size.len * 0.92, size.len * 0.92 * 0.25), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));

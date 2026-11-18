@@ -2,17 +2,55 @@
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
 // ================= props =================
+// the chunky, rounded way to build a stick: a round post (radius at the foot, height, top radius), instead of a thin box
+function post(r, h, m, x, y, z, rTop = r, cast = true) { const me = add(new THREE.Mesh(new THREE.CylinderGeometry(rTop, r, h, 20), m), undefined, cast); me.position.set(x, y + h / 2, z); return me; }
+// ---- grounding: contact shading and lamp pools ----
+// contact(x, z, rx, rz, ry): a soft, low-opacity warm plum blob on the ground where something stands (rx / rz: half sizes along the prop's own axes, a little bigger than its footprint, ry its turn).
+// lampPool(x, z, r, k): a soft warm pool of light on the ground under a lamp; daylight.js fades them in with the lamps at evening and night. Both are only recorded while the lobby builds (contactOn:
+// the other zones stand at their own ground heights), and flushContacts() turns each list into ONE mesh, so a hundred props cost two draw calls.
+let contactOn = false; const CONTACTS = [], POOLS = [];
+const POOL_MAT = new THREE.MeshBasicMaterial({ color: 0xffc27a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, vertexColors: true });
+function contact(x, z, rx, rz = rx, ry = 0) { if (contactOn) CONTACTS.push([x, z, rx, rz, ry]); }
+function lampPool(x, z, r = 3.4, k = 1) { if (contactOn) POOLS.push([x, z, r, r, 0, k]); }
+function flushContacts() {
+  const quads = (list, y, rgb) => {
+    const pos = new Float32Array(list.length * 12), nor = new Float32Array(list.length * 12), uv = new Float32Array(list.length * 8), col = new Float32Array(list.length * 12), idx = [];
+    list.forEach(([x, z, rx, rz, ry, k = 1], q) => {
+      const c = Math.cos(ry), sn = Math.sin(ry);
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([u, v], j) => {
+        const a = u * rx, b = v * rz, i = q * 4 + j;
+        pos.set([x + a * c + b * sn, y, z - a * sn + b * c], i * 3); nor.set([0, 1, 0], i * 3); uv.set([(u + 1) / 2, (v + 1) / 2], i * 2); col.set([k, k, k], i * 3);
+      });
+      idx.push(q * 4, q * 4 + 2, q * 4 + 1, q * 4, q * 4 + 3, q * 4 + 2);
+    });
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setIndex(idx);
+    return g;
+  };
+  if (CONTACTS.length) {
+    const m = new THREE.Mesh(quads(CONTACTS, .03), new THREE.MeshLambertMaterial({ color: PAL.plum, map: TX.contact, transparent: true, opacity: .46, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+    m.renderOrder = 1; m.frustumCulled = false; scene.add(m);
+  }
+  if (POOLS.length) { POOL_MAT.map = TX.pool; const m = new THREE.Mesh(quads(POOLS, .035), POOL_MAT); m.renderOrder = 2; m.frustumCulled = false; scene.add(m); }
+  CONTACTS.length = POOLS.length = 0; contactOn = false;
+}
+
 function streetLamp(x, z, zone, light = true) {
-  box(.34, .2, .34, MAT.metal, x, 0, z); box(.12, 3.5, .12, MAT.metal, x, .2, z); box(.95, .08, .12, MAT.metal, x + .42, 3.62, z);
-  box(.56, .08, .3, MAT.warmGlow, x + .74, 3.52, z, { cast: false }); box(.62, .1, .36, MAT.metal, x + .74, 3.6, z);
-  colCirc(x, z, .22);
+  post(.3, .26, MAT.metal, x, 0, z, .26); post(.12, 3.4, MAT.metal, x, .26, z, .1); box(.98, .13, .13, MAT.metal, x + .42, 3.56, z);
+  const globe = add(new THREE.Mesh(new THREE.SphereGeometry(.27, 20, 14), MAT.warmGlow), undefined, false); globe.position.set(x + .8, 3.36, z);   // a soft glowing globe under a round cap
+  const cap = add(new THREE.Mesh(new THREE.SphereGeometry(.34, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), MAT.metal)); cap.position.set(x + .8, 3.5, z); cap.scale.y = .6;
+  colCirc(x, z, .22); contact(x, z, .8); if (light) lampPool(x + .74, z + .2);
   if (light) pointLight(zone, 0xffc27a, 1.6, 9, x + .74, 3.2, z + .2);
 }
-function bollard(x, z) { box(.18, .7, .18, MAT.metal, x, 0, z); box(.2, .1, .2, MAT.warmGlow, x, .52, z, { cast: false }); colCirc(x, z, .14); }
+function bollard(x, z) {
+  post(.15, .55, MAT.metal, x, 0, z, .12); const g = add(new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 12), MAT.warmGlow), undefined, false); g.position.set(x, .66, z);
+  colCirc(x, z, .14);
+}
 function bench(x, z, ry = 0) {
+  PAVE_U.addBench(x, z);   // the paving grows moss in the joints under benches
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
-  for (const dx of [-.75, .75]) box(.16, .42, .5, MAT.concrete, dx, 0, 0, { p: g });
-  for (let i = 0; i < 4; i++) box(1.9, .06, .1, MAT.wood, 0, .42, -.18 + i * .12, { p: g });
+  for (const dx of [-.75, .75]) box(.22, .46, .54, MAT.concrete, dx, 0, 0, { p: g });
+  for (let i = 0; i < 4; i++) box(1.9, .08, .115, MAT.wood, 0, .44, -.18 + i * .12, { p: g });
+  contact(x, z, 1.4, .75, ry);
   const c = Math.abs(Math.sin(ry)) > .5; colBox(x - (c ? .3 : .95), z - (c ? .95 : .3), x + (c ? .3 : .95), z + (c ? .95 : .3));
 }
 function jitterSphere(r, detail) {
@@ -38,6 +76,7 @@ function treeBlossoms(g, blobs, s) {
   const pts = new THREE.Points(geo, blossomMat); pts.userData.dyn = true; g.add(pts);
 }
 function tree(x, z, s = 1, leaf = MAT.leafA, collide = true) {
+  PAVE_U.addPlant(x, z, s, true);   // petals settle near plants, and the paving gets dappled light under trees (groundlife.js)
   const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
   const tr = add(new THREE.Mesh(new THREE.CylinderGeometry(.15 * s, .26 * s, 2.6 * s, 7), MAT.bark), g); tr.position.y = 1.3 * s;
   const n = 5 + (rnd() * 3 | 0), blobs = [];
@@ -55,14 +94,17 @@ function tree(x, z, s = 1, leaf = MAT.leafA, collide = true) {
   return g;
 }
 function bush(x, z, s = 1, leaf = MAT.leafB) {
-  for (let i = 0; i < 3; i++) { const m = add(new THREE.Mesh(jitterSphere(rr(.45, .6) * s, 1), leaf)); m.position.set(x + (i - 1) * .45 * s, .35 * s, z + rr(-.15, .15)); }
-  colCirc(x, z, .6 * s);
+  PAVE_U.addPlant(x, z, s);
+  const mat = [MAT.leafA, MAT.leafB, MAT.leafC].indexOf(leaf), foliage = mat < 0 ? leaf : MAT.bush[mat];   // palette greens, lighter on top and darker underneath
+  for (let i = 0; i < 3; i++) { const m = add(new THREE.Mesh(jitterSphere(rr(.45, .6) * s, 1), foliage)); m.position.set(x + (i - 1) * .45 * s, .35 * s, z + rr(-.15, .15)); }
+  contact(x, z, 1.5 * s, 1.0 * s); colCirc(x, z, .6 * s);
 }
 function planterTree(x, z, leaf, s = 1) {
   box(2.2, .5, 2.2, MAT.concrete, x, 0, z); plane(1.9, 1.9, MAT.dirt, x, .51, z, 1);
   tree(x, z, s, leaf); COL[COL.length - 1].r = 1.2;
 }
 function pot(x, z, s = 1) {
+  PAVE_U.addPlant(x, z, s);
   const p = add(new THREE.Mesh(new THREE.CylinderGeometry(.32 * s, .26 * s, .6 * s, 12), MAT.concrete)); p.position.set(x, .3 * s, z);
   const b = add(new THREE.Mesh(jitterSphere(.42 * s, 1), MAT.leafA)); b.position.set(x, .85 * s, z);
   colCirc(x, z, .35 * s);
@@ -73,34 +115,36 @@ function hedgeRow(x0, z0, x1, z1) {
   box(w, .5, d, MAT.concrete, cx, 0, cz); box(w - .12, .8, d - .12, MAT.hedge, cx, .5, cz);
   colBox(cx - w / 2, cz - d / 2, cx + w / 2, cz + d / 2);
 }
+// every sign is one style: a painted pastel panel in a warm wood frame with rounded lettering (signTex, textures.js). opts.bg / the LED colour only choose which pastel.
+// Both builders keep the mesh layout [frame x4, panel, panel / frame] that the minigames rely on (the Mill swaps material[4]'s texture to re-letter a plate).
 function signBoard(text, x, y, z, w = 2.4, h = .45, ry = 0, opts) {
   const m = std(textTex(text, opts), 0); m.emissiveMap = m.map; m.emissive.setScalar(.3);   // a sign lights its own words a little, so they read at night too
   const side = MAT.darkWood;
-  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .08), [side, side, side, side, m, m]);
+  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .12), [side, side, side, side, m, m]);
   b.position.set(x, y, z); b.rotation.y = ry; return add(b);
 }
-// font: CSS family; the pixel font's capital C reads like an O on small signs, so those use a plain one
-function ledTex(lines, color, w = 256, h = 64, font = '"Pixelify Sans", monospace') {
+// ledTex is what the glowing screens use (a projector slide, a robot's face, a chess clock): a soft plum panel with rounded lettering in the colour asked for
+function ledTex(lines, color, w = 256, h = 64, font = SIGN_FONT) {
   return canvasTex(w, h, g => {
-    g.fillStyle = '#15171d'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#2c303a'; g.fillRect(0, 0, w, 3); g.fillRect(0, h - 3, w, 3);
+    g.fillStyle = PAL.plum; g.fillRect(0, 0, w, h);
+    g.fillStyle = PAL.paint; g.fillRect(0, 0, w, 3); g.fillRect(0, h - 3, w, 3);
     const fs = Math.min(28, (h - 10) / lines.length * .78);
     g.font = `600 ${fs}px ${font}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = color;
     lines.forEach((l, i) => g.fillText(l, w / 2, h / 2 + (i - (lines.length - 1) / 2) * fs * 1.2 + 1));
   });
 }
-function ledSign(lines, color, x, y, z, w, h, ry = 0, res = [256, 64], font) {
-  const t = ledTex(lines, color, res[0], res[1], font);
-  const m = new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 1.6, roughness: .5 });
-  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .1), [MAT.metal, MAT.metal, MAT.metal, MAT.metal, m, MAT.metal]);
+function ledSign(lines, color, x, y, z, w, h, ry = 0, res = [256, 64]) {
+  const t = signTex(lines, color, res[0], res[1]), m = std(t, 0); m.emissiveMap = t; m.emissive.setScalar(.4);
+  const side = MAT.darkWood, b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .12), [side, side, side, side, m, side]);
   b.position.set(x, y, z); b.rotation.y = ry; return add(b);
 }
 const PLAIN = '"Trebuchet MS", Arial, sans-serif';
 function umbrellaTable(x, z, cloth) {
-  const top = add(new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .06, 14), MAT.wood)); top.position.set(x, .74, z);
-  box(.08, 2.3, .08, MAT.metal, x, 0, z);
-  const u = add(new THREE.Mesh(new THREE.ConeGeometry(1.35, .45, 8), cloth)); u.position.set(x, 2.45, z);
-  for (const [dx, dz] of [[-.85, 0], [.85, 0]]) { box(.42, .45, .42, MAT.metal, x + dx, 0, z + dz); box(.42, .5, .06, MAT.metal, x + dx * 1.2, .45, z + dz); }
-  colCirc(x, z, 1.1);
+  const top = add(new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, .1, 24), MAT.wood)); top.position.set(x, .74, z);
+  post(.34, .08, MAT.metal, x, 0, z); post(.1, 2.3, MAT.metal, x, .08, z, .08);
+  const u = add(new THREE.Mesh(new THREE.SphereGeometry(1.4, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), cloth)); u.position.set(x, 2.15, z); u.scale.y = .38;   // a puffy parasol, not a flat 8-sided cone
+  const k = add(new THREE.Mesh(new THREE.SphereGeometry(.1, 12, 10), MAT.gold)); k.position.set(x, 2.78, z);
+  for (const [dx, dz] of [[-.85, 0], [.85, 0]]) { post(.26, .34, MAT.metal, x + dx, 0, z + dz, .22); post(.32, .12, cloth, x + dx, .34, z + dz); box(.1, .5, .5, MAT.metal, x + dx * 1.35, .36, z + dz); }
+  contact(x, z, 1.55); colCirc(x, z, 1.1);
 }
 function glowStrip(color) { return new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.4 }); }

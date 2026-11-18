@@ -101,7 +101,7 @@
       const mesh = (g, m, x, y, z, o = {}) => { const me = new THREE.Mesh(g, m); me.position.set(A[0] + x, y, A[1] + z); me.castShadow = o.cast !== false; me.receiveShadow = true; scene.add(me); return me; };
       // the belt: a dark bed, a rubber surface with a scrolling pixel texture, side rails with an amber strip, legs, end rollers
       bx(len, 0.22, 1.6, MAT.metal, cxm, 0.5, bz);
-      S.beltTex = TF.canvasTex(32, 16, (g, w, h) => { g.fillStyle = '#20232b'; g.fillRect(0, 0, w, h); g.fillStyle = '#2c303a'; for (let x = 0; x < w; x += 8) g.fillRect(x, 0, 4, h); g.fillStyle = '#4a3a22'; for (let x = 0; x < w; x += 8) { g.fillRect(x + 1, 2, 2, 2); g.fillRect(x + 3, h - 4, 2, 2); } }, { nearest: true });
+      S.beltTex = TF.canvasTex(32, 16, (g, w, h) => { g.fillStyle = PAL.plum; g.fillRect(0, 0, w, h); g.fillStyle = PAL.plum; for (let x = 0; x < w; x += 8) g.fillRect(x, 0, 4, h); g.fillStyle = PAL.brown; for (let x = 0; x < w; x += 8) { g.fillRect(x + 1, 2, 2, 2); g.fillRect(x + 3, h - 4, 2, 2); } }, { nearest: true });
       S.beltTex.repeat.set(len / 1.0, 1);
       const surface = new THREE.Mesh(new THREE.PlaneGeometry(len, L.belt.w), new THREE.MeshStandardMaterial({ map: S.beltTex, roughness: 0.9 })); surface.rotation.x = -Math.PI / 2; surface.position.set(A[0] + cxm, L.belt.top, A[1] + bz); surface.receiveShadow = true; scene.add(surface);
       const strip = TF.glowStrip(amber());
@@ -193,7 +193,7 @@
     }
     function buildPool() {
       for (let i = 0; i < POOL; i++) { const g = crateMesh(true), tg = g.userData.tag; g.traverse((o) => { if (o.isMesh) o.userData.slot = i; }); S.pool.push({ i, g, cv: tg.cv, tex: tg.tex, uid: null }); S.free.push(i); }
-      for (let i = 0; i < 3; i++) { const g = crateMesh(false); g.visible = true; S.ambient.push({ g, x: LAYOUT.belt.x0 + 1 + i * 5.6 }); }   // idle: sample crates ride the belt
+      for (let i = 0; i < 3; i++) { const g = crateMesh(false), x = LAYOUT.belt.x0 + 1 + i * 5.6; g.visible = true; g.position.copy(V(x, LAYOUT.belt.top, LAYOUT.belt.z)); S.ambient.push({ g, x }); }   // placed now: update() skips every other zone, which left them at the world origin, in the lobby fountain   // idle: sample crates ride the belt
     }
     const acquire = (c) => { const i = S.free.shift(); if (i == null) return null; const s = S.pool[i]; s.uid = c.c.uid; drawTag(s, c.c); s.g.visible = true; s.g.rotation.set(0, 0, 0); s.g.scale.setScalar(1); return s; };
     function release(c) { if (!c.slot) return; c.slot.g.visible = false; c.slot.uid = null; S.free.push(c.slot.i); c.slot = null; }

@@ -59,7 +59,7 @@ function vaiGreeter(x, z) {
 function vaiTokenStream(x, z) {
   const g = new THREE.Group(); g.userData.dyn = true; scene.add(g);
   const sprites = VAI_TOKENS.map((w) => {
-    const t = canvasTex(48, 16, (c) => { c.fillStyle = 'rgba(143,232,255,.18)'; c.fillRect(0, 1, 48, 14); c.fillStyle = '#c8f6ff'; c.font = '600 12px "Pixelify Sans", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(w, 24, 9); }, { nearest: true });
+    const t = canvasTex(48, 16, (c) => { c.fillStyle = 'rgba(143,232,255,.18)'; c.fillRect(0, 1, 48, 14); c.fillStyle = '#c8f6ff'; c.font = `600 12px ${SIGN_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(w, 24, 9); }, { nearest: true });
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); s.scale.set(1.1, .37, 1); g.add(s); return s;
   });
   anim.push((t) => sprites.forEach((s, i) => {
@@ -72,7 +72,7 @@ function vaiTokenStream(x, z) {
 function vaiTicker(z) {
   for (const s of [-1, 1]) { box(.3, 5.4, .3, MAT.metal, s * 3.3, 0, z); colCirc(s * 3.3, z, .22); }
   box(7, .3, .4, MAT.metal, 0, 5.4, z); box(7, .05, .05, vGlow(V_LED), 0, 5.36, z + .21, { cast: false });
-  const tex = canvasTex(1024, 32, (g) => { g.fillStyle = '#15171d'; g.fillRect(0, 0, 1024, 32); g.fillStyle = '#ffd27a'; g.font = '600 18px "Pixelify Sans", monospace'; g.textBaseline = 'middle'; g.fillText(VAI_TICKER, 0, 17); }, { nearest: true });
+  const tex = canvasTex(1024, 32, (g) => { g.fillStyle = PAL.plum; g.fillRect(0, 0, 1024, 32); g.fillStyle = '#ffd27a'; g.font = `600 18px ${SIGN_FONT}`; g.textBaseline = 'middle'; g.fillText(VAI_TICKER, 0, 17); }, { nearest: true });
   tex.repeat.set(.32, 1);
   const m = new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 1.4, roughness: .5 });
   for (const ry of [0, Math.PI]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(6.4, .6), m); p.position.set(0, 4.95, z + (ry ? -.21 : .21)); p.rotation.y = ry; p.userData.dyn = true; scene.add(p); }
@@ -147,7 +147,7 @@ function vaiRobotDog(x, z) {
 function vaiChatHolo(x, y, z, ry) {
   const frame = (cursor) => canvasTex(128, 48, (g) => {
     g.fillStyle = 'rgba(143,232,255,.16)'; g.fillRect(2, 2, 124, 44); g.fillStyle = '#8fe8ff'; g.fillRect(2, 2, 124, 2); g.fillRect(2, 44, 124, 2); g.fillRect(2, 2, 2, 44); g.fillRect(124, 2, 2, 44);
-    g.font = '600 12px "Pixelify Sans", monospace'; g.textBaseline = 'middle'; g.fillStyle = '#d6f7ff';
+    g.font = `600 12px ${SIGN_FONT}`; g.textBaseline = 'middle'; g.fillStyle = '#d6f7ff';
     g.fillText('> write a haiku', 10, 16); g.fillText('  about tokens' + (cursor ? '_' : ''), 10, 32);
   }, { nearest: true });
   const frames = [frame(true), frame(false)], m = new THREE.MeshBasicMaterial({ map: frames[0], transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -175,7 +175,7 @@ function vaiArtWall(x, z, ry) {
   const g = vGroup(x, z, ry), w = 5, h = 2.5;
   for (const s of [-1, 1]) gbox(g, .16, h + .5, .16, MAT.metal, s * (w / 2 + .1), 0, 0);
   gbox(g, w + .36, h + .2, .14, MAT.metal, 0, .4, -.06); gbox(g, w + .36, .05, .05, vGlow(V_LED), 0, h + .62, .03, { cast: false });
-  const tex = canvasTex(ART_W, ART_H, (c) => { c.fillStyle = '#0c0e14'; c.fillRect(0, 0, ART_W, ART_H); }, { nearest: true }), ctx = tex.image.getContext('2d');
+  const tex = canvasTex(ART_W, ART_H, (c) => { c.fillStyle = PAL.plum; c.fillRect(0, 0, ART_W, ART_H); }, { nearest: true }), ctx = tex.image.getContext('2d');
   const m = new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 1.1, roughness: .6 });
   const scr = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m); scr.position.set(0, .5 + h / 2, .02); scr.userData.dyn = true; g.add(scr);
   let strokes = artScene(), i = 0, hold = 0, fade = 0, acc = 0, last = 0;
@@ -185,7 +185,7 @@ function vaiArtWall(x, z, ry) {
     acc = 0;
     if (i < strokes.length) { for (let k = 0; k < 7 && i < strokes.length; k++, i++) { const [sx, sy, sw, sh, col] = strokes[i]; ctx.fillStyle = col; ctx.fillRect(sx | 0, sy | 0, Math.ceil(sw), Math.ceil(sh)); } }
     else if (hold < 40) hold++;
-    else if (fade < 14) { ctx.fillStyle = 'rgba(12,14,20,.25)'; ctx.fillRect(0, 0, ART_W, ART_H); fade++; }
+    else if (fade < 14) { ctx.fillStyle = 'rgba(90,66,86,.25)'; ctx.fillRect(0, 0, ART_W, ART_H); fade++; }
     else { strokes = artScene(); i = 0; hold = 0; fade = 0; }
     tex.needsUpdate = true;
   });
@@ -196,14 +196,14 @@ function vaiArtWall(x, z, ry) {
 function vaiConveyor(x0, x1, z, outX0, outX1) {
   const y = .8, len = x1 - x0, mid = (x0 + x1) / 2;
   box(len, .12, .7, MAT.metal, mid, y - .12, z); for (const lx of [x0 + .3, mid, x1 - .3]) for (const s of [-1, 1]) box(.08, y - .12, .08, MAT.metal, lx, 0, z + s * .3);
-  const beltTex = canvasTex(16, 4, (c) => { c.fillStyle = '#23262c'; c.fillRect(0, 0, 16, 4); c.fillStyle = '#3a3e48'; for (let i = 0; i < 16; i += 4) c.fillRect(i, 0, 1, 4); }, { nearest: true });
+  const beltTex = canvasTex(16, 4, (c) => { c.fillStyle = PAL.plum; c.fillRect(0, 0, 16, 4); c.fillStyle = PAL.paint; for (let i = 0; i < 16; i += 4) c.fillRect(i, 0, 1, 4); }, { nearest: true });
   beltTex.repeat.set(len * 2, 1);
   const belt = new THREE.Mesh(new THREE.PlaneGeometry(len, .6), new THREE.MeshStandardMaterial({ map: beltTex, roughness: .8 })); belt.rotation.x = -Math.PI / 2; belt.position.set(mid, y + .01, z); belt.userData.dyn = true; scene.add(belt);
   box(len, .04, .04, vGlow(V_LED), mid, y - .04, z + .36, { cast: false });
   box(1, .9, .9, MAT.metal, x1 + .4, 0, z); box(1.1, .5, 1, MAT.metal, x1 + .4, .9, z);
   ledSign(['TRAINING DATA'], '#ffd27a', x1 + .4, 1.75, z + .2, 1.6, .34);
   box(.06, .7, .6, vOnce('slot', () => new THREE.MeshStandardMaterial({ color: 0x0c0e14 })), x0 - .02, y - .05, z, { cast: false });
-  const icons = ['Aa', '01', '{}', '♪', '[]', '?!'].map((txt, k) => { const t = canvasTex(16, 16, (c) => { c.fillStyle = ['#ffd27a', '#8fe8ff', '#9dff9f', '#ff9db5', '#c8a6ff', '#ffffff'][k]; c.fillRect(0, 0, 16, 16); c.fillStyle = '#15171d'; c.font = '600 9px "Pixelify Sans", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, 8, 9); }, { nearest: true }); return std(t, 0, { emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .35 }); });
+  const icons = ['Aa', '01', '{}', '♪', '[]', '?!'].map((txt, k) => { const t = canvasTex(16, 16, (c) => { c.fillStyle = ['#ffd27a', '#8fe8ff', '#9dff9f', '#ff9db5', '#c8a6ff', '#ffffff'][k]; c.fillRect(0, 0, 16, 16); c.fillStyle = PAL.brown; c.font = `600 9px ${SIGN_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, 8, 9); }, { nearest: true }); return std(t, 0, { emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .35 }); });
   const cubes = Array.from({ length: 8 }, (_, k) => { const c = new THREE.Mesh(new THREE.BoxGeometry(.28, .28, .28), icons[k % icons.length]); c.castShadow = true; c.userData.dyn = true; scene.add(c); return c; });
   const crystalMat = new THREE.MeshStandardMaterial({ color: V_LED, emissive: V_LED, emissiveIntensity: 1.3, roughness: .2 });
   const crystals = Array.from({ length: 3 }, () => { const c = new THREE.Mesh(new THREE.OctahedronGeometry(.17), crystalMat); c.userData.dyn = true; scene.add(c); return c; });

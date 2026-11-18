@@ -7,6 +7,22 @@ function faceBox(w, h, d, mats, x, y, z) {
   const me = new THREE.Mesh(boxGeo(w, h, d, mats.map(m => m.userData.s || 0)), mats);
   me.position.set(x, y + h / 2, z); return add(me);
 }
+// a flower box: a coral planter with a row of leafy blobs and a few blossoms. Visual only (it sits against a wall, inside the walking pad). parent: a group, for coordinates local to it.
+function flowerBox(x, y, z, w, parent) {
+  box(w, .22, .24, MAT.pot, x, y, z, { cast: false, p: parent });
+  const n = Math.max(2, Math.round(w / .4));
+  for (let i = 0; i < n; i++) {
+    const bx = x - w / 2 + (i + .5) * w / n, m = add(new THREE.Mesh(jitterSphere(.16 + decorRandom() * .06, 1), decorRandom() < .3 ? MAT.leafLav : MAT.leafA), parent, false); m.position.set(bx, y + .3, z);
+    if (decorRandom() < .6) { const b = add(new THREE.Mesh(new THREE.SphereGeometry(.06, 10, 8), MAT.blossom), parent, false); b.position.set(bx + .06, y + .46, z + .1); }
+  }
+}
+// a cream-framed window with a sill (and a flower box if asked) for facades built from plain boxes; f is which way the facade faces in z (+1 or -1); y is the bottom of the glass
+function framedWindow(x, y, z, w, h, mat, f = 1, flowers = false) {
+  box(w + .26, h + .26, .05, MAT.trim, x, y - .13, z - f * .02, { cast: false, s: 0 });
+  box(w, h, .06, mat, x, y, z + f * .03, { cast: false, s: 0 });
+  box(w + .44, .1, .26, MAT.trim, x, y - .2, z + f * .12, { cast: false });
+  if (flowers) flowerBox(x, y - .62, z + f * .2, w + .1);
+}
 function officeBlock(cx, cz, W, D, H, o = {}) {
   const front = cz + D / 2, s = o.side || MAT.concrete;
   box(W + .4, .3, D + .4, MAT.concrete, cx, 0, cz);
@@ -16,12 +32,17 @@ function officeBlock(cx, cz, W, D, H, o = {}) {
   for (const [w, d, x, z] of [[W + .1, .22, cx, front - .05], [W + .1, .22, cx, cz - D / 2 + .05], [.22, D, cx - W / 2 + .05, cz], [.22, D, cx + W / 2 - .05, cz]]) box(w, .5, d, MAT.concrete, x, H + .3, z);
   for (let i = 0; i < (o.units ?? 2); i++) box(rr(1.2, 2.2), rr(.6, 1.1), rr(1, 1.6), MAT.metal, cx + rr(-W / 3, W / 3), H + .3, cz + rr(-D / 4, D / 4));
   if (o.fins) for (let x = cx - W / 2 + 1.5; x < cx + W / 2 - 1; x += o.fins) box(.14, H - .2, .45, MAT.wood, x, .4, front + .2, { cast: false });
+  // soft finishing: cream corner pilasters, a trim cap on the parapet, and a row of flower boxes along the foot of the front (between the fins, clear of the door)
+  for (const sx of [-1, 1]) box(.5, H, .5, MAT.trim, cx + sx * W / 2, .3, front, { cast: false });
+  box(W + .3, .14, .4, MAT.trim, cx, H + .8, front - .05, { cast: false });
+  if (o.planters !== false) for (let x = cx - W / 2 + 1.5 + (o.fins ? o.fins / 2 : 0); x < cx + W / 2 - 1; x += o.fins || 2.8) if (Math.abs(x - cx) > (o.door ?? 3.4)) flowerBox(x, .32, front + .3, Math.min(1.6, (o.fins || 2.8) - .8));
   if (o.collide !== false) colBox(cx - W / 2 - .2, cz - D / 2 - .2, cx + W / 2 + .2, front + .2);
   return front;
 }
 function hq(cx, cz) {
   const W = 17, D = 8, H = 9, front = officeBlock(cx, cz, W, D, H, { floors: 3, units: 3, fins: 3 });
   // entrance: lit glass doors under a concrete canopy
+  box(5, .16, 1.5, MAT.concrete, cx, 0, front + .75, { cast: false });   // the door step
   box(3.6, 2.7, .1, MAT.glassLit, cx, .3, front + .08, { cast: false });
   box(7, .24, 2.8, MAT.concrete, cx, 3.05, front + 1.4);
   box(5.6, .05, .3, MAT.warmGlow, cx, 3.0, front + 2.3, { cast: false });
@@ -47,14 +68,14 @@ function calfusHQ(cx, cz) {
   const curtainDraw = (k) => (g, W, H) => {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const t = y / H, sheen = ((x + y) % Math.round(23 * k) < 3 * k) ? 26 : 0;
-      let c = [86 - t * 22 + sheen, 146 - t * 30 + sheen, 196 - t * 30 + sheen];
-      if (x % Math.round(16 * k) === 0 || y === 0) c = [62, 70, 80]; else if (y >= Math.round(25 * k) && y <= Math.round(26.5 * k)) c = [70, 96, 124];
+      let c = [150 - t * 22 + sheen, 200 - t * 28 + sheen, 226 - t * 24 + sheen];   // soft sky-blue glass
+      if (x % Math.round(16 * k) === 0 || y === 0) c = palRGB(PAL.cream); else if (y >= Math.round(25 * k) && y <= Math.round(26.5 * k)) c = palRGB(PAL.periwinkle);
       P(g, x, y, c);
     }
   };
-  const curtain = std(refineTexture(canvasTex(32, 32, curtainDraw(1), { nearest: true }), 70, 70, curtainDraw(70 / 32)), 2.2, { roughness: .15, metalness: .45 });
-  const white = std(panel([226, 228, 230], [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32], [16, 0, 1, 32]]), 2.2);
-  const grey = std(panel([116, 120, 126], [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32]]), 2.2);
+  const curtain = std(refineTexture(canvasTex(32, 32, curtainDraw(1), { nearest: true }), 70, 70, curtainDraw(70 / 32)), 2.2, { roughness: .4, metalness: 0 });
+  const white = std(panel(palRGB(PAL.cream), [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32], [16, 0, 1, 32]]), 2.2);
+  const grey = std(panel(palRGB(PAL.lilac, .88), [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32]]), 2.2);
   // squashed in height so the whole front, logo included, fits in the game camera's narrow view
   const F = cz, D = 7, bz = F - D / 2, HM = 4.9, HT = 6.2;
   box(15, .3, D + 1.4, MAT.concrete, cx + .5, 0, bz + .4);
@@ -70,7 +91,7 @@ function calfusHQ(cx, cz) {
     const aw = add(new THREE.Mesh(boxGeo(1.5, .08, .45, 0), MAT.metal)); aw.position.set(cx + 4.9, 2.42 + i * 1.95, F + .5); aw.rotation.x = .35;
   }
   const logo = canvasTex(160, 40, (g, W, H) => {
-    g.fillStyle = rgb([116, 120, 126]); g.fillRect(0, 0, W, H);
+    g.fillStyle = rgb(palRGB(PAL.lilac, .88)); g.fillRect(0, 0, W, H);
     g.font = '700 30px "Helvetica Neue", Arial, sans-serif'; g.textBaseline = 'middle';
     const tw = g.measureText('Calfus').width, x0 = (W - tw) / 2, cw = g.measureText('C').width;
     g.fillStyle = '#ffffff'; g.fillText('Calfus', x0, H / 2 + 2);
@@ -83,6 +104,8 @@ function calfusHQ(cx, cz) {
   box(1.4, HT - 1, D - .4, MAT.charcoal, cx + 6.8, .3, bz - .3);
   for (let x = cx + 6.15; x < cx + 7.5; x += .2) box(.05, HT - 1.2, .3, MAT.metal, x, .4, F - .45);
   // entrance: lit glass doors under a canopy
+  box(3.6, .16, 1.2, MAT.concrete, cx - 2.5, 0, F + .6, { cast: false });   // the door step
+  for (const dx of [-5.3, .3]) flowerBox(cx + dx, .32, F + .3, 1.5);
   box(2.8, 2.6, .1, MAT.glassLit, cx - 2.5, .3, F + .06, { cast: false });
   box(4.6, .22, 2.2, MAT.concrete, cx - 2.5, 2.95, F + 1.1);
   for (const s of [-1, 1]) { box(.14, 2.95, .14, MAT.metal, cx - 2.5 + s * 2.1, 0, F + 2.05); colCirc(cx - 2.5 + s * 2.1, F + 2.05, .15); }
@@ -130,13 +153,22 @@ function palm(x, z, h = 3.4) {
   colCirc(x, z, .3);
 }
 // o.collide false for moving traffic (no static colliders); returns the car's group
+// a toy car, built into group g (z is forward): a chunky rounded body, a bubble cabin, round wheels with cream hubs, soft round lamps. Shared by the parked cars and the EV bay.
+let carMats;   // the car's own glass and tyres (the lobby builds before the office kit's materials exist)
+function carBody(g, color) {
+  carMats = carMats || { pane: new THREE.MeshStandardMaterial({ color: 0xd2e8ee, transparent: true, opacity: .3, roughness: .2, depthWrite: false }), tyre: new THREE.MeshStandardMaterial({ color: PAL.plum, roughness: .8 }) };
+  const paint = new THREE.MeshStandardMaterial({ color, roughness: .55, metalness: 0 });
+  box(1.8, .62, 4, paint, 0, .3, 0, { p: g }); box(1.62, .4, 2.0, carMats.pane, 0, .92, -.2, { p: g, cast: false });
+  const roof = add(new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), paint), g); roof.scale.set(.86, .34, 1.12); roof.position.set(0, 1.2, -.2);
+  for (const sx of [-.9, .9]) for (const sz of [-1.3, 1.3]) {
+    const w = add(new THREE.Mesh(new THREE.CylinderGeometry(.36, .36, .26, 28), carMats.tyre), g); w.rotation.z = Math.PI / 2; w.position.set(sx, .36, sz);
+    const hub = add(new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, .28, 20), MAT.umbrellaA), g, false); hub.rotation.z = Math.PI / 2; hub.position.set(sx, .36, sz);
+  }
+  for (const [sx, sz, c] of [[-.55, 2.02, 0xfff0c0], [.55, 2.02, 0xfff0c0], [-.55, -2.02, 0xff9a86], [.55, -2.02, 0xff9a86]]) { const l = add(new THREE.Mesh(new THREE.SphereGeometry(.13, 14, 10), glowStrip(c)), g, false); l.position.set(sx, .56, sz); }
+}
 function car(x, z, ry, color, o = {}) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
-  const paint = new THREE.MeshStandardMaterial({ color, roughness: .3, metalness: .5 });
-  box(1.8, .55, 4.1, paint, 0, .3, 0, { p: g }); box(1.6, .5, 2.1, paint, 0, .85, -.2, { p: g });
-  box(1.62, .38, 2.12, MAT.pane, 0, .9, -.2, { p: g, cast: false });
-  for (const sx of [-.85, .85]) for (const sz of [-1.3, 1.3]) { const w = add(new THREE.Mesh(new THREE.CylinderGeometry(.33, .33, .22, 10), MAT.charcoal), g); w.rotation.z = Math.PI / 2; w.position.set(sx, .33, sz); }
-  box(1.4, .1, .05, glowStrip(0xfff0c0), 0, .55, 2.06, { p: g, cast: false }); box(1.4, .1, .05, glowStrip(0xff3020), 0, .55, -2.06, { p: g, cast: false });
+  carBody(g, color);
   if (o.collide !== false) { colCirc(x - Math.sin(ry), z - Math.cos(ry), 1); colCirc(x + Math.sin(ry), z + Math.cos(ry), 1); }
   return g;
 }
@@ -268,7 +300,7 @@ function sparkles(x, z, color, n = 26, r = .8, h = 2.4) {
   for (let i = 0; i < n; i++) seed.push({ a: rnd() * 6.283, r: r * (.35 + rnd() * .65), sp: .22 + rnd() * .3, ph: rnd(), tw: 3 + rnd() * 4 });
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  const star = canvasTex(8, 8, g => { g.fillStyle = '#fff'; g.fillRect(3, 0, 2, 8); g.fillRect(0, 3, 8, 2); g.fillRect(2, 2, 4, 4); }, { nearest: true });
+  const star = canvasTex(32, 32, g => { const gr = g.createRadialGradient(16, 16, 0, 16, 16, 16); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.3, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 32, 32); }, { nearest: false });   // a soft round glow, not a pixel cross
   const mat = new THREE.PointsMaterial({ map: star, size: .2, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
   const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.userData.dyn = true; scene.add(pts);
   anim.push(t => {

@@ -38,7 +38,7 @@ addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.code === 'Space' && !e.repeat) { hero.trigger('jump'); e.preventDefault(); }
   if (e.code === 'KeyE' && !e.repeat && nearest) nearest.act();
-  if (e.code === 'KeyV' && !e.repeat) { camView ^= 1; const v = CAM_VIEWS[camView]; CAM_OFF.copy(v.off); camera.fov = v.fov; camera.updateProjectionMatrix(); }
+  if (e.code === 'KeyV' && !e.repeat) setCamView(camView ^ 1);
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });

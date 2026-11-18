@@ -13,10 +13,12 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPrefer
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;   // PCF honours shadow.radius (PCFSoft ignores it): soft-edged shadows like the characters' render
 const PR = Math.min(window.devicePixelRatio || 1, 1.5);
-let resScale = 1, ftAcc = 0, ftN = 0;   // drops render resolution if the machine can't keep up
+// drops render resolution if the machine can't keep up, and on a high-dpi screen raises it toward a pixel ratio of 2 (RES_MAX) while frames stay fast
+const RES_MAX = Math.min(window.devicePixelRatio || 1, 2) / PR;
+let resScale = 1, ftAcc = 0, ftN = 0;
 
 const scene = new THREE.Scene();
-const FOG = 0xcdbf9f;
+const FOG = 0xdde5ea;   // neutral cool haze until Daylight applies the mood
 scene.background = new THREE.Color(FOG);
 scene.fog = new THREE.Fog(FOG, 34, 95);
 // two camera views, V switches: a low over-the-shoulder third person (default) and the original high overview
@@ -24,6 +26,18 @@ const CAM_VIEWS = [{ off: new THREE.Vector3(0, 3.6, 7), fov: 48, y: 1.4 }, { off
 let camView = 0;
 const camera = new THREE.PerspectiveCamera(CAM_VIEWS[0].fov, 16 / 9, .5, 220);
 const CAM_OFF = CAM_VIEWS[0].off.clone();
+
+// ================= motion (anime.js v4) =================
+// anime's own requestAnimationFrame loop is off: frame() in loop.js calls anime.engine.update(), so every tween advances on the same frame as the render.
+anime.engine.useDefaultMainLoop = false;
+const REDUCED_MOTION = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);   // near-zero durations for people who ask for less motion
+const liveTweens = new WeakMap();
+// tween(target, { prop: end }, ms, { ease, onUpdate, onComplete }): one tween per target, so starting a new one cancels the one in flight (rapid input never stacks)
+function tween(target, props, ms, o = {}) {
+  const prev = liveTweens.get(target); if (prev) prev.cancel();
+  const a = anime.animate(target, Object.assign({ ease: 'inOut(2)' }, props, o, { duration: REDUCED_MOTION ? 1 : Math.max(1, ms) }));
+  liveTweens.set(target, a); return a;
+}
 
 let seed = 1337;
 const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;

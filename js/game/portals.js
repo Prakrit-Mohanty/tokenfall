@@ -7,11 +7,12 @@ const waterMat = new THREE.ShaderMaterial({
   uniforms: { t: timeU }, transparent: true, depthWrite: false,
   vertexShader: 'varying vec3 vW; void main(){ vec4 w=modelMatrix*vec4(position,1.); vW=w.xyz; gl_Position=projectionMatrix*viewMatrix*w; }',
   fragmentShader: `uniform float t; varying vec3 vW;
-    void main(){ vec2 p=floor(vW.xz*14.)/14.;
-      float w=sin(p.x*2.3+t*1.2)*sin(p.y*2.9-t*.9)+.5*sin((p.x+p.y)*3.7+t*.8);
-      vec3 c=mix(vec3(.13,.31,.34),vec3(.27,.5,.5),smoothstep(-.8,1.3,w));
-      float s=step(1.32,w+.35*sin(p.x*11.+t*2.6)*sin(p.y*7.-t*1.7)); c+=s*vec3(.55,.52,.4);
-      gl_FragColor=vec4(c,.93); }`
+    void main(){ vec2 p=vW.xz;   // smooth: no pixel grid, soft round glints instead of hard square sparkles
+      float w=sin(p.x*1.1+t*.8)*sin(p.y*1.4-t*.6)+.5*sin((p.x+p.y)*1.7+t*.55);
+      vec3 c=mix(vec3(.46,.74,.74),vec3(.64,.86,.83),smoothstep(-.9,1.4,w));
+      float g=smoothstep(.62,1.,sin(p.x*2.6+t*1.1)*sin(p.y*2.2-t*.8))*smoothstep(.6,1.2,w);
+      c+=g*vec3(.2,.19,.15);
+      gl_FragColor=vec4(c,.92); }`
 });
 function portalMat(color) {
   return new THREE.ShaderMaterial({
@@ -47,9 +48,10 @@ function portal(x, z, color, zone, to, label, o = {}) {
   pointLight(zone, color, .6, 5, x, 1.6, z);
   PORTALS.push({ x, z, to, label, zone, ...o });
 }
-// instanced crossed-quad scatter (grass tufts, flowers). GREEN_MATS lets the time of day tint and lift them; jit varies each instance's green so no two tufts match
+// instanced crossed-quad scatter (grass clumps, ferns, clover, flowers). lawn: the texture is a neutral shape that daylight.js tints per mood (a lighter cousin of the grass); otherwise it keeps its own colours.
+// Lit by hemi + sun only, no emissive. jit gives each instance its own slight lightness and hue, so no two clumps match; the lightest still sit above the ground.
 const GREEN_MATS = [];
-function scatter(texture, count, size, pick, jit = false) {
+function scatter(texture, count, size, pick, jit = false, lawn = false) {
   const geo = new THREE.PlaneGeometry(size, size * .8); geo.translate(0, size * .4, 0);
   const g2 = geo.clone(); g2.rotateY(Math.PI / 2);
   const merged = new THREE.BufferGeometry();
@@ -58,19 +60,19 @@ function scatter(texture, count, size, pick, jit = false) {
     merged.setAttribute(k, new THREE.BufferAttribute(arr, a.itemSize));
   }
   const ia = geo.index.array, idx = [...ia, ...Array.from(ia, i => i + 4)]; merged.setIndex(idx);
-  const m = new THREE.MeshStandardMaterial({ map: texture, emissiveMap: texture, emissive: 0x000000, alphaTest: .5, side: THREE.DoubleSide, roughness: 1 }); GREEN_MATS.push(m);
+  const m = new THREE.MeshStandardMaterial({ map: texture, alphaTest: .5, side: THREE.DoubleSide, roughness: 1 }); m.userData.lawn = lawn; GREEN_MATS.push(m);
   m.onBeforeCompile = sh => {
     sh.uniforms.uT = timeU;
     sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       vec2 ip = instanceMatrix[3].xz;
-      float sway = (sin(uT * 1.7 + ip.x * .45 + ip.y * .3) + .5 * sin(uT * 3.1 + ip.x)) * .055 * position.y / ${(size * .8).toFixed(2)};
+      float sway = (sin(uT * 1.7 + ip.x * .45 + ip.y * .3) + .5 * sin(uT * 3.1 + ip.x)) * .035 * position.y / ${(size * .8).toFixed(2)};
       transformed.x += sway; transformed.z += sway * .5;`);
   };
   const im = new THREE.InstancedMesh(merged, m, count), d = new THREE.Object3D(), c = new THREE.Color();
   let n = 0;
   for (let tries = 0; n < count && tries < count * 20; tries++) {
     const p = pick(); if (!p) continue;
-    d.position.set(p[0], p[2] || 0, p[1]); d.rotation.y = rnd() * 3; d.scale.setScalar(rr(.7, 1.3)); d.updateMatrix(); if (jit) im.setColorAt(n, c.setRGB(rr(.8, 1), rr(.9, 1), rr(.7, 1))); im.setMatrixAt(n++, d.matrix);
+    d.position.set(p[0], p[2] || 0, p[1]); d.rotation.y = rnd() * 3; d.scale.setScalar(rr(.7, 1.3)); d.updateMatrix(); if (jit) im.setColorAt(n, c.setRGB(rr(.94, 1.06), rr(.97, 1.06), rr(.9, 1.06))); im.setMatrixAt(n++, d.matrix);
   }
   im.count = n; im.receiveShadow = true; scene.add(im);
 }

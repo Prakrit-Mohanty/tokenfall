@@ -7,7 +7,7 @@ const LOBBY = VILLAGE;
 if (LOBBY.npcBounds) NPC_BOUNDS.lobby = LOBBY.npcBounds;
 
 const TF = window.TokenFall = {
-  THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, GREEN_MATS, rnd, rr, timeU, keys, post: final.u, charScale: CHAR_SCALE, skyU, SUN_DIR, shaftMat, get dust() { return dust; },
+  THREE, scene, camera, renderer, hemi, sun, FOG, CAM_OFF, MAT, TX, GREEN_MATS, GRASS_U, PAVE_U, POOL_MAT, rnd, rr, timeU, keys, post: final.u, charScale: CHAR_SCALE, charLight, tween, skyU, SUN_DIR, shaftMat, get dust() { return dust; },
   INTER, PORTALS, WALK, COL, ZONE_LIGHTS, FADERS, AREAS, anim, life, mergeStatic, leaderboard: LEADERBOARD_API, get lobbySpots() { return LOBBY.minigameSpots || {}; },
   canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
   gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,
@@ -93,7 +93,7 @@ window.TokenFallReady = { push(f) { f(TF); } };
 _ready.forEach(f => f(TF));
 
 // ================= boot =================
-const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('700 20px Cinzel'), document.fonts.load('24px "Press Start 2P"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
+const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('600 24px Fredoka'), document.fonts.load('700 20px Cinzel'), document.fonts.load('24px "Press Start 2P"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImg = new Image();
 const sheetReady = new Promise(r => { sheetImg.onload = r; sheetImg.src = window.CHAR_SHEET; });
 Promise.all([fontsReady, sheetReady]).then(() => {

@@ -18,6 +18,8 @@ CHARS = {
                {'idle': (0, 8, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 11, 56, True), 'jump': (12, 12, 80, False)}, 56, (4, 8)),
     'sudhanshu': ('Sudhanshu', 'sudhanshu-3d-extras/sudhanshu3d.png',   # the lossless copy of sudhanshu-3d/sprites/sudhanshu3d.webp
                   {'idle': (0, 11, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 10, 60, True), 'jump': (12, 11, 80, False)}, 34, (3, 7)),
+    'gaurav': ('Gaurav', 'gaurav-npc-extras/gaurav.png',   # an NPC: idle and walk only (the lossless copy of gaurav-npc/sprites/gaurav.webp)
+               {'idle': (0, 11, 200, True), 'walk': (4, 10, 95, True)}, 0, (0, 0)),
 }
 
 cols = max(f for c in CHARS.values() for (_, f, _, _) in c[2].values())
@@ -26,7 +28,7 @@ sheet = Image.new('RGBA', (cols * CELL[0], rows * CELL[1]))
 data, row = {}, 0
 for cid, (name, src, anims, lift, air) in CHARS.items():
     img = Image.open(os.path.join(ROOT, src)).convert('RGBA')
-    table = {}
+    table, air_ms = {}, None
     for anim, (r0, frames, ms, loop) in anims.items():
         jump = anim == 'jump'
         for i, d in enumerate(DIRS):
@@ -36,7 +38,7 @@ for cid, (name, src, anims, lift, air) in CHARS.items():
             row += 1
         if jump: air_ms = [air[0] * ms, (air[1] + 1) * ms]
     data[cid] = {'name': name, 'id': cid, 'cell': {'w': CELL[0], 'h': CELL[1]}, 'anchor': {'x': ANCHOR[0], 'y': ANCHOR[1]}, 'standHeight': STAND,
-                 'jumpHeight': lift, 'jumpAir': air_ms, 'actions': ['jump', 'run'], 'animations': table}
+                 'jumpHeight': lift, 'jumpAir': air_ms, 'actions': [a for a in ('jump', 'run') if a in anims], 'animations': table}
 
 buf = io.BytesIO(); sheet.save(buf, 'WEBP', quality=90, method=6)
 out = os.path.join(ROOT, 'js/sprites')

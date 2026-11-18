@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaurav NPC · Tokenfall</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#15131D;color:#EDE9F7;font-family:system-ui,sans-serif}
+  main{max-width:900px;margin:0 auto;padding:24px 16px}
+  h1{font-size:24px;margin:0 0 4px} p{margin:0 0 16px;color:#A9A3BC}
+</style>
+</head>
+<body>
+<main>
+  <h1>Gaurav · NPC</h1>
+  <p>Arrows/WASD move the orange "you" marker. Walk up to Gaurav (or click him) and he says a line.</p>
+  <div id="stage"></div>
+</main>
+<script src="js/gaurav-npc.js"></script>
+<script>
+  GauravNPC.mount(document.getElementById('stage'), { src: 'sprites/gaurav.webp' });
+</script>
+</body>
+</html>
