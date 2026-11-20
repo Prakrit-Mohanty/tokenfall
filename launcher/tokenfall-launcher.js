@@ -576,7 +576,7 @@ function screenHTML(v) {
     h += '<div style="position:absolute;inset:0;padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:26px;color:#FF6F91;text-shadow:3px 3px 0 #5B3FA8">CONTROLS</h2><button class="back" data-act="toMenu">Back · Esc</button></div>' +
       '<div style="display:grid;grid-template-columns:200px 1fr;gap:14px 16px;font-size:17px">' +
-      [['Arrows / WASD', 'Walk'], ['Shift', 'Run'], ['Space', 'Jump'], ['E', 'Interact'], ['V', 'Switch view'], ['Enter', 'Chat']].map(function (r) { return '<span style="color:#9FE7FF">' + r[0] + '</span><span style="color:#EDE9F7">' + r[1] + '</span>'; }).join('') +
+      [['Arrows / WASD', 'Walk'], ['Shift', 'Run'], ['Space', 'Jump'], ['E', 'Interact'], ['V', 'Switch view'], ['G', 'Glitch Log']].map(function (r) { return '<span style="color:#9FE7FF">' + r[0] + '</span><span style="color:#EDE9F7">' + r[1] + '</span>'; }).join('') +
       '</div></div>';
   }
   if (v.isZoom) h += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><p class="blink" style="margin:0;font-size:24px;color:#FF6F91">LOADING…</p></div>';

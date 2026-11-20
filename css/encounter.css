@@ -1,0 +1,80 @@
+/* Glitch encounters: the Arena battle frame around a minigame (encounter-ui.js). Reuses the storybook panel, fonts and TOKEN-1 colours. */
+:root {
+  --enc-sky-1: #ffe2c0; --enc-sky-2: #f6c6c9; --enc-sky-3: #b98fb8; --enc-sky-4: #5b4466;
+  --enc-pad: #8fd0a0; --enc-pad-rim: #5d9a73; --enc-muddle: #b9a8e6; --enc-foe: #d9ccff; --enc-q-shadow: #3a2b5c;
+  --enc-shadow: #000; --enc-scan: rgba(255, 255, 255, .05);
+}
+#enc { position: absolute; inset: 0; z-index: 40; display: none; pointer-events: auto; }
+#enc.live { display: block; }
+#enc canvas { image-rendering: pixelated; display: block; }
+#enc .enc-sky { position: absolute; inset: 0; background: linear-gradient(var(--enc-sky-1) 0%, var(--enc-sky-2) 38%, var(--enc-sky-3) 62%, var(--enc-sky-4) 100%); }
+#enc .enc-sky::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, var(--enc-scan) 0 2px, transparent 2px 4px); }
+#enc .enc-pad { position: absolute; border-radius: 50%; background: radial-gradient(ellipse, var(--enc-pad) 0 55%, var(--enc-pad-rim) 56% 70%, transparent 71%); }
+#enc .enc-pad.foe { width: 300px; height: 70px; right: 12%; top: 40%; }
+#enc .enc-pad.me { width: 360px; height: 84px; left: 8%; bottom: 25%; }
+#enc .enc-sp { position: absolute; }
+#enc .enc-sp.foe { right: calc(12% + 50px); top: calc(40% - 130px); }
+#enc .enc-sp.me { left: calc(8% + 100px); bottom: calc(25% + 30px); }
+#enc .enc-plate { position: absolute; width: 270px; padding: 10px 14px; }
+#enc .enc-plate.foe { left: 8%; top: 16%; }
+#enc .enc-plate.me { right: 8%; bottom: 33%; }
+#enc :is(.enc-nm, .enc-who, .enc-reward .k, .enc-reward h2, .enc-q) { font-family: var(--sb-title) !important; }
+#enc .enc-nm { font-size: 10px; color: var(--gold); letter-spacing: .04em; }
+#enc .enc-sub { font-size: 13px; opacity: .85; display: flex; justify-content: space-between; margin-top: 3px; }
+#enc .enc-bar { height: 12px; margin-top: 6px; border-radius: 99px; background: var(--t1-track); box-shadow: 0 0 0 2px var(--enc-shadow) inset; overflow: hidden; }
+#enc .enc-bar > i { display: block; height: 100%; border-radius: 99px; transition: width .5s cubic-bezier(.2, .8, .2, 1), background .4s; }
+#enc .enc-bar.muddle > i { background: var(--enc-muddle); }
+#enc .enc-box { position: absolute; left: 16px; right: 16px; bottom: 16px; min-height: 120px; padding: 16px 22px 20px; }
+#enc .enc-who { display: inline-block; font-size: 10px; background: var(--rose); color: var(--paper-ink); border: 2px solid var(--paper); border-radius: 999px; padding: 4px 10px; margin-bottom: 6px; }
+#enc .enc-who.foe { background: var(--enc-foe); }
+#enc .enc-who.nar { visibility: hidden; }
+#enc .enc-say { font-size: 19px; line-height: 1.5; min-height: 58px; }
+#enc .enc-say b { color: var(--gold); font-weight: 600; }
+#enc .enc-next { position: absolute; right: 18px; bottom: 12px; font-size: 13px; color: var(--gold); animation: enc-bob 1s infinite; }
+#enc .enc-wob { animation: enc-wob 2.4s ease-in-out infinite; }
+#enc .enc-idle { animation: enc-idle 1.6s steps(2) infinite; }
+#enc .enc-q { position: absolute; top: 10%; font-size: 16px; color: var(--enc-foe); text-shadow: 0 2px 0 var(--enc-q-shadow); animation: enc-rise 2.6s linear infinite; opacity: 0; }
+#enc .enc-hit { animation: enc-hit .4s; }
+#enc .enc-float { position: absolute; font-size: 24px; font-weight: 600; text-shadow: 0 2px 0 var(--enc-shadow), 0 0 8px var(--enc-shadow); pointer-events: none; }
+#enc .enc-float.good { color: var(--t1-good); } #enc .enc-float.bad { color: var(--t1-bad); }
+#enc .enc-calm { filter: saturate(.6) brightness(1.2); }
+#enc .enc-reward { position: absolute; inset: 0; margin: auto; width: min(440px, calc(100vw - 32px)); height: fit-content; padding: 22px; text-align: center; display: none; }
+#enc .enc-reward.on { display: block; }
+#enc .enc-reward .k { font-size: 10px; letter-spacing: .2em; color: var(--t1-s2); }
+#enc .enc-reward h2 { font-size: 16px; color: var(--gold); margin: 12px 0 8px; line-height: 1.5; }
+#enc .enc-chip { width: 84px; height: 84px; margin: 6px auto 10px; border-radius: 18px; display: grid; place-items: center; background: var(--t1-core); box-shadow: 0 0 0 2px var(--enc-shadow), 0 0 26px var(--t1-good); font-size: 40px; color: var(--t1-good); }
+#enc .enc-reward p { margin: 6px 0; font-size: 17px; line-height: 1.5; }
+#enc .enc-reward .enc-lesson { opacity: .8; font-size: 15px; }
+#enc .enc-slots { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
+#enc .enc-slots span { width: 26px; height: 10px; border-radius: 4px; background: var(--t1-track); box-shadow: 0 0 0 1px var(--enc-shadow); }
+#enc .enc-slots span.got { background: var(--t1-good); box-shadow: 0 0 8px var(--t1-good); }
+@keyframes enc-bob { 50% { transform: translateY(3px); } }
+@keyframes enc-wob { 50% { transform: translateY(-8px) rotate(-2deg); } }
+@keyframes enc-idle { 50% { transform: translateY(-3px); } }
+@keyframes enc-rise { 10% { opacity: 1; } 100% { transform: translateY(-60px) rotate(20deg); opacity: 0; } }
+@keyframes enc-hit { 25% { transform: translateX(-6px); filter: brightness(2); } 75% { transform: translateX(6px); } }
+@media (max-width: 760px) { #enc .enc-plate { width: 200px; } #enc .enc-pad.foe { width: 200px; } #enc .enc-pad.me { width: 220px; } }
+@media (prefers-reduced-motion: reduce) { #enc .enc-wob, #enc .enc-idle, #enc .enc-q, #enc .enc-next { animation: none; } }
+#enc .enc-moves { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+#enc .enc-moves:empty { display: none; }
+#enc .enc-move { text-align: left; font-size: 16px; padding: 8px 12px; border-radius: 10px; background: var(--t1-core); color: var(--ink); border: 1px solid var(--t1-step-line); cursor: pointer; }
+#enc .enc-move:hover, #enc .enc-move:focus-visible { border-color: var(--gold); outline: none; }
+#enc .enc-move:disabled { opacity: .55; cursor: default; }
+#enc .enc-move kbd { margin: 0 6px 0 0; }
+.enc-mark { position: absolute; z-index: 35; transform: translate(-50%, -100%); width: 34px; height: 34px; display: grid; place-items: center; font-family: var(--sb-title) !important; font-size: 16px; color: var(--t1-tag-ink); background: var(--gold); border: 2px solid var(--t1-core); border-radius: 50%; box-shadow: 0 0 14px var(--gold); pointer-events: none; animation: enc-pop .35s ease-out; }
+@keyframes enc-pop { 0% { transform: translate(-50%, -60%) scale(.2); } 70% { transform: translate(-50%, -110%) scale(1.15); } 100% { transform: translate(-50%, -100%) scale(1); } }
+@media (max-width: 640px) { #enc .enc-moves { grid-template-columns: 1fr; } }
+#enc .enc-dim { position: absolute; inset: 0; background: rgba(30, 18, 34, .55); }
+#enc .enc-foot { margin-top: 12px; font-size: 13px; color: var(--gold); text-align: right; }
+#enc .enc-chip canvas { width: 66px !important; height: auto !important; }
+#enc .enc-book { position: absolute; inset: 0; margin: auto; width: min(760px, calc(100vw - 32px)); height: fit-content; max-height: calc(100vh - 32px); overflow-y: auto; padding: 20px 22px; }
+#enc .enc-book .k { font-family: var(--sb-title) !important; font-size: 10px; letter-spacing: .2em; color: var(--t1-s2); text-align: center; }
+#enc .enc-book h2 { font-family: var(--sb-title) !important; font-size: 14px; color: var(--gold); text-align: center; margin: 10px 0 14px; }
+#enc .enc-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+#enc .enc-page { display: flex; gap: 10px; align-items: center; padding: 10px; background: var(--t1-step); border: 1px solid var(--t1-step-line); border-radius: 12px; }
+#enc .enc-page b { display: block; font-size: 16px; color: var(--gold); }
+#enc .enc-page span { display: block; font-size: 14px; }
+#enc .enc-page i { display: block; margin-top: 4px; font-size: 13px; opacity: .8; }
+#enc .enc-page.unknown .enc-pic canvas { filter: brightness(0); opacity: .35; }
+#enc .enc-page.unknown b { color: var(--ink); opacity: .6; }
+#enc .enc-pic { flex: none; width: 72px; display: grid; place-items: center; }

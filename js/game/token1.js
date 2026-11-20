@@ -22,9 +22,12 @@
 
   const install = (TF) => {
     const M = window.Token1Meter, F = window.Token1Follow, L = window.Token1Lines, ui = window.Token1UI.create(), v3 = new TF.THREE.Vector3();
-    let meter = M.load(read(STORE.meter)), joined = read(STORE.joined) === '1', away = read(STORE.away) === '1';
+    const forceIntro = new URLSearchParams(location.search).has('intro');
+    let meter = M.load(read(STORE.meter)), joined = read(STORE.joined) === '1' && !forceIntro, away = read(STORE.away) === '1';
+    let introAt = null;
     let inGame = false, run = null, parts = null, bot = null, home = null, beam = null, ready = false;
-    let shown = 1, size = 1, still = 0, lastHero = null, intro = null, introDone = false;
+    let shown = 1, size = 1, still = 0, lastHero = null, heroFacing = null, intro = null, introDone = false;
+    const slot = () => F.slotFor(TF.hero, heroFacing);
     const inter = { x: 0, z: 0, r: 0, label: 'TOKEN-1', verb: 'Talk', act: () => (joined ? guide() : startIntro()) };
     const stage = () => M.stage(meter);
     const stageLine = () => `${M.STAGES[stage()].line} ${tag(stage())}`;
@@ -50,9 +53,9 @@
     const endIntro = () => { intro = null; TF.cameraRestore(700); TF.lockPlayer(false); };
     const missionCard = () => {
       intro = 'card';
-      const m = L.MISSION, games = Object.values(L.GAMES).map((g) => `<div><b>${g.name}</b> <span>· ${g.where}</span></div>`).join('');
+      const m = L.MISSION, games = L.missionParts(window.EncounterScript.PARTS).map((x) => `<div>${x}</div>`).join('');
       ui.showCard(m.title, `<div class="t1-meet"><div class="t1-ring s${stage()}" style="--t1-p:${meter.accuracy}"><div id="t1-meet-face"></div></div>
-          <p>TOKEN-1 is stuck at <b class="t1-bad">${meter.accuracy}% accuracy</b>: sure of everything, right about almost nothing. Every right answer you give fixes a bit of it.</p></div>
+          <p>TOKEN-1 is the AI helper for every Calfus office. An update told to <i>make him faster</i> pulled out his five parts, and now he is at <b class="t1-bad">${meter.accuracy}% accuracy</b>: sure of everything, right about almost nothing. Take him office to office and win each part back from a game.</p></div>
         <div class="t1-steps">${m.rules(M.METER).map(([ic, a, b], i) => `<div class="t1-step"><span class="t1-ic">${ic}</span>${a}<br><b class="${['t1-gold', 't1-good', 't1-gold'][i]}">${b}</b></div>`).join('')}</div>
         <div class="t1-games">${games}</div>`, null,
       [{ label: m.later, key: 'Escape', act: decline }, { label: m.accept, key: 'Enter', primary: true, act: accept }], 'NEW MISSION');
@@ -62,7 +65,7 @@
       joined = true; away = false; write(STORE.joined, '1'); write(STORE.away, '0');
       endIntro(); ui.mark(false); beam.g.visible = false; refreshHud(); ui.bump();
       TF.banner('Mission accepted', 'Fix TOKEN-1');
-      setTimeout(() => speak('Yay! I will follow you. Walk to a minigame and I will explain it. <span class="t1-tag">probably</span>', 5000), 900);
+      setTimeout(() => speak('Yay! First stop: the Crescent Bay door, through the Pune gate. I will follow you. <span class="t1-tag">probably</span>', 5000), 900);
     };
     const decline = () => { endIntro(); setTimeout(() => speak('Okay! I will wait right here. Press <b>E</b> when you are ready.', 4500), 700); };
 
@@ -84,7 +87,7 @@
         ui.fly(head, { x: head.x + 80, y: -60 }, stage(), () => ui.bump());
         return;
       }
-      const s = F.slotFor(TF.hero); bot = Object.assign({}, bot, { x: s.x, z: s.z });
+      const s = slot(); bot = Object.assign({}, bot, { x: s.x, z: s.z });
       ui.fly(icon, headPoint(), stage(), () => { away = false; write(STORE.away, '0'); refreshHud(); speak(stageLine()); });
     };
 
@@ -120,6 +123,8 @@
       if (r.stageUp !== null) { TF.banner('TOKEN-1 repaired', M.STAGES[r.stageUp].name); setTimeout(() => speak(`${M.STAGES[r.stageUp].line} ${tag(r.stageUp)}`, 5600), 1400); }
     };
 
+    TF.token1 = { joined: () => joined, accuracy: () => meter.accuracy };
+
     TF.on('game', (e) => {
       if (e.phase === 'start') onStart(e.game);
       else if (e.phase === 'answer' && joined) onAnswer(e.correct);
@@ -134,9 +139,9 @@
       bot = { x: home.x, z: home.z, heading: 0, stuck: 0, moving: false };
       beam = makeBeam(TF, home.x, home.z); beam.g.visible = !joined; ui.mark(!joined);
       INTER.push(inter); ui.onIconClick(toggleAway); refreshHud(); ready = true;
-      (window.TokenFallStart || Promise.resolve()).then(() => setTimeout(() => { if (!introDone) startIntro(); }, INTRO_DELAY));
+      (window.TokenFallStart || Promise.resolve()).then(() => { introAt = performance.now() + INTRO_DELAY; });
     });
-    TF.on('enter', (prev, z) => { if (z === 'lobby' && !joined && !introDone) setTimeout(startIntro, INTRO_DELAY); });
+    TF.on('enter', (prev, z) => { if (z === 'lobby' && !joined && !introDone) introAt = performance.now() + INTRO_DELAY; });
 
     const waitAtHome = (t, dt) => {
       const look = Math.atan2(TF.hero.x - bot.x, TF.hero.y - bot.z);
@@ -147,8 +152,8 @@
 
     const follow = (dt) => {
       const hero = TF.hero;
-      if (shown < .02 && !present()) { const s = F.slotFor(hero); bot = Object.assign({}, bot, { x: s.x, z: s.z }); return; }
-      bot = F.step({ bot, target: F.slotFor(hero), home: { x: hero.x, z: hero.y }, dt, isBlocked: (x, z) => TF.blocked(x, z, .4) });
+      if (shown < .02 && !present()) { const s = slot(); bot = Object.assign({}, bot, { x: s.x, z: s.z }); return; }
+      bot = F.step({ bot, target: slot(), home: { x: hero.x, z: hero.y }, dt, isBlocked: (x, z) => TF.blocked(x, z, .4) });
       if (bot.moving) return;
       const look = Math.atan2(hero.x - bot.x, hero.y - bot.z);
       bot = Object.assign({}, bot, { heading: bot.heading + Math.atan2(Math.sin(look - bot.heading), Math.cos(look - bot.heading)) * Math.min(1, dt * 4) });
@@ -157,8 +162,13 @@
     TF.life.push((t, dtRaw) => {
       if (!ready) return;
       const hero = TF.hero, dt = Math.min(.1, dtRaw);
-      still = lastHero && Math.hypot(hero.x - lastHero.x, hero.y - lastHero.z) < 1e-3 ? still + dt : 0; lastHero = { x: hero.x, z: hero.y };
+      const moved = lastHero ? Math.hypot(hero.x - lastHero.x, hero.y - lastHero.z) : 0;
+      if (heroFacing === null) heroFacing = Math.atan2(...({ up: [0, -1], right: [1, 0], left: [-1, 0] }[hero.dir] || [0, 1]));
+      if (lastHero && moved / dtRaw < F.FOLLOW.teleport) heroFacing = F.facingToward(heroFacing, { vx: (hero.x - lastHero.x) / dtRaw, vz: (hero.y - lastHero.z) / dtRaw }, dt);
+      still = moved < 1e-3 ? still + dt : 0; lastHero = { x: hero.x, z: hero.y };
 
+      // the intro waits for a free moment (no dialog, fade, card or locked player) instead of giving up when one is busy
+      if (introAt !== null && !introDone && performance.now() >= introAt && canIntro()) { introAt = null; startIntro(); }
       if (joined) follow(dt); else waitAtHome(t, dt);
 
       const want = present() ? 1 : 0, wantSize = joined ? F.sizeFor(still) : 1;
@@ -166,7 +176,8 @@
       const { g, body, arms, tip } = parts;
       g.visible = shown > .02; g.position.set(bot.x, (1 - shown) * 3, bot.z); g.scale.setScalar(Math.max(.02, shown * size)); g.rotation.y = bot.heading;
       body.position.y = .12 + Math.sin(t * 2.2) * .06;
-      arms[1].rotation.z = bot.moving ? -.2 : .6 + Math.sin(t * 8) * .5; arms[0].rotation.z = bot.moving ? .2 : -.1;
+      const waving = !bot.moving && (!joined || still >= F.FOLLOW.growAfter);
+      arms[1].rotation.z = waving ? .6 + Math.sin(t * 8) * .5 : -.12; arms[0].rotation.z = waving ? -.1 : .12;
       tip.visible = Math.sin(t * 5) > -.3;
       inter.x = bot.x; inter.z = bot.z; inter.r = want && !intro ? 1.7 : 0;
       const head = headPoint(); ui.mark(!joined && !intro && want); ui.placeSay(head); ui.placeMark(head);

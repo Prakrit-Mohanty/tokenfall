@@ -12,7 +12,9 @@ npm run dev
 
 Then open http://127.0.0.1:8765/. Opening `index.html` directly from disk works too.
 
-Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `airport`, `us`, `archive` (the airport's baggage hall), `kitchen`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?board=sample` fills the leaderboard with sample rows.
+Handy URL options: `?zone=lab` (or `pune`, `abz`, `bridge`, `airport`, `us`, `archive` (the airport's baggage hall), `kitchen`) starts in an area and skips the launcher, `?at=x,z` starts at a position, `?board=sample` fills the leaderboard with sample rows, `?intro` replays TOKEN-1's first-meeting intro even after you joined.
+
+Every `npm run dev` start is a fresh game: the first page load after a restart clears saved progress (TOKEN-1, parts, Glitch Log, minigame progress and tips) and shows the title screen again; refreshes during the same run keep progress, and settings (sound, music, large text, daylight) always stay. Other ways of serving the page never clear anything.
 
 ## Layout
 

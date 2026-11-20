@@ -78,6 +78,59 @@ test('it turns to face the way it walks', () => {
   assert(Math.abs(Math.sin(b.heading - Math.atan2(0, 1))) < .2, 'heading ' + b.heading);
 });
 
+const HERO_SPEED = 3.3;
+const walkWith = (hero0, vx, vz, seconds, slot = (h) => F.slotFor(h), b0) => {
+  const dt = 1 / 60, frames = Math.round(seconds / dt), out = [];
+  let hero = Object.assign({}, hero0), b = b0 || bot(slot(hero).x, slot(hero).z);
+  for (let i = 0; i < frames; i++) {
+    hero = Object.assign({}, hero, { x: hero.x + vx * dt, y: hero.y + vz * dt });
+    b = F.step({ bot: b, target: slot(hero), home: { x: hero.x, z: hero.y }, dt, isBlocked: free });
+    out.push(b);
+  }
+  return out;
+};
+const flipsOf = (list, f) => list.slice(1).filter((e, i) => f(e) !== f(list[i])).length;
+
+test('following a hero who walks steadily at 60 fps, it keeps walking: no stop-go flicker', () => {
+  const frames = walkWith({ x: 0, y: 0, dir: 'left' }, -HERO_SPEED, 0, 3);
+  const settled = frames.slice(30);
+  assert.strictEqual(flipsOf(settled, (e) => e.moving), 0, `moving flipped ${flipsOf(settled, (e) => e.moving)} times`);
+  assert(settled.every((e) => e.moving));
+});
+
+test('uneven frames and a hero whose pace stutters near the walking threshold still cause no flicker', () => {
+  let hero = { x: 0, y: 0 }, b = bot(-1.4, .9), flips = 0, prev = null;
+  for (let i = 0; i < 600; i++) {
+    const dt = i % 2 ? 1 / 30 : 1 / 120, v = [.7, 1.2, .3, 1][i % 4];
+    hero = { x: hero.x + v * dt, y: 0 };
+    b = F.step({ bot: b, target: F.slotFor(hero, Math.PI / 2), home: { x: hero.x, z: 0 }, dt, isBlocked: free });
+    if (i > 60 && prev !== null && prev !== b.moving) flips++;
+    prev = b.moving;
+  }
+  assert.strictEqual(flips, 0, `moving flipped ${flips} times`);
+});
+
+test('when the hero stops it walks into its spot and settles once, without twitching', () => {
+  const walking = walkWith({ x: 0, y: 0, dir: 'left' }, -HERO_SPEED, 0, 2);
+  const stopped = walkWith({ x: -HERO_SPEED * 2, y: 0, dir: 'left' }, 0, 0, 2, undefined, walking[walking.length - 1]);
+  assert.strictEqual(flipsOf(stopped, (e) => e.moving), 1, 'one transition: walking -> settled');
+  assert(!stopped[stopped.length - 1].moving);
+});
+
+test('the follow spot turns smoothly with the walking direction instead of jumping sides', () => {
+  const a = F.slotFor({ x: 0, y: 0 }, Math.PI / 4), b = F.slotFor({ x: 0, y: 0 }, Math.PI / 4 + .02);
+  assert(Math.hypot(a.x - b.x, a.z - b.z) < .05, 'a small turn moves the spot a little');
+  assert.deepStrictEqual(F.slotFor({ x: 0, y: 0, dir: 'up' }, Math.atan2(0, 1)), F.slotFor({ x: 0, y: 0, dir: 'down' }), 'a heading wins over the sprite facing');
+});
+
+test('the walking direction follows the hero velocity and holds when the hero stops', () => {
+  const a0 = 0;
+  const turned = F.facingToward(a0, { vx: 1, vz: 0 }, 1 / 60);
+  assert(turned > a0 && turned < Math.PI / 2, 'eases toward +x, not snapping');
+  assert.strictEqual(F.facingToward(1.2, { vx: 0, vz: 0 }, 1 / 60), 1.2, 'standing still keeps the last direction');
+  assert.strictEqual(F.facingToward(1.2, { vx: .01, vz: 0 }, 1 / 60), 1.2, 'a tiny drift does not count as walking');
+});
+
 test('while the hero is on the move it is small; after standing still a moment it is full size', () => {
   assert.strictEqual(F.sizeFor(0), F.FOLLOW.small);
   assert.strictEqual(F.sizeFor(F.FOLLOW.growAfter - .01), F.FOLLOW.small);

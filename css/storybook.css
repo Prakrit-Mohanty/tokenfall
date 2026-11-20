@@ -35,7 +35,6 @@ html body .tag { background: rgba(58, 40, 56, .62); border-radius: 999px; paddin
 html body .tag.me { background: rgba(120, 76, 82, .72); color: #ffeab8; }
 html body .bubble { border-radius: 14px; border: 2px solid #6b4a58; background: var(--paper); color: var(--paper-ink); box-shadow: 0 3px 0 rgba(60, 30, 50, .25); }
 html body .bubble:after { border-top-color: #6b4a58; }
-html body #chatIn { border-radius: 999px; border: 2px solid rgba(234, 185, 138, .45); padding: 6px 14px; }
 /* conversation box: the speaker's name is a rose tab */
 html body #dialog .name { background: var(--rose); color: var(--paper-ink); border: 2px solid var(--paper); border-radius: 999px; letter-spacing: .04em; }
 html body #banner .t { font-size: 30px; line-height: 1.3; letter-spacing: .04em; text-shadow: 0 3px 14px rgba(50, 20, 50, .55); }

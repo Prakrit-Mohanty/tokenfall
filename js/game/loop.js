@@ -59,8 +59,7 @@ function frame(now) {
   } T += dt / 1000; timeU.value = T; final.u.time.value = T % 100;
   anime.engine.update();   // every tween (daylight, camera view, the leaderboard card) steps here, on the frame it is drawn
   // hero
-  const typing = document.activeElement === chatIn;
-  hero.setInput(dialog || traveling || typing || playerLocked ? { up: false, down: false, left: false, right: false, run: false } : {
+  hero.setInput(dialog || traveling || playerLocked ? { up: false, down: false, left: false, right: false, run: false } : {
     up: keys.KeyW || keys.ArrowUp, down: keys.KeyS || keys.ArrowDown, left: keys.KeyA || keys.ArrowLeft, right: keys.KeyD || keys.ArrowRight, run: keys.ShiftLeft || keys.ShiftRight,
   });
   stepChar(hero, dt);
