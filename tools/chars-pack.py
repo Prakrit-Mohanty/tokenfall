@@ -16,6 +16,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CELL, ANCHOR, STAND = (250, 230), (125, 222), 172
 DIRS = ['down', 'up', 'left', 'right']
+ROW8 = {'down': 0, 'up': 4, 'left': 6, 'right': 2}   # the 8-direction rows of tokenfall-characters (0, 45 ... 315 degrees) that are the game's four facings
 SCALE = 2.5     # 172 px standing -> 430 px: ~220 texels per metre at the game's size, what the paving has (190-470) and what the default camera draws (~215 px/m)
 PAD = 2         # source px of empty margin kept round each figure (room for the outline and the resample)
 GUTTER = 4      # output px between frames in an atlas, so mip levels do not mix neighbours
@@ -26,6 +27,11 @@ CHARS = {
                {'idle': (0, 8, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 11, 56, True), 'jump': (12, 12, 80, False)}, 56, (4, 8)),
     'sudhanshu': ('Sudhanshu', 'sudhanshu-3d-extras/sudhanshu3d.png',   # the lossless copy of sudhanshu-3d/sprites/sudhanshu3d.webp
                   {'idle': (0, 11, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 10, 60, True), 'jump': (12, 11, 80, False)}, 34, (3, 7)),
+    # the tokenfall-characters roster as lobby NPCs: idle (one still frame, the game's own sway and breathing do the rest) and walk, from the 8-direction rows
+    'saanvi': ('Saanvi', 'tokenfall-characters-extras/saanvi.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True)}, 0, (0, 0)),
+    'mehta': ('Mr. Mehta', 'tokenfall-characters-extras/mehta.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True)}, 0, (0, 0)),
+    'aarav': ('Aarav', 'tokenfall-characters-extras/aarav.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True)}, 0, (0, 0)),
+    'riya': ('Riya', 'tokenfall-characters-extras/riya.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True)}, 0, (0, 0)),
     'gaurav': ('Gaurav', 'gaurav-npc-extras/gaurav.png',   # an NPC: idle and walk only (the lossless copy of gaurav-npc/sprites/gaurav.webp)
                {'idle': (0, 11, 200, True), 'walk': (4, 10, 95, True)}, 0, (0, 0)),
 }
@@ -72,6 +78,8 @@ def upscale(frame, box, k):
     return (np.dstack([sharp, alpha]) * 255.0).round().astype(np.uint8)
 
 
+FIT = {'saanvi', 'mehta', 'aarav', 'riya'}   # their figures are drawn 1-5% shorter than the first three's 172 px: `fit` (written to chars-data.js, read by characters.js as sizeK) scales them to match
+
 AUXDIV = 5   # the volume maps are drawn at 1/5 of the upscaled frames (0.5x the source): they are smooth, so the sampler fills in the rest
 
 
@@ -111,7 +119,8 @@ def pack(cid, img, anims):
     for anim, (r0, frames, ms, loop) in anims.items():
         for i, d in enumerate(DIRS):
             for f in range(frames):
-                cell = img.crop((f * CELL[0], (r0 + i) * CELL[1], (f + 1) * CELL[0], (r0 + i + 1) * CELL[1]))
+                row = r0[d] if isinstance(r0, dict) else r0 + i   # r0: the first of four rows (down, up, left, right), or a row per facing
+                cell = img.crop((f * CELL[0], row * CELL[1], (f + 1) * CELL[0], (row + 1) * CELL[1]))
                 ys, xs = np.where(np.asarray(cell)[..., 3] > 8)
                 x0, x1, y0, y1 = (int(v) for v in (max(0, xs.min() - PAD), min(CELL[0], xs.max() + 1 + PAD), max(0, ys.min() - PAD), min(CELL[1], ys.max() + 1 + PAD)))
                 tiles.append(((anim, d, f), upscale(cell, (x0, y0, x1, y1), SCALE), (x0, y0, x1 - x0, y1 - y0)))
@@ -155,6 +164,7 @@ for cid, (name, src, anims, lift, air) in CHARS.items():
     aux.save(abuf, 'WEBP', lossless=True, exact=True)   # lossless and exact: the channels are data, and a transparent-looking pixel must keep its values
     auxes[cid] = base64.b64encode(abuf.getvalue()).decode()
     data[cid] = {'name': name, 'id': cid, 'cell': {'w': CELL[0], 'h': CELL[1]}, 'anchor': {'x': ANCHOR[0], 'y': ANCHOR[1]}, 'standHeight': STAND,
+                 'fit': round(STAND / (sum(rects[('idle', d, 0)][7] - 2 * PAD for d in DIRS) / 4), 4) if cid in FIT else 1,
                  'jumpHeight': lift, 'jumpAir': air_ms, 'actions': [a for a in ('jump', 'run') if a in anims], 'animations': table,
                  'atlas': {'w': atlas.width, 'h': atlas.height, 'scale': SCALE}, 'rects': order}
     total += atlas.width * atlas.height

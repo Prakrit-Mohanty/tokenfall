@@ -128,7 +128,7 @@ function makeChar(name, x, z, opt = {}) {
   const g = new THREE.Group(), tilt = new THREE.Group(); g.userData.dyn = true; tilt.rotation.x = CHAR_LEAN; tilt.add(mesh); g.add(tilt);
   const sh = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.set(0, .025, .1); sh.material.opacity = .85; g.add(sh);   // g.children[1]: the bridge toggles it
   scene.add(g);
-  Object.assign(c, { name, g, mesh, blob: sh, sizeK: 1, cell, box, lampC, lampCol, atlas, rects: CHARS[look].rects, zone: opt.zone || 'lobby', wait: 0, target: null, stuck: 0, fx: { sx: 1, sy: 1, by: 0 }, sw: { v: 0 } });
+  Object.assign(c, { name, g, mesh, blob: sh, sizeK: CHARS[look].fit || 1, cell, box, lampC, lampCol, atlas, rects: CHARS[look].rects, zone: opt.zone || 'lobby', wait: 0, target: null, stuck: 0, fx: { sx: 1, sy: 1, by: 0 }, sw: { v: 0 } });
   // a slow sway, an anime.js loop on its own object (so squash and stretch's tween never cancels it); the engine is stepped by the frame loop
   if (!REDUCED_MOTION) anime.animate(c.sw, { v: [-1, 1], duration: 2300 + Math.random() * 1200, ease: 'inOutSine', loop: true, alternate: true });
   c.tag = document.createElement('div'); c.tag.className = 'tag' + (opt.me ? ' me' : ''); c.tag.textContent = name; tagsEl.appendChild(c.tag);
@@ -174,7 +174,7 @@ function syncChar(c) {
 }
 
 // ================= NPCs =================
-const NPC_NAMES = ['rosa_j', 'chaiwala', 'pixelpriya', 'bobby5', 'sudhanshu', 'gaurav'];   // a name with its own model in CHARS wears it; the rest take turns
+const NPC_NAMES = ['rosa_j', 'chaiwala', 'pixelpriya', 'bobby5', 'sudhanshu', 'gaurav', 'saanvi', 'mehta', 'aarav', 'riya'];   // a name with its own model in CHARS wears it; the rest take turns
 const CHATTER = ['anyone tried the Prompt Lab yet?', 'the pond is so calm today', 'brb grabbing chai', 'what\'s a token again? 😅', 'who\'s flying to Pleasanton?', 'meet at the signpost!', 'gg everyone', 'who\'s doing the quiz later?', 'I named my koi Claude'];
 const NPC_TALK = {
   rosa_j: ['Hey! First day in TokenFall?', 'Tip: a model reads text in little pieces called tokens. That\'s where the name comes from!'],
@@ -182,6 +182,10 @@ const NPC_TALK = {
   pixelpriya: ['I\'m trying to visit all three areas today.', 'Pune is my favourite. The Calfus office is there.'],
   bobby5: ['brb, afk', '...oh, you\'re still here. Did you read the notice board?'],
   gaurav: ['जहाँ चाह, वहाँ राह। Where there\'s a will, there\'s a way.', 'बूँद-बूँद से घड़ा भरता है. Drop by drop the pot fills, and so does a model, one token at a time.', 'Tip: if a model\'s answer is off, don\'t start over. Tell it what was wrong and ask again.'],
+  saanvi: ['Hi! I\'m Saanvi. Ask me anything, then check what I tell you.', 'Tip: tell a model who the answer is for. A tip for a beginner reads very differently from one for an expert.'],
+  mehta: ['Good to see a new face. Mind the pond, it\'s deeper than it looks.', 'I\'ve seen many tools come and go. Verify what the model says. That habit never goes out of date.'],
+  aarav: ['Hey! Have you tried the Glass Bridge yet? Read the question before you step.', 'Tip: ask for the answer in a format you can use, a list, a table, three lines. Models follow instructions well.'],
+  riya: ['Hi there! I\'m trying every minigame today.', 'Tip: break a big ask into small steps. A model does better with one clear job at a time.'],
   sudhanshu: ['Aditya! Good to see you in TokenFall.', 'Tip: give a model the context you\'d give a new teammate. It can\'t read your mind, only your prompt.'],
 };
 let npcs = [];
