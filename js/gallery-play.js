@@ -2,6 +2,7 @@
 //
 // Pure (tested in Node, no DOM):
 //   createRun(spec) -> run     the rules of a run: tokens (threats + 2 a round), the five checks, judging every card, the combo, the round logs, the score
+//   tutorialRound(round)       the practice round: one threat of the first round, gliding slowly on the middle shelf, three shots
 //   describe(entry, idea)      the debrief Concept Card for one card: what you did, the tell, the idea
 //   tradeoff(score)            the one-line trade-off: shooting everything tanks accuracy, shooting nothing tanks catch rate
 // Browser:
@@ -66,6 +67,14 @@
     return run;
   }
 
+  // the practice round before the very first run: one threat from round 1 (its inspect line is the worked example) on the middle shelf, about twice as slow as a real card, with no timer to beat
+  const PRACTICE_SECS = 14;
+  function tutorialRound(r0) {
+    const it = r0.items.find((x) => x.shoot && x.inspect) || r0.items[0], t0 = 0.8;
+    const e = { uid: it.uid, itemId: it.itemId, lane: 1, dir: -1, x0: 0, popup: false, rise: 0, dur: PRACTICE_SECS, speed: 1 / PRACTICE_SECS, spawnTime: t0, endTime: t0 + PRACTICE_SECS };   // lane 1 runs right to left
+    return Object.assign({}, r0, { items: [it], threats: it.shoot ? 1 : 0, ammo: 3, schedule: [e], playSec: e.endTime });
+  }
+
   // what the debrief card says about one settled card
   function describe(e, idea) {
     const how = { stopped: e.inspected ? 'You inspected it, then shot:' : e.kind === 'trap' ? 'You shot it (a lucky call: you did not inspect it):' : 'You shot:',
@@ -77,7 +86,7 @@
     const verdict = s.accuracy != null && s.accuracy < 0.65 ? 'Quick on the trigger.' : s.catchRate < 0.65 ? 'Too many slipped through.' : s.catchRate >= 0.85 && s.accuracy != null && s.accuracy >= 0.85 ? 'A steady balance.' : 'A fair balance.';
     return `${verdict} ${TRADE}`;
   }
-  const roundLine = (s) => `Stopped ${s.stopped} of ${s.threats} threats (${Math.round(100 * s.catchRate)}%) · accuracy ${s.accuracy == null ? '–' : Math.round(100 * s.accuracy) + '%'} · ${s.leaks} missed · ${s.friendly} real cards hit · ${s.ammoLeft} tokens left · ${s.points || 0} points`;
+  const roundLine = (s) => `Stopped ${s.stopped} of ${s.threats} threats (${Math.round(100 * s.catchRate)}%) · accuracy ${s.accuracy == null ? '–' : Math.round(100 * s.accuracy) + '%'} · ${s.leaks} missed · ${s.friendly} real cards hit · ${s.ammoLeft} shots left · ${s.points || 0} points`;
 
   // ================================================================ the browser game
   function create(TF, world, opts = {}) {
@@ -105,6 +114,7 @@
       else if (name === 'thunk') { a.tone(150, 0.12, 'triangle', 0.1, 0, 80); a.noise(0.04, 0.08, 500); }
       else if (name === 'leak') { a.tone(180, 0.35, 'sawtooth', 0.07, 0, 90); a.noise(0.2, 0.1, 300); }
       else if (name === 'friendly') { a.tone(330, 0.12, 'triangle', 0.07, 0, 220); a.tone(247, 0.2, 'triangle', 0.06, 0.1); }
+      else if (name === 'hit') { a.tone(1400, 0.05, 'square', 0.05, 0, 2000); a.noise(0.03, 0.08, 2500); }
       else if (name === 'dry') a.tone(700, 0.04, 'square', 0.03);
       else if (name === 'combo') { a.tone(659, 0.1, 'triangle', 0.07); a.tone(784, 0.1, 'triangle', 0.07, 0.08); a.tone(1047, 0.25, 'triangle', 0.07, 0.16); }
       else if (name === 'murmur') { const f = 130 + Math.random() * 90; a.tone(f, 0.9, 'triangle', 0.012); a.tone(f * 1.26, 0.8, 'triangle', 0.008, 0.2); a.noise(0.7, 0.012, 300); }
@@ -121,36 +131,41 @@
         .gp-top .pips { display: flex; gap: 4px; justify-content: center; } .gp-top .pips i { width: 26px; height: 7px; border: 1px solid rgba(243,234,214,.45); }
         .gp-top .pips i.done { border-color: transparent; background: var(--c); } .gp-top .pips i.cur { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
         .gp-top .ribbon { display: none; margin-top: 4px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .2em; color: var(--gold); } .gp-top .ribbon.on { display: block; }
-        .gp-stat { position: absolute; bottom: 14px; left: 18px; text-align: left; padding: 7px 12px; font-size: 14px; line-height: 1.75; display: none; min-width: 190px; }
-        .gp-stat .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .gp-stat .clock.low { color: var(--hot); } .gp-stat b { color: var(--gold); font-weight: 600; }
-        .gp-stat .gems { display: inline-flex; gap: 6px; vertical-align: middle; flex-wrap: wrap; justify-content: flex-start; max-width: 130px; }
-        .gp-gem { width: 9px; height: 9px; background: var(--c); transform: rotate(45deg); box-shadow: 0 0 8px var(--c); } .gp-gem.off { background: transparent; box-shadow: none; border: 1px solid rgba(243,234,214,.35); }
-        .gp-stat kbd, .gp-msg kbd, .gp-brief kbd, .gp-help kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
-        .gp-msg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(620px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
+        .gp-stat { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.6; display: none; min-width: 170px; }   /* the same spot as the Glass Bridge's and Carrom's status panels */
+        .gp-stat .tl { font-size: 13px; line-height: 1.2; opacity: .8; } .gp-stat .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .gp-stat .clock.low { color: var(--hot); } .gp-stat b { color: var(--gold); font-weight: 600; } .gp-stat .miss { font-size: 14px; color: var(--hot); }
+        .gp-stat .gems { display: inline-flex; gap: 6px; vertical-align: middle; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
+        .gp-pel { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px var(--gold); } .gp-pel.off { background: transparent; box-shadow: none; border: 1px solid rgba(243,234,214,.35); }
+        .gp-mag { width: 14px; height: 14px; fill: none; stroke: var(--c); stroke-width: 1.6; stroke-linecap: round; } .gp-mag.off { stroke: rgba(243,234,214,.35); }
+        .gp-keys { position: absolute; bottom: 14px; left: 18px; text-align: left; padding: 6px 12px; font-size: 14px; line-height: 1.6; display: none; }   /* the key hints, apart from the stats so that panel stays small and off the shelves */
+        .gp-stat kbd, .gp-keys kbd, .gp-msg kbd, .gp-brief kbd, .gp-help kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
+        .gp-msg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(620px, max(300px, calc(100vw - 760px))); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
         .gp-brief { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; text-align: center; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
         .gp-brief .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .16em; color: var(--gold); } .gp-brief .t { font-size: 24px; margin: 8px 0; line-height: 1.25; } .gp-brief .m { font-size: 15px; opacity: .85; } .gp-brief .go { margin: 10px 0 0; font-size: 14px; color: var(--gold); text-align: right; }
         .gp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); padding: 8px 16px 9px; text-align: center; display: none; font-size: 16px; line-height: 1.4; background: rgba(10,12,20,.96); border-color: var(--gold); }
+        .gp-rs .rc { margin-top: 3px; font-size: 15px; line-height: 1.35; text-align: left; } .gp-rs .rc b { color: var(--gold); font-weight: 600; }
         .gp-rs h5 { margin: 0 0 3px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .gp-rs .go { color: var(--gold); font-size: 14px; margin-top: 3px; }
         .gp-read { position: absolute; left: 18px; top: 90px; width: min(380px, calc(100vw - 36px)); max-height: calc(100vh - 220px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 20px; line-height: 1.3; background: rgba(10,12,20,.96); pointer-events: auto; }
         .gp-read h5 { margin: 0 0 6px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .gp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); }
         .gp-read small { display: block; font-size: 14px; letter-spacing: .04em; color: var(--gold); } .gp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
         .gp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
         .gp-help h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .gp-help ul { margin: 0; padding-left: 20px; } .gp-help li { margin: 5px 0; } .gp-help .go { text-align: right; font-size: 14px; color: var(--gold); margin: 10px 0 0; }
-        @media (max-width: 1100px) { .gp-top { left: 18px; transform: none; width: calc(100vw - 280px); top: 70px; } .gp-stat { top: auto; bottom: 80px; left: 18px; right: auto; text-align: left; } .gp-stat .gems { justify-content: flex-start; } }   /* the strip clears the party list; the status block sits over the counter, not the shelves */
-        .gallery-on .gp-top, .gallery-on .gp-stat, .gallery-on .gp-msg, .gallery-on .gp-brief, .gallery-on .gp-rs, .gallery-on .gp-read, .gallery-on .gs-read, .gallery-on .gs-tag { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
+        @media (max-width: 1100px) { .gp-top { left: 18px; transform: none; width: calc(100vw - 280px); top: 70px; } .gp-stat { top: auto; bottom: 80px; } }   /* the strip clears the party list; the status block drops to the bottom, as in the other games */
+        .gallery-on .gp-top, .gallery-on .gp-stat, .gallery-on .gp-keys, .gallery-on .gp-msg, .gallery-on .gp-brief, .gallery-on .gp-rs, .gallery-on .gp-read, .gallery-on .gs-read, .gallery-on .gs-tag { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .gallery-on #chat, .gallery-on #help { display: none; }   /* the chat log and key hints sit over the stall; the stall has its own hints */`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
-      const h = { style, top: mk('gp-top'), stat: mk('gp-stat'), msg: mk('gp-msg'), brief: mk('gp-brief'), rs: mk('gp-rs'), read: mk('gp-read'), help: mk('gp-help'), topKey: '', statKey: '', readKey: '' };
-      h.stat.style.setProperty('--hot', STYLE[3].css);
+      const h = { style, top: mk('gp-top'), stat: mk('gp-stat'), keys: mk('gp-keys'), msg: mk('gp-msg'), brief: mk('gp-brief'), rs: mk('gp-rs'), read: mk('gp-read'), help: mk('gp-help'), topKey: '', statKey: '', readKey: '' };
+      h.stat.style.setProperty('--hot', STYLE[3].css); h.keys.innerHTML = 'Click to shoot · hold <kbd>F</kbd> to inspect<br><kbd>H</kbd> help · <kbd>Tab</kbd> read<br><kbd>M</kbd> sound on/off · <kbd>Esc</kbd> leave';
       return h;
     }
     const cardOpen = () => !!(bridge && bridge.card && bridge.card.open);
     const helpOpen = () => !!hud && hud.help.style.display === 'block';
     const sideName = (s) => C.SIDES[s].name;
+    const cardName = (e) => esc(e.card.subject ? `${e.card.from}: ${e.card.subject}` : e.card.from);   // how a card is named in a message
     const sideCss = (s) => (s === 'rush' ? 'var(--gold)' : STYLE[SIDE_SLOT[s]].css);
     const say = (html, secs = 2.6) => { S.hint = secs; hud.msg.innerHTML = html; hud.msg.style.display = 'block'; };
-    const gems = (n, total, color) => Array.from({ length: Math.max(n, total) }, (_, i) => `<i class="gp-gem ${i < n ? '' : 'off'}" style="--c:${color}"></i>`).join('');
+    const pellets = (n, total) => Array.from({ length: Math.max(n, total) }, (_, i) => `<i class="gp-pel ${i < n ? '' : 'off'}"></i>`).join('');
+    const lenses = (n, total, color) => Array.from({ length: Math.max(n, total) }, (_, i) => `<svg class="gp-mag ${i < n ? '' : 'off'}" style="--c:${color}" viewBox="0 0 14 14"><circle cx="5.8" cy="5.8" r="4"/><path d="M8.8 8.8 12.6 12.6"/></svg>`).join('');
     const clock = (secs) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
 
     function drawHud(dt) {
@@ -162,22 +177,23 @@
       const topKey = [run.i, S.phase, S.combo].join('|');
       if (inRound && topKey !== hud.topKey) {
         hud.topKey = topKey;
-        const pips = run.spec.rounds.map((x, i) => `<i class="${i < run.logs.length ? 'done' : ''}${i === run.i ? ' cur' : ''}" style="--c:${sideCss(x.side)}"></i>`).join('');
-        hud.top.innerHTML = `<div class="k">ROUND ${run.i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}</div><div class="t">${esc(r.kind === 'finale' ? r.banner[1] : r.brief)}</div><div class="pips" aria-hidden="true">${pips}</div><div class="ribbon ${S.combo >= RULES.COMBO ? 'on' : ''}">COMBO × ${S.combo}</div>`;
+        const pips = S.tutorial ? '' : run.spec.rounds.map((x, i) => `<i class="${i < run.logs.length ? 'done' : ''}${i === run.i ? ' cur' : ''}" style="--c:${sideCss(x.side)}"></i>`).join('');
+        hud.top.innerHTML = `<div class="k">${S.tutorial ? 'PRACTICE DUCK' : `ROUND ${run.i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}`}</div><div class="t">${S.tutorial ? 'Read it, inspect it, then decide: shoot it or spare it.' : esc(r.kind === 'finale' ? r.banner[1] : r.brief)}</div><div class="pips" aria-hidden="true">${pips}</div><div class="ribbon ${S.combo >= RULES.COMBO ? 'on' : ''}">COMBO × ${S.combo}</div>`;
       }
       // the status block: the round clock and the gems (tokens left, leaks, friendly fire, magnifier charges)
-      hud.stat.style.display = shown && inRound ? 'block' : 'none';
+      hud.stat.style.display = hud.keys.style.display = shown && inRound ? 'block' : 'none';
       if (inRound) {
         const left = Math.max(0, Math.ceil(r.playSec - S.world.t)), sc = S.phase === 'debrief' ? S.rsScore : null, entries = [...R.done.values()];
-        const pts = entries.reduce((n, e) => n + (e.points || 0), 0), leaks = entries.filter((e) => e.event === 'leak').length, fr = entries.filter((e) => e.event === 'friendly').length;
-        const key = [left, pts, R.ammo, leaks, fr, run.charges, S.phase, muted(), !!sc].join('|');
+        const pts = entries.reduce((n, e) => n + (e.points || 0), 0), bad = entries.filter((e) => e.event === 'leak' || e.event === 'friendly').length;   // missed threats + honest cards shot: the details wait for the recap
+        const key = [left, pts, R.ammo, bad, run.charges, S.phase, !!sc].join('|');
         if (key !== hud.statKey) {
           hud.statKey = key;
-          hud.stat.innerHTML = `<div class="clock ${left <= 8 && S.phase === 'play' ? 'low' : ''}">${S.phase === 'play' ? clock(left) : 'DONE'}</div>Points <b>${pts}</b><br>Tokens <span class="gems">${gems(R.ammo, R.ammoStart, 'var(--gold)')}</span><br>${STYLE[3].mark} Missed threats <span class="gems">${gems(leaks, 0, STYLE[3].css)}</span><br>${STYLE[0].mark} Real cards hit <span class="gems">${gems(fr, 0, STYLE[0].css)}</span><br>${STYLE[2].mark} Checks left <span class="gems">${gems(run.charges, RULES.MAGNIFIER, STYLE[2].css)}</span><br><kbd>H</kbd> help · <kbd>Tab</kbd> read · <kbd>M</kbd> ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
+          hud.stat.innerHTML = `${S.tutorial ? '<div class="tl">Practice · no timer</div>' : `${S.phase === 'play' ? '<div class="tl">Time left</div>' : ''}<div class="clock ${left <= 8 && S.phase === 'play' ? 'low' : ''}">${S.phase === 'play' ? clock(left) : 'DONE'}</div>`}Score <b>${pts}</b>${bad ? ` <span class="miss" title="Missed threats and honest cards shot">✗ ${bad}</span>` : ''}<br>Shots <span class="gems">${pellets(R.ammo, R.ammoStart)}</span><br>Inspections <span class="gems">${lenses(run.charges, RULES.MAGNIFIER, STYLE[2].css)}</span>`;
         }
       }
       if (S.hint > 0) { S.hint -= dt; hud.msg.style.display = S.hint <= 0 || !shown ? 'none' : 'block'; }
-      else if (shown && S.phase === 'play' && S.coach && run.i < 3 && !cardOpen()) { hud.msg.innerHTML = COACH[run.i]; hud.msg.style.display = 'block'; }
+      else if (shown && S.phase === 'play' && S.tutorial && !R.done.size && !cardOpen()) { const seen = S.inspectText[r.items[0].uid]; hud.msg.innerHTML = seen ? `Inspected: <b>${esc(seen)}</b> That is proof of fakery, so <b>shoot it</b> (click or <kbd>Space</kbd>). A card you can trace to a real source? Spare it.` : 'Practice duck. Read the card, then hold <kbd>F</kbd> on it to inspect it. It is free here.'; hud.msg.style.display = 'block'; }
+      else if (shown && S.phase === 'play' && S.coach && !S.tutorial && run.i < 3 && !cardOpen()) { hud.msg.innerHTML = COACH[run.i]; hud.msg.style.display = 'block'; }
       else hud.msg.style.display = 'none';
       // the reading panel (Tab): every card on screen, in large text, left to right
       hud.read.style.display = shown && S.read && S.phase === 'play' ? 'block' : 'none';
@@ -192,7 +208,7 @@
     const COACH = ['Click or <kbd>Space</kbd> to shoot a threat. Aim for the bullseye: the middle scores most. Let real ones pass.', 'Not sure about a card? Hold <kbd>F</kbd> on it to check it. You get 5 checks a run.', 'Three right calls in a row make a combo.'];
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.help.innerHTML = '<h3>SPOT SHOT</h3><ul><li>Paper ducks, each wearing a card, slide along three shelves towards the ticket windows. <b>Aim for the bullseye</b>: dead centre scores 100, the rings 50 and 25, the edge only 10. <b>Shoot the threats</b> (fakes, scams, poisoned inputs) with a click, a tap or <kbd>Space</kbd>; <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move the reticle.</li><li><b>Spare the real ones:</b> let them pass and they are delivered. Shooting a real card is friendly fire. A threat that reaches the window is a leak.</li><li>Each round gives threats + 2 tokens, and a shot that hits nothing still costs one. <b>Inspect</b> a card (hold <kbd>F</kbd>, the right button or a long press, about 0.6 s) to read its verification line: five checks for the whole run.</li><li>Some cards are traps: they look the wrong way round. A right call on a trap you did not inspect is a lucky shot and never counts towards mastery.</li><li><kbd>Tab</kbd> lists the cards in big text. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>Esc</kbd> leaves (finished rounds are kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.help.innerHTML = '<h3>SPOT SHOT</h3><ul><li>Paper ducks, each wearing a card, slide along three shelves towards the ticket windows. <b>Aim for the bullseye</b>: dead centre scores 100, the rings 50 and 25, the edge only 10. <b>Shoot the threats</b> (fakes, scams, poisoned inputs) with a click, a tap or <kbd>Space</kbd>; <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move the reticle.</li><li><b>Spare the real ones:</b> let them pass and they are delivered. Shooting a real card is friendly fire. A threat that reaches the window is a leak.</li><li>Each round gives threats + 2 shots, and a shot that hits nothing still costs one. <b>Inspect</b> a card (hold <kbd>F</kbd>, the right button or a long press, about 0.6 s) to read its verification line: five inspections for the whole run.</li><li>Some cards are traps: they look the wrong way round. A right call on a trap you did not inspect is a lucky shot and never counts towards mastery.</li><li><kbd>Tab</kbd> lists the cards in big text. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>Esc</kbd> leaves (finished rounds are kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
       hud.help.style.display = on ? 'block' : 'none';
     }
 
@@ -202,6 +218,7 @@
       const r = progress.newRun(), spec = E.shorten(E.composeRun(E.seedFor(r.playerId, r.runIndex), r.history));
       S = { on: true, coach: coachSeen < 3, oneLine: coachSeen >= 2, run: createRun(spec), runInfo: r, phase: 'intro', world, briefT: 0, hint: 0, waitTalk: null, read: false, combo: 0, inspectText: {}, landing: {}, rsScore: null, queue: [], murmurT: 0, endT: 0, summary: null };
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed });
+      if (!quiet && coachSeen === 0) { S.real = S.run; S.tutorial = true; S.run = createRun(Object.assign({}, spec, { rounds: [tutorialRound(spec.rounds[0])] })); }   // the very first visit: a practice duck before the real run (it is never scored or reported)
       if (quiet) { TF.banner('A new row', 'New cards'); beginRound(0); return; }
       TF.banner('Spot Shot', 'Shoot the threats, spare the real');
       TF.talk('Spot Shot', coachSeen === 0
@@ -212,9 +229,10 @@
     function beginRound(i) {
       const run = S.run, R = run.begin(i), r = R.r;
       world.clearRound(); world.loadRound(r); world.run(false); S.combo = 0; S.phase = 'brief'; S.inspectText = {}; S.landing = {}; S.hint = 0; S.read = false; S.endT = 0; hud.topKey = hud.statKey = hud.readKey = '';
-      emit('round', { index: i, items: r.items.map((c) => c.itemId) });
+      if (!S.tutorial) emit('round', { index: i, items: r.items.map((c) => c.itemId) });
+      if (S.tutorial) { hud.brief.innerHTML = '<div class="k">PRACTICE DUCK</div><div class="t">One slow duck. Read it, inspect it, decide.</div><div class="m">No timer and nothing is scored.</div><p class="go"><kbd>E</kbd> Start ▼</p>'; hud.brief.style.display = 'block'; S.briefT = 8; return; }
       if (r.kind === 'finale') { TF.banner(r.banner[0], r.banner[1]); hud.brief.style.display = 'none'; S.briefT = 3; return; }
-      hud.brief.innerHTML = `<div class="k">ROUND ${i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}</div><div class="t">${esc(r.brief)}</div>${S.oneLine ? '' : `<div class="m">${R.ammoStart} tokens this round · ${run.charges} check${run.charges === 1 ? '' : 's'} left</div>`}<p class="go"><kbd>E</kbd> Start ▼</p>`;
+      hud.brief.innerHTML = `<div class="k">ROUND ${i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}</div><div class="t">${esc(r.brief)}</div>${S.oneLine ? '' : `<div class="m">${R.ammoStart} shots this round · ${run.charges} inspection${run.charges === 1 ? '' : 's'} left</div>`}<p class="go"><kbd>E</kbd> Start ▼</p>`;
       hud.brief.style.display = 'block'; S.briefT = 8;
     }
     function startPlay() {
@@ -224,12 +242,12 @@
     // ---- the world's events ----
     function onShoot(ev) {
       if (!S || S.phase !== 'play') return;
-      const res = S.run.shoot(ev.uid, world.t, ev); if (res.kind === 'miss') { S.landing.miss = true; return; }
+      const res = S.run.shoot(ev.uid, world.t, ev); if (res.kind === 'miss') { S.landing.miss = true; world.marker('miss'); say('Missed: no card under the reticle.', 1.4); return; }
       if (res.kind !== 'hit') return;
       const e = res.entry; S.landing[e.uid] = e; S.combo = S.run.round.combo;
-      world.resolve(e.uid, 'shot', { stamp: e.stamp, tone: e.shoot ? 'threat' : 'rueful' });
-      if (!e.shoot) { world.flash('bad'); say(`That one was real: <b>${esc(e.stamp)}</b>`); } else world.flash('good');
-      if (e.points) { say(`<b>+${e.points}</b> ${esc(e.ring)}`, 1.4); if (e.points >= 100) { world.slowmo(0.4); sfx('combo'); } }
+      world.resolve(e.uid, 'shot', { stamp: e.stamp, tone: e.shoot ? 'threat' : 'rueful', reason: e.reason }); world.marker(e.shoot ? 'good' : 'bad'); sfx('hit');
+      if (!e.shoot) { world.flash('bad'); say(`That one was real: <b>${cardName(e)}</b>. ${esc(e.reason)}`, 3.2); } else world.flash('good');
+      if (e.points) { say(`<b>+${e.points}</b> ${esc(e.ring)} · ${esc(e.reason)}`, 2.6); if (e.points >= 100) { world.slowmo(0.4); sfx('combo'); } }
       if (res.ribbon) { sfx('combo'); say(`<b>COMBO × ${S.combo}</b>`, 1.6); }
     }
     function onLand(ev) {
@@ -241,8 +259,8 @@
       if (!S || S.phase !== 'play') return;
       const res = S.run.pass(ev.uid, world.t); if (!res) return;
       const e = res.entry, c = world.state.cards.get(ev.uid), lane = c ? c.e.lane : 0; S.combo = S.run.round.combo;
-      if (res.kind === 'leak') { world.flash('bad'); world.resolve(ev.uid, 'leaked', { stamp: 'SLIPPED THROUGH', tone: 'leak' }); world.gate(lane, 'leak'); world.cameraShake(0.3, 0.04); sfx('leak'); say('A threat got past you.', 1.8); }
-      else { world.resolve(ev.uid, 'delivered', { tone: 'ok' }); world.gate(lane, 'ok'); sfx('ding'); }
+      if (res.kind === 'leak') { world.flash('bad'); world.resolve(ev.uid, 'leaked', { stamp: 'SLIPPED THROUGH', tone: 'leak', reason: e.reason }); world.gate(lane, 'leak'); world.cameraShake(0.3, 0.04); sfx('leak'); say(`<b>${cardName(e)}</b> slipped through. ${esc(e.reason)}`, 3.4); }
+      else { world.resolve(ev.uid, 'delivered', { tone: 'ok' }); world.note(ev.uid, `Spared: ${e.reason}`, 'ok'); world.gate(lane, 'ok'); sfx('ding'); }
       if (res.ribbon) { sfx('combo'); say(`<b>COMBO × ${S.combo}</b>`, 1.6); }
     }
     function onInspect(ev) {
@@ -250,16 +268,32 @@
       const r = S.run.inspect(ev.uid, world.t); if (!r) return;
       S.inspectText[ev.uid] = r.text; world.showInspect(ev.uid, r.text); sfx('scan'); emit('inspect', { uid: ev.uid, charges: r.charges });
     }
-    function onDry() { if (S && S.phase === 'play' && S.run.round && S.run.round.ammo <= 0) { S.run.round.dry++; sfx('dry'); say('Out of tokens: let the rest pass.', 1.8); } }
+    function onDry() { if (S && S.phase === 'play' && S.run.round && S.run.round.ammo <= 0) { S.run.round.dry++; sfx('dry'); say('Out of shots: let the rest pass.', 1.8); } }
 
     // ---- the debrief: the round's numbers, then up to 3 Concept Cards (E to continue) ----
+    // the round's mistakes, each with its reason: threats that slipped through, honest cards that were shot
+    function recap(entries) {
+      const bad = entries.filter((e) => e.event === 'leak' || e.event === 'friendly'), x = `<span style="color:${STYLE[3].css}">✗</span>`;
+      if (!bad.length) return '<div class="rc">Every threat stopped and every honest card spared.</div>';
+      return bad.slice(0, 4).map((e) => `<div class="rc">${x} ${e.event === 'leak' ? 'Missed' : 'Shot an honest card'}: <b>${cardName(e)}</b>. ${esc(e.reason)}</div>`).join('') + (bad.length > 4 ? `<div class="rc">…and ${bad.length - 4} more.</div>` : '');
+    }
     function endRound() {
+      if (S.tutorial) return endPractice();
       const run = S.run, log = run.finishRound(world.t), sc = E.scoreRound(log);
       for (const e of log.entries) emit('answer', { credit: true, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, shoot: e.shoot, action: e.action, correct: e.correct, lucky: e.lucky, inspected: e.inspected });
       S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 2); S.queueN = S.queue.length; world.run(false); S.read = false; hud.statKey = '';
       const name = sideName(log.side);
-      hud.rs.innerHTML = `<h5>ROUND ${run.i + 1} · ${esc(name.toUpperCase())}</h5>${esc(roundLine(sc))}<div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>S</kbd> skip ▼</div>`; hud.rs.style.display = 'block';
+      hud.rs.innerHTML = `<h5>ROUND ${run.i + 1} · ${esc(name.toUpperCase())}</h5>${esc(roundLine(sc))}${recap(log.entries)}<div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>S</kbd> skip ▼</div>`; hud.rs.style.display = 'block';
       sfx('chime'); TF.sys(`Round ${run.i + 1}: stopped ${sc.stopped} of ${sc.threats} threats, accuracy ${sc.accuracy == null ? '–' : Math.round(100 * sc.accuracy) + '%'}.`);
+    }
+    // the practice duck is done: the worked example, then the real run
+    function endPractice() {
+      const R = S.run.round, it = R.r.items[0], e = R.done.get(it.uid), said = !e ? '' : e.event === 'stopped' ? 'You shot it: the right call.' : 'You let it through, but it was a fake.';
+      S.phase = 'lesson'; world.run(false); S.read = false; hud.statKey = '';
+      hud.rs.innerHTML = `<h5>WORKED EXAMPLE</h5>The card said: “${esc(it.card.body)}” (${esc(it.card.from)}).<br>Checking it showed: <b>${esc(it.inspect)}</b><br>${said} ${esc(it.tell)}<br>Had the check shown a real source you can open, you would spare it, even if a detector score looked scary.<div class="go"><kbd>E</kbd> Start round 1 ▼</div>`; hud.rs.style.display = 'block'; sfx('chime');
+    }
+    function endLesson() {
+      hud.rs.style.display = 'none'; S.run = S.real; S.tutorial = false; world.clearRound(); beginRound(0);
     }
     function nextCard() {
       if (!S || S.phase !== 'debrief') return;
@@ -271,6 +305,7 @@
     function closeCard() {
       if (!S) return;
       if (S.phase === 'brief') { startPlay(); return; }
+      if (S.phase === 'lesson') { endLesson(); return; }
       if (S.phase !== 'debrief') return;
       if (cardOpen()) bridge.card.hide();
       nextCard();
@@ -288,14 +323,14 @@
     play.closeDebrief = () => { if (!S || S.phase !== 'done') return; leave(); };
     function leave() {
       if (!S) return;
-      if (S.run && S.phase !== 'done') {   // cards of finished rounds were credited as they went; the ones settled in the round left behind are kept as partial attempts
+      if (S.run && S.phase !== 'done' && !S.tutorial) {   // cards of finished rounds were credited as they went; the ones settled in the round left behind are kept as partial attempts
         for (const e of S.run.partial()) emit('answer', { credit: false, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, shoot: e.shoot, action: e.action, correct: e.correct, lucky: e.lucky, inspected: e.inspected });
         const part = S.run.score(false); emit('abandon', { rounds: S.run.logs.length, leaks: part.leaks, friendly: part.friendly, timeMs: Math.round(S.run.elapsed * 1000) });
       }
       bridge && bridge.card && bridge.card.hide(); showHelp(false); S.on = false;
       if (play.modal && play.modal.open()) { play.modal.hide && play.modal.hide(); }
       const s = S; S = null;
-      if (hud) for (const k of ['top', 'stat', 'msg', 'brief', 'rs', 'read', 'help']) hud[k].style.display = 'none';
+      if (hud) for (const k of ['top', 'stat', 'keys', 'msg', 'brief', 'rs', 'read', 'help']) hud[k].style.display = 'none';
       document.getElementById('ui').classList.remove('gallery-on'); world.run(false); world.leave();
       return s;
     }
@@ -355,5 +390,5 @@
     if (typeof window !== 'undefined') window.galleryPlay = play;
     return play;
   }
-  return { RULES, TRADE, createRun, describe, tradeoff, roundLine, create, install };
+  return { RULES, TRADE, PRACTICE_SECS, createRun, tutorialRound, describe, tradeoff, roundLine, create, install };
 });

@@ -12,6 +12,12 @@
     { name: 'Calibrated', line: 'I still only guess the next word. Now I tell you when I am guessing. Please check.' },
   ];
 
+  // TOKEN-1's hints: from 50% accuracy up every hint is right; below that it is unsure, and about one hint in four points the wrong way
+  // (hintMisleads takes a roll in [0, 1), so the caller decides where randomness comes from)
+  const HINT = { unsureBelow: 50, wrongChance: 0.25 };
+  const isUnsure = (accuracy) => accuracy < HINT.unsureBelow;
+  const hintMisleads = (accuracy, roll) => isUnsure(accuracy) && roll < HINT.wrongChance;
+
   const clamp = (v) => Math.max(METER.min, Math.min(METER.max, v));
   const isCount = (n) => Number.isInteger(n) && n >= 0;
 
@@ -42,7 +48,7 @@
     return valid ? { accuracy: v.accuracy, correct: v.correct, wrong: v.wrong } : createMeter();
   };
 
-  const api = { METER, STAGES, createMeter, applyAnswer, stage, finalScore, save, load };
+  const api = { METER, STAGES, HINT, isUnsure, hintMisleads, createMeter, applyAnswer, stage, finalScore, save, load };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else window.Token1Meter = api;
 })();

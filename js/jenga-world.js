@@ -115,8 +115,8 @@
       TF.box(T - 0.2, 0.12, T - 0.2, MAT.darkWood, x, H - 0.12, z, { cast: false });
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) TF.box(LEG, H - 0.12, LEG, MAT.darkWood, x + sx * (T / 2 - 0.16), 0, z + sz * (T / 2 - 0.16));
       TF.signBoard('TOKEN TOWER', x, 0.52, z + T / 2 + 0.05, 1.1, 0.26, 0, { w: 256, h: 56, size: 22 });
-      for (const [dx, dz] of [[-1.55, 0.7], [1.5, -0.4]]) { const st = TF.add(new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.46, 12), MAT.wood)); st.position.set(x + dx, 0.23, z + dz); }
-      for (const [dx, dz, ry, k] of [[-0.62, 0.5, 0.4, 0], [-0.48, 0.36, -0.2, 1], [0.7, 0.62, 1.3, 0]]) {   // a few spare blocks on the table, one leaning on another
+      for (const [dx, dz] of [[-1.55, 0.7], [1.5, -0.4]]) { const st = TF.add(new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.46, 12), MAT.wood)); st.position.set(x + dx, 0.23, z + dz); TF.colCirc(x + dx, z + dz, 0.3); }
+      for (const [dx, dz, ry, k] of [[-0.5, 0.78, 0.15, 0], [-0.42, 0.74, -0.2, 1], [0.78, 0.45, 1.3, 0]]) {   // a few spare blocks on the table, one stacked on another; all clear of the tower (±0.39 m) and inside the table edge (±1.05 m)
         const m = new THREE.Mesh(geo, woodMat); m.position.set(x + dx, TOP + size.hgt * (k + 0.5), z + dz); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; scene.add(m);
       }
       TF.colBox(x - T / 2 - 0.25, z - T / 2 - 0.25, x + T / 2 + 0.25, z + T / 2 + 0.25);

@@ -173,7 +173,7 @@
       const rev = revisitList(data), w = data.topicWeights, next = stats.slice().sort((a, b) => w[b.id] - w[a.id]).slice(0, 2).map((t) => t.name);
       const stars = summary ? '★'.repeat(summary.stars) + '☆'.repeat(3 - summary.stars) : '';
       const sum = summary
-        ? `<b>${stars}</b> · <b>${summary.tokens}</b> tokens · <b>${summary.falls}</b> mistake${summary.falls === 1 ? '' : 's'}${summary.scans ? ` · <b>${summary.scans}</b> hint${summary.scans === 1 ? '' : 's'}` : ''} · ${Math.floor(summary.seconds / 60)}m ${String(summary.seconds % 60).padStart(2, '0')}s`
+        ? `<b>${stars}</b> · <b>${summary.tokens}</b> points · <b>${summary.falls}</b> mistake${summary.falls === 1 ? '' : 's'}${summary.scans ? ` · <b>${summary.scans}</b> hint${summary.scans === 1 ? '' : 's'}` : ''} · ${Math.floor(summary.seconds / 60)}m ${String(summary.seconds % 60).padStart(2, '0')}s`
         : `<b>${data.runs.filter((r) => r.finished).length}</b> run${data.runs.filter((r) => r.finished).length === 1 ? '' : 's'} finished · <b>${Object.values(data.concepts).filter((c) => c.mastered).length}/${C.CARDS.length}</b> concepts mastered`;
       panel.innerHTML = `<h3>REPORT CARD</h3><div class="sum">${sum}</div>`
         + stats.map((t) => `<div class="row"><span>${esc(t.name)}</span><span class="bar" role="img" aria-label="${esc(t.name)} ${Math.round(t.mastery * 100)}%"><i style="width:${Math.round(t.mastery * 100)}%;background:${ZONE_CSS[t.zone]}"></i></span><span class="num">${t.mastered}/${t.total} · ${Math.round(t.mastery * 100)}%</span></div>`).join('')

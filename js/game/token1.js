@@ -27,6 +27,8 @@
     let shown = 1, size = 1, still = 0, lastHero = null, intro = null, introDone = false;
     const inter = { x: 0, z: 0, r: 0, label: 'TOKEN-1', verb: 'Talk', act: () => (joined ? guide() : startIntro()) };
     const stage = () => M.stage(meter);
+    // what other games may ask of TOKEN-1: is it with the player, how sure is it, and a toast to say a hint in (shown over a minigame, takes no keys)
+    TF.token1 = { get joined() { return joined; }, get accuracy() { return meter.accuracy; }, get unsure() { return M.isUnsure(meter.accuracy); }, misleads: (roll) => joined && M.hintMisleads(meter.accuracy, roll), say: (title, html, ms) => ui.toast(title, html, ms) };
     const stageLine = () => `${M.STAGES[stage()].line} ${tag(stage())}`;
 
     const screenAt = (x, y, z) => {
@@ -168,7 +170,8 @@
       body.position.y = .12 + Math.sin(t * 2.2) * .06;
       arms[1].rotation.z = bot.moving ? -.2 : .6 + Math.sin(t * 8) * .5; arms[0].rotation.z = bot.moving ? .2 : -.1;
       tip.visible = Math.sin(t * 5) > -.3;
-      inter.x = bot.x; inter.z = bot.z; inter.r = want && !intro ? 1.7 : 0;
+      const crowded = INTER.some((it) => it !== inter && it.r > 0 && Math.hypot(hero.x - it.x, hero.y - it.z) < it.r);   // another interactable is in reach: it gets the prompt
+      inter.x = bot.x; inter.z = bot.z; inter.r = want && !intro && F.promptOn({ joined, still, crowded }) ? 2.2 : 0;   // 2.2: it parks about 1.7 away (its follow slot), so a smaller reach would rarely show the prompt
       const head = headPoint(); ui.mark(!joined && !intro && want); ui.placeSay(head); ui.placeMark(head);
     });
   };

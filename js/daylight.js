@@ -127,7 +127,7 @@
     const record = () => { S.base = { sun: sun.intensity, hemi: hemi.intensity, hemiColor: hemi.color.clone(), fog: scene.fog.color.clone(), near: scene.fog.near, far: scene.fog.far }; };
     // a game is open when it has put its '<name>-on' class on #ui, or in the bridge (a game you walk through); the interface hides its lobby furniture then (storybook.css, #ui[data-play])
     const uiEl = () => document.getElementById('ui');
-    const inPlay = (z) => { const u = uiEl(); const on = z === 'bridge' || (!!u && /-on\b/.test(u.className)); if (u) u.dataset.play = on ? '1' : ''; return on; };
+    const inPlay = (z) => { const u = uiEl(); const on = z === 'bridge' || (!!u && /-on\b/.test(u.className)); if (u) { u.dataset.play = on ? '1' : ''; u.dataset.walk = z === 'bridge' ? '1' : ''; } return on; };   // walk: a game you walk through keeps the key strip (storybook.css)
     // A look is everything the scene is shown with: the mood's parameters plus the "e..." values that depend on where the player is (roofed or open). It holds only numbers,
     // [numbers] and '#hex' strings, so blend() can ease between any two looks: moods, zones, a game opening.
     const hexOf = (c) => '#' + c.getHexString();

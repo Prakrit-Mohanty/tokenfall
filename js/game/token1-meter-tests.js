@@ -79,4 +79,13 @@ test('a missing, corrupt or tampered save loads as a fresh meter', () => {
   for (const raw of bad) assert.deepStrictEqual(M.load(raw), M.createMeter(), 'should reset: ' + raw);
 });
 
+test('hints: sure from 50% up, below that about one in four misleads', () => {
+  assert(M.isUnsure(M.METER.start) && M.isUnsure(49) && !M.isUnsure(50) && !M.isUnsure(100));
+  for (let r = 0; r < 1; r += 0.05) assert.strictEqual(M.hintMisleads(50, r), false, 'never at 50% or more');
+  assert.strictEqual(M.hintMisleads(10, 0), true);
+  assert.strictEqual(M.hintMisleads(10, M.HINT.wrongChance), false);
+  let wrong = 0; for (let i = 0; i < 1000; i++) if (M.hintMisleads(30, (i + 0.5) / 1000)) wrong++;
+  assert.strictEqual(wrong, 250, 'a quarter of an even spread of rolls');
+});
+
 done();

@@ -50,6 +50,7 @@ function setCamView(i) {
 
 // ================= main loop =================
 let hero, nearest = null, nearP = null, last = performance.now(), T = 0, chatterT = 4000;
+const chatter = window.Chatter.create();   // each bot's own lines, never repeated within the last 10 messages (chatter.js)
 function frame(now) {
   const raw = now - last, dt = Math.min(50, raw); last = now;
   if (!document.hidden) { ftAcc += raw; ftN++; }
@@ -72,7 +73,7 @@ function frame(now) {
     if (c.moving && Math.hypot(c.x - ox, c.y - oz) < c.speed * dt / 1000 * .4) c.stuck += dt; else c.stuck = 0;
   }
   chatterT -= dt;
-  if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone && !c.mute); if (here.length) { const pool = zone === 'lab' || zone === 'abz' ? CHATTER_OFFICE : CHATTER; say(here[Math.random() * here.length | 0], pool[Math.random() * pool.length | 0]); } }
+  if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone && !c.mute); if (here.length) { const bot = chatter.speaker(here), text = chatter.line(bot.name, zone === 'lab' || zone === 'abz' ? CHATTER_OFFICE : CHATTER); if (text) say(bot, text); } }
   charLightsFrame();
   for (const c of chars) syncChar(c);
   // portals

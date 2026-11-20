@@ -16,6 +16,7 @@
   else root.BridgePlay = api;
 })(this, function (W, G, C) {
   const { PHYS } = W;
+  const HINTS = 3;   // F cracks one wrong tile; this many per run
 
   // ---------------------------------------------------------------- pure: the motor
   // m: { alt, vy, grounded, coyote, buffer, air }. probe(pad) -> the surface under the hero (or null) with that much tolerance.
@@ -69,10 +70,16 @@
   const BRIEFING = [
     'Welcome to the Glass Bridge! Each row asks a question. The tiles are the answers.',
     'Jump onto the tile you think is right. A wrong tile shatters.',
-    'Space jumps (tap it alone to hop forward). Shift runs. E closes a card. F gives a hint, twice per run. M mutes. S skips talk.',
+    'Space jumps (tap it alone to hop forward). Shift runs. E closes a card. F gives a hint, three times per run. M mutes. S skips talk.',
     'The parkour bits are just for fun: fall there and you only lose time. Fun fact: this sentence is about 12 tokens long.',
   ], BRIEF_SHORT = 'Back on the bridge. Jump onto the tile you think is right. Space jumps, F hints, M mutes.';
-  const STAGE_RULE = ['Read the question at the top, then hop onto the tile with the right answer.', 'A wrong tile means a fall and a card. Then the row is dealt again.', 'F gives a hint: it cracks one wrong tile, but caps you at 2 stars.', 'The boss is one case with three calls. Same rules.'];
+  // easy (chosen on arrival, before the run): the rows touch and there is no parkour, so you just walk onto your answer. Same questions, same scoring.
+  const BRIEF_EASY = [
+    'Welcome to the Glass Bridge! Each row asks a question. The tiles are the answers.',
+    'Walk onto the tile you think is right. A wrong tile shatters. No jumping needed.',
+    'F gives a hint, three times per run. E closes a card. M mutes. S skips talk.',
+  ];
+  const STAGE_RULE = ['Read the question on the board above the row, then hop onto the tile with the right answer.', 'A wrong tile means a fall and a card. Then the row is dealt again.', 'F gives a hint: it cracks one wrong tile, but caps you at 2 stars.', 'The boss is one case with three calls. Same rules.'];
 
   // ---------------------------------------------------------------- the game
   function create(TF, world, opts = {}) {
@@ -83,16 +90,32 @@
     const play = { autotick: true, on(evt, fn) { (listeners[evt] = listeners[evt] || []).push(fn); return fn; } };
     const emit = (type, data = {}) => { const e = Object.assign({ type, at: Date.now() }, data); (listeners[type] || []).forEach((f) => f(e)); (listeners['*'] || []).forEach((f) => f(e)); if (progress.onEvent) progress.onEvent(e); };
     let S = null, hud = null, fx = null;
+    const camLook = new THREE.Vector3(), CAM_RAISE = 1.7;   // from higher up, the hero's head and TOKEN-1's antenna cover less of the tiles ahead, and the tile text is seen less edge-on
     const now = () => TF.timeU.value;
 
     // ---- run state ----
     function newRun() {
       const r = progress.newRun();
-      if (r.runIndex >= 2) referee.splice(0, referee.length, BRIEF_SHORT);
+      const easy = !!TF.easy;
       S = { playerId: r.playerId, runIndex: r.runIndex, spec: G.shorten(G.composeRun(G.seedFor(r.playerId, r.runIndex), r.history)), started: false, finished: false, startedAt: 0,
         falls: 0, scans: 0, tokens: 0, streak: 0, best: 0, cp: 0, rows: {}, taken: new Set(), lock: null, breakT: 0, pending: null, card: null,
-        fallHandled: false, motor: createMotor(), jumpQ: false, standId: null, standRect: null, shake: { t: 0, d: 1, m: 0 }, scanned: {}, answers: [] };
+        fallHandled: false, motor: createMotor(), jumpQ: false, standId: null, standRect: null, shake: { t: 0, d: 1, m: 0 }, scanned: {}, misled: {}, answers: [], safe: null, choosing: true };
+      setReferee(easy);
+      S.spec.easy = easy;   // the layout reads it (bridge-world.js); rerolls and bonus rows clone the spec, so it sticks for the run
       return S.spec;
+    }
+    const setReferee = (easy) => referee.splice(0, referee.length, ...(easy ? BRIEF_EASY : S.runIndex >= 2 ? [BRIEF_SHORT] : BRIEFING));
+    // Normal or Easy, asked on arrival with the hero held; the course is rebuilt when the choice differs from the one it was built for
+    function showChoice() {
+      hud.m.innerHTML = `<h3>CHOOSE YOUR MODE</h3><ul style="list-style:none;padding:0"><li><kbd>1</kbd> Normal: jump from row to row, with parkour in between</li><li><kbd>2</kbd> Easy: just walk onto the tile you think is right</li></ul><p>Same questions and scoring either way.</p><p class="go"><kbd>Enter</kbd> ${S.spec.easy ? 'Easy' : 'Normal'} (last time)</p>`;
+      hud.m.style.display = 'block'; TF.lockPlayer(true);
+    }
+    function choose(easy) {
+      S.choosing = false; hud.m.style.display = 'none'; TF.lockPlayer(false); TF.easy = easy;
+      if (S.spec.easy !== easy) { S.spec.easy = easy; world.build(S.spec); }
+      setReferee(easy);
+      TF.sys(`The Glass Bridge: 8 questions, 3 stages and a boss. ${easy ? 'Easy mode: just walk onto your answer' : 'Space jumps'}, F hints, M mutes.`);
+      if (coachSeen === 0) showHelp(true);   // the very first visit opens the how-to-play panel
     }
     const rowSt = (id) => S.rows[id] || (S.rows[id] = { seenAt: null, falls: 0, solved: false });
     const rowIndexOf = (id) => S.spec.rows.findIndex((r) => r.id === id);
@@ -120,8 +143,8 @@
         if (!this.ctx || this.muted) return;
         switch (name) {
           case 'chime': this.tone(784, 0.14, 'sine', 0.12); this.tone(1175, 0.4, 'sine', 0.1, 0.09); break;
-          case 'crack': this.noise(0.07, 0.2, 2600); this.tone(1900, 0.04, 'square', 0.05); this.tone(1400, 0.05, 'square', 0.04, 0.08); break;
-          case 'shatter': this.noise(0.55, 0.28, 1100); this.noise(0.25, 0.2, 4000, 0.03); this.tone(240, 0.35, 'sawtooth', 0.05, 0, 70); break;
+          case 'crack': this.noise(0.06, 0.2, 2800); this.tone(1900, 0.04, 'square', 0.05); this.noise(0.05, 0.17, 3400, 0.14); this.tone(1500, 0.05, 'square', 0.04, 0.14); this.noise(0.07, 0.22, 2600, 0.3); this.tone(2300, 0.04, 'square', 0.04, 0.3); break;   // three ticks as the crack spreads
+          case 'shatter': this.noise(0.55, 0.28, 1100); this.noise(0.25, 0.2, 4000, 0.03); this.tone(240, 0.35, 'sawtooth', 0.05, 0, 70); this.tone(2637, 0.25, 'sine', 0.04, 0.05); this.tone(3136, 0.3, 'sine', 0.03, 0.12); this.tone(3951, 0.35, 'sine', 0.025, 0.2); break;   // and the glass tinkling down
           case 'jump': this.tone(380, 0.09, 'square', 0.035, 0, 640); break;
           case 'coin': this.tone(1320, 0.06, 'square', 0.05); this.tone(1760, 0.12, 'square', 0.05, 0.05); break;
           case 'fall': this.tone(420, 0.8, 'triangle', 0.09, 0, 70); break;
@@ -215,50 +238,43 @@
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
-        .bq { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: min(880px, calc(100vw - 620px)); padding: 10px 18px 12px; text-align: center; display: none; background: rgba(32, 22, 19, .95); border-color: var(--gold); }
-        .bq .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
-        .bq .t { font-size: clamp(20px, 2.1vw, 28px); line-height: 1.25; margin: 3px 0 8px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
-        .bq .a { display: grid; gap: 8px; text-align: left; } .bq .a.n2 { grid-template-columns: repeat(2, 1fr); } .bq .a.n3 { grid-template-columns: repeat(3, 1fr); }
-        .bq .a > div { display: flex; gap: 8px; align-items: flex-start; padding: 6px 9px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: clamp(16px, 1.6vw, 21px); line-height: 1.25; }
-        .bq .a i { font-style: normal; flex: none; font-size: 1.15em; line-height: 1.05; }
-        .bq .a .x { opacity: .4; text-decoration: line-through; }
+        .bq { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); padding: 6px 20px; text-align: center; display: none; background: rgba(32, 22, 19, .93); border-color: var(--gold); }
+        .bq .k { font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: .14em; color: var(--gold); }
+        .bq, .bs, .bc, .bk, .bh { font-variant-ligatures: none; }   /* the pixel font draws some digit and letter pairs as other glyphs */
         .bs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.5; display: none; }
-        .bs b { color: #ffe39a; font-weight: 600; } .bs kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
+        .bs b { color: #ffe39a; font-weight: 400; } .bs kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .bc { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -52%); width: min(620px, calc(100vw - 32px)); padding: 18px 26px 16px; display: none; font-size: 22px; line-height: 1.45; background: rgba(40, 28, 24, .95); }
         .bc h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
         .bc p { margin: 7px 0; } .bc .w { color: #ff9d8a; } .bc .tk { color: #9dffc0; font-size: 24px; line-height: 1.3; margin: 0 0 10px; } .bc .go { text-align: right; font-size: 16px; color: var(--gold); margin: 12px 0 0; animation: bob 1s infinite; }
         .bc kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); }
-        .bs .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 5px; }
+        .bs .pl { font-size: 14px; line-height: 1.2; margin: 0 0 3px; } .bs .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 5px; }
         .bs .pips i { width: 13px; height: 8px; border: 1px solid rgba(243,234,214,.45); } .bs .pips i.done { border-color: transparent; background: var(--c, #ffd27a); } .bs .pips i.cur { border-color: #ffe39a; box-shadow: 0 0 0 1px #ffe39a; }
-        .bk { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 9px 18px; text-align: center; display: none; font-size: clamp(17px, 1.6vw, 21px); line-height: 1.3; background: rgba(32, 22, 19, .93); }
+        .bk { position: absolute; left: 50%; bottom: 76px;   /* above the lobby's key strip, which the bridge keeps */ transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 9px 18px; text-align: center; display: none; font-size: clamp(17px, 1.6vw, 21px); line-height: 1.3; background: rgba(32, 22, 19, .93); }
         .bh { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 20px; line-height: 1.4; background: rgba(32, 22, 19, .96); }
         .bh h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
         .bh ul { margin: 0; padding-left: 20px; } .bh li { margin: 5px 0; } .bh kbd, .bk kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); } .bh .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         .bf { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; opacity: 0; transition: opacity .3s; } .bf.g { background: radial-gradient(circle, rgba(255, 210, 122, .05) 30%, rgba(255, 210, 122, .38)); } .bf.r { background: radial-gradient(circle, rgba(255, 70, 60, .05) 30%, rgba(255, 70, 60, .4)); }
         .bf b { font-family: 'Cinzel', serif; font-size: clamp(30px, 5vw, 56px); letter-spacing: .08em; color: #fff3c4; text-shadow: 0 2px 0 #000, 0 0 18px #ffb347; }
-        @media (max-width: 1100px) { .bq { width: calc(100vw - 32px); top: 70px; } .bs { top: auto; bottom: 120px; right: 18px; } }`;
+        @media (max-width: 1100px) { .bq { top: 70px; } .bs { top: auto; bottom: 120px; right: 18px; } }`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
-      return { style, q: mk('bq'), s: mk('bs'), c: mk('bc'), k: mk('bk'), h: mk('bh'), qKey: '', sKey: '', kKey: '' };
+      return { style, q: mk('bq'), s: mk('bs'), c: mk('bc'), k: mk('bk'), h: mk('bh'), m: mk('bh'), qKey: '', sKey: '', kKey: '' };
     }
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     function currentRow(h) { const L = world.layout; return L && L.rows.find((rl) => rl.zc < h.y + 0.2 && !rowSt(rl.id).solved); }
     function drawHud(h) {
-      const L = world.layout, rl = L && !S.finished ? currentRow(h) : null, show = rl && h.y - rl.zs < 24 && !S.card && !helpOpen();
+      const L = world.layout, rl = L && !S.finished ? currentRow(h) : null, show = rl && h.y - rl.zs < 24 && !S.card && !helpOpen() && !S.choosing;
       hud.q.style.display = show ? 'block' : 'none';
+      if (L) for (const r of L.rows) world.veilRow(r.id, !!rl && r.index > rl.index && !rowSt(r.id).solved);   // rows ahead of the current one stay dim and unlabelled until you reach them
       if (show) {
-        const row = S.spec.rows[rl.index], st = rowSt(rl.id);
+        const row = S.spec.rows[rl.index], st = rowSt(rl.id), nth = S.spec.rows.filter((r) => !r.bonus).indexOf(row) + 1, total = S.spec.rows.filter((r) => !r.bonus).length;
         if (st.seenAt == null) st.seenAt = now();
-        const struck = S.scanned[rl.id] || [], key = rl.id + row.variantId + row.stem + struck.join();
-        if (key !== hud.qKey) {
-          hud.qKey = key;
-          const shapes = row.tiles.length === 2 ? ['▲', '◆'] : ['▲', '●', '◆'], col = { amber: '#ffb347', green: '#7dff8a', cyan: '#5cd6ff' }[row.zone] || '#ffd27a';
-          hud.q.innerHTML = `<div class="k">${esc(rl.label)} · ${esc(TOPIC_NAME[row.topic])}</div><div class="t">${esc(row.stem)}</div>`
-            + `<div class="a n${row.tiles.length}">${row.tiles.map((tl, i) => `<div class="${struck.includes(i) ? 'x' : ''}"><i style="color:${col}">${shapes[i]}</i><span>${esc(tl.text)}</span></div>`).join('')}</div>`;
-        }
-      }
+        const key = row.bonus ? 'bonus' : nth + '/' + total;
+        if (key !== hud.qKey) { hud.qKey = key; hud.q.innerHTML = `<div class="k">${row.bonus ? 'BONUS QUESTION' : `QUESTION ${nth} OF ${total}`}</div>`; }
+        world.setQuestion(rl.id, { head: TOPIC_NAME[row.topic], stem: row.stem });   // the question lives in the world, above the row; the answers live only on the tiles
+      } else world.setQuestion(null);
       const normal = S.spec.rows.filter((r) => !r.bonus), done = normal.filter((r) => rowSt(r.id).solved).length;
-      const curId = rl ? rl.id : '', key = [done, S.streak, S.tokens, S.scans, audio.muted, S.falls, curId, S.spec.rows.length].join();
+      const curId = rl ? rl.id : '', key = [done, S.streak, S.tokens, S.scans, audio.muted, curId, S.spec.rows.length].join();
       const ct = coachText();
       if (ct !== hud.kKey) { hud.kKey = ct; hud.k.innerHTML = ct; hud.k.style.display = ct ? 'block' : 'none'; }
       hud.s.style.display = S.finished ? 'none' : 'block';
@@ -266,27 +282,29 @@
         hud.sKey = key;
         const zc = { amber: '#ffb347', green: '#7dff8a', cyan: '#5cd6ff' };
         const pips = S.spec.rows.map((r) => `<i class="${rowSt(r.id).solved ? 'done' : ''}${r.id === curId ? ' cur' : ''}" style="--c:${r.bonus || r.boss ? '#ffd27a' : zc[r.zone]}"></i>`).join('');
-        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div>Answered <b>${done}/${normal.length}</b> · Streak <b>${S.streak}</b><br>Tokens <b>${S.tokens}</b> · Mistakes <b>${S.falls}</b><br>Hint <kbd>F</kbd> <b>${2 - S.scans}</b> left · <kbd>H</kbd> help · <kbd>M</kbd> ${audio.muted ? 'sound off' : 'sound on'}`;
+        hud.s.innerHTML = `<div class="pl">Answered <b>${done}/${normal.length}</b></div><div class="pips" aria-hidden="true">${pips}</div>Streak <b>${S.streak}</b> · Score <b>${S.tokens}</b><br>Hints <kbd>F</kbd> <b>${HINTS - S.scans}</b> of ${HINTS} left · <kbd>H</kbd> help · <kbd>M</kbd> ${audio.muted ? 'sound off' : 'sound on'}`;   // mistakes are not shown until the run ends
       }
     }
     // ---- gentle coaching for new players: one short rule per stage, for the first three runs ----
-    const COACH_KEY = 'tokenfall.bridge.coach';
-    let coachSeen = 0;
-    try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
+    const COACH_KEY = 'tokenfall.bridge.coach', START_KEY = 'tokenfall.bridge.startPrompt';
+    let coachSeen = 0, startSeen = false;
+    try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; startSeen = !!localStorage.getItem(START_KEY); } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
     const helpOpen = () => !!hud && hud.h.style.display === 'block';
     function coachText() {
-      if (!S || S.finished || S.card || TF.talking || S.runIndex >= 3 || helpOpen()) return '';
+      if (S && !S.started && !startSeen && !S.finished && !S.card && !S.choosing && !TF.talking && !helpOpen()) return 'Step onto the tile you think is right.' + (S.spec.easy ? '' : ' Walk to the edge, then tap <kbd>Space</kbd> to hop on.');   // once, at the start line, until you step on
+      if (!S || S.finished || S.card || S.choosing || TF.talking || S.runIndex >= 3 || helpOpen()) return '';
       const st = S.stand;
-      if (!S.started) return 'Walk to the edge, then tap <kbd>Space</kbd> to hop onto the first row. Land on the tile with the right answer.';
-      if (st && (st.kind === 'tile' || st.kind === 'link') && rowSt(st.rowId).solved) return 'Row cleared! Walk sideways to the next answer, then tap <kbd>Space</kbd>.';
-      if (st && st.kind === 'platform') return STAGE_RULE[Math.min(S.cp, 3)];
+      const easy = S.spec.easy;
+      if (!S.started) return easy ? 'Walk forward onto the tile with the right answer.' : 'Walk to the edge, then tap <kbd>Space</kbd> to hop onto the first row. Land on the tile with the right answer.';
+      if (st && (st.kind === 'tile' || st.kind === 'link') && rowSt(st.rowId).solved) return easy ? 'Row cleared! Line up with the next answer and walk onto it.' : 'Row cleared! Walk sideways to the next answer, then tap <kbd>Space</kbd>.';
+      if (st && st.kind === 'platform') return easy ? 'Read the question on the board above the row, then walk onto the tile with the right answer.' : STAGE_RULE[Math.min(S.cp, 3)];
       if (st && st.kind !== 'tile') return 'Parkour: you lose nothing if you fall here. Hop across.';
       return '';
     }
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.h.innerHTML = '<h3>HOW TO PLAY</h3><ul><li>Every row asks a question. Every tile is an answer.</li><li>Jump onto the tile you think is right. A wrong tile breaks. You fall, read why, and the row is dealt again.</li><li><kbd>Space</kbd> jumps (tap it alone to hop forward). <kbd>Shift</kbd> runs.</li><li>An answered row links up. Walk to any lane, then jump on.</li><li><kbd>F</kbd> hint (2 per run) cracks one wrong tile, but caps you at 2 stars.</li><li><kbd>M</kbd> sound. <kbd>R</kbd> report card. <kbd>E</kbd> closes cards. <kbd>S</kbd> skips talk and cards.</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.h.innerHTML = `<h3>HOW TO PLAY</h3><ul><li>Every row asks a question. Every tile is an answer.</li><li>Jump onto the tile you think is right. A wrong tile breaks. You fall, read why, and the row is dealt again.</li>${S && S.spec.easy ? '<li>Easy mode: walk onto a tile to choose it. No jumping.</li><li>An answered row links up. Walk to any lane, then walk on.</li>' : '<li><kbd>Space</kbd> jumps (tap it alone to hop forward). <kbd>Shift</kbd> runs.</li><li>An answered row links up. Walk to any lane, then jump on.</li>'}<li><kbd>F</kbd> hint (3 per run) cracks one wrong tile, but caps you at 2 stars.</li><li><kbd>M</kbd> sound. <kbd>R</kbd> report card. <kbd>E</kbd> closes cards. <kbd>S</kbd> skips talk and cards.</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>`;
       hud.h.style.display = on ? 'block' : 'none';
     }
     // The Concept Card panel, shared with the other games (play.card): show({ lead, text, breaks, idea, hint }) / hide() / open.
@@ -315,15 +333,16 @@
     const skipTalk = () => { for (let n = 0; TF.talking && n < 99 && typeof advanceDialog === 'function'; n++) advanceDialog(); };   // advanceDialog: the lobby's global; S ends what is left of a dialogue
     function showCard(p) {
       S.card = p; S.lock = { x: TF.hero.x, z: TF.hero.y };
-      card.show({ skippable: true, lead: `You chose ${(p.row.tiles.length === 2 ? ['▲', '◆'] : ['▲', '●', '◆'])[p.lane]}:`, text: p.tileText, breaks: p.breaks, idea: p.idea });   // the tile's shape mark, so the colour is not the only cue
+      card.show({ skippable: true, lead: `You chose ${'ABC'[p.lane]}:`, text: p.tileText, breaks: p.breaks, idea: p.idea, hint: 'Try again' });   // the tile's letter, so the colour is not the only cue
     }
 
     // ---- what happens to a row ----
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     function startRun() {
       if (S.started) return; S.started = true; S.startedAt = Date.now();
+      if (!startSeen) { startSeen = true; try { localStorage.setItem(START_KEY, '1'); } catch (e) {} }
       emit('run', { playerId: S.playerId, runIndex: S.runIndex, seed: S.spec.seed, seen: S.spec.seen.slice() });
-      TF.banner(STAGE_TEXT[0][0], STAGE_TEXT[0][1]); TF.sys('The run begins. Jump onto the tile you think is right.');
+      TF.banner(STAGE_TEXT[0][0], STAGE_TEXT[0][1]); TF.sys(`The run begins. ${S.spec.easy ? 'Walk' : 'Jump'} onto the tile you think is right.`);
     }
     function onStand(s) {
       if (s.kind === 'tile') return onTile(s);
@@ -343,7 +362,8 @@
       if (tile.correct) {
         st.solved = true; S.streak++; S.best = Math.max(S.best, S.streak); S.tokens += 25;
         world.settleRow(row.id, s.lane); audio.play('chime'); bumpCoach();
-        if (!S.linkHint) { S.linkHint = true; TF.sys('The row links up. Walk to any lane, then jump (Space) to the next row.'); }
+        if (S.misled[row.id] && TF.token1) TF.token1.say('TOKEN-1', 'My hint was wrong that time: the cracked tile was the right one. Always check me against the question.', 4500);   // the lesson, once it can no longer cost you
+        if (!S.linkHint) { S.linkHint = true; TF.sys(S.spec.easy ? 'The row links up. Walk to any lane, then on to the next row.' : 'The row links up. Walk to any lane, then jump (Space) to the next row.'); }
         const t = world.layout.rows.find((r) => r.id === row.id).tiles[s.lane];
         fx.spawn(18, t.x, 0.6, world.layout.rows.find((r) => r.id === row.id).zc, 0xffd27a, { speed: 3, up: 4, size: 0.2, life: 1.0, white: 0.4 });
         TF.sys(S.streak > 1 ? `Correct! Streak ×${S.streak}.` : 'Correct!'); flash(true, S.streak >= 3 ? `Streak ×${S.streak}!` : '');
@@ -351,7 +371,7 @@
         emit('answer', { correct: true, firstTry: st.falls === 0, ...base });
       } else {
         S.pending = { row, lane: s.lane, tileText: tile.text, breaks: tile.breaks, idea: row.idea, base: Object.assign({ wrongId: tile.id }, base) };
-        S.lock = { x: TF.hero.x, z: TF.hero.y }; S.breakT = 0.3;   // no grace period: the hero is held while the glass cracks
+        S.lock = { x: TF.hero.x, z: TF.hero.y }; S.breakT = 0.55;   // no grace period: the hero is held while the glass trembles and cracks
         world.crackTile(row.id, s.lane, 2); audio.play('crack');
       }
     }
@@ -373,22 +393,26 @@
         S.answers.push(Object.assign({ correct: false, firstTry: false }, p.base));
         emit('answer', { correct: false, firstTry: false, ...p.base }); emit('fall', { knowledge: true, rowId: p.row.id });
       } else { TF.sys('You fell. Back to the last checkpoint, no penalty.'); emit('fall', { knowledge: false }); }
-      TF.fade(() => { if (!S || !world.layout || TF.zone !== 'bridge') return; respawn(); if (p) showCard(p); });   // the player may have left through a portal meanwhile
+      if (p) return showCard(p);   // the why comes first, while you are still falling; closeCard() does the fade and the respawn
+      TF.fade(() => { if (!S || !world.layout || TF.zone !== 'bridge') return; respawn(); });   // the player may have left through a portal meanwhile
     }
     function respawn() {
       const cp = world.layout.checkpoints[S.cp], h = TF.hero;
       h.x = cp.x; h.y = cp.z; h.dir = 'up'; Object.assign(S.motor, createMotor()); h.alt = 0; S.standId = null; S.fallHandled = false; S.lock = null;
-      if (S.card) S.lock = { x: h.x, z: h.y };
       TF.snapCamera();
     }
     // E on the card: re-deal the row (a different variant of the same concept) and bring the missed concept back as a bonus row
     function closeCard() {
-      const p = S.card; if (!p) return;
+      const p = S.card; if (!p || p.closing) return;
+      p.closing = true; hud.c.style.display = 'none';   // S.card stays set until the screen is black, so a second E does nothing
+      TF.fade(() => { if (!S || !world.layout || TF.zone !== 'bridge') return; redeal(p); respawn(); });   // the player may have left through a portal meanwhile
+    }
+    function redeal(p) {
       const i = rowIndexOf(p.row.id);
       let res = G.rerollRow(S.spec, i), spec = res.spec, bonus = null;
       if (!p.row.boss) { const b = G.insertBonusRow(spec, i); if (b.row) { spec = b.spec; bonus = b.row; } }
-      S.spec = spec; S.card = null; S.pending = null; S.lock = null; hud.c.style.display = 'none';
-      delete S.scanned[p.row.id]; rowSt(p.row.id).seenAt = null;   // the re-dealt row is a fresh question
+      S.spec = spec; S.card = null; S.pending = null; S.lock = null;
+      delete S.scanned[p.row.id]; delete S.misled[p.row.id]; rowSt(p.row.id).seenAt = null;   // the re-dealt row is a fresh question
       if (bonus) { world.build(spec); reapply(); } else world.rerollRow(spec, i);
       TF.sys(bonus ? 'The row is re-dealt, and that idea will come back as a bonus row.' : 'The row is re-dealt: same idea, new question.');
     }
@@ -401,25 +425,30 @@
     }
     function scan() {
       if (S.finished || S.card || S.lock) return;
-      if (S.scans >= 2) return TF.sys('No hints left on this run.');
+      if (S.scans >= HINTS) return TF.sys('No hints left on this run.');
       const h = TF.hero, rl = currentRow(h);
       if (!rl) return TF.sys('Nothing to hint here.');
       const row = S.spec.rows[rl.index], done = S.scanned[rl.id] || [];
       const open = row.tiles.map((t, lane) => lane).filter((lane) => !row.tiles[lane].correct && !done.includes(lane));
       if (!open.length) return TF.sys('That row already has a hint.');
-      const rng = G.mulberry32(G.hash32(S.spec.seed + ':scan:' + rl.id + ':' + S.scans)), lane = open[(rng() * open.length) | 0];
+      const rng = G.mulberry32(G.hash32(S.spec.seed + ':scan:' + rl.id + ':' + S.scans)); let lane = open[(rng() * open.length) | 0];
+      // with TOKEN-1 along, the hint is TOKEN-1's: when its accuracy is low it is sometimes wrong, and then the cracked tile is the RIGHT one. Checking it against the question is the skill.
+      const t1 = TF.token1, mine = !!(t1 && t1.joined), roll = rng(), right = row.tiles.findIndex((t) => t.correct);
+      const misled = mine && t1.misleads(roll) && !done.includes(right);
+      if (misled) { lane = right; S.misled[rl.id] = true; }
       S.scans++; (S.scanned[rl.id] = done).push(lane); world.crackTile(rl.id, lane, 1); audio.play('scan');
-      TF.sys(`Hint: one wrong tile in ${rl.label.toLowerCase()} is cracked. ${2 - S.scans} left. The run is capped at 2 stars.`);
-      emit('scan', { rowId: rl.id, conceptId: row.conceptId });
+      if (mine) t1.say("TOKEN-1's hint", `I scanned ${esc(rl.label)}: the cracked tile looks wrong to me.${t1.unsure ? ' <span class="t1-tag">TOKEN-1 isn\'t sure</span><br><small>Check me against the question.</small>' : ''}`, 4200);   // short: the toast sits over the question board
+      else TF.sys(`Hint: one wrong tile in ${rl.label.toLowerCase()} is cracked. ${HINTS - S.scans} left. The run is capped at 2 stars.`);
+      emit('scan', { rowId: rl.id, conceptId: row.conceptId, misled });
     }
     function finish() {
       S.finished = true; const stars = starsFor(S), secs = Math.round((Date.now() - S.startedAt) / 1000);
       audio.play('chime'); TF.banner('You made it', `${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`);
       const summary = { stars, falls: S.falls, scans: S.scans, tokens: S.tokens, bestStreak: S.best, seconds: secs, answers: S.answers, seen: S.spec.seen, seed: S.spec.seed, runIndex: S.runIndex, playerId: S.playerId, spec: S.spec };
-      TF.sys(`Finished: ${stars} star${stars > 1 ? 's' : ''}, ${S.falls} mistake${S.falls === 1 ? '' : 's'}, ${S.tokens} tokens.`);
+      TF.sys(`Finished: ${stars} star${stars > 1 ? 's' : ''}, ${S.falls} mistake${S.falls === 1 ? '' : 's'}, ${S.tokens} points.`);
       emit('finish', summary);
       if (play.debrief) play.debrief(summary);   // bridge-progress.js shows the report card
-      else TF.talk('Referee', [`You crossed! ${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`, `${S.falls} mistake${S.falls === 1 ? '' : 's'}, ${S.scans} hint${S.scans === 1 ? '' : 's'}, ${S.tokens} tokens banked.`, 'Walk into the portal to head home. The bridge will be different next time.']);
+      else TF.talk('Referee', [`You crossed! ${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`, `${S.falls} mistake${S.falls === 1 ? '' : 's'}, ${S.scans} hint${S.scans === 1 ? '' : 's'}, ${S.tokens} points banked.`, 'Walk into the portal to head home. The bridge will be different next time.']);
     }
 
     // ---- the per-frame tick (right after the lobby moves the hero) ----
@@ -435,6 +464,12 @@
       if (S.breakT > 0 && (S.breakT -= dt) <= 0) shatter();
       const jump = S.jumpQ && !S.lock; S.jumpQ = false;
       const probe = (pad) => world.surfaceAt(h.x, h.y, T, pad);
+      // easy: the glass edge is a wall (slide along it); only a shattered tile drops you
+      if (S.spec.easy && S.motor.grounded && !S.motor.doomed) {
+        const on = (x, z) => world.surfaceAt(x, z, T, PHYS.EDGE);
+        if (on(h.x, h.y)) S.safe = { x: h.x, z: h.y };
+        else if (S.safe) { if (on(h.x, S.safe.z)) h.y = S.safe.z; else if (on(S.safe.x, h.y)) h.x = S.safe.x; else { h.x = S.safe.x; h.y = S.safe.z; } }
+      }
       const ev = stepMotor(S.motor, dt, jump, probe);
       if (ev.landed) { // a generous landing is snapped onto the glass so it cannot slide off
         const r = world.rectOf(ev.landed, T), e = PHYS.EDGE; h.x = clamp(h.x, r.x0 + e, r.x1 - e); h.y = clamp(h.y, r.z0 + e, r.z1 - e);
@@ -459,7 +494,13 @@
     function onKey(e) {
       if (TF.zone !== 'bridge' || !S) return false;
       audio.init();
-      if (e.code === 'Space') { if (!e.repeat) S.jumpQ = true; return true; }
+      if (S.choosing) {
+        if (e.repeat) return true;
+        if (['Digit1', 'Numpad1'].includes(e.code)) choose(false); else if (['Digit2', 'Numpad2'].includes(e.code)) choose(true); else if (['Enter', 'KeyE'].includes(e.code)) choose(S.spec.easy);
+        else if (e.code === 'KeyM') audio.toggle();
+        return true;
+      }
+      if (e.code === 'Space') { if (!e.repeat && !S.spec.easy) S.jumpQ = true; return true; }
       if ((e.code === 'KeyE' || e.code === 'KeyS') && S.card) { if (!e.repeat) closeCard(); return true; }   // S on a card: the same as E (the row is re-dealt at once)
       if (e.code === 'KeyM' && !e.repeat) { audio.toggle(); return true; }
       if (e.code === 'KeyF' && !e.repeat) { scan(); return true; }
@@ -470,6 +511,7 @@
 
     function frame(t, dt) {
       if (TF.zone !== 'bridge' || !S || !hud) return;
+      if (!TF.cameraHeld) { camLook.copy(TF.camera.position).sub(TF.CAM_OFF); TF.camera.position.y += CAM_RAISE; TF.camera.position.z -= 0.4; TF.camera.lookAt(camLook); }   // the lobby has already placed the camera this frame; look from a little higher, at the same spot
       fx.update(dt); tickCoins(t, TF.hero); drawHud(TF.hero);
       if (S.shake.t > 0) { S.shake.t -= dt; const m = S.shake.m * Math.max(0, S.shake.t / S.shake.d); TF.camera.position.x += (Math.random() - 0.5) * m; TF.camera.position.y += (Math.random() - 0.5) * m; }
     }
@@ -477,15 +519,15 @@
     function enterZone() {
       hud = hud || makeHud(); fx = makeFx();   // the coins were built by the world's build event, which fires first
       const h = TF.hero; h.noLift = true; h.alt = 0; hud.qKey = hud.sKey = hud.kKey = ''; hud.c.style.display = 'none'; hud.h.style.display = 'none';
-      if (coachSeen === 0) setTimeout(() => { if (TF.zone === 'bridge') showHelp(true); }, 900);   // the very first visit opens the how-to-play panel
-      TF.sys('The Glass Bridge: 8 questions, 3 stages and a boss. Space jumps, F hints, M mutes.');
+      if (S) showChoice();
     }
     function leaveZone() {
       const h = TF.hero; h.noLift = false; h.alt = 0; h.g.children[1].visible = true;
       if (S && S.started && !S.finished) emit('abandon', { seen: S.spec.seen, falls: S.falls });
       if (fx) { fx.dispose(); fx = null; }
       clearCoins();
-      if (hud) { hud.q.style.display = hud.s.style.display = hud.c.style.display = hud.k.style.display = hud.h.style.display = 'none'; }
+      if (S && S.choosing) TF.lockPlayer(false);
+      if (hud) { hud.q.style.display = hud.s.style.display = hud.c.style.display = hud.k.style.display = hud.h.style.display = hud.m.style.display = 'none'; }
       S = null;
     }
 

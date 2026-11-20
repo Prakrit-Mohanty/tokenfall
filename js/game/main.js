@@ -12,6 +12,9 @@ const TF = window.TokenFall = {
   canvasTex, std, box, boxGeo, faceBox, plane, add, pointLight, ledSign, ledTex, signBoard, textTex, glowStrip, glowDisc,
   gate, portal, scatter, streetLamp, officeBlock, tree, colBox, colCirc, makeFader, talk, snapCamera, travel, blocked,
   get hero() { return hero; }, get zone() { return zone; }, get talking() { return !!dialog; }, get traveling() { return traveling; },
+  // the last Normal / Easy choice on the Glass Bridge or the carrom table: the default (Enter) the next time either asks
+  get easy() { try { return localStorage.getItem('tokenfall.easy') === '1'; } catch (e) { return false; } },
+  set easy(on) { try { localStorage.setItem('tokenfall.easy', on ? '1' : '0'); } catch (e) {} },
   zoneTick: {}, zoneEnv: {}, ground: {}, onKey: null, _on: { boot: [], enter: [], game: [] },
   on(evt, fn) { this._on[evt].push(fn); return fn; },
   fire(evt, e) { this._on[evt].forEach(f => f(e)); },
@@ -40,9 +43,9 @@ const TF = window.TokenFall = {
   // fn(x, z, y) -> ground height or null (a void); stored for the zone's tick to consult
   setGroundProvider(zoneKey, fn) { this.ground[zoneKey] = fn; },
   // a still, silent NPC (talk() on E, never wanders, never chats)
-  addNPC(name, x, z, zoneKey, lines) {
+  addNPC(name, x, z, zoneKey, lines, look) {   // look: a model from CHARS (the default takes turns between the lobby's two)
     NPC_TALK[name] = lines; NPC_BOUNDS[zoneKey] = [x, z, x, z];
-    const c = makeChar(name, x, z, { speed: 1, zone: zoneKey });
+    const c = makeChar(name, x, z, { speed: 1, zone: zoneKey, look });
     c.wait = 1e12; c.mute = true; c.dir = 'down'; npcs.push(c); return c;
   },
 };

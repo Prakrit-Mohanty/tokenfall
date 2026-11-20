@@ -54,11 +54,13 @@ html body #party h4 #count { font-family: var(--sb-font) !important; font-size: 
 /* while a game is open (daylight.js sets data-play) the lobby furniture steps aside: the key strip, the roster and the chat log; each game has its own help and HUD */
 /* they ease out and back in (a short fade and slide) instead of snapping; visibility drops only after the fade, so a hidden panel takes no clicks */
 html body #ui :is(#help, #party, #log) { transition: opacity .2s ease, transform .2s ease, visibility 0s; }
-html body #ui[data-play="1"] :is(#help, #party, #log) { opacity: 0; visibility: hidden; transition: opacity .16s ease, transform .16s ease, visibility 0s linear .16s; }
+html body #ui[data-play="1"] :is(#party, #log), html body #ui[data-play="1"]:not([data-walk="1"]) #help { opacity: 0; visibility: hidden; transition: opacity .16s ease, transform .16s ease, visibility 0s linear .16s; }
 html body #ui[data-play="1"] #party { transform: translateY(-8px); }
-html body #ui[data-play="1"] :is(#help, #log) { transform: translateY(8px); }
+html body #ui[data-play="1"] #log, html body #ui[data-play="1"]:not([data-walk="1"]) #help { transform: translateY(8px); }
+/* the bridge keeps the key strip but not chat: the chat log is hidden while you play, so a message would go nowhere; its key hint goes too */
+html body #ui[data-walk="1"] :is(#chat, .k-chat) { display: none; }
 @media (prefers-reduced-motion: reduce) { html body #ui :is(#help, #party, #log) { transition: none !important; } }
 /* one job per moment: while a brief, a how-to or a results card is up, the HUD strips behind it step aside (read cards stay out of this: the clock must keep showing while a ticket is read).
    A card counts as up when its game has put an inline display: block / flex on it. */
 html body #ui:has(:is(.kp-brief, .kp-help, .kp-rs, .mp-brief, .mp-help, .mp-rs, .gp-brief, .gp-help, .gp-rs, .th, .ch, .cp, .bh, .bc):is([style*="display: block"], [style*="display: flex"]))
-  :is(.kp-top, .kp-rail, .kp-carry, .kp-msg, .mp-top, .mp-stat, .mp-legend, .mp-msg, .gp-top, .gp-stat, .gp-msg, .tq, .ts, .tm, .tg, .cq, .cs, .cm, .bq, .bs, .bk, #prompt) { visibility: hidden; }
+  :is(.kp-top, .kp-rail, .kp-carry, .kp-msg, .mp-top, .mp-stat, .mp-legend, .mp-msg, .gp-top, .gp-stat, .gp-keys, .gp-msg, .tq, .ts, .tm, .tg, .cq, .cs, .cm, .bq, .bs, .bk, #prompt) { visibility: hidden; }

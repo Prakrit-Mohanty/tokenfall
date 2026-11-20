@@ -25,6 +25,7 @@
   PHYS.APEX = (PHYS.JUMP_V * PHYS.JUMP_V) / (2 * PHYS.GRAVITY);   // 1.15 high
   // widest gap crossable at a given speed: take off at the edge (+ coyote time, + the tiny edge tolerance), land on the far edge (+ the generous landing hitbox)
   PHYS.reach = (speed, coyote = true) => speed * (PHYS.AIR + (coyote ? PHYS.COYOTE : 0)) + PHYS.LAND_PAD + PHYS.EDGE;
+  const EASY_GAP = 0.15;   // < 2 x PHYS.EDGE: walkable
 
   const ZONE_HEX = { amber: 0xffb347, green: 0x7dff8a, cyan: 0x5cd6ff, gold: 0xffd27a };
   const CP_COLOR = ['green', 'cyan', 'gold']; // a checkpoint wears the colour of the stage it leads into
@@ -54,6 +55,8 @@
     const rowStage = {};
     spec.stages.forEach((st, si) => st.rowIds.forEach((id) => { rowStage[id] = si; }));
     let z = cz + DIM.START_D / 2, cp = 0, rowNo = 0, bossNo = 0;
+    // easy (spec.easy): no parkour interludes, and a hairline between rows that the feet tolerance (PHYS.EDGE on each side) walks straight over
+    const rowGap = spec.easy ? EASY_GAP : DIM.ROW_GAP;
     const place = (depth, gap) => { const zs = z - gap, zn = zs - depth; z = zn; return { zs, zn, zc: (zs + zn) / 2 }; };
     const rect = (kind, id, x0, x1, zn, zs, extra) => { const s = Object.assign({ kind, id, x0, x1, z0: zn, z1: zs, y: 0 }, extra); L.surfaces.push(s); return s; };
     const band = (zone, zs) => { let b = L.bands.find((x) => x.zone === zone); if (!b) L.bands.push((b = { zone, zs, zn: zs })); return b; };
@@ -61,14 +64,14 @@
     for (const it of spec.sequence) {
       if (it.type === 'start' || it.type === 'checkpoint' || it.type === 'end') {
         const depth = it.type === 'start' ? DIM.START_D : it.type === 'end' ? DIM.END_D : DIM.PLAT_D;
-        const p = place(depth, it.type === 'start' ? 0 : DIM.ROW_GAP);
+        const p = place(depth, it.type === 'start' ? 0 : rowGap);
         const zone = it.type === 'start' ? 'amber' : it.type === 'end' ? 'gold' : CP_COLOR[cp++];
         const plat = Object.assign({ kind: it.type, index: L.platforms.length, zone, x: cx, w: DIM.PLAT_W }, p);
         L.platforms.push(plat);
         rect('platform', it.type + plat.index, cx - DIM.PLAT_W / 2, cx + DIM.PLAT_W / 2, p.zn, p.zs, { platform: plat.index });
       } else if (it.type === 'row') {
         const { row, i } = byId[it.row], n = row.tiles.length, width = n * DIM.TILE_W + (n - 1) * DIM.LANE_GAP;
-        const p = place(DIM.TILE_D, DIM.ROW_GAP);
+        const p = place(DIM.TILE_D, rowGap);
         const label = row.bonus ? 'BONUS' : row.boss ? 'BOSS ' + ++bossNo + '/3' : 'ROW ' + ++rowNo;
         const zone = row.boss ? 'gold' : row.zone;
         const tiles = row.tiles.map((_, lane) => {
@@ -80,7 +83,7 @@
         for (let k = 1; k < n; k++) rect('link', row.id + ':link' + k, tiles[k - 1].x1, tiles[k].x0, p.zn, p.zs, { rowId: row.id, lane: k });
         L.rows.push(Object.assign({ id: row.id, index: i, label, zone, glass: row.zone, n, width, tiles, boss: row.boss, bonus: row.bonus }, p));
         const b = band(row.boss ? 'gold' : spec.stages[rowStage[row.id]].zone, p.zs); b.zn = p.zn;
-      } else if (it.type === 'interlude') {
+      } else if (it.type === 'interlude' && !spec.easy) {
         const rng = G.mulberry32(it.seed), zs = z - DIM.ROW_GAP;
         const piece = (kind, id, a, b, x, w, extra) => rect(kind, id, x - w / 2, x + w / 2, zs - b, zs - a, extra);
         const pieces = [];
@@ -154,13 +157,14 @@
     guardrails: ['#..#..#.', '#..#..#.', '########', '#..#..#.', '#..#..#.', '########', '#..#..#.', '#..#..#.'],
     approvals: ['########', '#......#', '#.....##', '##...#.#', '#.#.#..#', '#..#...#', '#......#', '########'],
   };
-  const SHAPES = (n) => (n === 2 ? ['triangle', 'diamond'] : ['triangle', 'circle', 'diamond']);
+  const LETTERS = (n) => ['A', 'B', 'C'].slice(0, n);   // the answers, left to right: "pick B" means the middle tile
 
   function create(TF, opts = {}) {
     const { THREE, MAT, scene } = TF;
+    const REF = { x: -7.4, z: 697 };   // the referee: left of the first row's lanes, just inside the start line (the start platform's north edge is at CZ - 4)
     const CX = 0, CZ = 700;   // a free spot: the lobby, Archive, Pune, the Calfus office and ABZ already take (0,0), (-300,0), (300,0), (0,-300) and (0,300)
     const ENV = { fog: parseInt(PAL.plum.slice(1), 16), near: 26, far: 88, sun: 0.62, hemi: 0.66, hemiColor: 0xcfdcff };   // more even: less sun, more sky
-    const state = { anims: [], origin: 'lobby', kiosk: null, spec: null, specFor: null, broken: new Set(), linked: new Set(), links: {}, listeners: { build: [], dispose: [] }, layout: null, root: null, reg: null, tiles: {}, textures: [], mats: [], light: null, mist: [], tokens: null, color: new THREE.Color(ZONE_HEX.amber), debug: !!opts.debug };
+    const state = { falling: new Set(), anims: [], origin: 'lobby', kiosk: null, spec: null, specFor: null, broken: new Set(), linked: new Set(), links: {}, listeners: { build: [], dispose: [] }, layout: null, root: null, reg: null, tiles: {}, textures: [], mats: [], light: null, mist: [], tokens: null, color: new THREE.Color(ZONE_HEX.amber), debug: !!opts.debug };
     const txSet = new Set(Object.values(TF.TX).flat());
     const texCache = new Map();   // tile textures survive a rebuild (a bonus row rebuilds the course), and identical answers share one
     const ZCOL = Object.fromEntries(Object.entries(ZONE_HEX).map(([k, v]) => [k, new THREE.Color(v)])), WARM = new THREE.Color(0xffe8c0);   // reused every frame: no allocation
@@ -168,47 +172,43 @@
     const sharedMats = new Set(Object.values(MAT));
     const own = (o) => { state.mats.push(o); return o; };
 
-    // ---- glass tile texture: tinted pixel-glass pane + shape glyph + answer text ----
-    function tileTexture(text, hex, shape, crack = 0) {
-      const key = text + '|' + hex + '|' + shape + '|' + crack;
+    // ---- glass tile texture: tinted pixel-glass pane + answer letter + answer text ----
+    function tileTexture(text, hex, letter, crack = 0, veil = false) {   // veil: a row you have not reached yet, plain dim glass with no label. No text: a bare pane (parkour glass)
+      const key = text + '|' + hex + '|' + letter + '|' + crack + (veil ? '|v' : '');
       if (texCache.has(key)) return texCache.get(key);
-      const K = 1.5, W = 256, H = Math.round((256 * DIM.TILE_D) / DIM.TILE_W), S = 2.54, tint = rgbOf(hex);   // S: the top face is seen ~23 degrees from above, so upright things are drawn 2.5x taller. K: twice the pixels, so close-up text stays sharp
+      const K = 1.5, W = 256, H = Math.round((256 * DIM.TILE_D) / DIM.TILE_W), S = 2.1, tint = rgbOf(hex);   // S: the top face is seen ~30 degrees from above (the bridge raises the camera), so upright things are drawn 2.1x taller. K: twice the pixels, so close-up text stays sharp
       const cw = Math.round(W * K), ch = Math.round(H * K);
       const tex = TF.canvasTex(cw, ch, (g) => {
         g.scale(cw / W, ch / H);
         for (let y = 0; y < H; y += 4) {
-          const f = y / H, base = [92 - f * 34, 116 - f * 40, 138 - f * 40], k = 0.34;
-          g.fillStyle = `rgb(${base.map((v, i) => (v * (1 - k) + tint[i] * k) | 0).join(',')})`;
+          const f = y / H, base = [170 - f * 30, 214 - f * 30, 232 - f * 26], k = 0.1;   // pale, cool glass with a hint of the stage colour; translucent, so the drop shows through
+          g.fillStyle = `rgba(${base.map((v, i) => (v * (1 - k) + tint[i] * k) | 0).join(',')},${(0.26 + f * 0.12).toFixed(2)})`;
           g.fillRect(0, y, W, 4);
         }
         for (let i = 0; i < 520; i++) { const x = (TF.rnd() * W) | 0, y = (TF.rnd() * H) | 0, l = TF.rnd() < 0.5; g.fillStyle = l ? 'rgba(255,255,255,.12)' : 'rgba(0,0,0,.16)'; g.fillRect(x, y, 2, 2); }
         g.fillStyle = 'rgba(255,255,255,.09)';
         for (let x = -H; x < W; x += 64) { g.beginPath(); g.moveTo(x, H); g.lineTo(x + 18, H); g.lineTo(x + 18 + H * 0.5, 0); g.lineTo(x + H * 0.5, 0); g.fill(); }
-        g.fillStyle = 'rgba(20,24,32,.55)'; g.fillRect(0, 0, W, 3); g.fillRect(0, H - 3, W, 3); g.fillRect(0, 0, 3, H); g.fillRect(W - 3, 0, 3, H);
+        g.fillStyle = 'rgba(236,250,255,.8)'; g.fillRect(0, 0, W, 4); g.fillRect(0, H - 4, W, 4); g.fillRect(0, 0, 4, H); g.fillRect(W - 4, 0, 4, H);   // the bevel catching light
+        if (veil) { g.fillStyle = 'rgba(14,18,30,.4)'; g.fillRect(0, 0, W, H); } else if (text) {
         g.save(); g.scale(1, S);
-        const h = H / S, cy = h / 2;
-        g.fillStyle = 'rgba(8,12,20,.7)'; g.fillRect(8, cy - 15, 34, 30);
-        g.fillStyle = cssOf(hex); g.strokeStyle = cssOf(hex);
-        if (shape === 'circle') { g.beginPath(); g.arc(25, cy, 10, 0, 6.283); g.fill(); }
-        else if (shape === 'diamond') { g.beginPath(); g.moveTo(25, cy - 12); g.lineTo(37, cy); g.lineTo(25, cy + 12); g.lineTo(13, cy); g.fill(); }
-        else { g.beginPath(); g.moveTo(25, cy - 11); g.lineTo(37, cy + 9); g.lineTo(13, cy + 9); g.fill(); }
-        g.textAlign = 'left'; g.textBaseline = 'middle';
-        let size = 32, lines;
-        for (; size >= 12; size--) {
+        const h = H / S, cy = h / 2, PAD = 10, panelX = 52, panelW = W - panelX - 16, maxW = panelW - PAD * 2;   // 16 px of glass all round the label, and PAD of it inside the panel
+        g.fillStyle = 'rgba(8,12,20,.7)'; g.fillRect(14, cy - 15, 30, 30);
+        g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = cssOf(hex); g.font = `700 26px ${SIGN_FONT}`; g.fillText(letter, 29, cy + 1);   // A, B or C: it means something (which answer), unlike the old shapes
+        g.textAlign = 'center'; g.textBaseline = 'middle';
+        let size = 30, lines;   // the biggest type that fits in up to 3 centred lines; a long word or a hyphenated one breaks rather than shrinking the whole answer
+        for (; size >= 14; size--) {
           g.font = `600 ${size}px ${SIGN_FONT}`;
-          lines = []; let line = '';
-          for (const w of text.split(' ')) { const t = line ? line + ' ' + w : w; if (line && g.measureText(t).width > 200) { lines.push(line); line = w; } else line = t; }
-          lines.push(line);
-          if (lines.length <= 2 && lines.length * size * 1.12 <= h - 6) break;
+          lines = wrapText(g, text, maxW);
+          if (lines.length <= 3 && lines.length * size * 1.12 <= h - 16 && lines.every((l) => g.measureText(l).width <= maxW)) break;
         }
-        const lh = size * 1.12;
-        g.fillStyle = 'rgba(6,9,16,.82)'; g.fillRect(46, cy - (lines.length * lh) / 2 - 3, W - 52, lines.length * lh + 6);
-        g.lineJoin = 'round'; g.lineWidth = 3.5; g.strokeStyle = 'rgba(0,0,0,.9)';   // a dark outline keeps the letters crisp over any glass
+        const lh = size * 1.12, tx = panelX + panelW / 2;
+        g.fillStyle = 'rgba(10,20,42,.88)'; g.fillRect(panelX, cy - (lines.length * lh) / 2 - 6, panelW, lines.length * lh + 12);
+        g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.9)';   // a dark outline keeps the letters crisp over any glass
         lines.forEach((l, i) => {
           const y = cy + (i - (lines.length - 1) / 2) * lh;
-          g.strokeText(l, 52, y); g.fillStyle = '#ffffff'; g.fillText(l, 52, y);
+          g.strokeText(l, tx, y); g.fillStyle = '#ffffff'; g.fillText(l, tx, y);
         });
-        g.restore();
+        g.restore(); }
         if (crack) { // 1: a Scan has cracked this tile in shimmering light, 2: it is breaking now
           g.fillStyle = crack === 1 ? 'rgba(255,226,154,.2)' : 'rgba(255,255,255,.1)'; g.fillRect(0, 0, W, H);
           const cx = W * (0.35 + 0.3 * TF.rnd()), cy = H * (0.35 + 0.3 * TF.rnd());
@@ -243,7 +243,7 @@
     const glow = {}, glass = {};
     const glowOf = (hex) => glow[hex] || (glow[hex] = own(TF.glowStrip(hex)));
     const thin = {}, thinGlow = (hex) => thin[hex] || (thin[hex] = own(new THREE.MeshStandardMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.85 })));   // gantry lines: less bloom than the tile frames
-    const sideOf = (hex) => glass[hex] || (glass[hex] = own(new THREE.MeshStandardMaterial({ color: new THREE.Color(hex).lerp(new THREE.Color(0xbfd8e0), 0.6), transparent: true, opacity: 0.7, roughness: 0.3, emissive: hex, emissiveIntensity: 0.16 })));
+    const sideOf = (hex) => glass[hex] || (glass[hex] = own(new THREE.MeshStandardMaterial({ color: new THREE.Color(hex).lerp(new THREE.Color(0xbfd8e0), 0.6), transparent: true, opacity: 0.55, roughness: 0.2, emissive: hex, emissiveIntensity: 0.3 })));
 
     // ---- parts ----
     function platform(p, L) {
@@ -262,6 +262,14 @@
         for (const s of [-1, 1]) TF.box(0.1, 1.4, 0.1, MAT.metal, sx + s * 1.4, 0, sz);
         TF.ledSign(['CHECKPOINT'], cssOf(hex), sx, 1.55, sz, 2.6, 0.45);
       } else if (p.kind === 'start') {
+        // the start line: a chequered strip across the platform's north edge, and the referee's flag beside the referee
+        const chk = TF.canvasTex(16, 16, (g) => { g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#1d1a22'; g.fillRect(0, 0, 8, 8); g.fillRect(8, 8, 8, 8); }, { nearest: true });
+        chk.repeat.set(DIM.PLAT_W / 0.5, 1);
+        const line = new THREE.Mesh(new THREE.PlaneGeometry(DIM.PLAT_W, 0.5), new THREE.MeshBasicMaterial({ map: chk })); line.rotation.x = -Math.PI / 2; line.position.set(cx, 0.03, p.zn + 0.5); scene.add(line);
+        TF.box(0.09, 2.9, 0.09, MAT.metal, REF.x - 0.95, 0, REF.z);
+        const flagTex = TF.canvasTex(16, 16, (g) => { g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#1d1a22'; g.fillRect(0, 0, 8, 8); g.fillRect(8, 8, 8, 8); }, { nearest: true });
+        flagTex.repeat.set(3, 2);
+        const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.9), new THREE.MeshBasicMaterial({ map: flagTex, side: THREE.DoubleSide })); flag.position.set(REF.x - 0.95 + 0.79, 2.42, REF.z); scene.add(flag);
         // to the side too: a portal on the course axis would glare through the camera's line of sight to the rows ahead
         TF.portal(cx + 4.8, p.zc + 2.0, ZONE_HEX.gold, 'bridge', 'lobby', 'TokenFall Lobby');
         TF.ledSign([state.origin === 'lab' ? 'Back to the office' : 'Back to Lobby'], '#f6e3b4', cx + 4.8, 3.9, p.zc + 2.0, 2.4, 0.45);
@@ -280,17 +288,17 @@
 
     function row(rl, spec, L) {
       const hex = ZONE_HEX[rl.glass], accent = ZONE_HEX[rl.zone], cx = L.cx, r = spec.rows[rl.index];
-      const shapes = SHAPES(rl.n), list = [];
+      const letters = LETTERS(rl.n), list = [];
       rl.tiles.forEach((t, lane) => {
-        const top = own(new THREE.MeshStandardMaterial({ map: tileTexture(r.tiles[lane].text, hex, shapes[lane]), transparent: true, opacity: 0.92, roughness: 0.35, metalness: 0.1, emissive: 0xffffff, emissiveIntensity: 0.32 }));
+        const top = own(new THREE.MeshStandardMaterial({ map: tileTexture(r.tiles[lane].text, hex, letters[lane]), transparent: true, opacity: 1, roughness: 0.2, metalness: 0.1, emissive: 0xffffff, emissiveIntensity: 0.8 }));
         top.emissiveMap = top.map;
         const side = sideOf(hex);
-        const mesh = new THREE.Mesh(new THREE.BoxGeometry(DIM.TILE_W, DIM.TILE_H, DIM.TILE_D), [side, side, top, side, side, side]);
-        mesh.position.set(t.x, -DIM.TILE_H / 2, rl.zc); mesh.receiveShadow = true; scene.add(mesh);
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(DIM.TILE_W, SLAB, DIM.TILE_D), [side, side, top, side, side, side]);   // SLAB: thick enough for the edge to read as a pane of glass
+        mesh.position.set(t.x, -SLAB / 2, rl.zc); mesh.receiveShadow = true; scene.add(mesh);
         const fm = state.debug && r.tiles[lane].correct ? glowOf(0x9dffc0) : glowOf(accent);
         const frame = TF.box(DIM.TILE_W + 0.24, 0.14, DIM.TILE_D + 0.24, fm, t.x, -0.2, rl.zc, { cast: false });
         frame.userData.dyn = true;   // its material changes on a reroll / debug
-        list.push({ lane, mesh, frame, top, x: t.x, z: rl.zc, text: r.tiles[lane].text, hex, shape: shapes[lane], base: top.map, cracks: {}, shimmer: false });
+        list.push({ lane, mesh, frame, top, x: t.x, z: rl.zc, text: r.tiles[lane].text, hex, letter: letters[lane], base: top.map, cracks: {}, shimmer: false, veiled: false, home: mesh.position.clone(), shake: false, fall: null });
       });
       state.tiles[rl.id] = list;
       state.links[rl.id] = [];
@@ -311,6 +319,37 @@
       st.emissiveMap = st.map;
       const sign = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.52, 0.08), [MAT.metal, MAT.metal, MAT.metal, MAT.metal, st, MAT.metal]);
       sign.position.set(cx - half - 1.15, 2.5, zp + 0.1); scene.add(sign);   // beside the left post, out of the way of the tiles
+    }
+
+    // ---- the question board: ONE flat plaque in the world, moved above whichever row is current (bridge-play.js calls setQuestion every frame) ----
+    // Low and between the gantry posts on purpose: the follow camera's top edge sits near y 4.3, and a higher or wider board would leave the screen or cover the rows ahead.
+    const SLAB = 0.34;
+    const BOARD = { W: 8, H: 2.0, Y: 1.6, PX: 128 };   // world size, bottom height, texture pixels per world unit
+    function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+    function wrapText(g, text, maxW) {   // words, and the halves of a hyphenated word ("company-" "approved"), greedily onto lines
+      const lines = []; let line = '';
+      for (const w of text.match(/[^\s-]+-?\s*/g) || [text]) { const t = line + w; if (line && g.measureText(t.trimEnd()).width > maxW) { lines.push(line.trimEnd()); line = w; } else line = t; }
+      lines.push(line.trimEnd()); return lines;
+    }
+    function drawBoard(b, head, stem, hex) {
+      const g = b.tex.image.getContext('2d'), W = b.tex.image.width, H = b.tex.image.height, padX = 44, top = 78;
+      g.clearRect(0, 0, W, H);
+      g.fillStyle = 'rgba(40,28,30,.94)'; roundRect(g, 5, 5, W - 10, H - 10, 40); g.fill();
+      g.lineWidth = 7; g.strokeStyle = cssOf(hex); g.stroke();
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = cssOf(hex); g.font = `600 30px ${SIGN_FONT}`; g.fillText(head.toUpperCase(), W / 2, 46);
+      let size = 60, lines;   // the biggest type that fits, so a short question is easy to read from the start line and a long one still fits
+      for (; size >= 24; size -= 2) { g.font = `600 ${size}px ${SIGN_FONT}`; lines = wrapText(g, stem, W - padX * 2); if (lines.length * size * 1.2 <= H - top - 28) break; }
+      const lh = size * 1.2, y0 = top + (H - top - 28) / 2 - ((lines.length - 1) * lh) / 2;
+      g.lineJoin = 'round'; g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,.55)'; g.fillStyle = '#fff8e6';
+      lines.forEach((l, i) => { g.strokeText(l, W / 2, y0 + i * lh); g.fillText(l, W / 2, y0 + i * lh); });
+      b.tex.needsUpdate = true;
+    }
+    function makeBoard() {
+      const tex = TF.canvasTex(BOARD.W * BOARD.PX, BOARD.H * BOARD.PX, () => {}, { smooth: true });
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, fog: false });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(BOARD.W, BOARD.H), mat);
+      mesh.visible = false; mesh.renderOrder = 5; mesh.castShadow = false;
+      return (state.board = { mesh, tex, key: '' });
     }
 
     function interlude(il, L) {
@@ -455,6 +494,7 @@
       for (let i = animStart; i < TF.anim.length; i++) if (!state.anims.includes(TF.anim[i])) state.anims.push(TF.anim[i]);   // so dispose takes them out again
       rootG.traverse((o) => { if (o.isMesh) o.castShadow = false; });
       mergeStatic(rootG);
+      rootG.add(makeBoard().mesh);   // after the merge: it moves, and dispose() takes it out with the rest of the course
       state.broken.clear(); state.linked.clear();
       state.listeners.build.forEach((f) => f(L));
       return L;
@@ -477,21 +517,48 @@
       scene.remove(state.root);
       state.textures.forEach((t) => t.dispose()); state.mats.forEach((m) => m.dispose());
       if (!keepCache) { texCache.forEach((t) => t.dispose()); texCache.clear(); }
-      Object.assign(state, { root: null, reg: null, tiles: {}, textures: [], mats: [], light: null, mist: [], tokens: null, layout: null });
+      state.falling.clear();
+      Object.assign(state, { root: null, reg: null, tiles: {}, textures: [], mats: [], light: null, mist: [], tokens: null, layout: null, board: null });
       for (const k in glow) delete glow[k]; for (const k in glass) delete glass[k]; for (const k in thin) delete thin[k];
     }
 
+    function resetTile(t) {   // a tile that shook or fell comes back whole
+      state.falling.delete(t); t.fall = null; t.shake = false;
+      t.mesh.position.copy(t.home); t.mesh.rotation.set(0, 0, 0); t.frame.position.set(t.x, -0.2, t.z); t.top.opacity = 1; t.mesh.visible = t.frame.visible = true;
+    }
     // after a fall: new texts on the same row (same concept, same number of tiles)
     function rerollRow(spec, rowIndex) {
       state.spec = spec;
       if (!state.root) return;
-      const r = spec.rows[rowIndex], list = state.tiles[r.id], rl = state.layout.rows.find((x) => x.id === r.id), shapes = SHAPES(rl.n);
+      const r = spec.rows[rowIndex], list = state.tiles[r.id], rl = state.layout.rows.find((x) => x.id === r.id), letters = LETTERS(rl.n);
       list.forEach((t) => {
-        const tex = tileTexture(r.tiles[t.lane].text, ZONE_HEX[rl.glass], shapes[t.lane]);
+        const tex = tileTexture(r.tiles[t.lane].text, ZONE_HEX[rl.glass], letters[t.lane]);
         Object.assign(t, { base: tex, cracks: {}, text: r.tiles[t.lane].text, shimmer: false });
-        t.top.map = t.top.emissiveMap = tex; t.top.emissiveIntensity = 0.32; t.top.needsUpdate = true;
-        t.mesh.visible = t.frame.visible = true; state.broken.delete(rl.id + ':' + t.lane);
+        t.top.map = t.top.emissiveMap = tex; t.top.emissiveIntensity = 0.8; t.top.needsUpdate = true;
+        resetTile(t); state.broken.delete(rl.id + ':' + t.lane);
         t.frame.material = state.debug && r.tiles[t.lane].correct ? glowOf(0x9dffc0) : glowOf(ZONE_HEX[rl.zone]);
+      });
+    }
+
+    // the board over a row: setQuestion(rowId, { head, stem }) shows it there, setQuestion(null) hides it. Cheap to call every frame: it only redraws when the text or the row changes.
+    function setQuestion(rowId, info) {
+      const b = state.board, rl = b && rowId && state.layout.rows.find((x) => x.id === rowId);
+      if (!b) return;
+      b.mesh.visible = !!rl; if (!rl) return;
+      b.mesh.position.set(state.layout.cx, BOARD.Y + BOARD.H / 2, rl.zn - 0.4);
+      const key = rowId + '|' + info.head + '|' + info.stem;
+      if (key !== b.key) { b.key = key; drawBoard(b, info.head, info.stem, ZONE_HEX[rl.zone]); }
+    }
+
+    // a row you have not reached: dim glass, no label, a grey frame, so it cannot be mistaken for more options on the current row. veilRow(rowId, false) puts it back.
+    function veilRow(rowId, on) {
+      const list = state.tiles[rowId], rl = state.layout && state.layout.rows.find((x) => x.id === rowId); if (!list || !rl) return;
+      list.forEach((t) => {
+        if (t.veiled === on) return;
+        t.veiled = on;
+        const tex = on ? tileTexture('', t.hex, t.letter, 0, true) : t.base;
+        t.top.map = t.top.emissiveMap = tex; t.top.opacity = on ? 0.5 : 1; t.top.emissiveIntensity = on ? 0.2 : 0.8; t.top.needsUpdate = true;
+        t.frame.material = on ? glowOf(0x4a505c) : state.debug && state.spec.rows[rl.index].tiles[t.lane].correct ? glowOf(0x9dffc0) : glowOf(ZONE_HEX[rl.zone]);
       });
     }
 
@@ -499,13 +566,14 @@
     const tileOf = (rowId, lane) => (state.tiles[rowId] || [])[lane];
     function crackTile(rowId, lane, level) { // 0 clean, 1 scanned (shimmering), 2 breaking
       const t = tileOf(rowId, lane); if (!t) return;
-      const tex = level ? (t.cracks[level] = t.cracks[level] || tileTexture(t.text, t.hex, t.shape, level)) : t.base;
-      t.top.map = t.top.emissiveMap = tex; t.top.needsUpdate = true; t.shimmer = level === 1;
-      if (!level) t.top.emissiveIntensity = 0.32;
+      const tex = level ? (t.cracks[level] = t.cracks[level] || tileTexture(t.text, t.hex, t.letter, level)) : t.base;
+      t.top.map = t.top.emissiveMap = tex; t.top.needsUpdate = true; t.shimmer = level === 1; t.shake = level === 2;   // breaking: the pane trembles until it goes
+      if (!level) t.top.emissiveIntensity = 0.8;
     }
     function breakTile(rowId, lane) {
       const t = tileOf(rowId, lane); if (!t) return null;
-      state.broken.add(rowId + ':' + lane); t.mesh.visible = t.frame.visible = false; t.shimmer = false;
+      state.broken.add(rowId + ':' + lane); t.frame.visible = false; t.shimmer = t.shake = false;
+      t.fall = { age: 0, vy: 0, spin: (lane % 2 ? 1 : -1) * (0.6 + 0.4 * ((lane * 7 + 3) % 5) / 5) }; state.falling.add(t);   // the pane drops into the abyss (animated below); the gap is solid-free at once
       return { x: t.x, z: t.z, hex: t.hex };
     }
     // the row is answered: the right tile glows gold, the others go quiet (and stay solid: the answer is committed)
@@ -518,10 +586,19 @@
     // ---- per frame, only while in the zone ----
     const here = () => TF.zone === 'bridge' && state.root;
     const dofBase = () => Math.max(4, TF.renderer.domElement.height / 105);   // the lobby's own value
+    let lastT = 0;
     TF.anim.push((t) => {
+      const dt = Math.min(0.05, Math.max(0, t - lastT)); lastT = t;
       if (!here()) return;
+      for (const id in state.tiles) for (const tl of state.tiles[id]) if (tl.shake) tl.mesh.position.set(tl.home.x + Math.sin(t * 70 + tl.lane) * 0.035, tl.home.y, tl.home.z + Math.cos(t * 83) * 0.03);
+      for (const tl of state.falling) {   // gravity, a tumble, and a fade; gone once it is far below
+        const f = tl.fall; f.age += dt; f.vy += 22 * dt;
+        tl.mesh.position.y -= f.vy * dt; tl.mesh.rotation.x += f.spin * dt * 2.2; tl.mesh.rotation.z += f.spin * dt * 1.4;
+        tl.top.opacity = Math.max(0, 1 - f.age / 1.1);
+        if (f.age > 1.1) { tl.mesh.visible = false; state.falling.delete(tl); }
+      }
       if (TF.post) TF.post.maxR.value = dofBase() * 0.4;   // the tilt-shift blur turns far rows into mush; the answers must stay readable
-      for (const id in state.tiles) for (const tl of state.tiles[id]) if (tl.shimmer) tl.top.emissiveIntensity = 0.5 + 0.22 * Math.sin(t * 3.5 + tl.lane);
+      for (const id in state.tiles) for (const tl of state.tiles[id]) if (tl.shimmer) tl.top.emissiveIntensity = 0.85 + 0.25 * Math.sin(t * 3.5 + tl.lane);
       for (const id of state.linked) for (const m of state.links[id] || []) if (m.scale.x < 1) m.scale.x = Math.min(1, 0.05 + (t - m.userData.t0) / 0.3);   // the links grow in
       const h = TF.hero, L = state.layout;
       state.color.lerp(ZCOL[colorAt(L, h.y)], 0.012);
@@ -560,7 +637,7 @@
       state.spec = spec; state.specFor = o.specFor || null;
       TF.registerZone('bridge', { cx: CX, cz: CZ, name: 'The Glass Bridge', sub: 'Pick the right tile', color: ZONE_HEX.gold, ret: [0, 14.6], retDir: 'up', spawn: [0, -0.4], env: ENV });
       TF.on('enter', (prev, z) => { if (z === 'bridge') { state.origin = prev === 'lab' ? 'lab' : 'lobby'; if (state.specFor) state.spec = state.specFor(); build(state.spec); } else if (prev === 'bridge') dispose(); });
-      if (o.referee) TF.addNPC('referee', CX - 3.0, CZ - 0.2, 'bridge', o.referee);
+      if (o.referee) TF.addNPC('referee', REF.x, REF.z, 'bridge', o.referee, 'gaurav');   // not the player's model, and not the lobby's other regular
     }
 
     return {
@@ -569,11 +646,11 @@
       get layout() { return state.layout; }, get tiles() { return state.tiles; }, get spec() { return state.spec; },
       surfaceAt: (x, z, t, pad) => (state.layout ? surfaceAt(state.layout, x, z, t, pad, state.broken, state.linked) : null),
       rectOf: (s, t) => (s.kind === 'moving' ? movingRect(s, t) : s),
-      crackTile, breakTile, settleRow, isBroken: (rowId, lane) => state.broken.has(rowId + ':' + lane),
+      crackTile, breakTile, settleRow, setQuestion, veilRow, isBroken: (rowId, lane) => state.broken.has(rowId + ':' + lane),
       on(evt, fn) { state.listeners[evt].push(fn); },
       colorAt: (z) => (state.layout ? colorAt(state.layout, z) : 'amber'),
     };
   }
 
-  return { DIM, PHYS, ZONE_HEX, computeLayout, surfaceAt, colorAt, movingU, vanishState, movingRect, create };
+  return { DIM, PHYS, EASY_GAP, ZONE_HEX, computeLayout, surfaceAt, colorAt, movingU, vanishState, movingRect, create };
 });

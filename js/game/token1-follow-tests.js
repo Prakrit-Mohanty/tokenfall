@@ -90,4 +90,14 @@ test('a missing or broken still-time counts as moving, never as NaN', () => {
   for (const v of [undefined, null, NaN, -1]) assert.strictEqual(F.sizeFor(v), F.FOLLOW.small);
 });
 
+test('the Talk prompt: always before TOKEN-1 joins, afterwards only when standing still and nothing else is in reach', () => {
+  const g = F.FOLLOW.growAfter;
+  assert.strictEqual(F.promptOn({ joined: false, still: 0, crowded: true }), true);
+  assert.strictEqual(F.promptOn({ joined: true, still: 0, crowded: false }), false, 'walking');
+  assert.strictEqual(F.promptOn({ joined: true, still: g - 0.01, crowded: false }), false, 'only just stopped');
+  assert.strictEqual(F.promptOn({ joined: true, still: g, crowded: false }), true, 'standing still');
+  assert.strictEqual(F.promptOn({ joined: true, still: 10, crowded: true }), false, 'a station is in reach: it keeps the prompt');
+  assert.strictEqual(F.promptOn({ joined: true, still: undefined, crowded: false }), false, 'a missing still-time counts as moving');
+});
+
 done();

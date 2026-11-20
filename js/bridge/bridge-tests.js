@@ -12,6 +12,16 @@ const spec = (i, history) => G.composeRun(G.seedFor('player-' + i, 0), history);
 const specs = Array.from({ length: N }, (_, i) => spec(i));
 const normalRows = (s) => s.rows.filter((r) => !r.boss);
 
+test('fill: "a {x}" / "an {x}" follow the sound of the value ("an 8k-token", "an email", "a user")', () => {
+  assert.strictEqual(G.fill('a {N}-token reply from a {W}-token window', { N: '2k', W: '8k' }), 'a 2k-token reply from an 8k-token window');
+  for (const [v, want] of [['email thread', 'an'], ['insurance claim', 'an'], ['11k', 'an'], ['18k', 'an'], ['80k', 'an'], ['110k', 'a'], ['32k', 'a'], ['user story', 'a'], ['one-pager', 'a'], ['hour log', 'an'], ['report', 'a']]) assert.strictEqual(G.fill('a {x}', { x: v }), `${want} ${v}`, v);
+  assert.strictEqual(G.fill('A {x} and an {x}', { x: 'email' }), 'An email and an email');
+  assert.strictEqual(G.fill('a {missing}', {}), 'a {missing}');
+  const bad = [];   // no rendered question text has "a" before a vowel letter or an 8/11/18 number
+  for (const s of specs.slice(0, 300)) for (const r of s.rows) for (const t of [r.stem, r.idea, ...r.tiles.flatMap((x) => [x.text, x.breaks || ''])]) { const m = t.match(/\b[Aa] (8|11|18|[aeio])\w*/); if (m) bad.push(m[0]); }
+  assert.deepStrictEqual([...new Set(bad)], [], 'article before a vowel sound');
+});
+
 test('seedFor: deterministic, and different players/runs get different seeds', () => {
   assert.strictEqual(G.seedFor('amy', 3), G.seedFor('amy', 3));
   assert.notStrictEqual(G.seedFor('amy', 3), G.seedFor('amy', 4));
@@ -251,6 +261,17 @@ test('layout: surfaceAt finds tiles and platforms, and the gaps are the void', (
       assert(W.surfaceAt(L, r.tiles[0].x0 - 0.1, r.zc, 0, PHYS.LAND_PAD), 'the landing hitbox is generous');
     }
     assert(L.walk[0] < L.cx - DIM.PLAT_W / 2 + 1 && L.walk[2] > L.cx + DIM.PLAT_W / 2 - 1 && L.walk[1] < L.north && L.walk[3] > L.south);
+  }
+});
+
+test('easy layout: no parkour, and every tile is a straight walk from the platform or row before it', () => {
+  for (const s of specs.slice(0, 60)) {
+    const L = W.computeLayout(Object.assign(G.shorten(JSON.parse(JSON.stringify(s))), { easy: true }));
+    assert.strictEqual(L.interludes.length, 0);
+    assert(!L.surfaces.some((q) => ['stone', 'moving', 'beam', 'vanish', 'pad'].includes(q.kind)), 'no parkour pieces');
+    for (const r of L.rows) for (const t of r.tiles) {
+      for (let z = r.zs + 0.6; z >= r.zn; z -= 0.05) assert(W.surfaceAt(L, t.x, z, 0, PHYS.EDGE), 'no void on the walk onto a tile');
+    }
   }
 });
 

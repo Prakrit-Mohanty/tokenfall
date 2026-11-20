@@ -73,7 +73,9 @@
     }
     return b;
   }
-  const fill = (s, b) => s.replace(/\{(\w+)\}/g, (m, k) => (k in b ? b[k] : m));
+  // "a {x}" / "an {x}" take the article that suits the value that goes in: "an 8k-token window", "an email", "a user" (a vowel sound, not a vowel letter)
+  const anSound = (w) => /^8\d*|^(11|18)(\D|$)/.test(w) || /^(hour|honest|heir)/i.test(w) || (/^[aeiou]/i.test(w) && !/^(one|once|eu|uni|use|user|usual|util|ubiq)/i.test(w));
+  const fill = (s, b) => s.replace(/\b([Aa])n? \{(\w+)\}/g, (m, a, k) => (k in b ? a + (anSound(String(b[k])) ? 'n ' : ' ') + b[k] : m)).replace(/\{(\w+)\}/g, (m, k) => (k in b ? b[k] : m));
 
   // ---- lanes: uniform, but never 3 correct tiles in a row on the same side ----
   const sideOf = (lane, n) => (n === 2 ? (lane ? 'R' : 'L') : 'LCR'[lane]);

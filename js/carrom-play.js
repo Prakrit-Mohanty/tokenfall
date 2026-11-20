@@ -20,6 +20,8 @@
 //  (SORT_PARTIAL_CREDIT). Stars: 3 for 13+ of 15 with at most one strike in the whole run, 2 for 9+, 1 finished.
 //  A Quick run (chosen at the start, key 1) is rounds 1, 2 and the finale: 9 points at most, and the star thresholds scale with it (run.max).
 //  "First try" for mastery means a right pocket with no strike on that answer before it; a missed shot is skill, not knowledge.
+//  Easy (chosen before the run, S.easy; the last choice is the default): no aiming. Keys 1-4 or a click on a pocket pick an answer, and the game plays G.ghostFor's shot into
+//  that pocket on the real physics. Same questions, clock, strikes and scoring.
 (function (root, factory) {
   const isNode = typeof module === 'object' && module.exports;
   const api = factory(isNode ? require('./carrom-physics.js') : root.CarromPhysics, isNode ? require('./carrom-generator.js') : root.CarromGenerator, isNode ? require('./carrom-content.js') : root.CARROM_CONTENT);
@@ -172,7 +174,7 @@
         .cq .it { display: inline-block; margin: 0 0 6px; padding: 2px 12px; font-size: clamp(16px, 1.5vw, 20px); color: #1a140c; background: var(--gold); }
         .cq .a { display: grid; gap: 4px; grid-template-columns: repeat(2, 1fr); text-align: left; }
         .cq .a > div { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: 16px; line-height: 1.3; }
-        .cq .a i { font-style: normal; flex: none; font-size: 17px; }
+        .cq .a i { font-style: normal; flex: none; font-size: 17px; } .cq .a kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); }
         .cs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.6; display: none; min-width: 170px; }
         .cs b { color: #ffe39a; font-weight: 600; } .cs kbd, .cm kbd, .ch kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .cs .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 4px; }
@@ -198,15 +200,15 @@
     function say(html, secs = 2.6) { A.hint = secs; hud.m.innerHTML = html; hud.m.style.display = 'block'; }
     function drawHud(dt) {
       if (!S || !hud) return;
-      const R = S.run.round(), q = R.q(), st = R.st(), talking = TF.talking, helping = hud.h.style.display === 'block', on = S.on && !talking && !helping && S.phase !== 'done' && S.phase !== 'pick';   // at the end the report has the screen; before the run, the Quick / Full choice has it
-      hud.p.style.display = S.on && S.phase === 'pick' && !talking && !helping ? 'block' : 'none';
+      const R = S.run.round(), q = R.q(), st = R.st(), talking = TF.talking, helping = hud.h.style.display === 'block', on = S.on && !talking && !helping && S.phase !== 'done' && S.phase !== 'pick' && S.phase !== 'mode';   // at the end the report has the screen; before the run, the Quick / Full choice has it
+      hud.p.style.display = S.on && (S.phase === 'pick' || S.phase === 'mode') && !talking && !helping ? 'block' : 'none';
       const key = [S.run.i, R.qi, st.idx, S.phase === 'card', helping, talking].join('|');
       hud.q.style.display = on && !cardOpen() ? 'block' : 'none';
       if (key !== hud.qKey) {
         hud.qKey = key;
         const kicker = R.round.kind === 'case' ? `LAST ROUND · SHOT ${R.qi + 1} OF 2` : `ROUND ${S.run.i + 1} OF ${S.run.rounds.length} · ${sideName(q.side).toUpperCase()}`;
         const item = q.kind === 'sort' ? `<div class="it">Item ${st.idx + 1} of ${st.targets.length}: ${esc(st.targets[st.idx].item.text)}</div>` : '';
-        hud.q.innerHTML = `<div class="k">${esc(kicker)}</div><div class="t">${esc(q.stem)}</div>${item}<div class="a">${q.options.map((o, i) => `<div><i style="color:${SLOT_CSS[i]}" aria-hidden="true">${MARK[i]}</i><span>${esc(o.text)}</span></div>`).join('')}</div>`;
+        hud.q.innerHTML = `<div class="k">${esc(kicker)}</div><div class="t">${esc(q.stem)}</div>${item}<div class="a">${q.options.map((o, i) => `<div>${S.easy ? `<kbd>${i + 1}</kbd>` : ''}<i style="color:${SLOT_CSS[i]}" aria-hidden="true">${MARK[i]}</i><span>${esc(o.text)}</span></div>`).join('')}</div>`;
       }
       hud.s.style.display = on || cardOpen() ? 'block' : 'none';
       const secs = Math.ceil(R.clock), sKey = [secs, R.strikes, S.run.i, S.run.total().toFixed(1), muted()].join('|');
@@ -217,18 +219,18 @@
         hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div><div class="clock ${secs <= 10 ? 'low' : ''}">${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</div>Mistakes <span class="gems">${gems}</span><br>Points <b>${S.run.total().toFixed(1)}</b><br><kbd>H</kbd> help · <kbd>M</kbd> sound ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
       }
       if (A.hint > 0) { A.hint -= dt; hud.m.style.display = A.hint <= 0 || !on ? 'none' : 'block'; }
-      else if (on && S.phase === 'aim' && coachSeen < 3 && !cardOpen()) { hud.m.innerHTML = coachRule(R); hud.m.style.display = 'block'; }
+      else if (on && S.phase === 'aim' && (coachSeen < 3 || S.easy) && !cardOpen()) { hud.m.innerHTML = coachRule(R); hud.m.style.display = 'block'; }
       else hud.m.style.display = 'none';
     }
     // coaching: one short rule per round for the first three runs (coachSeen counts the runs in which you took a shot)
     const COACH = ['Pull back from the striker and let go. The coin flies away from it.', 'Press <kbd>Tab</kbd> or click a baseline to shoot from another side.', 'A wrong pocket is a mistake. Two mistakes end the round.'];
-    const coachRule = (R) => (S.run.i === 0 ? COACH[0] : R.round.kind === 'sort' ? 'Sort round: send each item to its own pocket.' : R.round.kind === 'case' ? 'Last round: two linked questions, one shot each.' : COACH[Math.min(S.run.i, 2)]);
+    const coachRule = (R) => (S.easy ? 'Press <kbd>1</kbd>-<kbd>4</kbd> or click a pocket: the coin goes into that answer.' : S.run.i === 0 ? COACH[0] : R.round.kind === 'sort' ? 'Sort round: send each item to its own pocket.' : R.round.kind === 'case' ? 'Last round: two linked questions, one shot each.' : COACH[Math.min(S.run.i, 2)]);
     const COACH_KEY = 'tokenfall.carrom.coach'; let coachSeen = 0;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.h.innerHTML = '<h3>HOUSE RULES</h3><ul><li>The four pockets are the four answers. Flick the coin into the one you think is right.</li><li>Pull back from the striker and let go: the farther you pull, the harder the shot. Or <kbd>←</kbd><kbd>→</kbd> turn, hold <kbd>Space</kbd> and release. <kbd>A</kbd><kbd>D</kbd> slide the striker.</li><li>A hit pushes the coin away from the striker. So shoot from a side facing away from your pocket. <kbd>Tab</kbd> or a click on a baseline moves the striker there. The dotted line shows where the coin will go.</li><li>Wrong pocket: a mistake and a Concept Card (<kbd>E</kbd> continues). Two mistakes, or no time, and the ghost shows the answer. A coin that stops on the board only costs time.</li><li><kbd>S</kbd> skips talk, cards and waits. <kbd>M</kbd> sound. <kbd>Esc</kbd> leave (progress is kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.h.innerHTML = `<h3>HOUSE RULES</h3><ul><li>The four pockets are the four answers. Flick the coin into the one you think is right.</li>${S && S.easy ? '<li>Easy mode: press <kbd>1</kbd>-<kbd>4</kbd> or click a pocket, and the coin is shot into it for you. </li>' : '<li>Pull back from the striker and let go: the farther you pull, the harder the shot. Or <kbd>←</kbd><kbd>→</kbd> turn, hold <kbd>Space</kbd> and release. <kbd>A</kbd><kbd>D</kbd> slide the striker.</li><li>A hit pushes the coin away from the striker. So shoot from a side facing away from your pocket. <kbd>Tab</kbd> or a click on a baseline moves the striker there. The dotted line shows where the coin will go.</li>'}<li>Wrong pocket: a mistake and a Concept Card (<kbd>E</kbd> continues). Two mistakes, or no time, and the ghost shows the answer. A coin that stops on the board only costs time.</li><li><kbd>S</kbd> skips talk, cards and waits. <kbd>M</kbd> sound. <kbd>Esc</kbd> leave (progress is kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>`;
       hud.h.style.display = on ? 'block' : 'none';
     }
     const helpOpen = () => !!hud && hud.h.style.display === 'block';
@@ -296,8 +298,13 @@
     function afterTalk(fn) { S.waitTalk = fn; }
     function startRun() {
       const r = progress.newRun(), spec = G.composeRun(G.seedFor(r.playerId, r.runIndex), r.history);
-      S = { on: true, run: createRun(spec), runInfo: r, phase: 'pick', coached: false, state: null, sim: null, anim: null, cx: 50, cy: 50, prev: null, shake: { t: 0, d: 1, m: 0 }, ghost: null, waitTalk: null, brief: 0, lastSecs: -1, startedAt: Date.now(), cardOut: null, ghostCard: false, pendingNext: false, roundDone: false };
+      S = { on: true, easy: !!TF.easy, run: createRun(spec), runInfo: r, phase: 'mode', coached: false, state: null, sim: null, anim: null, cx: 50, cy: 50, prev: null, shake: { t: 0, d: 1, m: 0 }, ghost: null, waitTalk: null, brief: 0, lastSecs: -1, startedAt: Date.now(), cardOut: null, ghostCard: false, pendingNext: false, roundDone: false };
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed, seen: spec.seen.slice() });
+      hud.p.innerHTML = `<h3>CHOOSE YOUR MODE</h3><p><kbd>1</kbd> Normal: aim and shoot the striker yourself</p><p><kbd>2</kbd> Easy: pick a pocket, the game takes the shot</p><p>Same questions and scoring either way. <kbd>Enter</kbd> ${S.easy ? 'Easy' : 'Normal'} (last time)</p>`;
+    }
+    // Normal / Easy first (keys 1 / 2, Enter = the last choice), then Quick / Full
+    function pickMode(easy) {
+      S.easy = TF.easy = easy; S.phase = 'pick'; hud.qKey = '';
       hud.p.innerHTML = '<h3>CHOOSE YOUR RUN</h3><p><kbd>1</kbd> Quick: 3 rounds, about 3 minutes</p><p><kbd>2</kbd> or <kbd>E</kbd> Full: 5 rounds</p>';
     }
     // the Quick / Full choice (keys 1 / 2, E = Full), then the brief: the full one on the first play, one line after that. Quick = rounds 1, 2 and the finale.
@@ -305,7 +312,9 @@
       const sp = S.run.spec;
       if (quick) { sp.rounds = [sp.rounds[0], sp.rounds[1], sp.rounds[sp.rounds.length - 1]]; sp.seen = sp.rounds.flatMap((r) => r.questions.map((q) => q.variantId)).concat(sp.rerolled || []); sp.clockSeconds = sp.rounds.reduce((n, r) => n + r.clock, 0); S.run = createRun(sp); }
       S.phase = 'intro'; hud.p.style.display = 'none';
-      TF.talk('devansh', coachSeen === 0
+      TF.talk('devansh', S.easy
+        ? (coachSeen === 0 ? ['Welcome to the carrom table. The four pockets are the four answers.', 'Easy mode: press 1 to 4, or click a pocket, and I take the shot for you. A wrong pocket costs a mistake and shows a Concept Card. Two mistakes and I show you the answer.'] : ['Back for another? Press 1 to 4, or click a pocket, and I take the shot.'])
+        : coachSeen === 0
         ? ['Welcome to the carrom table. The four pockets are the four answers.', 'Shoot the coin into the pocket you think is right. A wrong pocket costs a mistake and shows a Concept Card. Two mistakes and I show you the answer.', 'Pull back from the striker and let go. Tab or a click on a baseline changes your side. S skips talk. M mutes. Esc leaves.']
         : ['Back for another? Same rules: the pockets are the answers.']);
       afterTalk(() => startRound(0));
@@ -324,6 +333,11 @@
       S.prev = { x: S.cx, y: S.cy }; S.state = st; S.sim = { acc: 0, events: [], power: A.power, sink: null, strikerSunk: false }; S.phase = 'rolling'; S.anim = null;
       sfx('clack', A.power); clearGuide(); A.power = 0; A.charging = false;
       if (!S.coached) { S.coached = true; if (coachSeen < 3) bumpCoach(); }
+    }
+    function easyShot(corner) {   // easy: the game takes the shot into the chosen pocket
+      const sh = G.ghostFor({ x: S.cx, y: S.cy }, corner);
+      if (!sh) { say('That pocket cannot be reached from here. Pick another.'); return; }
+      A.side = sh.side; A.t = sh.strikerX; putStriker(); A.angle = sh.angle; A.power = sh.power; shoot();
     }
     const pocketXY = (p) => ({ x: P.POCKETS[p][0], y: P.POCKETS[p][1] });
     const showBodies = (st) => { const s = st.bodies[0], c = st.bodies[1]; if (s.alive) world.setStriker(s.x, s.y, true); else strikerMesh().visible = false; if (c.alive) world.setCoin(c.x, c.y, true); };
@@ -366,7 +380,7 @@
       say(S.state.first == null ? 'The striker missed the coin. Line it up and pull back again.' : sim.strikerSunk ? 'The striker fell in a pocket. Only time lost.' : 'No pocket that time. Try another angle, or another side (Tab).');
     }
     function skip() {   // S: jump over what is left of a debrief (the ghost shot, the answer card, the wait) to the next question or round
-      if (!S || S.phase === 'pick' || helpOpen()) return;
+      if (!S || S.phase === 'pick' || S.phase === 'mode' || helpOpen()) return;
       if (S.phase === 'card') closeCard();
       if (S.phase === 'ghost') ghostDone();
       if (S.phase === 'card' && S.ghostCard) closeCard();
@@ -463,9 +477,11 @@
       if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
+      if (S.phase === 'mode') { if (!e.repeat && ['Digit1', 'Numpad1'].includes(e.code)) pickMode(false); else if (!e.repeat && ['Digit2', 'Numpad2'].includes(e.code)) pickMode(true); else if (!e.repeat && ['KeyE', 'Enter'].includes(e.code)) pickMode(S.easy); return true; }
       if (S.phase === 'pick') { if (!e.repeat && ['Digit1', 'Numpad1'].includes(e.code)) pickLength(true); else if (!e.repeat && ['Digit2', 'Numpad2', 'KeyE', 'Enter'].includes(e.code)) pickLength(false); return true; }
       if (e.code === 'KeyS' && !e.repeat) { skip(); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else closeCard(); return true; }
+      if (S.easy) { const n = /^(Digit|Numpad)([1-4])$/.exec(e.code); if (n && !e.repeat && canAim()) easyShot(S.run.round().q().options[n[2] - 1].corner); return true; }   // no manual aim
       if (e.code === 'Tab' && !e.repeat) { if (canAim()) { const k = SIDE_CYCLE.indexOf(A.side); setLane(SIDE_CYCLE[(k + (e.shiftKey ? 3 : 1)) % 4], A.t); } return true; }
       held[e.code] = true;
       if (e.code === 'Space') { if (canAim() && !e.repeat) { A.charging = true; A.power = 0.05; } return true; }
@@ -486,6 +502,7 @@
     function onPointerDown(e) {
       if (!canAim() || e.button > 0) return; const b = boardOf(e); if (!b) return;
       const L = lane(), a = audio(); if (a && a.init) a.init();
+      if (S.easy) { const c = P.POCKETS.findIndex(([x, y]) => Math.hypot(b.x - x, b.y - y) < 14); if (c >= 0) { easyShot(c); e.preventDefault(); } return; }   // a click near a pocket
       if (Math.hypot(b.x - L.x, b.y - L.y) <= GRAB) { A.drag = true; ptr = e.pointerId; try { e.target.setPointerCapture(e.pointerId); } catch (x) {} onPointerMove(e); e.preventDefault(); return; }   // pull back from the striker
       const ln = laneAt(b); if (ln && Math.hypot(b.x - S.cx, b.y - S.cy) > CFG.R_COIN + CFG.R_STRIKER + 1) { setLane(ln.side, ln.t); e.preventDefault(); }   // a click on a baseline moves the striker there
     }

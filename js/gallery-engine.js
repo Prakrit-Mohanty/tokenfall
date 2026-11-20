@@ -18,7 +18,7 @@
 //
 // runSpec: { v, game, seed, avoid, order, magnifier, estSeconds, rounds: [round x 5] }
 //   round: { index, kind: 'side' | 'finale', side, brief | null, banner?, concepts, lead, pairs, threats, ammo, traversal, spacing, rseed, playSec, items, schedule }
-//   item (a record, strings already filled): { uid, itemId, side, conceptId, variantId, twin, cue, shoot, kind, params, card, inspect, stamp, tell, leak | friendly }
+//   item (a record, strings already filled): { uid, itemId, side, conceptId, variantId, twin, cue, shoot, kind, params, card, inspect, reason?, stamp, tell, leak | friendly }; reason is the one line shown on the card after a call and in the recap, and falls back to the inspect line
 //   Every round is built from twin pairs: a threat and a legit card that share a surface cue, so no single cue gives the answer. Whether a card is a threat is drawn
 //   independently of its lane, direction, speed, spawn time, popup flag and text length; the ammo is always threats + 2.
 (function (root, factory) {
@@ -199,6 +199,7 @@
   // counter (world z = counter z - local z), so the camera looks north with +x on its right.
   const LAYOUT = {
     rail: FIELD.rail, cardW: FIELD.cardW, cardH: 0.76, pad: 0.05, riseDrop: 0.78,
+    bull: { x: 0.34, y: -0.05 },   // the bullseye sits on the duck's chest, this far (m) ahead of the card's centre in its direction of travel and below it, clear of the paper's text
     lanes: [{ z: 0.9, y: 1.32 }, { z: 1.6, y: 1.84 }, { z: 2.3, y: 2.36 }],
     camera: { pos: [0, 2.0, -2.7], look: [0, 1.55, 1.4], fov: 50 },
   };
@@ -227,7 +228,7 @@
       const c = cardPose(e, t); if (c.state !== 'moving') continue;
       const k = (c.z - ray.o[2]) / ray.d[2]; if (!(k > 0)) continue;
       const x = ray.o[0] + ray.d[0] * k, y = ray.o[1] + ray.d[1] * k;
-      if (Math.abs(x - c.x) <= LAYOUT.cardW / 2 + LAYOUT.pad && Math.abs(y - c.y) <= LAYOUT.cardH / 2 + LAYOUT.pad && (!best || k < best.k)) best = { uid: e.uid, k, x, y, dx: x - c.x, dy: y - c.y };
+      if (Math.abs(x - c.x) <= LAYOUT.cardW / 2 + LAYOUT.pad && Math.abs(y - c.y) <= LAYOUT.cardH / 2 + LAYOUT.pad && (!best || k < best.k)) best = { uid: e.uid, k, x, y, dx: x - c.x, dy: y - c.y, ox: x - c.x - e.dir * LAYOUT.bull.x, oy: y - c.y - LAYOUT.bull.y };   // dx, dy from the card's centre; ox, oy from the bullseye (what the rings score)
     }
     return best;
   }
@@ -266,7 +267,7 @@
   function entryFor(it, action, inspected, t) {
     const j = judge(it, action, inspected);
     return { uid: it.uid, itemId: it.itemId, side: it.side, conceptId: it.conceptId, variantId: it.variantId, twin: it.twin, shoot: it.shoot, kind: it.kind, stamp: it.stamp, tell: it.tell, card: it.card,
-      inspect: it.inspect, why: it.shoot ? it.leak : it.friendly, action: j.action, event: j.event, correct: j.correct, lucky: j.lucky, inspected: !!inspected, t };
+      inspect: it.inspect, reason: it.reason || it.inspect, why: it.shoot ? it.leak : it.friendly, action: j.action, event: j.event, correct: j.correct, lucky: j.lucky, inspected: !!inspected, t };
   }
 
   // ---------------------------------------------------------------- scoring

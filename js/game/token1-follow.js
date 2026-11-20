@@ -39,7 +39,11 @@
 
   const sizeFor = (stillSeconds) => (stillSeconds >= FOLLOW.growAfter ? 1 : FOLLOW.small);
 
-  const api = { FOLLOW, slotFor, step, sizeFor };
+  // the "E Talk · TOKEN-1" prompt: a companion that follows is always in reach, so once it has joined you the prompt shows only when you have stood still next to it
+  // (the same stillness that makes it full size) and nothing else is in reach to take the prompt (a station, a sign, a totem). Before it joins, it waits at its spot and always shows.
+  const promptOn = ({ joined, still, crowded }) => !joined || (still >= FOLLOW.growAfter && !crowded);
+
+  const api = { FOLLOW, slotFor, step, sizeFor, promptOn };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else window.Token1Follow = api;
 })();

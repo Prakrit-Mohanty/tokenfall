@@ -9,7 +9,8 @@
 //   world.enter(cb) / world.leave(cb)     fade, lock + hide the hero, ease the camera in / restore camera and hero      world.open() = enter (spot-shot play replaces it)
 //   world.loadRound(round)     put a round's cards on the schedule (round = a runSpec round); world.run(on) starts / pauses its clock; world.clearRound() disposes the card textures
 //   world.t                    the round clock in seconds (the engine's schedule time): every card sits where E.cardPose(entry, t) says
-//   world.resolve(uid, action, { stamp, tone })   action 'shot' | 'leaked' | 'delivered': the card flips, shows its stamp and goes; tone 'threat' | 'rueful' | 'ok' | 'leak'
+//   world.resolve(uid, action, { stamp, tone, reason })   action 'shot' | 'leaked' | 'delivered': the card flips, shows its stamp and a one-line reason, and goes; tone 'threat' | 'rueful' | 'ok' | 'leak'
+//   world.note(uid, text, tone) a note that follows a card (a spared card does not flip, so its reason rides here)     world.marker('good' | 'bad' | 'miss')   a hit marker on the reticle
 //   world.showInspect(uid, text) / world.visibleCards()     the verification tag that follows a card; the cards on screen, for the large-text panel
 //   world.shoot(nx, ny)        fire the token popper at the reticle position; returns { uid | null }; the event 'shoot' carries the same
 //   world.ring() / world.gate(lane, 'ok' | 'leak') / world.cameraShake(secs, amp) / world.light(on)
@@ -23,7 +24,7 @@
   else root.GalleryWorld = api;
 })(this, function (E, CW) {
   const L = E.LAYOUT, STYLE = CW.STYLE;   // the same four colours as the other games: amber, green, cyan, rose
-  const HOLD = 0.6, POOL = 12, TOKEN_SECS = 0.3, FLIP_SECS = 0.36, KEEP_SECS = 0.9, ARRIVE_SECS = 0.55, RET_SPEED = 1.1, BASE_ASPECT = 16 / 9;
+  const HOLD = 0.6, POOL = 12, TOKEN_SECS = 0.3, FLIP_SECS = 0.36, KEEP_SECS = 0.9, ARRIVE_SECS = 0.55, RET_SPEED = 1.1, BASE_ASPECT = 16 / 9, AIM_SLOW = 0.55;   // AIM_SLOW: the ducks' speed while the reticle rests on a card
 
   // ---------------------------------------------------------------- pure
   // stall-local (x right, y up, z north from the counter) <-> the lobby: x is the world's x, world z = counter z - local z
@@ -68,7 +69,7 @@
     const S = {
       built: false, active: false, leaving: false, at: null, rt: 0, running: false, round: null, cards: new Map(), free: [], pool: [], hover: null, ret: { nx: 0, ny: -0.05 }, keys: {},
       hold: { uid: null, t: 0, progress: 0, done: false }, holding: null, spent: false, touch: null, tokens: [], sparks: [], gates: [], lanterns: [], bell: null, popper: null, recoil: 0, light: null, base: 0, play: 0, env: null,
-      sparkles: null, shake: null, tags: new Map(), aspect: 0, ui: null, tok: null,
+      pace: 1, sparkles: null, shake: null, tags: new Map(), aspect: 0, ui: null, tok: null,
     };
     const world = { state: S, STYLE };
     const emit = (evt, a) => listeners.forEach(([e, f]) => (e === evt || e === '*') && f(a, evt));
@@ -81,7 +82,7 @@
     // ---- the colours and the font come from the lobby's own tokens, never from hex written here ----
     function tokens() {
       const cs = getComputedStyle(document.documentElement), v = (k, d) => cs.getPropertyValue(k).trim() || d, hex = (c) => '#' + c.getHexString();
-      return { paper: v('--ink', '#f3ead6'), gold: v('--gold', '#d9b46a'), dark: hex(MAT.lanternCap.color), red: hex(MAT.redLantern.color), green: STYLE[1].css, amber: STYLE[0].css, font: getComputedStyle(document.body).fontFamily || 'monospace' };
+      return { paper: v('--ink', '#f3ead6'), gold: v('--gold', '#d9b46a'), dark: hex(MAT.lanternCap.color), red: hex(MAT.redLantern.color), green: STYLE[1].css, amber: STYLE[0].css, cyan: STYLE[2].css, font: getComputedStyle(document.body).fontFamily || 'monospace' };
     }
 
     // ---- the spot: free lawn south of the pool, checked against the lobby's own colliders; the walkable apron south of the counter is added to WALK ----
@@ -157,34 +158,40 @@
     // ---- the pooled cards: a paper cutout on a stand, a front (the artefact) and a back (the stamp) ----
     function cardCanvas() { const c = document.createElement('canvas'); c.width = 512; c.height = 256; return c; }
     const SX = 512 / 320, SY = 256 / 220;   // the card is drawn in a 320 x 220 space so the text is not stretched
-    // a carnival duck cut out of the card (the canvas stays clear outside it): a yellow body, a head and a beak facing the way it travels, a paper plate on its chest
-    // with the scoring rings painted over the middle. 320 x 220 units are 1.1 x 0.76 m, so a ring of E.RINGS radius r is r / 0.00344 units wide, centred on the card.
+    // a carnival duck cut out of the card (the canvas stays clear outside it): a yellow body, a head and a beak facing the way it travels. The front then gets a sheet of cream paper (the
+    // text) behind and the scoring rings on the chest (clear of the text). 320 x 220 units are 1.1 x 0.76 m, so a ring of E.RINGS radius r is r / 0.00344 units wide.
     const DUCK_YELLOW = '#ffd23f', DUCK_EDGE = '#b8741a', M_PER_UNIT = 1.1 / 320;
-    function duck(g, dir, plate) {
+    function duck(g, dir) {
       g.save(); if (dir < 0) { g.translate(320, 0); g.scale(-1, 1); }
       const body = () => { g.beginPath(); g.ellipse(148, 124, 130, 68, 0, 0, 7); g.moveTo(262 + 40, 52); g.ellipse(262, 52, 40, 40, 0, 0, 7); g.rect(228, 64, 58, 60); g.moveTo(44, 110); g.lineTo(4, 66); g.lineTo(76, 90); g.closePath(); };
       g.lineJoin = 'round'; g.lineWidth = 10; g.strokeStyle = DUCK_EDGE; body(); g.stroke(); g.fillStyle = DUCK_YELLOW; body(); g.fill();
       g.fillStyle = '#ff8a1f'; g.strokeStyle = DUCK_EDGE; g.lineWidth = 4; g.beginPath(); g.ellipse(304, 60, 17, 10, 0, 0, 7); g.fill(); g.stroke();   // the beak
       g.fillStyle = '#fff'; g.beginPath(); g.arc(268, 44, 8, 0, 7); g.fill(); g.fillStyle = '#222'; g.beginPath(); g.arc(271, 44, 4, 0, 7); g.fill();   // the eye
       g.restore();
-      if (!plate) return;
-      g.fillStyle = S.tok.paper; g.beginPath(); g.roundRect(46, 56, 210, 126, 12); g.fill();
-      E.RINGS.slice().reverse().forEach((ring, i) => { g.globalAlpha = 0.5; g.fillStyle = i % 2 ? '#fff' : S.tok.red; g.beginPath(); g.arc(160, 110, ring.r / M_PER_UNIT, 0, 7); g.fill(); }); g.globalAlpha = 1;
+    }
+    // the scoring rings on the chest, where E.LAYOUT.bull says (the hit test measures from the same spot); opaque, outlined, so they read on the yellow
+    function target(g, dir) {
+      const cx = 160 + dir * L.bull.x / M_PER_UNIT, cy = 110 - L.bull.y / M_PER_UNIT; g.lineWidth = 3; g.strokeStyle = S.tok.dark;
+      E.RINGS.slice().reverse().forEach((ring, i) => { g.fillStyle = i % 2 ? S.tok.paper : S.tok.red; g.beginPath(); g.arc(cx, cy, ring.r / M_PER_UNIT, 0, 7); g.fill(); g.stroke(); });
     }
     function drawFront(slot, card, dir) {
-      const g = slot.fc.getContext('2d'), T = S.tok; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 512, 256); g.setTransform(SX, 0, 0, SY, 0, 0); duck(g, dir, true);
-      g.textBaseline = 'middle'; g.textAlign = 'left'; g.font = `700 12px ${T.font}`; g.fillStyle = T.dark; g.fillText(`${cardText(card)[0]} · ${String(card.from).slice(0, 18)}`, 54, 68);   // the full card is in the hover caption and the Tab list
-      let y = 86; g.font = `600 13px ${T.font}`;
-      const lines = wrapLines((card.subject ? card.subject + ': ' : '') + card.body, 194, (s) => g.measureText(s).width), shown = lines.slice(0, 6);
+      const g = slot.fc.getContext('2d'), T = S.tok; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 512, 256); g.setTransform(SX, 0, 0, SY, 0, 0); duck(g, dir);
+      const px = dir > 0 ? 10 : 118;   // opaque cream paper on the side away from the rings, dark text on it
+      g.fillStyle = T.paper; g.strokeStyle = T.dark; g.lineWidth = 3; g.beginPath(); g.roundRect(px, 24, 192, 174, 12); g.fill(); g.stroke(); target(g, dir);
+      g.textBaseline = 'middle'; g.textAlign = 'left'; g.font = `700 14px ${T.font}`; g.fillStyle = T.dark; g.fillText(`${cardText(card)[0]} · ${String(card.from).slice(0, 14)}`, px + 10, 42);   // the full card is in the hover popup and the Tab list
+      let y = 66; g.font = `700 17px ${T.font}`;
+      const lines = wrapLines((card.subject ? card.subject + ': ' : '') + card.body, 172, (s) => g.measureText(s).width), shown = lines.slice(0, 6);
       if (lines.length > shown.length) shown[shown.length - 1] = shown[shown.length - 1].replace(/\s*\S{0,3}$/, '') + '…';
-      for (const ln of shown) { g.fillText(ln, 54, y); y += 15; }
+      for (const ln of shown) { g.fillText(ln, px + 10, y); y += 19; }
       slot.ft.needsUpdate = true;
     }
-    function drawBack(slot, text, tone, dir) {
+    function drawBack(slot, text, tone, dir, reason) {
       const g = slot.bc.getContext('2d'), T = S.tok, col = tone === 'ok' ? T.green : tone === 'rueful' ? T.amber : T.red;
       g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 512, 256); g.setTransform(-SX, 0, 0, -SY, 512, 256);   // the back is seen after a flip: drawn turned half a circle, it reads upright
-      duck(g, dir, false); g.fillStyle = T.paper; g.beginPath(); g.roundRect(46, 56, 210, 126, 12); g.fill(); g.translate(151, 119); g.rotate(-0.12); g.textAlign = 'center'; g.textBaseline = 'middle'; g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 4;
-      let size = 30; g.font = `700 ${size}px ${T.font}`; const lines = wrapLines(text, 180, (s) => g.measureText(s).width);
+      duck(g, dir); g.fillStyle = T.paper; g.strokeStyle = T.dark; g.lineWidth = 3; g.beginPath(); g.roundRect(30, 36, 242, 156, 12); g.fill(); g.stroke();
+      if (reason) { g.save(); g.fillStyle = T.dark; g.font = `700 14px ${T.font}`; g.textAlign = 'center'; g.textBaseline = 'middle'; const rl = wrapLines(reason, 222, (s) => g.measureText(s).width).slice(0, 2); rl.forEach((s, i) => g.fillText(s, 151, 160 + 18 * i - (rl.length - 1) * 9)); g.restore(); }   // the one-line reason under the stamp
+      g.translate(151, reason ? 90 : 119); g.rotate(-0.12); g.textAlign = 'center'; g.textBaseline = 'middle'; g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 4;
+      let size = reason ? 26 : 30; g.font = `700 ${size}px ${T.font}`; const lines = wrapLines(text, 180, (s) => g.measureText(s).width);
       while ((lines.length > 2 || lines.some((s) => g.measureText(s).width > 180)) && size > 14) { size -= 2; g.font = `700 ${size}px ${T.font}`; lines.splice(0, lines.length, ...wrapLines(text, 180, (s) => g.measureText(s).width)); }
       const lh = size * 1.15, w = Math.max(...lines.map((s) => g.measureText(s).width)) + 26, h = lh * lines.length + 20;
       g.globalAlpha = 0.9; g.strokeRect(-w / 2, -h / 2, w, h); g.strokeRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10);
@@ -196,7 +203,7 @@
       for (let i = 0; i < POOL; i++) {
         const fc = cardCanvas(), bc = cardCanvas(), ft = new THREE.CanvasTexture(fc), bt = new THREE.CanvasTexture(bc);
         for (const t of [ft, bt]) { t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; }
-        const fm = new THREE.MeshStandardMaterial({ map: ft, roughness: 0.9, alphaTest: 0.5 }), bm = new THREE.MeshStandardMaterial({ map: bt, roughness: 0.9, alphaTest: 0.5 });
+        const fm = new THREE.MeshBasicMaterial({ map: ft, alphaTest: 0.5 }), bm = new THREE.MeshBasicMaterial({ map: bt, alphaTest: 0.5 });   // unlit: the paper stays bright and the text crisp under the dimmed lamp
         const m = new THREE.Mesh(geo, [edge, edge, edge, edge, fm, bm]); m.visible = false; m.receiveShadow = true; m.userData.dyn = true; scene.add(m);
         S.pool.push({ i, m, fc, bc, ft, bt, fm, bm, uid: null }); S.free.push(i);
       }
@@ -222,8 +229,8 @@
       const c = S.cards.get(uid); if (!c || c.fx || c.gone) return false;
       const stamp = o.stamp || '', tone = o.tone || (action === 'delivered' ? 'ok' : action === 'leaked' ? 'leak' : 'threat');
       if (action === 'shot') { c.fx = { kind: 'shot', t: -(c.wait || 0), stamp, tone }; c.frozen = c.slot ? c.slot.m.position.clone() : null; }
-      else { c.fx = { kind: action, t: 0, stamp, tone }; if (c.slot && action === 'leaked') drawBack(c.slot, stamp, tone, c.e.dir); }
-      if (action === 'shot' && c.slot) drawBack(c.slot, stamp, tone, c.e.dir);
+      else { c.fx = { kind: action, t: 0, stamp, tone }; if (c.slot && action === 'leaked') drawBack(c.slot, stamp, tone, c.e.dir, o.reason); }
+      if (action === 'shot' && c.slot) drawBack(c.slot, stamp, tone, c.e.dir, o.reason);
       return true;
     };
     world.gate = (lane, kind) => { const g = S.gates[lane]; if (!g) return; g.flash = 1; g.kind = kind; };
@@ -260,12 +267,12 @@
       if (!S.active || !S.round) return { uid: null };
       if (!world.canShoot()) { emit('dry'); return { uid: null, dry: true }; }
       const ray = rayAt(nx, ny), hit = E.hitTest(entriesNow(), S.rt, ray), tk = S.tokens.find((t) => !t.live);
-      const lead = hit && E.cardPose(S.cards.get(hit.uid).e, S.rt + TOKEN_SECS);   // the dart lands where the card will be, on the spot that was aimed at
+      const lead = hit && E.cardPose(S.cards.get(hit.uid).e, S.rt + TOKEN_SECS * S.pace);   // the dart lands where the card will be, on the spot that was aimed at
       const L3 = hit ? [lead.state === 'moving' ? lead.x + hit.dx : hit.x, hit.y, L.lanes[S.cards.get(hit.uid).e.lane].z] : (() => { const k = (3.0 - ray.o[2]) / ray.d[2]; return [ray.o[0] + ray.d[0] * k, ray.o[1] + ray.d[1] * k, 3.0]; })();
       if (tk) { tk.live = true; tk.t = 0; tk.dur = TOKEN_SECS; tk.uid = hit ? hit.uid : null; S.popper.g.updateMatrixWorld(true); S.popper.muzzle.getWorldPosition(tk.from); tk.to.copy(V(L3)); tk.m.visible = true; }
       S.recoil = 1;
       if (hit) { const c = S.cards.get(hit.uid); c.wait = TOKEN_SECS; }
-      emit('shoot', { uid: hit ? hit.uid : null, t: S.rt, nx, ny, dx: hit ? hit.dx : 0, dy: hit ? hit.dy : 0 });
+      emit('shoot', { uid: hit ? hit.uid : null, t: S.rt, nx, ny, dx: hit ? hit.ox : 0, dy: hit ? hit.oy : 0 });   // measured from the bullseye
       return { uid: hit ? hit.uid : null };
     };
 
@@ -274,6 +281,11 @@
       const c = S.cards.get(uid); if (!c) return;
       let t = S.tags.get(uid); if (!t) { const el = document.createElement('div'); el.className = 'panel gs-tag'; S.ui.tags.appendChild(el); t = { el, off: 0 }; S.tags.set(uid, t); }
       t.el.textContent = text; t.el.style.opacity = 1; t.off = 0;
+    };
+    world.note = (uid, text, tone) => { world.showInspect(uid, text); const t = S.tags.get(uid); if (t) t.el.dataset.tone = tone || ''; };
+    world.marker = (kind) => {
+      const r = S.ui && S.ui.ret; if (!r) return;
+      S.ui.hm.style.stroke = kind === 'good' ? S.tok.green : kind === 'bad' ? S.tok.red : S.tok.paper; r.classList.remove('hit', 'miss'); void r.offsetWidth; r.classList.add(kind === 'miss' ? 'miss' : 'hit');
     };
     const cardCenterWorld = (c) => { if (c.slot && c.slot.m.visible) return c.slot.m.position; const p = E.cardPose(c.e, S.rt); return p.state === 'pending' || p.state === 'gone' ? null : V([p.x, p.y, p.z]); };
     const project = (v) => { const r = TF.renderer.domElement.getBoundingClientRect(), p = v.clone().project(TF.camera); return [r.left + ((p.x + 1) / 2) * r.width, r.top + ((1 - p.y) / 2) * r.height]; };
@@ -360,7 +372,7 @@
       const hov = S.hover && S.cards.get(S.hover);
       if (hov && !(hov.fx && hov.fx.kind === 'shot')) {
         const lines = cardText(hov.it.card); S.ui.read.innerHTML = `<b>${esc(lines[0])} · ${esc(lines[1])}</b>` + (hov.it.card.subject ? `<i>${esc(hov.it.card.subject)}</i>` : '') + `<span>${esc(hov.it.card.body)}</span>`;
-        S.ui.read.style.display = 'block'; const w = S.ui.read.offsetWidth; S.ui.read.style.left = Math.max(8, Math.min(r.right - w - 8, x + 28)) + 'px'; S.ui.read.style.top = Math.max(8, y - S.ui.read.offsetHeight - 22) + 'px';
+        S.ui.read.style.display = 'block'; const w = S.ui.read.offsetWidth; S.ui.read.style.left = Math.max(8, Math.min(r.right - w - 8, x + 28)) + 'px'; const above = y - S.ui.read.offsetHeight - 22; S.ui.read.style.top = (above < 112 ? y + 32 : above) + 'px';   // below the reticle when above would run under the round strip
       } else S.ui.read.style.display = 'none';
       for (const [uid, t] of S.tags) {
         const c = S.cards.get(uid), at = c && cardCenterWorld(c);
@@ -376,7 +388,8 @@
       if (TF.camera.aspect !== S.aspect && !S.leaving) { applyCamera(S.aspect ? 0 : 800); }   // a resized window refits the view
       S.ret = stepReticle(S.ret, S.keys, dt);
       TF.camera.updateMatrixWorld();
-      if (S.running && S.round) S.rt += dt;
+      S.pace += ((S.hover ? AIM_SLOW : 1) - S.pace) * Math.min(1, dt * 8);   // the ducks ease down while the reticle rests on a card, and back up when it leaves
+      if (S.running && S.round) S.rt += dt * S.pace;
       // cards: placed where the engine's schedule says; a card that reaches the gate is reported once, then slides in behind the ticket window
       let hovered = null;
       for (const [uid, c] of S.cards) {
@@ -436,16 +449,20 @@
         .gs-ret circle { fill: none; stroke: var(--gold); stroke-width: 2; }
         .gs-ret .dot { fill: var(--gold); stroke: none; }
         .gs-ret .ring { stroke: var(--ink); stroke-width: 4; stroke-dasharray: 100; transform: rotate(-90deg); transform-origin: 50% 50%; opacity: 0; }
-        .gs-ret.on circle:not(.ring) { stroke: var(--ink); } .gs-ret.hold .ring { opacity: 1; }
-        .gs-read { position: absolute; display: none; max-width: 420px; padding: 10px 14px 11px; font-size: 20px; line-height: 1.4; }   /* the caption is the real reading surface: big */
+        .gs-ret svg { transition: transform .12s; } .gs-ret.on svg { transform: scale(1.25); } .gs-ret.on circle:not(.ring) { stroke: var(--gs-on); stroke-width: 3.5; } .gs-ret.on .dot { fill: var(--gs-on); } .gs-ret.hold .ring { opacity: 1; }   /* over a card: bigger and cyan, not just a shade lighter */
+        .gs-ret .hm { fill: none; stroke-width: 3; stroke-linecap: round; opacity: 0; transform-box: fill-box; transform-origin: center; } .gs-ret.hit .hm { animation: gs-hm .4s ease-out; } .gs-ret.miss circle:not(.ring) { animation: gs-miss .3s ease-out; }
+        @keyframes gs-hm { 0% { opacity: 1; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.6); } } @keyframes gs-miss { 50% { stroke-opacity: .25; } }
+        html body .gs-ui .gs-read { --dk: #2b1d14; z-index: 6; position: absolute; display: none; max-width: 440px; padding: 12px 16px 13px; font-size: 26px; line-height: 1.35; color: var(--dk); background: var(--ink); border: 3px solid var(--dk); border-radius: 10px; outline: none; box-shadow: 0 6px 18px rgba(0,0,0,.45); }   /* the caption is the real reading surface: opaque cream paper, dark type, big (the storybook skin's .panel rule is why this selector is long) */
         .gs-flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
-        .gs-read b { display: block; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .1em; color: var(--gold); margin-bottom: 3px; }
+        html body .gs-ui .gs-read b { display: block; font-size: 15px; letter-spacing: .1em; color: #8a5a14; margin-bottom: 4px; }
         .gs-read i { display: block; font-style: normal; font-weight: 700; } .gs-read span { display: block; }
+        .gs-tag[data-tone="ok"] { border-left-color: var(--gs-on); }
         .gs-tag { position: absolute; transform: translate(-50%, -100%); max-width: 300px; padding: 4px 10px 5px; font-size: 17px; line-height: 1.3; border-left: 4px solid var(--gold); background: rgba(14, 16, 26, .9); }`;
       document.head.appendChild(style);
       const root = document.createElement('div'); root.className = 'gs-ui'; document.getElementById('ui').appendChild(root);
-      root.innerHTML = '<div class="gs-ret"><svg viewBox="-22 -22 44 44"><circle r="14"/><circle class="dot" r="2.2"/><circle class="ring" r="18" pathLength="100"/></svg></div><div class="panel gs-read"></div><div class="gs-tags"></div><div class="gs-flash"></div>';
-      S.ui = { flash: root.querySelector('.gs-flash'), root, ret: root.querySelector('.gs-ret'), ring: root.querySelector('.ring'), read: root.querySelector('.gs-read'), tags: root.querySelector('.gs-tags') };
+      root.innerHTML = '<div class="gs-ret"><svg viewBox="-22 -22 44 44"><path class="hm" d="M-17 -17L-9 -9M17 -17L9 -9M-17 17L-9 9M17 17L9 9"/><circle r="14"/><circle class="dot" r="2.2"/><circle class="ring" r="18" pathLength="100"/></svg></div><div class="panel gs-read"></div><div class="gs-tags"></div><div class="gs-flash"></div>';
+      root.style.setProperty('--gs-on', S.tok.cyan);
+      S.ui = { hm: root.querySelector('.hm'), flash: root.querySelector('.gs-flash'), root, ret: root.querySelector('.gs-ret'), ring: root.querySelector('.ring'), read: root.querySelector('.gs-read'), tags: root.querySelector('.gs-tags') };
     }
 
     // ---- building, at boot ----

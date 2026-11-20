@@ -18,7 +18,7 @@
     claims: { name: 'Claims & citations', zone: 'amber', brief: 'Shoot claims with nothing real behind them. Spare the ones you can trace.' },
     asking: { name: 'Who\'s really asking', zone: 'green', brief: 'Shoot requests you can\'t verify another way. Spare the ones that check out.' },
     poison: { name: 'Poisoned inputs', zone: 'cyan', brief: 'Your assistant is about to read these. Shoot any that try to give it orders.' },
-    labels: { name: 'Detectors & labels', zone: 'rose', brief: 'Shoot what you can show is faked or misattributed. Spare the honest, even if a score disagrees.' },
+    labels: { name: 'Detectors & labels', zone: 'rose', brief: 'Shoot cards with proof of fakery. Spare honest ones, even if a detector score looks scary.' },
     rush: { name: 'Rush hour', zone: 'gold', brief: '' },
   };
   const SIDE_IDS = ['claims', 'asking', 'poison', 'labels'];

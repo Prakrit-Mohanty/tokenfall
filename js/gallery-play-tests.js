@@ -22,11 +22,24 @@ test('judging a shot: a threat is stopped, a real card is friendly fire; a card 
   assert.deepStrictEqual([a.kind, a.entry.event, a.entry.correct], ['hit', 'stopped', true]); assert.deepStrictEqual([b.kind, b.entry.event, b.entry.correct], ['hit', 'friendly', false]);
   assert.strictEqual(again.kind, 'miss'); assert.strictEqual(run.round.ammo, round(0).ammo - 3);
 });
+test('reason: every settled card carries one line saying why, an optional card reason first and the inspect line otherwise', () => {
+  const run = P.createRun(spec); run.begin(0); const [th, lg] = [round(0).items.find((c) => c.shoot), round(0).items.find((c) => !c.shoot)];
+  const a = run.shoot(th.uid, 1).entry, b = run.pass(lg.uid, 2).entry; assert.strictEqual(a.reason, th.inspect); assert.strictEqual(b.reason, lg.inspect);
+  assert.strictEqual(E.entryFor(Object.assign({}, th, { reason: 'Because.' }), 'shot', false, 1).reason, 'Because.');
+  assert(round(0).items.every((c) => { const r = c.reason || c.inspect; return typeof r === 'string' && r.length > 0 && r.length <= 90; }), 'a one-liner for every card');
+});
 test('judging a pass: a threat that reaches the ticket window is a leak, a real card is delivered; a settled card cannot pass again', () => {
   const run = P.createRun(spec); run.begin(1); const th = round(1).items.find((c) => c.shoot), lg = round(1).items.find((c) => !c.shoot);
   const a = run.pass(th.uid, 5), b = run.pass(lg.uid, 6);
   assert.deepStrictEqual([a.kind, a.entry.correct, a.entry.action], ['leak', false, 'leaked']); assert.deepStrictEqual([b.kind, b.entry.correct, b.entry.action], ['delivered', true, 'delivered']);
   assert.strictEqual(run.pass(th.uid, 7), null); assert.strictEqual(run.pass('nope', 7), null);
+});
+test('practice round: one threat of round 1 on the middle shelf, slower than any real card, three shots, a normal run can play it, and the real round is left alone', () => {
+  const r0 = round(0), t = P.tutorialRound(r0), e = t.schedule[0];
+  assert.strictEqual(t.items.length, 1); assert(t.items[0].shoot && t.items[0].inspect); assert.strictEqual(t.schedule.length, 1); assert.strictEqual(e.uid, t.items[0].uid); assert.strictEqual(t.ammo, 3);
+  assert(e.dur > Math.max(...r0.schedule.map((x) => x.dur)) * 1.5, 'slower than every real card'); assert.strictEqual(e.lane, 1); assert.strictEqual(e.dir, -1);
+  assert.strictEqual(t.playSec, e.endTime); assert(r0.items.length > 1 && r0.schedule.length === r0.items.length && r0.ammo === r0.threats + 2, 'the real round is untouched');
+  const run = P.createRun(Object.assign({}, spec, { rounds: [t] })); run.begin(0); assert.strictEqual(run.shoot(e.uid, 3).entry.event, 'stopped'); assert.strictEqual(run.round.ammo, 2);
 });
 test('magnifier: five charges for the WHOLE run (not per round), once per card, never on a settled card; inspecting a trap first makes the right call verified, not lucky', () => {
   const run = P.createRun(spec); let used = 0;
@@ -105,6 +118,6 @@ test('trade-off: one line that always explains it ("Shooting everything tanks ac
   for (const [c, a] of [[1, 1], [0.7, 0.7], [0.5, 0.9], [0.9, 0.4], [0, null]]) { const l = t(c, a); assert(l.endsWith(P.TRADE) && !/\n/.test(l)); }
   assert(/steady/i.test(t(0.9, 0.9)) && /fair/i.test(t(0.7, 0.7)) && /slipped/i.test(t(0.5, 0.9)) && /trigger/i.test(t(0.9, 0.4)) && /slipped/i.test(t(0, null)));
   assert.strictEqual(P.TRADE, 'Shooting everything tanks accuracy; shooting nothing tanks catch rate.');
-  assert(/Stopped 4 of 5 threats \(80%\) · accuracy 80% · 1 missed · 1 real cards hit · 3 tokens left · 250 points/.test(P.roundLine({ stopped: 4, threats: 5, catchRate: 0.8, accuracy: 0.8, leaks: 1, friendly: 1, ammoLeft: 3, points: 250 })));
+  assert(/Stopped 4 of 5 threats \(80%\) · accuracy 80% · 1 missed · 1 real cards hit · 3 shots left · 250 points/.test(P.roundLine({ stopped: 4, threats: 5, catchRate: 0.8, accuracy: 0.8, leaks: 1, friendly: 1, ammoLeft: 3, points: 250 })));
 });
 done();
