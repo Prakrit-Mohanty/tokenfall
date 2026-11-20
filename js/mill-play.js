@@ -105,35 +105,35 @@
       else a.play(name);
     }
 
-    // ---- HUD: the lobby's .panel look, Cinzel for titles, Pixelify Sans for text ----
+    // ---- HUD: the lobby's .panel look, Baloo 2 for titles, Nunito for text ----
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
         .mp-top { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 8px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
-        .mp-top .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
+        .mp-top .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
         .mp-top .t { font-size: clamp(16px, 1.25vw, 18px); line-height: 1.35; margin: 2px 0 4px; color: var(--ink); }
         .mp-top .pips { display: flex; gap: 4px; justify-content: center; } .mp-top .pips i { width: 26px; height: 7px; border: 1px solid rgba(243,234,214,.45); }
         .mp-top .pips i.done { border-color: transparent; background: var(--c); } .mp-top .pips i.cur { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
-        .mp-top .ribbon { display: none; margin-top: 4px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .2em; color: var(--gold); } .mp-top .ribbon.on { display: block; }
+        .mp-top .ribbon { display: none; margin-top: 4px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .2em; color: var(--gold); } .mp-top .ribbon.on { display: block; }
         .mp-stat { position: absolute; bottom: 22px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.75; display: none; min-width: 200px; }
-        .mp-stat .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .mp-stat b { color: var(--gold); font-weight: 600; }
+        .mp-stat .clock { font-family: var(--font-secondary); font-size: 22px; letter-spacing: .08em; } .mp-stat b { color: var(--gold); font-weight: 600; }
         .mp-stat .gems { display: inline-flex; gap: 6px; vertical-align: middle; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
         .mp-gem { width: 9px; height: 9px; background: var(--c); transform: rotate(45deg); box-shadow: 0 0 8px var(--c); } .mp-gem.off { background: transparent; box-shadow: none; border: 1px solid rgba(243,234,214,.35); }
         .mp-brake { display: inline-block; width: 110px; height: 9px; vertical-align: middle; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.4); } .mp-brake i { display: block; height: 100%; background: var(--gold); }
         .mp-stat kbd, .mp-msg kbd, .mp-brief kbd, .mp-help kbd, .mp-rs kbd, .mp-legend kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .mp-legend { position: absolute; left: 18px; bottom: 84px; width: 330px; padding: 7px 10px 8px; display: none; font-size: 16px; line-height: 1.4; }
-        .mp-legend h5 { margin: 0 0 4px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
-        .mp-legend div.r { display: grid; grid-template-columns: 26px 1fr; gap: 6px; align-items: baseline; margin: 2px 0; } .mp-legend b { font-size: 15px; } .mp-legend small { display: block; opacity: .85; font-size: 16px; }
+        .mp-legend h5 { margin: 0 0 4px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
+        .mp-legend div.r { display: grid; grid-template-columns: 26px 1fr; gap: 6px; align-items: baseline; margin: 2px 0; } .mp-legend b { font-size: 16px; } .mp-legend small { display: block; opacity: .85; font-size: 16px; }
         .mp-msg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.4; background: rgba(32, 22, 19,.93); }
         .mp-brief { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.45; background: rgba(32, 22, 19,.96); }
-        .mp-brief .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .16em; color: var(--gold); } .mp-brief .s { font-size: 16px; letter-spacing: .08em; color: var(--hot); margin: 2px 0 6px; } .mp-brief .t { font-size: 21px; margin: 6px 0 10px; line-height: 1.3; }
-        .mp-brief .bins { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 16px; line-height: 1.4; } .mp-brief .bins span { display: block; opacity: .85; font-size: 16px; } .mp-brief .go { margin: 10px 0 0; font-size: 14px; color: var(--gold); text-align: right; }
+        .mp-brief .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .mp-brief .s { font-size: 16px; letter-spacing: .08em; color: var(--hot); margin: 2px 0 6px; } .mp-brief .t { font-size: 21px; margin: 6px 0 10px; line-height: 1.3; }
+        .mp-brief .bins { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 16px; line-height: 1.4; } .mp-brief .bins span { display: block; opacity: .85; font-size: 16px; } .mp-brief .go { margin: 10px 0 0; font-size: 16px; color: var(--gold); text-align: right; }
         .mp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 32px)); padding: 8px 16px 9px; text-align: center; display: none; font-size: 16px; line-height: 1.4; background: rgba(32, 22, 19,.96); border-color: var(--gold); }
-        .mp-rs h5 { margin: 0 0 3px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .mp-rs .go { color: var(--gold); font-size: 14px; margin-top: 3px; }
+        .mp-rs h5 { margin: 0 0 3px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); } .mp-rs .go { color: var(--gold); font-size: 16px; margin-top: 3px; }
         .mp-read { position: absolute; right: 18px; top: 110px; width: min(400px, calc(100vw - 36px)); max-height: calc(100vh - 330px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 19px; line-height: 1.4; background: rgba(32, 22, 19,.96); pointer-events: auto; }
-        .mp-read h5 { margin: 0 0 6px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .mp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); } .mp-read small { display: block; font-size: 16px; letter-spacing: .04em; color: var(--gold); } .mp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
+        .mp-read h5 { margin: 0 0 6px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); } .mp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); } .mp-read small { display: block; font-size: 16px; letter-spacing: .04em; color: var(--gold); } .mp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
         .mp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 18px; line-height: 1.45; background: rgba(32, 22, 19,.96); pointer-events: auto; }
-        .mp-help h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .mp-help ul { margin: 0; padding-left: 20px; } .mp-help li { margin: 5px 0; } .mp-help label { display: block; margin: 10px 0 0; cursor: pointer; } .mp-help .go { text-align: right; font-size: 14px; color: var(--gold); margin: 10px 0 0; }
+        .mp-help h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .mp-help ul { margin: 0; padding-left: 20px; } .mp-help li { margin: 5px 0; } .mp-help label { display: block; margin: 10px 0 0; cursor: pointer; } .mp-help .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         .mp-flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s; }
         @media (max-width: 1100px) { .mp-top { left: 18px; transform: none; width: calc(100vw - 280px); top: 70px; } .mp-legend { bottom: 84px; width: 250px; } .mp-read { top: 140px; } }
         .mill-on .mp-top, .mill-on .mp-stat, .mill-on .mp-msg, .mill-on .mp-brief, .mill-on .mp-rs, .mill-on .mp-read, .mill-on .mp-legend, .mill-on .mw-read { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */

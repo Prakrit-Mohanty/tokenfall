@@ -164,28 +164,28 @@
     }
     const muted = () => !!(audio() && audio().muted);
 
-    // ---- HUD: the lobby's .panel look, Cinzel for titles, Pixelify Sans for text. Three things only: the question card, a small status block, one hint line ----
+    // ---- HUD: the lobby's .panel look, Baloo 2 for titles, Nunito for text. Three things only: the question card, a small status block, one hint line ----
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
         .cq { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 9px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
-        .cq .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
+        .cq .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
         .cq .t { font-size: clamp(17px, 1.7vw, 23px); line-height: 1.35; margin: 2px 0 6px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
-        .cq .it { display: inline-block; margin: 0 0 6px; padding: 2px 12px; font-size: clamp(16px, 1.5vw, 20px); color: #1a140c; background: var(--gold); }
+        .cq .it { display: inline-block; margin: 0 0 6px; padding: 2px 12px; font-size: clamp(16px, 1.5vw, 20px); color: #3B2A14; background: var(--gold); }
         .cq .a { display: grid; gap: 4px; grid-template-columns: repeat(2, 1fr); text-align: left; }
         .cq .a > div { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: 16px; line-height: 1.3; }
-        .cq .a i { font-style: normal; flex: none; font-size: 17px; } .cq .a kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); }
+        .cq .a i { font-style: normal; flex: none; font-size: 17px; } .cq .a kbd { font: inherit; padding: 0 6px; color: #3B2A14; background: var(--gold); }
         .cs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.6; display: none; min-width: 170px; }
         .cs b { color: #ffe39a; font-weight: 600; } .cs kbd, .cm kbd, .ch kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .cs .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 4px; }
         .cs .pips i { width: 15px; height: 8px; border: 1px solid rgba(243,234,214,.45); } .cs .pips i.done { border-color: transparent; background: var(--c); } .cs .pips i.cur { border-color: #ffe39a; box-shadow: 0 0 0 1px #ffe39a; }
-        .cs .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .cs .clock.low { color: #ff8f7a; }
+        .cs .clock { font-family: var(--font-secondary); font-size: 22px; letter-spacing: .08em; } .cs .clock.low { color: #ff8f7a; }
         .cs .gems { display: inline-flex; gap: 8px; vertical-align: middle; } .cg { width: 9px; height: 9px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 8px var(--gold); } .cg.hot { background: #ff7a5c; box-shadow: 0 0 8px #ff7a5c; }
         .cm { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.4; background: rgba(32, 22, 19,.93); }
         .cp { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(520px, calc(100vw - 32px)); padding: 14px 24px; display: none; font-size: 20px; line-height: 1.5; text-align: center; background: rgba(32, 22, 19,.96); }
-        .cp h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .cp p { margin: 6px 0; } .cp kbd { font: inherit; padding: 0 6px; border: 1px solid rgba(243,234,214,.5); }
+        .cp h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .cp p { margin: 6px 0; } .cp kbd { font: inherit; padding: 0 6px; border: 1px solid rgba(243,234,214,.5); }
         .ch { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(32, 22, 19,.96); }
-        .ch h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .ch ul { margin: 0; padding-left: 20px; } .ch li { margin: 5px 0; } .ch .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
+        .ch h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .ch ul { margin: 0; padding-left: 20px; } .ch li { margin: 5px 0; } .ch .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         @media (max-width: 1100px) { .cq { width: calc(100vw - 32px); top: 70px; } .cs { top: auto; bottom: 80px; } }
         .carrom-on .bc, .carrom-on .cq, .carrom-on .cs, .carrom-on .cm, .carrom-on .ch, .carrom-on .cp { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .carrom-on #chat, .carrom-on #help { display: none; }   /* the chat log and key hints sit over the pockets; the table has its own hints */`;

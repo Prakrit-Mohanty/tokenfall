@@ -32,7 +32,7 @@ const palLift = (hex) => {
 };
 
 // ---- signs: one style everywhere (painted wood panel, rounded lettering). Callers still pass a colour hint (an old LED colour, a board colour); it only picks WHICH pastel the panel is painted.
-const SIGN_FONT = '"Fredoka", "Baloo 2", "Trebuchet MS", sans-serif';   // rounded; the pixel fonts stay on the HUD
+const SIGN_FONT = '"Baloo 2", "Poppins", system-ui, sans-serif';   // rounded; same two families as the HTML UI (css/typography.css)
 const SIGN_HUES = ['peach', 'blush', 'coral', 'butter', 'mint', 'sage', 'teal', 'sky', 'periwinkle', 'lilac'];
 // '#rgb' / '#rrggbb' / 0xrrggbb to '#rrggbb' (or null)
 const palHex = (c) => {

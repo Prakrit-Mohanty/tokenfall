@@ -499,7 +499,7 @@
     function makeUi() {
       const root = document.createElement('div'); root.style.cssText = 'position:fixed;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:6;';
       const prompt = document.createElement('div'); prompt.className = 'panel kt-prompt'; prompt.style.cssText = 'position:absolute;left:50%;bottom:92px;transform:translateX(-50%);font-size:14px;padding:4px 10px;white-space:nowrap;display:none;';
-      const style = document.createElement('style'); style.textContent = '.kt-prompt kbd{font:inherit;color:#1a140c;background:var(--gold);padding:0 6px;margin-right:6px;}';
+      const style = document.createElement('style'); style.textContent = '.kt-prompt kbd{font:inherit;color:#3B2A14;background:var(--gold);padding:0 6px;margin-right:6px;}';
       root.appendChild(style); root.appendChild(prompt); document.body.appendChild(root); S.ui = { root, prompt };
     }
     world.build = () => {

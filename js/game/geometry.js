@@ -143,6 +143,7 @@ function box(w, h, d, m, x, y, z, o = {}) {
   const me = new THREE.Mesh(stick ? new THREE.CylinderGeometry(r, r, h, 20) : boxGeo(w, h, d, o.s ?? m.userData.s), m);
   me.position.set(x, y + h / 2, z);
   if (o.ry) me.rotation.y = o.ry;
+  else if (!o.p && y <= .12 && y + h > .05 && y + h <= .5 && w >= .6 && d >= .6) FLOORS.push([x - w / 2, z - d / 2, x + w / 2, z + d / 2, y + h]);   // a low slab (a deck, a door step) somebody can stand on: floorAt lifts them onto it
   return add(me, o.p, o.cast !== false);
 }
 function plane(w, d, m, x, y, z, s) {
@@ -154,6 +155,7 @@ function plane(w, d, m, x, y, z, s) {
 // ================= world bookkeeping =================
 const COL = [];        // colliders: {x,z,r} circle | {x0,z0,x1,z1} box | {ex,ez,rx,rz} ellipse
 const WALK = [];       // walkable rects [x0,z0,x1,z1]
+const FLOORS = [];     // raised floors [x0,z0,x1,z1,top], registered by box() (low slabs); where one is walkable, characters stand on it
 const INTER = [];      // interactables {x,z,r,label,verb,act}
 const PORTALS = [];
 const ZONE_LIGHTS = { lobby: [], lab: [], airport: [], us: [], archive: [], pune: [], abz: [], bridge: [] };
@@ -163,6 +165,7 @@ const FADERS = [];     // things that turn see-through when they would hide the 
 const colBox = (x0, z0, x1, z1) => COL.push({ x0, z0, x1, z1 });
 const colCirc = (x, z, r) => COL.push({ x, z, r });
 function walkable(x, z) { for (const r of WALK) if (x > r[0] && x < r[2] && z > r[1] && z < r[3]) return true; return false; }
+function floorAt(x, z) { let y = 0; for (const f of FLOORS) if (f[4] > y && x > f[0] && x < f[2] && z > f[1] && z < f[3]) y = f[4]; return y; }
 function blocked(x, z, pad = .32) {
   if (!walkable(x, z)) return true;
   for (const c of COL) {

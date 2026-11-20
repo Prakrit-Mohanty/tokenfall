@@ -20,7 +20,7 @@ function usMaterials() {
   const board = pOnce('usBoard', () => std(canvasTex(256, 128, (g) => {
     g.fillStyle = '#f6f6f2'; g.fillRect(0, 0, 256, 128);
     const ink = (c, w = 2) => { g.strokeStyle = c; g.fillStyle = c; g.lineWidth = w; };
-    g.font = '600 10px "Pixelify Sans", monospace';
+    g.font = `600 10px ${SIGN_FONT}`;
     ink('#1c1c20'); for (const [x, y, t] of [[14, 20, 'prompt'], [76, 20, 'model'], [138, 20, 'answer'], [200, 20, 'check']]) { g.strokeRect(x - 4, y - 10, 46, 16); g.fillText(t, x, y + 1); }
     for (const x of [56, 118, 180]) { g.beginPath(); g.moveTo(x, 15); g.lineTo(x + 16, 15); g.lineTo(x + 12, 12); g.moveTo(x + 16, 15); g.lineTo(x + 12, 18); g.stroke(); }
     ink('#c0392b'); g.fillText('tokens:', 14, 52); ['To', 'ken', 'Fall', ' is', ' fun'].forEach((t, i) => { g.strokeRect(62 + i * 30, 42, 28, 14); g.fillText(t, 64 + i * 30, 52); });

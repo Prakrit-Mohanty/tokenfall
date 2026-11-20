@@ -1,0 +1,70 @@
+/* Tokenfall typography: two roles, no pixel/bitmap faces.
+   PRIMARY   Poppins 400/700 (Nunito as fallback)   dialogue, quiz, instructions: anything read at length
+   SECONDARY Baloo 2 600                            buttons, keycaps, HUD, minigame titles, scores
+   Max font-weight is 700. Text is warm brown or cream on the panels, never pure black. */
+
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Nunito:wght@400;700&family=Poppins:wght@400;700&display=swap");
+
+:root {
+  --font-primary: "Poppins", "Nunito", "Varela Round", system-ui, sans-serif;
+  --font-secondary: "Baloo 2", "Nunito", system-ui, sans-serif;
+
+  --ink-brown: #6B5B45;      /* body text on light surfaces */
+  --ink-dark: #3B2A14;       /* dark text on gold/orange chips (not pure black) */
+
+  /* readable text never drops below 16px; long-form text never below 18px */
+  --text-read: clamp(1.125rem, 1.02rem + 0.45vw, 1.375rem);
+  --text-ui: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-title: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
+}
+
+/* ---------- Secondary: HUD, buttons, titles, scores ---------- */
+
+.hud-label,
+.btn-label,
+.minigame-title,
+.score {
+  font-family: var(--font-secondary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.hud-label {
+  font-size: var(--text-ui);
+  line-height: 1.3;
+  color: var(--ink-brown);
+}
+
+.btn-label {
+  font-size: var(--text-ui);
+  line-height: 1.2;
+  color: var(--ink-dark);
+}
+
+.minigame-title {
+  font-size: var(--text-title);
+  line-height: 1.15;
+  color: var(--ink-brown);
+}
+
+.score {
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-brown);
+}
+
+/* ---------- Primary: quiz text (questions AND answers) ---------- */
+
+.quiz-text {
+  font-family: var(--font-primary);
+  font-weight: 400;
+  font-size: var(--text-read);
+  line-height: 1.5;
+  color: var(--ink-brown);
+}
+
+.quiz-text strong,
+.quiz-text b {
+  font-weight: 700;
+}

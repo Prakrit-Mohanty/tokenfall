@@ -96,7 +96,7 @@ window.TokenFallReady = { push(f) { f(TF); } };
 _ready.forEach(f => f(TF));
 
 // ================= boot =================
-const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Pixelify Sans"'), document.fonts.load('600 24px Fredoka'), document.fonts.load('700 20px Cinzel'), document.fonts.load('24px "Press Start 2P"')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
+const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Baloo 2"'), document.fonts.load('400 18px Poppins'), document.fonts.load('700 18px Poppins')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImgs = {}, auxImgs = {}, sheetReady = Promise.all([[window.CHAR_SHEETS, sheetImgs], [window.CHAR_AUX, auxImgs]].flatMap(([srcs, into]) => Object.entries(srcs).map(([id, src]) => new Promise(r => { const im = into[id] = new Image(); im.onload = r; im.src = src; }))));
 Promise.all([fontsReady, sheetReady]).then(() => {
   buildTextures(); buildMaterials();

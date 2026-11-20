@@ -111,21 +111,21 @@
     let TF = null, play = null, panel = null, panelOpen = false;
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-    // ---- the results: the lobby's .panel look, Cinzel for titles, Pixelify Sans for text (the same look as the other games' summaries) ----
+    // ---- the results: the lobby's .panel look, Baloo 2 for titles, Nunito for text (the same look as the other games' summaries) ----
     function makePanel() {
       const style = document.createElement('style');
       style.textContent = `
         .kr { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(700px, calc(100vw - 32px)); max-height: calc(100vh - 110px); overflow-y: auto; padding: 16px 22px 14px; display: none; font-size: 17px; line-height: 1.4; background: rgba(40, 28, 24, .96); pointer-events: auto; border-color: var(--gold); z-index: 8; }
-        .kr h3 { margin: 0; font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
-        .kr .sum { margin: 4px 0 4px; font-size: 18px; } .kr .sum b { color: var(--gold); font-weight: 600; } .kr .waste { margin: 0 0 8px; font-size: 15px; opacity: .92; }
-        .kr .cost { margin: 2px 0 8px; font-size: 14px; } .kr .cost div { display: grid; grid-template-columns: 130px 1fr 60px; gap: 8px; align-items: center; margin: 2px 0; }
-        .kr .row { display: grid; grid-template-columns: 190px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 15px; }
+        .kr h3 { margin: 0; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
+        .kr .sum { margin: 4px 0 4px; font-size: 18px; } .kr .sum b { color: var(--gold); font-weight: 600; } .kr .waste { margin: 0 0 8px; font-size: 16px; opacity: .92; }
+        .kr .cost { margin: 2px 0 8px; font-size: 16px; } .kr .cost div { display: grid; grid-template-columns: 130px 1fr 60px; gap: 8px; align-items: center; margin: 2px 0; }
+        .kr .row { display: grid; grid-template-columns: 190px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 16px; }
         .kr .bar { height: 11px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); } .kr .bar i { display: block; height: 100%; }
-        .kr .num { text-align: right; opacity: .85; font-size: 14px; }
-        .kr h4 { margin: 12px 0 4px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
-        .kr ul { margin: 0; padding-left: 18px; } .kr li { margin: 3px 0; } .kr li small { opacity: .8; font-size: 14px; } .kr .none { opacity: .8; }
-        .kr .note { margin-top: 8px; font-size: 13px; opacity: .72; }
-        .kr .acts { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 14px; }
+        .kr .num { text-align: right; opacity: .85; font-size: 16px; }
+        .kr h4 { margin: 12px 0 4px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
+        .kr ul { margin: 0; padding-left: 18px; } .kr li { margin: 3px 0; } .kr li small { opacity: .8; font-size: 16px; } .kr .none { opacity: .8; }
+        .kr .note { margin-top: 8px; font-size: 16px; opacity: .72; }
+        .kr .acts { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 16px; }
         .kr button { font: inherit; color: var(--ink); background: rgba(40, 28, 24,.9); border: 1px solid var(--gold); padding: 4px 12px; cursor: pointer; } .kr button:hover { background: rgba(217,180,106,.2); }
         .kr kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         @media (max-width: 560px) { .kr .row { grid-template-columns: 110px 1fr 66px; } .kr .cost div { grid-template-columns: 90px 1fr 50px; } }`;

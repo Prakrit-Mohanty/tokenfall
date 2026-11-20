@@ -273,14 +273,14 @@
     // ---- the panel ----
     const ui = document.createElement('div'); ui.style.cssText = 'position:fixed;inset:0;z-index:7;display:none;pointer-events:none;';
     ui.innerHTML = `<style>
-      .dl-box{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,calc(100vw - 32px));padding:14px 18px 12px;pointer-events:auto;font-size:15px;color:var(--ink)}
+      .dl-box{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,calc(100vw - 32px));padding:14px 18px 12px;pointer-events:auto;font-size: 16px;color:var(--ink)}
       .dl-box h3{margin:0;font-weight:600;font-size:17px;color:var(--gold);letter-spacing:.04em;display:flex;justify-content:space-between;align-items:center}
       .dl-box button{font:inherit;color:var(--ink);background:rgba(60,42,34,.9);border:1px solid var(--gold);padding:5px 8px;cursor:pointer}
       .dl-box button:hover,.dl-box button.on{background:var(--gold);color:#2a1c14}
       .dl-clock{margin:8px 0 10px;display:flex;align-items:baseline;gap:12px}.dl-clock b{font-size:34px;font-weight:600}.dl-clock i{font-style:normal;opacity:.8}
       .dl-pre{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}.dl-pre button{padding:7px 2px;line-height:1.25}.dl-pre span{display:block;font-size:20px}
       .dl-box label{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;margin:6px 0}.dl-box input[type=range]{width:100%;accent-color:var(--gold)}
-      .dl-box .chk{display:flex;gap:8px;align-items:center;margin-top:8px}.dl-box small{display:block;margin-top:8px;opacity:.65;font-size:12px}
+      .dl-box .chk{display:flex;gap:8px;align-items:center;margin-top:8px}.dl-box small{display:block;margin-top:8px;opacity:.65;font-size: 16px}
     </style>
     <div class="panel dl-box"><h3>Daylight Console <button data-x>✕</button></h3>
       <div class="dl-clock"><b data-t></b><i data-n></i></div>

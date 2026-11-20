@@ -239,22 +239,22 @@
       const style = document.createElement('style');
       style.textContent = `
         .bq { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); padding: 6px 20px; text-align: center; display: none; background: rgba(32, 22, 19, .93); border-color: var(--gold); }
-        .bq .k { font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: .14em; color: var(--gold); }
+        .bq .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
         .bq, .bs, .bc, .bk, .bh { font-variant-ligatures: none; }   /* the pixel font draws some digit and letter pairs as other glyphs */
         .bs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.5; display: none; }
         .bs b { color: #ffe39a; font-weight: 400; } .bs kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .bc { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -52%); width: min(620px, calc(100vw - 32px)); padding: 18px 26px 16px; display: none; font-size: 22px; line-height: 1.45; background: rgba(40, 28, 24, .95); }
-        .bc h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
+        .bc h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
         .bc p { margin: 7px 0; } .bc .w { color: #ff9d8a; } .bc .tk { color: #9dffc0; font-size: 24px; line-height: 1.3; margin: 0 0 10px; } .bc .go { text-align: right; font-size: 16px; color: var(--gold); margin: 12px 0 0; animation: bob 1s infinite; }
-        .bc kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); }
-        .bs .pl { font-size: 14px; line-height: 1.2; margin: 0 0 3px; } .bs .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 5px; }
+        .bc kbd { font: inherit; padding: 0 6px; color: #3B2A14; background: var(--gold); }
+        .bs .pl { font-size: 16px; line-height: 1.2; margin: 0 0 3px; } .bs .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 5px; }
         .bs .pips i { width: 13px; height: 8px; border: 1px solid rgba(243,234,214,.45); } .bs .pips i.done { border-color: transparent; background: var(--c, #ffd27a); } .bs .pips i.cur { border-color: #ffe39a; box-shadow: 0 0 0 1px #ffe39a; }
         .bk { position: absolute; left: 50%; bottom: 76px;   /* above the lobby's key strip, which the bridge keeps */ transform: translateX(-50%); max-width: min(640px, calc(100vw - 420px)); padding: 9px 18px; text-align: center; display: none; font-size: clamp(17px, 1.6vw, 21px); line-height: 1.3; background: rgba(32, 22, 19, .93); }
         .bh { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 20px; line-height: 1.4; background: rgba(32, 22, 19, .96); }
-        .bh h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
-        .bh ul { margin: 0; padding-left: 20px; } .bh li { margin: 5px 0; } .bh kbd, .bk kbd { font: inherit; padding: 0 6px; color: #1a140c; background: var(--gold); } .bh .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
+        .bh h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
+        .bh ul { margin: 0; padding-left: 20px; } .bh li { margin: 5px 0; } .bh kbd, .bk kbd { font: inherit; padding: 0 6px; color: #3B2A14; background: var(--gold); } .bh .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         .bf { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; opacity: 0; transition: opacity .3s; } .bf.g { background: radial-gradient(circle, rgba(255, 210, 122, .05) 30%, rgba(255, 210, 122, .38)); } .bf.r { background: radial-gradient(circle, rgba(255, 70, 60, .05) 30%, rgba(255, 70, 60, .4)); }
-        .bf b { font-family: 'Cinzel', serif; font-size: clamp(30px, 5vw, 56px); letter-spacing: .08em; color: #fff3c4; text-shadow: 0 2px 0 #000, 0 0 18px #ffb347; }
+        .bf b { font-family: var(--font-secondary); font-size: clamp(30px, 5vw, 56px); letter-spacing: .08em; color: #fff3c4; text-shadow: 0 2px 0 #000, 0 0 18px #ffb347; }
         @media (max-width: 1100px) { .bq { top: 70px; } .bs { top: auto; bottom: 120px; right: 18px; } }`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };

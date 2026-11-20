@@ -13,7 +13,11 @@ const CHAR_STRETCH = 1.05;   // a touch of extra height, within what the painted
 const CHAR_TOP = FIG_H * CHAR_SCALE * CHAR_STRETCH * Math.cos(CHAR_LEAN);   // standing head height in metres: the camera look-at and the prompts are measured from it
 const PROMPT_Y = CHAR_TOP + .7, PORTAL_Y = CHAR_TOP + .4;   // where the E prompt floats over an interactable / a portal
 // the top of a character's head in the world: y, and z (the backward lean pulls it away from the camera). Name tags and bubbles hang from it.
-function charHead(c) { const h = FIG_H * c.mesh.scale.y + c.mesh.position.y; return { y: h * Math.cos(CHAR_LEAN), z: c.y + h * Math.sin(CHAR_LEAN) }; }
+function charHead(c) { const h = FIG_H * (c.shape.head || 1) * c.mesh.scale.y + c.mesh.position.y; return { y: h * Math.cos(CHAR_LEAN) + (c.fy || 0), z: c.y + h * Math.sin(CHAR_LEAN) }; }
+// a look that is not a standing figure (Prakrit on his bike, in a 418x385 cell): its own bend width (half the figure's width, px), head height (in standing heights), the hidden shadow stand-in
+// ([sx, sy, sz, x, y, z] ellipsoids, card metres before the scale) and the soft shadow's size. The default is the 250x230 figure.
+const BIKE_SHAPE = { bend: 200, head: 1.9, blob: [3.4, 1.5], proxy: [[1.5, .55, .35, 0, .8, .08], [.45, .7, .3, 0, 1.9, .1], [.37, .36, .33, 0, 2.65, .1]] };
+const SHAPE = { prakrit: BIKE_SHAPE, prakrit_ride: BIKE_SHAPE };   // the second is the bike with the player riding pillion
 const sheetTex = {}, auxTex = {};   // look -> its atlas texture, and its volume map (normal, height, cavity: tools/chars-pack.py); main.js fills both
 const chars = [];
 const spriteGeoBent = new THREE.PlaneGeometry(1, 1, 8, 1);   // width segments for the cylindrical bend (see the vertex shader)
@@ -65,6 +69,7 @@ const tagsEl = document.getElementById('tags');
 let npcLooks = 0;   // NPCs without a model of their own take turns: Aditya, Sudhanshu, Aditya...
 function makeChar(name, x, z, opt = {}) {
   const look = opt.look || (opt.me ? 'aditya' : ['aditya', 'sudhanshu'][npcLooks++ % 2]);
+  const CH = CHARS[look].cell.h, AX = CHARS[look].anchor.x, AY = CHARS[look].anchor.y, shape = SHAPE[look] || {}, BW = shape.bend || 46;   // this look's cell and anchor (they shadow Aditya's, which the shader below would otherwise bake in)
   const c = new SpriteCharacter(CHARS[look], null, { x, y: z, speed: opt.speed || 3.3, scale: 1, animRef: 3.3 });   // animRef: the hero's walk, which the cycles match; slower NPCs step slower
   // one GPU copy of each atlas for everyone: each character only tells the shader which frame to show (uCell: its rect in the atlas as u, v, width, height; uBox: where its figure sat in the cell)
   const t = sheetTex[look], aux = auxTex[look], atlas = CHARS[look].atlas, cell = { value: new THREE.Vector4() }, box = { value: new THREE.Vector4() }, lampC = { value: new THREE.Vector3(0, 1, 0) }, lampCol = { value: new THREE.Color(0, 0, 0) };
@@ -73,8 +78,8 @@ function makeChar(name, x, z, opt = {}) {
     return 'uniform vec4 uCell, uBox;\nuniform float uBend;\nvarying float vCellY, vBendX, vViewZ;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\nvUv = uCell.xy + uv * uCell.zw;').replace('#include <project_vertex>', '#include <project_vertex>\nvViewZ = -mvPosition.z;').replace('#include <begin_vertex>', `
       vec2 cp = vec2(uBox.x + (position.x + .5) * uBox.z, uBox.y + (.5 - position.y) * uBox.w);   // this vertex in cell px, from the cell's top left
       vCellY = 1. - cp.y / ${CH.toFixed(1)};
-      float xn = (cp.x - ${AX.toFixed(1)}) / 46.;   // across the figure: -1 at its left edge, 1 at its right
-      vBendX = 2. * uBend * xn / (46. * ${SPU.toFixed(6)});   // the slope of the bend, for the normal
+      float xn = (cp.x - ${AX.toFixed(1)}) / ${BW.toFixed(1)};   // across the figure: -1 at its left edge, 1 at its right
+      vBendX = 2. * uBend * xn / (${BW.toFixed(1)} * ${SPU.toFixed(6)});   // the slope of the bend, for the normal
       vec3 transformed = vec3((cp.x - ${AX.toFixed(1)}) * ${SPU.toFixed(6)}, (${AY.toFixed(1)} - cp.y) * ${SPU.toFixed(6)}, -uBend * xn * xn);   // the card curves away from the viewer toward its edges`);
   };
   const mat = new THREE.MeshBasicMaterial({ map: t, alphaTest: .5, fog: true });   // its colour (the charLight tint) is set each frame by lightChar
@@ -121,14 +126,14 @@ function makeChar(name, x, z, opt = {}) {
       float zv = vViewZ - cHt * uBulge;   // view depth, nudged toward the camera by the height
       gl_FragDepth = ((uP.x * -zv + uP.y) / zv) * .5 + .5;`);
   };
+  mat.customProgramCacheKey = () => look;   // the cell size and anchor are baked into the shader text, so each look needs its own program (three shares one per onBeforeCompile source otherwise)
   const mesh = new THREE.Mesh(spriteGeoBent, mat); mesh.frustumCulled = false; mesh.scale.setScalar(CHAR_SCALE);   // the unit quad's own bounds mean nothing: the shader places the vertices
-  const body = new THREE.Mesh(proxyGeo, proxyMat), head = new THREE.Mesh(proxyGeo, proxyMat);   // in card metres (before CHAR_SCALE): a 1.6 m figure, big round head
-  body.scale.set(.26, .58, .2); body.position.set(0, .56, .08); head.scale.set(.37, .36, .33); head.position.set(0, 1.24, .1);
-  for (const m of [body, head]) { m.castShadow = true; mesh.add(m); }
+  // in card metres (before CHAR_SCALE): a 1.6 m figure, big round head
+  for (const [sx, sy, sz, x, y, z] of shape.proxy || [[.26, .58, .2, 0, .56, .08], [.37, .36, .33, 0, 1.24, .1]]) { const m = new THREE.Mesh(proxyGeo, proxyMat); m.scale.set(sx, sy, sz); m.position.set(x, y, z); m.castShadow = true; mesh.add(m); }
   const g = new THREE.Group(), tilt = new THREE.Group(); g.userData.dyn = true; tilt.rotation.x = CHAR_LEAN; tilt.add(mesh); g.add(tilt);
   const sh = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.set(0, .025, .1); sh.material.opacity = .85; g.add(sh);   // g.children[1]: the bridge toggles it
   scene.add(g);
-  Object.assign(c, { name, g, mesh, blob: sh, sizeK: CHARS[look].fit || 1, cell, box, lampC, lampCol, atlas, rects: CHARS[look].rects, zone: opt.zone || 'lobby', wait: 0, target: null, stuck: 0, fx: { sx: 1, sy: 1, by: 0 }, sw: { v: 0 } });
+  Object.assign(c, { name, g, mesh, blob: sh, sizeK: CHARS[look].fit || 1, shape, cell, box, lampC, lampCol, atlas, rects: CHARS[look].rects, zone: opt.zone || 'lobby', wait: 0, target: null, stuck: 0, fx: { sx: 1, sy: 1, by: 0 }, sw: { v: 0 } });
   // a slow sway, an anime.js loop on its own object (so squash and stretch's tween never cancels it); the engine is stepped by the frame loop
   if (!REDUCED_MOTION) anime.animate(c.sw, { v: [-1, 1], duration: 2300 + Math.random() * 1200, ease: 'inOutSine', loop: true, alternate: true });
   c.tag = document.createElement('div'); c.tag.className = 'tag' + (opt.me ? ' me' : ''); c.tag.textContent = name; tagsEl.appendChild(c.tag);
@@ -156,7 +161,8 @@ function syncChar(c) {
   lightChar(c);
   const rc = c.rects[f.start + f.col];
   c.cell.value.set(rc[0] / c.atlas.w, 1 - (rc[1] + rc[3]) / c.atlas.h, rc[2] / c.atlas.w, rc[3] / c.atlas.h); c.box.value.set(rc[4], rc[5], rc[6], rc[7]);
-  c.g.position.set(c.x, 0, c.y);
+  c.fy = (c.fy || 0) + (floorAt(c.x, c.y) - (c.fy || 0)) * .4;   // stand on a deck or a step, easing up and down (the shoes were sunk into it)
+  c.g.position.set(c.x, c.fy, c.y);
   // a little life: lean into the direction of travel, breathe when still, squash on the beat of each step
   const vx = c.x - (c.px ?? c.x), vz = c.y - (c.py ?? c.y); c.px = c.x; c.py = c.y;
   const lean = c.leanX = (c.leanX || 0) + (Math.max(-1, Math.min(1, vx * 40)) - (c.leanX || 0)) * .2, fwd = c.leanZ = (c.leanZ || 0) + (Math.max(-1, Math.min(1, vz * 40)) - (c.leanZ || 0)) * .2;
@@ -169,7 +175,7 @@ function syncChar(c) {
   c.wasMoving = c.moving; c.prevAir = air;
   const K = CHAR_SCALE * c.sizeK;   // sizeK: a place can scale one character (the Prompt Kitchen's steep camera makes the hero small); the squash and the blob follow
   c.mesh.scale.set(K * (1 - beat * .008) * c.fx.sx, K * CHAR_STRETCH * (1 + beat * .018) * c.fx.sy, K);
-  c.blob.scale.set(K * .95, K * 1.7, 1);
+  c.blob.scale.set(K * .95 * (c.shape.blob ? c.shape.blob[0] : 1), K * 1.7 * (c.shape.blob ? c.shape.blob[1] : 1), 1);
   c.mesh.position.y = air + c.fx.by;
 }
 

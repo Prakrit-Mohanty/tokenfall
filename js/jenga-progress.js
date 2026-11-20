@@ -111,19 +111,19 @@
     let TF = null, play = null, panel = null, panelOpen = false;
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-    // ---- the debrief: the lobby's .panel look, Cinzel for titles, Pixelify Sans for text ----
+    // ---- the debrief: the lobby's .panel look, Baloo 2 for titles, Nunito for text ----
     function makePanel() {
       const style = document.createElement('style');
       style.textContent = `
         .tr { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); max-height: calc(100vh - 110px); overflow-y: auto; padding: 16px 22px 14px; display: none; font-size: 17px; line-height: 1.4; background: rgba(40, 28, 24, .96); pointer-events: auto; font-variant-ligatures: none; }
-        .tr h3 { margin: 0; font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
+        .tr h3 { margin: 0; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
         .tr .sum { margin: 4px 0 10px; font-size: 18px; } .tr .sum b { color: #ffe39a; font-weight: 600; }
         .tr .row { display: grid; grid-template-columns: 210px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 16px; }
         .tr .bar { height: 11px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); } .tr .bar i { display: block; height: 100%; }
-        .tr .num { text-align: right; opacity: .85; font-size: 15px; }
-        .tr h4 { margin: 12px 0 4px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
-        .tr ul { margin: 0; padding-left: 18px; } .tr li { margin: 3px 0; } .tr li small { opacity: .8; font-size: 15px; } .tr .none { opacity: .8; }
-        .tr .stat { margin-top: 8px; font-size: 16px; } .tr .note { margin-top: 8px; font-size: 15px; opacity: .8; }
+        .tr .num { text-align: right; opacity: .85; font-size: 16px; }
+        .tr h4 { margin: 12px 0 4px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
+        .tr ul { margin: 0; padding-left: 18px; } .tr li { margin: 3px 0; } .tr li small { opacity: .8; font-size: 16px; } .tr .none { opacity: .8; }
+        .tr .stat { margin-top: 8px; font-size: 16px; } .tr .note { margin-top: 8px; font-size: 16px; opacity: .8; }
         .tr .acts { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 16px; }
         .tr button { font: inherit; color: var(--ink); background: rgba(40, 28, 24,.9); border: 1px solid var(--gold); padding: 4px 12px; cursor: pointer; } .tr button:hover { background: rgba(217,180,106,.2); }
         .tr kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }

@@ -151,14 +151,14 @@
       const style = document.createElement('style');
       style.textContent = `
         .br { position: absolute; top: 43%; left: 50%; transform: translate(-50%, -50%); width: min(660px, calc(100vw - 32px)); max-height: calc(100vh - 190px); overflow-y: auto; padding: 16px 22px 14px; display: none; font-size: 17px; line-height: 1.4; background: rgba(40, 28, 24, .95); pointer-events: auto; }
-        .br h3 { margin: 0; font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
+        .br h3 { margin: 0; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); font-weight: 700; }
         .br .sum { margin: 4px 0 10px; font-size: 18px; } .br .sum b { color: #ffe39a; font-weight: 600; }
         .br .row { display: grid; grid-template-columns: 170px 1fr 92px; gap: 10px; align-items: center; margin: 3px 0; font-size: 16px; }
         .br .bar { height: 11px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); } .br .bar i { display: block; height: 100%; }
-        .br .num { text-align: right; opacity: .85; font-size: 15px; }
-        .br h4 { margin: 12px 0 4px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .14em; color: var(--gold); }
-        .br ul { margin: 0; padding-left: 18px; } .br li { margin: 3px 0; } .br li small { opacity: .8; font-size: 15px; } .br .none { opacity: .8; }
-        .br .note { margin-top: 8px; font-size: 15px; opacity: .8; }
+        .br .num { text-align: right; opacity: .85; font-size: 16px; }
+        .br h4 { margin: 12px 0 4px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
+        .br ul { margin: 0; padding-left: 18px; } .br li { margin: 3px 0; } .br li small { opacity: .8; font-size: 16px; } .br .none { opacity: .8; }
+        .br .note { margin-top: 8px; font-size: 16px; opacity: .8; }
         .br .acts { display: flex; gap: 10px; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 16px; }
         .br button { font: inherit; color: var(--ink); background: rgba(40, 28, 24,.9); border: 1px solid var(--gold); padding: 4px 12px; cursor: pointer; }
         .br button:hover { background: rgba(217,180,106,.2); } .br kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }

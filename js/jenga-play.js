@@ -102,12 +102,12 @@
       else a.play(name);
     }
 
-    // ---- HUD: the lobby's .panel look, Cinzel for titles, Pixelify Sans for text. A question card, a status block, a gauge while placing, one hint line ----
+    // ---- HUD: the lobby's .panel look, Baloo 2 for titles, Nunito for text. A question card, a status block, a gauge while placing, one hint line ----
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
         .tq { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 9px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
-        .tq .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
+        .tq .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
         .tq .t { font-size: clamp(17px, 1.7vw, 23px); line-height: 1.35; margin: 2px 0 6px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
         .tq .a { display: grid; gap: 4px; grid-template-columns: repeat(2, 1fr); text-align: left; }
         .tq.nolegend .a { display: none; }
@@ -117,15 +117,15 @@
         .ts b { color: #ffe39a; font-weight: 600; } .ts kbd, .tm kbd, .th kbd, .tg kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .ts .pips { display: flex; gap: 3px; justify-content: flex-end; margin: 0 0 4px; }
         .ts .pips i { width: 15px; height: 8px; border: 1px solid rgba(243,234,214,.45); } .ts .pips i.done { border-color: transparent; background: var(--c); } .ts .pips i.cur { border-color: #ffe39a; box-shadow: 0 0 0 1px #ffe39a; }
-        .ts .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .ts .clock.low { color: var(--hot); }
+        .ts .clock { font-family: var(--font-secondary); font-size: 22px; letter-spacing: .08em; } .ts .clock.low { color: var(--hot); }
         .ts .gems { display: inline-flex; gap: 8px; vertical-align: middle; } .tgem { width: 9px; height: 9px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 8px var(--gold); } .tgem.hot { background: var(--hot); box-shadow: 0 0 8px var(--hot); }
         .tm { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 420px)); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.4; background: rgba(32, 22, 19,.93); }
         .tg { position: absolute; left: 18px; bottom: 22px; width: 264px; padding: 8px 12px 9px; display: none; font-size: 16px; line-height: 1.4; background: rgba(32, 22, 19,.94); }
-        .tg h5 { margin: 0 0 5px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); display: flex; justify-content: space-between; } .tg h5 span { font-family: 'Pixelify Sans'; letter-spacing: .04em; color: var(--c); font-size: 16px; }
+        .tg h5 { margin: 0 0 5px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); display: flex; justify-content: space-between; } .tg h5 span { font-family: var(--font-primary); letter-spacing: .04em; color: var(--c); font-size: 16px; }
         .tg .bar { height: 11px; background: rgba(255,255,255,.1); border: 1px solid rgba(217,180,106,.35); margin-bottom: 7px; } .tg .bar i { display: block; height: 100%; background: var(--c); transition: width .08s; }
         .tg canvas { display: block; width: 112px; height: 112px; margin: 0 auto 4px; background: rgba(255,255,255,.04); border: 1px solid rgba(217,180,106,.3); } .tg p { margin: 0; opacity: .85; }
         .th { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(32, 22, 19,.96); }
-        .th h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .th ul { margin: 0; padding-left: 20px; } .th li { margin: 5px 0; } .th .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
+        .th h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .th ul { margin: 0; padding-left: 20px; } .th li { margin: 5px 0; } .th .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         @media (max-width: 1100px) { .tq { width: calc(100vw - 32px); top: 70px; } .ts { top: auto; bottom: 80px; } .tg { bottom: 80px; } }
         .tower-on .tq, .tower-on .ts, .tower-on .tm, .tower-on .th, .tower-on .tg, .tower-on .tt-tag { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .tower-on #chat, .tower-on #help { display: none; }   /* the chat log and key hints sit over the tower; the tower has its own hints */`;

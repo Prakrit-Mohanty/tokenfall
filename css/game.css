@@ -1,6 +1,6 @@
   :root { --gold: #d9b46a; --ink: #f3ead6; --panel: rgba(40, 28, 24, .78); }
   * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1311; font-family: 'Pixelify Sans', monospace; color: var(--ink); }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a1311; font-family: var(--font-primary); color: var(--ink); }
   canvas { display: block; width: 100vw; height: 100vh; }
   #ui { position: fixed; inset: 0; pointer-events: none; }
   #ui.big > .panel, #ui.big > #help { zoom: 1.2; }   /* L: large text; only the fixed panels, never the overlays whose children are placed in screen pixels */
@@ -8,17 +8,17 @@
   #launcher, #launcher * { box-sizing: content-box; }
   .panel { background: var(--panel); border: 1px solid rgba(217, 180, 106, .55); box-shadow: 0 0 0 1px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04); }
 
-  #loc { position: absolute; top: 18px; left: 18px; padding: 8px 16px 8px 12px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .08em; display: flex; align-items: center; gap: 10px; }
+  #loc { position: absolute; top: 18px; left: 18px; padding: 8px 16px 8px 12px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .08em; display: flex; align-items: center; gap: 10px; }
   #loc .gem { width: 9px; height: 9px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 8px var(--gold); }
-  #loc small { display: block; font-family: 'Pixelify Sans'; font-size: 14px; letter-spacing: .04em; opacity: .7; }
+  #loc small { display: block; font-family: var(--font-primary); font-size: 16px; letter-spacing: .04em; opacity: .7; }
 
-  #party { position: absolute; top: 18px; right: 18px; width: 190px; padding: 10px 12px; font-size: 14px; }
-  #party h4 { margin: 0 0 6px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .12em; color: var(--gold); display: flex; justify-content: space-between; }
+  #party { position: absolute; top: 18px; right: 18px; width: 190px; padding: 10px 12px; font-size: 16px; }
+  #party h4 { margin: 0 0 6px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .12em; color: var(--gold); display: flex; justify-content: space-between; }
   #plist > div { display: flex; align-items: center; gap: 7px; line-height: 1.55; }
   #party i { width: 7px; height: 7px; background: #6ee07a; box-shadow: 0 0 6px #6ee07a; }
   #party .me { color: #ffe39a; }
 
-  #chat { position: absolute; left: 18px; bottom: 18px; width: 340px; font-size: 14px; }
+  #chat { position: absolute; left: 18px; bottom: 18px; width: 340px; font-size: 16px; }
   #log { padding: 8px 10px; min-height: 40px; }
   #log p { margin: 2px 0; text-shadow: 0 1px 0 #000; }
   #log b { color: #ffe39a; font-weight: 600; }
@@ -26,42 +26,42 @@
   #chatIn { pointer-events: auto; width: 100%; margin-top: 6px; padding: 7px 10px; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid rgba(217,180,106,.35); outline: none; }
   #chatIn:focus { border-color: var(--gold); }
 
-  #help { position: absolute; bottom: 18px; right: 18px; font-size: 14px; opacity: .8; text-align: right; text-shadow: 0 1px 2px #000; line-height: 1.6; }
+  #help { position: absolute; bottom: 18px; right: 18px; font-size: 16px; opacity: .8; text-align: right; text-shadow: 0 1px 2px #000; line-height: 1.6; }
   #help kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
 
   #tags { position: absolute; inset: 0; }
-  .tag { position: absolute; transform: translate(-50%, -100%); font-size: 14px; white-space: nowrap; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
+  .tag { position: absolute; transform: translate(-50%, -100%); font-size: 16px; white-space: nowrap; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
   .tag.me { color: #ffe39a; }
-  .bubble { position: absolute; transform: translate(-50%, -100%); max-width: 220px; padding: 5px 9px; font-size: 14px; color: #2a2116; background: #f6ecd3; border: 2px solid #3a2b1a; white-space: normal; text-align: center; }
+  .bubble { position: absolute; transform: translate(-50%, -100%); max-width: 220px; padding: 5px 9px; font-size: 16px; color: #2a2116; background: #f6ecd3; border: 2px solid #3a2b1a; white-space: normal; text-align: center; }
   .bubble:after { content: ''; position: absolute; left: 50%; bottom: -8px; margin-left: -5px; border: 5px solid transparent; border-top-color: #3a2b1a; border-bottom: 0; }
-  #prompt { position: absolute; transform: translate(-50%, -100%); font-size: 14px; padding: 4px 10px; display: none; white-space: nowrap; }
-  #prompt kbd { font: inherit; color: #1a140c; background: var(--gold); padding: 0 6px; margin-right: 6px; }
+  #prompt { position: absolute; transform: translate(-50%, -100%); font-size: 16px; padding: 4px 10px; display: none; white-space: nowrap; }
+  #prompt kbd { font: inherit; color: #3B2A14; background: var(--gold); padding: 0 6px; margin-right: 6px; }
 
   #dialog { position: absolute; left: 50%; bottom: 28px; width: min(720px, calc(100vw - 32px)); transform: translateX(-50%); padding: 18px 24px 20px; font-size: 19px; line-height: 1.5; display: none; min-height: 108px; }
-  #dialog .name { position: absolute; top: -16px; left: 18px; padding: 3px 14px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .08em; background: #1d1a24; border: 1px solid var(--gold); }
-  #dialog .next { position: absolute; right: 16px; bottom: 8px; font-size: 14px; color: var(--gold); animation: bob 1s infinite; }
+  #dialog .name { position: absolute; top: -16px; left: 18px; padding: 3px 14px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .08em; background: #1d1a24; border: 1px solid var(--gold); }
+  #dialog .next { position: absolute; right: 16px; bottom: 8px; font-size: 16px; color: var(--gold); animation: bob 1s infinite; }
   @keyframes bob { 50% { transform: translateY(3px); } }
 
   #banner { position: absolute; top: 26%; left: 50%; transform: translateX(-50%); text-align: center; opacity: 0; transition: opacity .8s; }
   #banner .line { width: 420px; max-width: 80vw; height: 1px; margin: 10px auto; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-  #banner .t { font-family: 'Cinzel', serif; font-size: 40px; letter-spacing: .14em; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  #banner .t { font-family: var(--font-secondary); font-size: 40px; letter-spacing: .14em; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
   #banner .s { font-size: 16px; letter-spacing: .1em; opacity: .85; text-shadow: 0 1px 4px #000; }
 
   #fade { position: absolute; inset: 0; background: #000; opacity: 1; transition: opacity .45s; }
-  #loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: 'Cinzel', serif; letter-spacing: .2em; font-size: 14px; color: var(--gold); }
+  #loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-secondary); letter-spacing: .2em; font-size: 16px; color: var(--gold); }
   @media (max-width: 720px) { #party, #help { display: none; } #chat { width: calc(100vw - 32px); left: 16px; } }
 
   #board { position: absolute; inset: 0; display: none; place-items: center; background: rgba(6, 8, 14, .45); pointer-events: auto; }
   #board .card { width: min(440px, calc(100vw - 32px)); padding: 18px 20px 14px; }
-  #board .title { font-family: 'Cinzel', serif; font-size: 20px; letter-spacing: .08em; color: var(--gold); }
-  #board .sub { font-size: 14px; opacity: .75; margin: 2px 0 12px; }
+  #board .title { font-family: var(--font-secondary); font-size: 20px; letter-spacing: .08em; color: var(--gold); }
+  #board .sub { font-size: 16px; opacity: .75; margin: 2px 0 12px; }
   #board .rows { list-style: none; margin: 0; padding: 0; max-height: 52vh; overflow-y: auto; }
   #board li { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 6px 8px; font-size: 16px; }
   #board li:nth-child(odd) { background: rgba(255, 255, 255, .05); }
   #board .rank { display: grid; place-items: center; height: 24px; background: #3a4a6b; color: var(--ink); }
-  #board .r1 .rank { background: #f2b53a; color: #15171d; } #board .r2 .rank { background: #cfd5dc; color: #15171d; } #board .r3 .rank { background: #e0a878; color: #15171d; }
+  #board .r1 .rank { background: #f2b53a; color: #3B2A14; } #board .r2 .rank { background: #cfd5dc; color: #3B2A14; } #board .r3 .rank { background: #e0a878; color: #3B2A14; }
   #board .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #board .score { color: #8fe8ff; font-variant-numeric: tabular-nums; }
   #board .empty { display: block; text-align: center; padding: 22px 8px; opacity: .8; }
-  #board .hint { margin-top: 10px; text-align: center; font-size: 14px; opacity: .7; }
-  #board kbd { font: inherit; color: #1a140c; background: var(--gold); padding: 0 5px; }
+  #board .hint { margin-top: 10px; text-align: center; font-size: 16px; opacity: .7; }
+  #board kbd { font: inherit; color: #3B2A14; background: var(--gold); padding: 0 5px; }

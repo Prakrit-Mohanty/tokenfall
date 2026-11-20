@@ -32,6 +32,11 @@ CHARS = {
     'mehta': ('Mr. Mehta', 'tokenfall-characters-extras/mehta.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True)}, 0, (0, 0)),
     'aarav': ('Aarav', 'tokenfall-characters-extras/aarav.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True)}, 0, (0, 0)),
     'riya': ('Riya', 'tokenfall-characters-extras/riya.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True)}, 0, (0, 0)),
+    # Prakrit on his Yamaha, the Pune bike taxi's rider: the bike pack's own 8 still poses (named by angle: 0 faces the camera, 90 faces right) and its leaned-in riding frame (last of the 4) for right and left
+    'prakrit': ('Prakrit', 'prakrit-extras/prakrit-bike.png',
+                {'idle': ({str(a): i for i, a in enumerate(range(0, 360, 45))}, 1, 200, True), 'ride': ({'right': (8, 3), 'left': (9, 3)}, 1, 200, True)}, 0, (0, 0)),
+    # the same bike with the player (Aditya) riding pillion, for the ride itself: right and left only, still and leaned in (built by pillion_sheet below)
+    'prakrit_ride': ('Prakrit', 'pillion', {'idle': ({'right': 0, 'left': 1}, 1, 200, True), 'ride': ({'right': 2, 'left': 3}, 1, 200, True)}, 0, (0, 0)),
     'gaurav': ('Gaurav', 'gaurav-npc-extras/gaurav.png',   # an NPC: idle and walk only (the lossless copy of gaurav-npc/sprites/gaurav.webp)
                {'idle': (0, 11, 200, True), 'walk': (4, 10, 95, True)}, 0, (0, 0)),
 }
@@ -78,6 +83,47 @@ def upscale(frame, box, k):
     return (np.dstack([sharp, alpha]) * 255.0).round().astype(np.uint8)
 
 
+# The bike pack's cells are 418x385 (ground point 209,381) and Prakrit sits ~1.32x bigger on it than he stands on foot (hair 82 px vs 62 px across, the same 172 px foot frames as the roster), so it
+# is drawn at 0.755 (`fit`, read as sizeK) and upscaled by 2.5 * 0.755 to keep the roster's texel density: his head then matches Aditya's.
+BIKES = ('prakrit', 'prakrit_ride')
+CELLS = {b: ((418, 385), (209, 381)) for b in BIKES}
+BIKE_FIT = 0.755
+SCALES = {b: SCALE * BIKE_FIT for b in BIKES}
+
+
+# The passenger: the bike has only a small tail cowl, so Aditya's profile sprite is scaled to the bike's world size (1 / BIKE_FIT), his hips set on the tail behind Prakrit, his legs cut off just
+# below them, and the bike and its rider drawn over him: the cowl hides the cut and the driver's back hides his side, so he reads as seated, a head and shoulders behind Prakrit.
+# Per frame: bike (column, row), the hero's row (3 = facing right, 2 = left), and where his hips go (x, y in the 418x385 cell; the left frames mirror x).
+PILLION_HIP = 0.78   # Aditya's hips, as a fraction of his figure's height from its top (a big head: the legs are short)
+PILLION = [(0, 2, 3, 128, 226, False), (0, 6, 2, 128, 226, True), (3, 8, 3, 128, 246, False), (3, 9, 2, 128, 246, True)]
+
+
+def pillion_sheet():
+    bike = Image.open(os.path.join(ROOT, 'prakrit-extras/prakrit-bike.png')).convert('RGBA')
+    hero = Image.open(os.path.join(ROOT, CHARS['aditya'][1])).convert('RGBA')
+    bw, bh = CELLS['prakrit'][0]
+    sheet = Image.new('RGBA', (bw, bh * len(PILLION)), (0, 0, 0, 0))
+    k = 1 / BIKE_FIT
+    for i, (bc, br, hr, hx, hy, mirror) in enumerate(PILLION):
+        h = hero.crop((0, hr * CELL[1], CELL[0], (hr + 1) * CELL[1]))
+        alpha = np.asarray(h)[..., 3]
+        ys = np.where(alpha > 8)[0]
+        hip = ys.min() + PILLION_HIP * (ys.max() - ys.min() + 1)
+        cols = np.where(alpha[int(hip)] > 8)[0]
+        if mirror:
+            hx = bw - hx
+        big = h.convert('RGBa').resize((round(CELL[0] * k), round(CELL[1] * k)), Image.LANCZOS).convert('RGBA')
+        px, py = round(hx - (cols.min() + cols.max()) / 2 * k), round(hy - hip * k)
+        layer = Image.new('RGBA', (bw, bh), (0, 0, 0, 0))
+        layer.alpha_composite(big, (max(px, 0), max(py, 0)), (max(-px, 0), max(-py, 0), big.width, big.height))
+        arr = np.asarray(layer).copy()
+        arr[hy + 6:, :, 3] = 0
+        cell = Image.fromarray(arr, 'RGBA')
+        cell.alpha_composite(bike.crop((bc * bw, br * bh, (bc + 1) * bw, (br + 1) * bh)))
+        sheet.alpha_composite(cell, (0, i * bh))
+    return sheet
+
+
 FIT = {'saanvi', 'mehta', 'aarav', 'riya'}   # their figures are drawn 1-5% shorter than the first three's 172 px: `fit` (written to chars-data.js, read by characters.js as sizeK) scales them to match
 
 AUXDIV = 5   # the volume maps are drawn at 1/5 of the upscaled frames (0.5x the source): they are smooth, so the sampler fills in the rest
@@ -113,17 +159,22 @@ def volume_maps(tile):
     return (np.clip(out, 0.0, 1.0) * 255.0).round().astype(np.uint8)
 
 
+def dirs_of(r0):
+    return list(r0) if isinstance(r0, dict) and set(r0) != set(DIRS) else DIRS   # a dict keyed by its own facings (the bike's angles), else the game's four
+
+
 def pack(cid, img, anims):
     """Upscales and shelf-packs one character's frames. Returns the atlas image and, per frame, [atlas x, y, w, h, box x, y, w, h]."""
     tiles = []   # (key, array, box)
+    cw, ch = CELLS.get(cid, (CELL, ANCHOR))[0]
     for anim, (r0, frames, ms, loop) in anims.items():
-        for i, d in enumerate(DIRS):
+        for i, d in enumerate(dirs_of(r0)):
             for f in range(frames):
-                row = r0[d] if isinstance(r0, dict) else r0 + i   # r0: the first of four rows (down, up, left, right), or a row per facing
-                cell = img.crop((f * CELL[0], row * CELL[1], (f + 1) * CELL[0], (row + 1) * CELL[1]))
+                row, col0 = (lambda v: v if isinstance(v, tuple) else (v, 0))(r0[d] if isinstance(r0, dict) else r0 + i)   # r0: the first of four rows (down, up, left, right), or a row (or row, first column) per facing
+                cell = img.crop(((f + col0) * cw, row * ch, (f + col0 + 1) * cw, (row + 1) * ch))
                 ys, xs = np.where(np.asarray(cell)[..., 3] > 8)
-                x0, x1, y0, y1 = (int(v) for v in (max(0, xs.min() - PAD), min(CELL[0], xs.max() + 1 + PAD), max(0, ys.min() - PAD), min(CELL[1], ys.max() + 1 + PAD)))
-                tiles.append(((anim, d, f), upscale(cell, (x0, y0, x1, y1), SCALE), (x0, y0, x1 - x0, y1 - y0)))
+                x0, x1, y0, y1 = (int(v) for v in (max(0, xs.min() - PAD), min(cw, xs.max() + 1 + PAD), max(0, ys.min() - PAD), min(ch, ys.max() + 1 + PAD)))
+                tiles.append(((anim, d, f), upscale(cell, (x0, y0, x1, y1), SCALES.get(cid, SCALE)), (x0, y0, x1 - x0, y1 - y0)))
     order = sorted(range(len(tiles)), key=lambda t: -tiles[t][1].shape[0])
     pos, x, y, rowh = {}, GUTTER, GUTTER, 0
     for t in order:
@@ -149,11 +200,11 @@ def pack(cid, img, anims):
 
 data, sheets, auxes, total = {}, {}, {}, 0
 for cid, (name, src, anims, lift, air) in CHARS.items():
-    img = Image.open(os.path.join(ROOT, src)).convert('RGBA')
+    img = pillion_sheet() if src == 'pillion' else Image.open(os.path.join(ROOT, src)).convert('RGBA')
     atlas, aux, rects = pack(cid, img, anims)
     table, order, air_ms = {}, [], None
     for anim, (r0, frames, ms, loop) in anims.items():
-        for d in DIRS:
+        for d in dirs_of(r0):
             table[f'{anim}_{d}'] = {'start': len(order), 'frames': frames, 'durations': [ms] * frames, 'loop': loop}
             order += [rects[(anim, d, f)] for f in range(frames)]
         if anim == 'jump': air_ms = [air[0] * ms, (air[1] + 1) * ms]
@@ -163,10 +214,11 @@ for cid, (name, src, anims, lift, air) in CHARS.items():
     abuf = io.BytesIO()
     aux.save(abuf, 'WEBP', lossless=True, exact=True)   # lossless and exact: the channels are data, and a transparent-looking pixel must keep its values
     auxes[cid] = base64.b64encode(abuf.getvalue()).decode()
-    data[cid] = {'name': name, 'id': cid, 'cell': {'w': CELL[0], 'h': CELL[1]}, 'anchor': {'x': ANCHOR[0], 'y': ANCHOR[1]}, 'standHeight': STAND,
-                 'fit': round(STAND / (sum(rects[('idle', d, 0)][7] - 2 * PAD for d in DIRS) / 4), 4) if cid in FIT else 1,
+    cell, anchor = CELLS.get(cid, (CELL, ANCHOR))
+    data[cid] = {'name': name, 'id': cid, 'cell': {'w': cell[0], 'h': cell[1]}, 'anchor': {'x': anchor[0], 'y': anchor[1]}, 'standHeight': STAND,
+                 'fit': BIKE_FIT if cid in BIKES else round(STAND / (sum(rects[('idle', d, 0)][7] - 2 * PAD for d in DIRS) / 4), 4) if cid in FIT else 1,
                  'jumpHeight': lift, 'jumpAir': air_ms, 'actions': [a for a in ('jump', 'run') if a in anims], 'animations': table,
-                 'atlas': {'w': atlas.width, 'h': atlas.height, 'scale': SCALE}, 'rects': order}
+                 'atlas': {'w': atlas.width, 'h': atlas.height, 'scale': SCALES.get(cid, SCALE)}, 'rects': order}
     total += atlas.width * atlas.height
     print(cid, atlas.size, 'aux', aux.size, len(order), 'frames', len(buf.getvalue()) // 1024, 'KB +', len(abuf.getvalue()) // 1024, 'KB volume maps')
 

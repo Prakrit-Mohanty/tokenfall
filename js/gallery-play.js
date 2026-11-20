@@ -121,34 +121,34 @@
       else a.play(name);
     }
 
-    // ---- HUD: the lobby's .panel look, Cinzel for titles, Pixelify Sans for text. A round strip, a status block with gems, a hint line, the brief, the round result, the reading panel ----
+    // ---- HUD: the lobby's .panel look, Baloo 2 for titles, Nunito for text. A round strip, a status block with gems, a hint line, the brief, the round result, the reading panel ----
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
         .gp-top { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 640px)); padding: 6px 14px 8px; text-align: center; display: none; background: rgba(10,12,20,.95); border-color: var(--gold); }
-        .gp-top .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); }
+        .gp-top .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
         .gp-top .t { font-size: clamp(16px, 1.5vw, 20px); line-height: 1.25; margin: 2px 0 4px; color: var(--ink); }
         .gp-top .pips { display: flex; gap: 4px; justify-content: center; } .gp-top .pips i { width: 26px; height: 7px; border: 1px solid rgba(243,234,214,.45); }
         .gp-top .pips i.done { border-color: transparent; background: var(--c); } .gp-top .pips i.cur { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
-        .gp-top .ribbon { display: none; margin-top: 4px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .2em; color: var(--gold); } .gp-top .ribbon.on { display: block; }
+        .gp-top .ribbon { display: none; margin-top: 4px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .2em; color: var(--gold); } .gp-top .ribbon.on { display: block; }
         .gp-stat { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.6; display: none; min-width: 170px; }   /* the same spot as the Glass Bridge's and Carrom's status panels */
-        .gp-stat .tl { font-size: 13px; line-height: 1.2; opacity: .8; } .gp-stat .clock { font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: .08em; } .gp-stat .clock.low { color: var(--hot); } .gp-stat b { color: var(--gold); font-weight: 600; } .gp-stat .miss { font-size: 14px; color: var(--hot); }
+        .gp-stat .tl { font-size: 16px; line-height: 1.2; opacity: .8; } .gp-stat .clock { font-family: var(--font-secondary); font-size: 22px; letter-spacing: .08em; } .gp-stat .clock.low { color: var(--hot); } .gp-stat b { color: var(--gold); font-weight: 600; } .gp-stat .miss { font-size: 16px; color: var(--hot); }
         .gp-stat .gems { display: inline-flex; gap: 6px; vertical-align: middle; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
         .gp-pel { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px var(--gold); } .gp-pel.off { background: transparent; box-shadow: none; border: 1px solid rgba(243,234,214,.35); }
         .gp-mag { width: 14px; height: 14px; fill: none; stroke: var(--c); stroke-width: 1.6; stroke-linecap: round; } .gp-mag.off { stroke: rgba(243,234,214,.35); }
-        .gp-keys { position: absolute; bottom: 14px; left: 18px; text-align: left; padding: 6px 12px; font-size: 14px; line-height: 1.6; display: none; }   /* the key hints, apart from the stats so that panel stays small and off the shelves */
+        .gp-keys { position: absolute; bottom: 14px; left: 18px; text-align: left; padding: 6px 12px; font-size: 16px; line-height: 1.6; display: none; }   /* the key hints, apart from the stats so that panel stays small and off the shelves */
         .gp-stat kbd, .gp-keys kbd, .gp-msg kbd, .gp-brief kbd, .gp-help kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .gp-msg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(620px, max(300px, calc(100vw - 760px))); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
         .gp-brief { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; text-align: center; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
-        .gp-brief .k { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .16em; color: var(--gold); } .gp-brief .t { font-size: 24px; margin: 8px 0; line-height: 1.25; } .gp-brief .m { font-size: 15px; opacity: .85; } .gp-brief .go { margin: 10px 0 0; font-size: 14px; color: var(--gold); text-align: right; }
+        .gp-brief .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .gp-brief .t { font-size: 24px; margin: 8px 0; line-height: 1.25; } .gp-brief .m { font-size: 16px; opacity: .85; } .gp-brief .go { margin: 10px 0 0; font-size: 16px; color: var(--gold); text-align: right; }
         .gp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); padding: 8px 16px 9px; text-align: center; display: none; font-size: 16px; line-height: 1.4; background: rgba(10,12,20,.96); border-color: var(--gold); }
-        .gp-rs .rc { margin-top: 3px; font-size: 15px; line-height: 1.35; text-align: left; } .gp-rs .rc b { color: var(--gold); font-weight: 600; }
-        .gp-rs h5 { margin: 0 0 3px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .gp-rs .go { color: var(--gold); font-size: 14px; margin-top: 3px; }
+        .gp-rs .rc { margin-top: 3px; font-size: 16px; line-height: 1.35; text-align: left; } .gp-rs .rc b { color: var(--gold); font-weight: 600; }
+        .gp-rs h5 { margin: 0 0 3px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); } .gp-rs .go { color: var(--gold); font-size: 16px; margin-top: 3px; }
         .gp-read { position: absolute; left: 18px; top: 90px; width: min(380px, calc(100vw - 36px)); max-height: calc(100vh - 220px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 20px; line-height: 1.3; background: rgba(10,12,20,.96); pointer-events: auto; }
-        .gp-read h5 { margin: 0 0 6px; font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: .14em; color: var(--gold); } .gp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); }
-        .gp-read small { display: block; font-size: 14px; letter-spacing: .04em; color: var(--gold); } .gp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
+        .gp-read h5 { margin: 0 0 6px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); } .gp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); }
+        .gp-read small { display: block; font-size: 16px; letter-spacing: .04em; color: var(--gold); } .gp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
         .gp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
-        .gp-help h3 { margin: 0 0 8px; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: .16em; color: var(--gold); } .gp-help ul { margin: 0; padding-left: 20px; } .gp-help li { margin: 5px 0; } .gp-help .go { text-align: right; font-size: 14px; color: var(--gold); margin: 10px 0 0; }
+        .gp-help h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .gp-help ul { margin: 0; padding-left: 20px; } .gp-help li { margin: 5px 0; } .gp-help .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         @media (max-width: 1100px) { .gp-top { left: 18px; transform: none; width: calc(100vw - 280px); top: 70px; } .gp-stat { top: auto; bottom: 80px; } }   /* the strip clears the party list; the status block drops to the bottom, as in the other games */
         .gallery-on .gp-top, .gallery-on .gp-stat, .gallery-on .gp-keys, .gallery-on .gp-msg, .gallery-on .gp-brief, .gallery-on .gp-rs, .gallery-on .gp-read, .gallery-on .gs-read, .gallery-on .gs-tag { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .gallery-on #chat, .gallery-on #help { display: none; }   /* the chat log and key hints sit over the stall; the stall has its own hints */`;
