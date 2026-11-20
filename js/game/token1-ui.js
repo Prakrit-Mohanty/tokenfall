@@ -106,5 +106,5 @@
     return { setHud, showHud, onIconClick: (fn) => (onIcon = fn), say, hideSay, placeSay, showCard, closeCard, cardOpen: () => !!card, toast, float, iconPoint, fly, bump, face, mark, placeMark };
   };
 
-  window.Token1UI = { create };
+  window.Token1UI = { create, animate };
 })();

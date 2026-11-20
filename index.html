@@ -4,12 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TokenFall Lobby</title>
+<script src="js/fresh-start.js?v=1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="css/typography.css?v=1">
-<link rel="stylesheet" href="css/game.css?v=3">
-<link rel="stylesheet" href="css/storybook.css?v=2">
-<link rel="stylesheet" href="css/token1.css?v=3">
+<link rel="stylesheet" href="css/game.css?v=4">
+<link rel="stylesheet" href="css/storybook.css?v=4">
+<link rel="stylesheet" href="css/token1.css?v=4">
+<link rel="stylesheet" href="css/encounter.css?v=2">
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -18,8 +20,8 @@
   <div id="prompt" class="panel"></div>
   <div id="loc" class="panel"><div class="gem"></div><div><span id="locName">TokenFall Lobby</span><small id="locSub">Main Plaza</small></div></div>
   <div id="party" class="panel"><h4><span>LOBBY</span><span id="count">5 / 20</span></h4><div id="plist"></div></div>
-  <div id="chat"><div id="log" class="panel"></div><input id="chatIn" maxlength="80" placeholder="Press Enter to chat"></div>
-  <div id="help"><kbd>WASD</kbd> move &nbsp;<kbd>Shift</kbd> run &nbsp;<kbd>Space</kbd> jump<br><kbd>E</kbd> interact &nbsp;<kbd>V</kbd> view &nbsp;<kbd>M</kbd> music &nbsp;<span class="k-chat"><kbd>Enter</kbd> chat &nbsp;</span><kbd>L</kbd> large text</div>
+  <div id="chat"><div id="log" class="panel"></div></div>
+  <div id="help"><kbd>WASD</kbd> move &nbsp;<kbd>Shift</kbd> run &nbsp;<kbd>Space</kbd> jump<br><kbd>E</kbd> interact &nbsp;<kbd>V</kbd> view &nbsp;<kbd>M</kbd> music &nbsp;<kbd>G</kbd> glitch log &nbsp;<kbd>L</kbd> large text</div>
   <div id="dialog" class="panel"><div class="name"></div><div class="text"></div><div class="next">▼</div></div>
   <div id="banner"><div class="line"></div><div class="t"></div><div class="s"></div><div class="line"></div></div>
   <div id="fade"></div>
@@ -28,7 +30,7 @@
 
 <div id="launcher"></div>
 <script src="launcher/office-room.js?v=2"></script>
-<script src="launcher/tokenfall-launcher.js?v=2"></script>
+<script src="launcher/tokenfall-launcher.js?v=3"></script>
 <script src="launcher/start.js?v=3"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -73,12 +75,16 @@
 <script src="js/ambience.js?v=1"></script>
 <script src="js/dreamworld.js?v=1"></script>
 <script src="js/daylight.js?v=1"></script>
-<script src="js/game/game-events.js?v=2"></script>
+<script src="js/game/game-events.js?v=3"></script>
 <script src="js/game/token1-meter.js?v=2"></script>
 <script src="js/game/token1-follow.js?v=2"></script>
-<script src="js/game/token1-lines.js?v=2"></script>
+<script src="js/game/token1-lines.js?v=5"></script>
 <script src="js/game/token1-ui.js?v=2"></script>
-<script src="js/game/token1.js?v=2"></script>
+<script src="js/game/token1.js?v=6"></script>
+<script src="js/game/encounter-script.js?v=4"></script>
+<script src="js/game/encounter-sprites.js?v=1"></script>
+<script src="js/game/encounter-ui.js?v=3"></script>
+<script src="js/game/encounter.js?v=4"></script>
 <script src="js/game/music.js?v=2"></script>
 <script>
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => BridgePlay.install(TF));
@@ -93,6 +99,7 @@
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => Daylight.install(TF));
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => GameEvents.install(TF));
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => Token1.install(TF));
+(window.TokenFallReady = window.TokenFallReady || []).push((TF) => Encounter.install(TF));
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => Music.install(TF));
 </script>
 <script src="js/game/setup.js?v=3"></script>
@@ -122,9 +129,9 @@
 <script src="js/game/effects.js?v=2"></script>
 <script src="js/game/chatter.js?v=1"></script>
 <script src="js/game/characters.js?v=10"></script>
-<script src="js/game/ui.js?v=2"></script>
+<script src="js/game/ui.js?v=3"></script>
 <script src="js/game/post.js?v=2"></script>
-<script src="js/game/loop.js?v=4"></script>
+<script src="js/game/loop.js?v=5"></script>
 <script src="js/game/ambient.js?v=1"></script>
 <script src="js/game/groundlife.js?v=1"></script>
 <script src="js/game/main.js?v=4"></script>

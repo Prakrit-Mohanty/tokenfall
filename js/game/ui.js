@@ -1,11 +1,15 @@
-// TokenFall: HUD, chat log, dialogue, banners and keyboard input.
+// TokenFall: HUD, notices, dialogue, banners and keyboard input.
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
 // ================= UI =================
-const logEl = document.getElementById('log'), lines = [];
+const logEl = document.getElementById('log');
+const NOTICE_MS = 4500;
+let noticeT = 0;
+// system notices (travel, game hints) show briefly in the corner; people's lines stay in their speech bubbles
 function log(name, text, sys) {
-  lines.push({ name, text, sys }); if (lines.length > 5) lines.shift();
-  logEl.innerHTML = lines.map(l => l.sys ? `<p class="sys">${esc(l.text)}</p>` : `<p><b>${esc(l.name)}:</b> ${esc(l.text)}</p>`).join('');
+  if (!sys) return;
+  logEl.innerHTML = `<p class="sys">${esc(text)}</p>`; logEl.classList.add('on');
+  clearTimeout(noticeT); noticeT = setTimeout(() => logEl.classList.remove('on'), NOTICE_MS);
 }
 const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 const dlg = document.getElementById('dialog'), dlgName = dlg.querySelector('.name'), dlgText = dlg.querySelector('.text');
@@ -25,14 +29,7 @@ const fadeEl = document.getElementById('fade');
 
 // ================= input =================
 const keys = {};
-const chatIn = document.getElementById('chatIn');
 addEventListener('keydown', e => {
-  if (document.activeElement === chatIn) {
-    if (e.key === 'Enter') { const v = chatIn.value.trim(); if (v) say(hero, v); chatIn.value = ''; chatIn.blur(); }
-    if (e.key === 'Escape') chatIn.blur();
-    return;
-  }
-  if (e.key === 'Enter') { chatIn.focus(); e.preventDefault(); return; }
   if (dialog) { if (['Space', 'KeyE', 'Enter', 'Escape'].includes(e.code) && !e.repeat) advanceDialog(); e.preventDefault(); return; }
   if (TF.onKey && TF.onKey(e)) { e.preventDefault(); return; }
   keys[e.code] = true;

@@ -19,12 +19,11 @@
   #party .me { color: #ffe39a; }
 
   #chat { position: absolute; left: 18px; bottom: 18px; width: 340px; font-size: 16px; }
-  #log { padding: 8px 10px; min-height: 40px; }
+  #log { display: none; padding: 8px 10px; }
+  #log.on { display: block; }
   #log p { margin: 2px 0; text-shadow: 0 1px 0 #000; }
   #log b { color: #ffe39a; font-weight: 600; }
   #log .sys { color: #9fd8ff; }
-  #chatIn { pointer-events: auto; width: 100%; margin-top: 6px; padding: 7px 10px; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid rgba(217,180,106,.35); outline: none; }
-  #chatIn:focus { border-color: var(--gold); }
 
   #help { position: absolute; bottom: 18px; right: 18px; font-size: 16px; opacity: .8; text-align: right; text-shadow: 0 1px 2px #000; line-height: 1.6; }
   #help kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }

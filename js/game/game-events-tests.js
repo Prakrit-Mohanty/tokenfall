@@ -64,6 +64,20 @@ test('an answer without a boolean correct flag is dropped, never counted as wron
   assert.strictEqual(got.length, 0);
 });
 
+test('a Kitchen answer reports right or wrong as ok, and is forwarded as correct', () => {
+  const kitchen = fakePlay(), { got, fire } = collect();
+  forward({ kitchen }, fire);
+  kitchen.emit('answer', { ok: true, credit: true }); kitchen.emit('answer', { ok: false, kind: 'left' });
+  assert.deepStrictEqual(got, [{ game: 'kitchen', phase: 'answer', correct: true }, { game: 'kitchen', phase: 'answer', correct: false }]);
+});
+
+test('only the Kitchen reads ok: another game with an ok field still answers by correct', () => {
+  const mill = fakePlay(), kitchen = fakePlay(), { got, fire } = collect();
+  forward({ mill, kitchen }, fire);
+  mill.emit('answer', { correct: false, ok: true }); mill.emit('answer', { ok: true }); kitchen.emit('answer', { ok: 'yes' });
+  assert.deepStrictEqual(got, [{ game: 'mill', phase: 'answer', correct: false }]);
+});
+
 test('a game that is not loaded is skipped and the others still forward', () => {
   const jenga = fakePlay(), { got, fire } = collect();
   forward({ carrom: undefined, gallery: null, jenga, bridge: {} }, fire);

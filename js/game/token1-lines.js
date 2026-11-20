@@ -25,24 +25,31 @@
   };
 
   const INTRO = [
-    'Oh! A human! Hello! I am TOKEN-1, and I know EVERYTHING.',
-    'Pune is in Brazil. The pond is lava. Chai is a kind of car. I am 100% sure of all of it.',
-    'Hmm. My own diagnostics say my accuracy is 10%. That sounds… low?',
-    'Every right answer you give in a minigame fixes a bit of me. Will you help me?',
+    'Oh! A human! Hello! I am TOKEN-1, the AI helper for every Calfus office.',
+    'People ask me things all day, and I help: answers, notes, emails. Usually correctly.',
+    'Welcome! The canteen is on the roof, and today is Sunday. …Wait. Neither of those is true.',
+    'Running a self-check… Five parts missing. Accuracy: 10%. Oh no. That explains a lot.',
+    'Last night an update was told to "make TOKEN-1 faster", so it pulled out everything slowing me down.',
+    'Those were the parts that make me RIGHT. And each one got locked inside a game somewhere in our offices.',
+    'So we go office to office: Crescent Bay and ABZ in Pune, the airport, Pleasanton in the US. Win a game, get a part.',
+    'Colleagues on the way will stop us to show off their own glitchy AI. Beat a glitch and it goes in our Glitch Log.',
+    'Every right answer also lifts my accuracy. Will you take me office to office and help me?',
   ];
 
   const MISSION = {
-    title: 'Mission: Fix TOKEN-1',
+    title: 'Mission: Missing Pieces',
     accept: 'Accept mission',
     later: 'Not now',
     rules: (m) => [
-      ['🎮', 'Play the minigames', 'all around TokenFall'],
+      ['🎮', 'Go office to office', 'win a game, get a part back'],
       ['⚖', 'Right answer / wrong answer', `+${m.up}% / −${m.down}%`],
       ['★', 'TOKEN-1\'s accuracy', 'is your final score'],
     ],
   };
 
-  const api = { GAMES, INTRO, MISSION };
+  const missionParts = (parts) => Object.values(parts).map((p) => `<b>${p.name}</b> <span>· ${p.game}, ${p.where}</span>`);
+
+  const api = { GAMES, INTRO, MISSION, missionParts };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else window.Token1Lines = api;
 })();
