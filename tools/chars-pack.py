@@ -24,7 +24,7 @@ ATLAS_W = 4096
 # id: (name, source atlas, {anim: (first row in the source, frames, ms per frame, loops)}, jump lift px, jump air frames)
 CHARS = {
     'aditya': ('Aditya Verma', 'aditya-3d/sprites/aditya3d.webp',
-               {'idle': (0, 8, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 11, 56, True), 'jump': (12, 12, 80, False)}, 56, (4, 8)),
+               {'idle': (0, 1, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 11, 56, True), 'jump': (12, 12, 80, False)}, 56, (4, 8)),
     'sudhanshu': ('Sudhanshu', 'sudhanshu-3d-extras/sudhanshu3d.png',   # the lossless copy of sudhanshu-3d/sprites/sudhanshu3d.webp
                   {'idle': (0, 11, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 10, 60, True), 'jump': (12, 11, 80, False)}, 34, (3, 7)),
     # the tokenfall-characters roster as lobby NPCs and player picks: idle (one still frame, the game's own sway and breathing do the rest), walk, run and jump from the 8-direction rows (riya's run and jump are 4-direction rows, down up left right)
