@@ -112,7 +112,7 @@ Promise.all([fontsReady, sheetReady]).then(() => {
   return window.TokenFallStart || Promise.resolve();
 }).then(() => {
   const look = CharSelect.getChoice();
-  hero = makeChar(look, LOBBY.spawn[0], LOBBY.spawn[1], { me: true, look, style: CharSelect.getLook() });
+  hero = makeChar(look, LOBBY.spawn[0], LOBBY.spawn[1], { me: true, look });
   hero.dir = LOBBY.spawnDir; hero.zone = 'lobby';
   npcs = CharSelect.npcNames(NPC_NAMES, look).map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2, look: CHARS[n] ? n : undefined }); c.wait = Math.random() * 3000; return c; });
   for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }

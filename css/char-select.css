@@ -1,30 +1,103 @@
-/* The character pick after the launcher's START (launcher/char-select-screen.js). Same night-violet, pink and mint palette as the launcher. */
+/* The character pick after the launcher's START (launcher/char-select-screen.js): a cozy, bright look to match the lobby. One cream panel with a warm brown outline over a blurred
+   picture of the lobby, one accent (pink), one tape motif (on the two cards), one pill shape for every control. Chunky rounded type: Baloo 2 for names, labels and buttons, Poppins for reading. */
 #charpick {
-  position: fixed; inset: 0; z-index: 200; outline: none;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 16px;
-  background: radial-gradient(ellipse at 50% 40%, #2a1f4a 0%, #140F24 70%);
-  color: #FFE6EC; font-family: 'Baloo 2', 'Nunito', sans-serif;
-  opacity: 0; transition: opacity .6s ease;
+  --cream: #EDE3C8; --brown: #25402B; --green: #3F6B47; --brown-soft: rgba(37, 64, 43, .2);   /* --brown is the deep forest ink: outlines and text */
+  position: fixed; inset: 0; z-index: 200; outline: none; padding: 16px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-primary, 'Poppins', sans-serif); color: var(--brown);
+  opacity: 0; transition: opacity .5s ease;
 }
 #charpick.on { opacity: 1; }
-#charpick h1 { margin: 0; font-size: 40px; font-weight: 700; color: #FF6F91; text-shadow: 3px 3px 0 #5B3FA8; }
-#charpick .cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
-#charpick .card {
-  width: 200px; padding: 14px 14px 16px; text-align: center; cursor: pointer;
-  border: 3px solid #5B3FA8; border-radius: 14px; background: #1A1430;
-  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+/* the lobby, soft and out of focus, under a sky-to-cream wash */
+#charpick .cp-backdrop {
+  position: absolute; inset: -24px; z-index: -1; transform: scale(1.04); filter: blur(9px);
+  background: linear-gradient(180deg, rgba(96, 140, 108, .8) 0%, rgba(222, 212, 180, .7) 100%), #8fae93 url('../launcher/select-backdrop.jpg') center / cover;
 }
-#charpick .card img { display: block; width: 100%; height: 250px; object-fit: contain; }
-#charpick .name { font-size: 22px; font-weight: 700; margin-top: 6px; }
-#charpick .blurb { font-size: 16px; line-height: 1.35; color: #FFB3C6; margin-top: 4px; min-height: 2.7em; }
-#charpick .card.sel { border-color: #9FE7FF; box-shadow: 0 0 0 4px #9FE7FF44, 0 0 24px #9FE7FF55; transform: translateY(-6px); }
-#charpick .hint { font-size: 16px; color: #9FE7FF; }
-#charpick .look { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-#charpick .row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
-#charpick .label { width: 90px; font-size: 16px; font-weight: 700; color: #FFB3C6; text-align: right; margin-right: 6px; }
-#charpick .pill {
-  padding: 6px 16px; font-size: 16px; font-weight: 700; cursor: pointer; border-radius: 999px;
-  border: 2px solid #5B3FA8; background: #1A1430; color: #FFE6EC;
+#charpick .cp-frame {
+  position: relative; width: min(1180px, 100%); height: min(780px, calc(100vh - 32px)); display: flex; flex-direction: column; padding: 20px 34px 18px;
+  border-radius: 30px; border: 3px solid var(--brown); background: rgba(228, 214, 186, .95);
+  box-shadow: 0 8px 0 var(--brown-soft), 0 24px 48px rgba(25, 45, 30, .28);
 }
-#charpick .pill.on { background: #FF6F91; border-color: #FF6F91; color: #140F24; }
-#charpick .pill.focus { border-color: #9FE7FF; box-shadow: 0 0 0 3px #9FE7FF55; }
+#charpick .cp-top { font-family: var(--font-secondary, 'Baloo 2', sans-serif); font-size: 28px; line-height: 1.2; color: var(--brown); }
+#charpick .cp-top::after { content: ''; display: block; width: 84px; height: 5px; margin-top: 4px; border-radius: 3px; background: var(--green); }
+
+#charpick .cp-main { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; }
+
+/* the stage: the chosen character on a small round grass platform, with a soft shadow under their feet */
+#charpick .cp-stage { position: relative; height: 100%; min-height: 0; }
+#charpick .cp-platform {
+  position: absolute; left: 50%; bottom: 7%; width: min(300px, 70%); aspect-ratio: 3.4 / 1; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 38%, #b5e39b 0%, #8ccd72 70%); border: 3px solid var(--brown);
+  box-shadow: 0 9px 0 #6fa557, 0 9px 0 3px var(--brown), 0 20px 20px rgba(25, 45, 30, .22);
+}
+#charpick .cp-platform::after { content: ''; position: absolute; left: 22%; right: 22%; top: 34%; height: 34%; border-radius: 50%; background: radial-gradient(ellipse, rgba(50, 90, 40, .42), rgba(50, 90, 40, 0) 70%); }
+#charpick .cp-art { position: absolute; inset: 0 0 calc(7% + 22px); display: flex; align-items: flex-end; justify-content: center; opacity: 0; transform: translateX(-18px); transition: opacity .28s ease, transform .28s ease; pointer-events: none; }
+#charpick .cp-art.on { opacity: 1; transform: none; }
+#charpick .cp-art .cp-fallback { height: 100%; }
+#charpick .cp-art canvas, #charpick .cp-art .cp-fallback { width: auto; max-height: 100%; max-width: 100%; object-fit: contain; transform: scale(var(--fit, 1)); transform-origin: 50% 100%; filter: drop-shadow(0 3px 3px rgba(25, 45, 30, .3)); }
+
+#charpick .cp-info { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; min-height: 0; gap: 10px; }
+#charpick .cp-name {
+  margin: 0; font-family: var(--font-secondary, 'Baloo 2', sans-serif); font-weight: 600; font-size: clamp(44px, 6.4vw, 88px); line-height: 1; letter-spacing: .01em;
+  color: var(--brown); text-shadow: 0 3px 0 #9DBB9C, 0 5px 0 rgba(37, 64, 43, .18);
+}
+#charpick .cp-chip { display: inline-block; padding: 1px 16px; border-radius: 999px; border: 2px solid var(--brown); background: var(--green); color: var(--cream); font-family: var(--font-secondary, 'Baloo 2', sans-serif); font-size: 18px; line-height: 1.5; }
+#charpick .cp-blurb { margin: 0; font-size: 18px; line-height: 1.4; max-width: 30em; }
+
+/* the two cards (tip, preview): cream with a brown outline and the one strip of tape */
+#charpick .cp-card { position: relative; width: 100%; max-width: 32em; border-radius: 18px; border: 3px solid var(--brown); background: var(--cream); box-shadow: 0 4px 0 var(--brown-soft); }
+#charpick .cp-card::before { content: ''; position: absolute; top: -10px; right: 28px; width: 58px; height: 18px; border-radius: 2px; transform: rotate(4deg); pointer-events: none; z-index: 2;
+  background: repeating-linear-gradient(45deg, rgba(63, 107, 71, .92) 0 6px, rgba(237, 227, 200, .92) 6px 12px); box-shadow: 0 1px 2px rgba(25, 45, 30, .3); }
+#charpick .cp-label { display: inline-block; padding: 0 12px; border-radius: 999px; border: 2px solid var(--brown); background: var(--green); color: var(--cream); font-family: var(--font-secondary, 'Baloo 2', sans-serif); font-size: 16px; line-height: 1.5; }
+#charpick .cp-tip { padding: 16px 20px 14px; }
+#charpick .cp-tip .cp-label { margin-bottom: 6px; }
+#charpick .cp-tip p { margin: 0; font-size: 18px; line-height: 1.5; }
+
+/* the preview: a clip of the chosen character walking round the real lobby (recorded by tools/record-previews.mjs); it takes the height the column has left */
+#charpick .cp-preview { flex: 1 1 120px; min-height: 96px; max-height: 190px; background: #CDBF9F; }   /* not overflow: hidden, so the tape shows; the clips round their own corners */
+#charpick .cp-preview.off { display: none; }
+#charpick .cp-clip { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 15px; object-fit: cover; opacity: 0; transition: opacity .25s ease; }
+#charpick .cp-clip.on { opacity: 1; }
+#charpick .cp-preview .cp-label { position: absolute; left: 10px; top: 9px; z-index: 1; }
+
+/* the strip: keys, the four characters, Start. Every arrow and button is the same pill. */
+#charpick .cp-strip { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding-top: 10px; }
+#charpick .cp-keys { font-size: 16px; display: flex; align-items: center; gap: 4px; }
+#charpick kbd { display: inline-block; min-width: 26px; padding: 0 7px; border-radius: 7px; border: 2px solid var(--brown); background: #F3EAD6; color: var(--brown); font-family: var(--font-secondary, 'Baloo 2', sans-serif); font-size: 16px; line-height: 1.35; text-align: center; box-shadow: 0 2px 0 var(--brown-soft); }
+#charpick .cp-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; min-width: 48px; padding: 0 18px; cursor: pointer;
+  border-radius: 999px; border: 3px solid var(--brown); background: var(--cream); color: var(--brown);
+  font-family: var(--font-secondary, 'Baloo 2', sans-serif); font-size: 20px; line-height: 1; box-shadow: 0 4px 0 var(--brown-soft); user-select: none;
+  transition: transform .12s ease, background .12s ease;
+}
+#charpick .cp-btn:hover { background: #BFD3B8; transform: translateY(-1px); }
+#charpick .cp-btn:active { transform: translateY(2px); box-shadow: none; }
+#charpick .cp-arrow { padding: 0; font-size: 30px; padding-bottom: 4px; }
+#charpick .cp-go { justify-self: end; background: var(--green); color: var(--cream); }
+#charpick .cp-go:hover { background: #50804F; }
+#charpick .cp-startwrap { justify-self: end; }
+#charpick .cp-pick { display: flex; align-items: flex-end; justify-content: center; gap: 20px; }
+#charpick .cp-pick .cp-arrow { align-self: center; }
+
+/* the thumbnails: the face box grows when chosen, the name under it never moves */
+#charpick .cp-thumb { width: 112px; cursor: pointer; text-align: center; }
+#charpick .cp-face { width: 100%; height: 104px; overflow: hidden; border-radius: 16px; border: 3px solid var(--brown); background: #D9C9A8; box-shadow: 0 4px 0 var(--brown-soft); transform-origin: 50% 100%; transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
+#charpick .cp-face canvas { display: block; width: 100%; height: 100%; }
+#charpick .cp-face img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 6%; }
+#charpick .cp-thumb:hover .cp-face { border-color: var(--green); }
+#charpick .cp-thumb.sel .cp-face { transform: scale(1.14); border-color: var(--green); box-shadow: 0 0 0 4px var(--green), 0 6px 0 var(--brown-soft); }
+#charpick .cp-tname { display: block; margin-top: 8px; font-family: var(--font-secondary, 'Baloo 2', sans-serif); font-size: 18px; line-height: 1.3; white-space: nowrap; }
+#charpick .cp-thumb.sel .cp-tname { text-decoration: underline 3px var(--green); text-underline-offset: 4px; }
+
+@media (max-width: 860px) {
+  #charpick .cp-frame { padding: 14px 16px 12px; }
+  #charpick .cp-main { grid-template-columns: 1fr; grid-auto-rows: min-content; gap: 8px; align-content: start; overflow-y: auto; }   /* too short for both: the middle scrolls, the strip and Start stay put */
+  #charpick .cp-stage { height: 30vh; }
+  #charpick .cp-name { font-size: clamp(40px, 11vw, 64px); }
+  #charpick .cp-thumb { width: 78px; }
+  #charpick .cp-face { height: 70px; }
+  #charpick .cp-preview { flex: none; height: 130px; }
+}
+@media (max-height: 760px) { #charpick .cp-face { height: 80px; } #charpick .cp-thumb { width: 96px; } #charpick .cp-tip p, #charpick .cp-blurb { font-size: 16px; } #charpick .cp-name { font-size: clamp(44px, 5.4vw, 72px); } }
+@media (max-height: 690px) { #charpick .cp-preview { display: none; } }   /* no room for it under the tip */
+@media (prefers-reduced-motion: reduce) { #charpick, #charpick * { transition: none !important; } }

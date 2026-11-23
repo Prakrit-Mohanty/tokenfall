@@ -3,11 +3,21 @@
 // Browser: window.CharSelect. Node: require('./char-select.js').
 (function () {
   const KEY = 'tokenfall.char';
+  // blurb is what each one already says in the lobby (NPC_TALK in js/game/characters.js), shortened for the picker; specialty is the AI-literacy topic they stand for
   const ROSTER = [
-    { id: 'saanvi', name: 'Saanvi', blurb: 'Checks every answer twice, models included.' },
-    { id: 'riya', name: 'Riya', blurb: 'Trying every minigame today.' },
-    { id: 'mehta', name: 'Mr. Mehta', blurb: 'Verify, then trust. In that order.' },
-    { id: 'aarav', name: 'Aarav', blurb: 'Reads the question before the next step.' },
+    { id: 'saanvi', name: 'Saanvi', specialty: 'Validates output', blurb: 'Checks every answer twice, models included.' },
+    { id: 'riya', name: 'Riya', specialty: 'Saves tokens', blurb: 'Trying every minigame today.' },
+    { id: 'mehta', name: 'Mr. Mehta', specialty: 'Human in the loop', blurb: 'Verify, then trust. In that order.' },
+    { id: 'aarav', name: 'Aarav', specialty: 'Reads the question first', blurb: 'Reads the question before the next step.' },
+  ];
+  // the picker's tips: one or two lines each, handed round the characters (tipFor)
+  const TIPS = [
+    'Ask for a specific output format: a list, a table, three lines.',
+    'Set a token budget: say how long the answer may be.',
+    'Verify facts before you trust them, however sure the model sounds.',
+    'Pick the model that fits the task: a small one for easy, a big one for hard.',
+    'State guardrails in the prompt: what to avoid, and what to stick to.',
+    'Check citations: a model can invent sources that look real.',
   ];
   const DEFAULT = 'saanvi';
 
@@ -24,47 +34,10 @@
   }
   // the lobby's NPCs without the one the player is walking as
   const npcNames = (names, choice) => names.filter((n) => n !== choice);
+  // tip number n, wrapping round the pool (n may be any integer)
+  const tipFor = (n) => TIPS[((n % TIPS.length) + TIPS.length) % TIPS.length];
 
-  // ---- the look: hair colour and accessories, the hero's only. Saved as one value next to the pick.
-  // the hair of each roster sprite. ref: the median hue, saturation and value of its hair pixels (0-1), from the idle frame facing down.
-  // from: the height above the feet (in standing heights) the hair key starts at: where the head, or for long hair the hair's end, begins. vMax: the brightest hair pixel the key takes
-  // hMax: the highest hue it takes (hair is redder than skin: Riya's lighter bun highlights are as bright as her skin, so her key tells them apart by hue).
-  const HAIR_REF = {
-    saanvi: { ref: [.041, .5, .455], from: .5, vMax: .6, hMax: .14 },
-    riya: { ref: [.03, .587, .416], from: .62, vMax: .82, hMax: .05 },
-    mehta: { ref: [.041, .398, .349], from: .62, vMax: .6, hMax: .14 },
-    aarav: { ref: [.032, .406, .384], from: .62, vMax: .6, hMax: .14 },
-  };
-  const HAIR = [
-    { id: 'original', name: 'Original' },
-    { id: 'black', name: 'Black', hsv: [.66, .12, .16] },
-    { id: 'auburn', name: 'Auburn', hsv: [.98, .75, .5] },
-    { id: 'blonde', name: 'Blonde', hsv: [.11, .55, .75] },
-    { id: 'silver', name: 'Silver', hsv: [.6, .08, .78] },
-  ];
-  const ACCESSORIES = [{ id: 'clip', name: 'Hair clip' }, { id: 'scarf', name: 'Scarf' }, { id: 'charm', name: 'Bag charm' }];
-  const LOOK_KEY = 'tokenfall.look';
-  const cleanLook = (v = {}) => ({
-    hair: HAIR.some((h) => h.id === v.hair) ? v.hair : 'original',
-    acc: Object.fromEntries(ACCESSORIES.map((a) => [a.id, !!(v.acc && v.acc[a.id] === true)])),
-  });
-  // a stale or hand-edited value falls back to the default look, so it never breaks the hero
-  function getLook(storage = store()) {
-    try { const raw = storage && storage.getItem(LOOK_KEY); return cleanLook(raw ? JSON.parse(raw) : {}); } catch (e) { return cleanLook(); }
-  }
-  function setLook(look, storage = store()) {
-    try { if (storage) storage.setItem(LOOK_KEY, JSON.stringify(cleanLook(look))); } catch (e) {}
-  }
-  // what the shader turns this character's hair by: a hue turn, the saturation and value ratios from its own hair to the chosen colour, and the character's key (from, vMax, hMax).
-  // null for the original colour, or a character with no measured hair.
-  function hairShift(id, hair) {
-    const pick = HAIR.find((h) => h.id === hair), r = HAIR_REF[id];
-    if (!pick || !pick.hsv || !r) return null;
-    const [h, s, v] = pick.hsv;
-    return { dh: ((h - r.ref[0]) % 1 + 1) % 1, ks: s / r.ref[1], kv: v / r.ref[2], from: r.from, vMax: r.vMax, hMax: r.hMax };
-  }
-
-  const api = { KEY, ROSTER, DEFAULT, getChoice, setChoice, npcNames, LOOK_KEY, HAIR, ACCESSORIES, getLook, setLook, hairShift };
+  const api = { KEY, ROSTER, TIPS, DEFAULT, getChoice, setChoice, npcNames, tipFor };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else window.CharSelect = api;
 })();
