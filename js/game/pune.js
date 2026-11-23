@@ -260,7 +260,7 @@ function puneParking(cx, cz, asphalt) {
   for (const z of [-8, -5.2, -2.4, .4, 3.2]) box(4.8, .015, .1, MAT.white, cx - 18.3, .02, cz + z, { cast: false });
   const BA = Math.PI * .75;
   for (const x of [-17.2, -15.2, -13.2, -11.2, -9.2]) box(.08, .015, 2.6, MAT.white, cx + x, .02, cz + 3.2, { ry: BA, cast: false });
-  sportsCar('bmw', cx - 18.3, cz - 6.6, -Math.PI / 2); sportsCar('jesko', cx - 18.3, cz - 3.8, -Math.PI / 2); sportsCar('m4', cx - 18.3, cz - 1, -Math.PI / 2);
+  sportsCar('bmw', cx - 18.3, cz - 6.6, Math.PI / 2); sportsCar('jesko', cx - 18.3, cz - 3.8, Math.PI / 2); sportsCar('m4', cx - 18.3, cz - 1, Math.PI / 2);   // nose out, towards the lane
   INTER.push({ x: cx - 15.6, z: cz - 3.8, r: 1.4, label: 'Koenigsegg Jesko', verb: 'Look', act: () => talk('Koenigsegg Jesko', ['A Koenigsegg Jesko in orange, all carbon wing and gold wheels.', 'Somebody at Crescent Bay is doing very well.']) });
   INTER.push({ x: cx - 15.6, z: cz - 6.6, r: 1.4, label: 'BMW M3 GTR', verb: 'Look', act: () => talk('BMW M3 GTR', ['The BMW M3 GTR in its racing livery.', 'It looks like it would rather be on a highway than in a car park.']) });
   const BIKES = [['r15', -16.2, 'Yamaha R15M', 'A Yamaha R15M in metallic grey, with blue wheels and gold forks.'],
@@ -289,13 +289,16 @@ function puneStreet(cx, cz) {
   const M = cz + PUNE_MZ, J1 = cx + PUNE_RX, J2 = cx + PUNE_RX2, [x0, x1] = PUNE_LANE_X, L = PUNE_LANES;
   trafficLights(J1, M, 4.6, 6.7); trafficLights(J2, M, 4.6, 6.7);
   const eastStops = [J1 - 6.8, J2 - 6.8], westStops = [J1 + 6.8, J2 + 6.8];
-  lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, 'creta'], [cx + 40, 'auto', PAL.gold], [cx + 100, 'bmw'], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, 'eeco']]);
-  lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, 'scorpio'], [cx + 70, 'creta'], [cx + 125, 'auto', PAL.sage], [cx + 30, 'scooter', PAL.coral], [cx + 100, 'creta']]);
-  lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, 'eeco'], [cx + 20, 'auto', PAL.gold], [cx + 80, 'creta'], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, 'creta']]);
-  lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', PAL.sage], [cx - 20, 'jesko'], [cx + 50, 'creta'], [cx + 130, 'omni'], [cx + 15, 'scooter', 0x3f8a4a]]);
-  for (const [J, cars] of [[J1, [[cz - 40, 'omni'], [cz + 40, 'auto', PAL.gold]]], [J2, [[cz - 20, 'auto', PAL.gold], [cz + 55, 'creta']]]]) {
+  // the cars in traffic take turns from one fixed rotation, so every model shows up as often as the others (two each), spread out instead of bunched
+  const ROTA = ['creta', 'm4', 'scorpio', 'eeco', 'omni', 'bmw', 'jesko', 'cybertruck'];
+  let rota = 0; const nextCar = () => ROTA[rota++ % ROTA.length];
+  lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, nextCar()], [cx + 40, 'auto', PAL.gold], [cx + 100, nextCar()], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, nextCar()]]);
+  lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, nextCar()], [cx + 70, nextCar()], [cx + 125, 'auto', PAL.sage], [cx + 30, 'scooter', PAL.coral], [cx + 100, nextCar()]]);
+  lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, nextCar()], [cx + 20, 'auto', PAL.gold], [cx + 80, nextCar()], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, nextCar()]]);
+  lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', PAL.sage], [cx - 20, nextCar()], [cx + 50, nextCar()], [cx + 130, nextCar()], [cx + 15, 'scooter', 0x3f8a4a]]);
+  for (const [J, cars] of [[J1, [[cz - 40, nextCar()], [cz + 40, 'auto', PAL.gold]]], [J2, [[cz - 20, 'auto', PAL.gold], [cz + 55, nextCar()]]]]) {
     lane('z', J - 1.5, 1, cz - 70, cz + 80, M - 6.8, 'ns', cars);
-    lane('z', J + 1.5, -1, cz + 80, cz - 70, M + 6.8, 'ns', cars.map(([s, k, c]) => [s + 30, k, c ^ 0x202020]));
+    lane('z', J + 1.5, -1, cz + 80, cz - 70, M + 6.8, 'ns', cars.map(([s, k, c]) => [s + 30, ROTA.includes(k) ? nextCar() : k, c ^ 0x202020]));   // the other way: its own cars from the rotation
   }
   life.push((t, dt) => stepTraffic(t, dt));
 }
@@ -461,7 +464,9 @@ function buildPune(a) {
   withSideRandom(() => {
     const M = puneMaterials(), asphalt = std(TX.concrete, 1.5, { roughness: .8 }); asphalt.color.setRGB(.36, .37, .41);
     puneGround(cx, cz, M);
-    plane(36, 17, MAT.paver, cx - 3, .016, cz - .5, 3);
+    // the Crescent Bay forecourt (and only this): the sandy stone tiles, ~25 cm each (the texture holds 8 x 3 of them, laid every 2 m)
+    { const t = new THREE.TextureLoader().load(window.ROAD_TEX.stone); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 8 / 3); t.anisotropy = 8;
+      plane(36, 17, std(t, 0, { roughness: .9 }), cx - 3, .016, cz - .5, 2); }
     WALK.push([cx - 24, cz - 14, cx + 130, cz + PUNE_MZ - 6], [cx - 55, cz + PUNE_MZ - 6, cx + 145, cz + PUNE_MZ + 9]);
     WALK.push([cx + PUNE_GALLI[0], cz + PUNE_GALLI[1] - 1, cx + PUNE_GALLI[2], cz + PUNE_GALLI[3] + 1], [cx + PUNE_SQUARE[0], cz + PUNE_SQUARE[1], cx + PUNE_SQUARE[2], cz + PUNE_SQUARE[3]]);
     WALK.push([cx + PUNE_CAMPUS[0] - 2, cz + PUNE_MZ + 9, cx + PUNE_CAMPUS[2] + 2, cz + PUNE_CAMPUS[3] + .5]);
