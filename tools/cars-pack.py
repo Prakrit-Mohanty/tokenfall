@@ -264,6 +264,8 @@ def m4():
     for m in [m for m in o.data.materials if m]:
         if m.name in ('glass', 'glasswindshiled'):
             material(m, (.06, .08, .1), rough=.05, alpha=.6)
+        elif m.name in ('sidetyre', 'main'):   # the tyres: near-black in the source, lost against the dark rims; a rubber grey that reads
+            material(m, (.16, .16, .17), rough=.85)
         elif 'PaintTNR' in m.name:   # its paint is a near-black teal that reads as a hole in the game's soft light: the same teal, lifted
             material(m, (.07, .4, .43), rough=.3)
     decimate(o, 40000)   # at 16000 the body tore open in dark seams

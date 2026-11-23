@@ -12,6 +12,7 @@ const PUNE_CAMPUS = [22, 28, 53, 46];
 const PUNE_GALLI = [104, 25, 112, 50];
 const PUNE_SQUARE = [96, 50, 120, 62];
 const PUNE_ROAD_X = [-160, 260];
+const PUNE_PARK_AISLE = -13.3;   // the Crescent Bay car park's aisle and driveway, x from cx: the north kerb is cut for it
 const PUNE_LANE_X = [-70, 160];
 const PUNE_LANES = { eastOuter: 12.6, eastInner: 14.6, westInner: 17.4, westOuter: 19.4 };
 const PUNE_TAXI_STANDS = { cb: [5, 8.6], abz: [80, 8.6] };
@@ -25,7 +26,9 @@ const pOnce = (key, make) => pMats[key] || (pMats[key] = make());
 
 // ---------------------------------------------------------------- materials drawn for Pune (pixel textures, like the rest of the game)
 function puneMaterials() {
-  const brick = pOnce('brick', () => MAT.paver);   // footpaths are the one shared path material (the pastel tile)
+  // Pune's footpaths (only Pune's: the lobby keeps its pastel tile): basket-weave pavers (pavement_1.glb via tools/roads-pack.py), a texture every ~2.4 m
+  // (callers lay it every 3 m, hence the repeat), so each brick is a real ~20 x 10 cm
+  const brick = pOnce('brick', () => { const t = new THREE.TextureLoader().load(window.ROAD_TEX.pavers); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1.25, 1.25); t.anisotropy = 8; return std(t, 0, { roughness: .9 }); });
   const granite = pOnce('granite', () => std(canvasTex(32, 16, (g) => {
     g.fillStyle = PAL.paint; g.fillRect(0, 0, 32, 16);
     for (let y = 0; y < 16; y += 8) for (let x = (y / 8) * 4; x < 36; x += 8) { g.fillStyle = [PAL.paint, PAL.paintLight, PAL.plum][rnd() * 3 | 0]; g.fillRect(x - 4, y, 7, 7); }
@@ -57,7 +60,10 @@ function puneGround(cx, cz, M) {
   const runs = [[x0, PUNE_RX - 3], [PUNE_RX + 3, PUNE_RX2 - 3], [PUNE_RX2 + 3, x1]];
   for (const [a, b] of runs) {
     for (const z of [PUNE_MZ - 7.5, PUNE_MZ + 7.5]) plane(b - a, 3, M.brick, cx + (a + b) / 2, .024, cz + z, 3);
-    for (const z of [PUNE_MZ - 6.1, PUNE_MZ + 6.1]) box(b - a, .16, .22, MAT.concrete, cx + (a + b) / 2, 0, cz + z, { cast: false });
+    for (const z of [PUNE_MZ - 6.1, PUNE_MZ + 6.1]) {
+      const cut = z < PUNE_MZ && a < PUNE_PARK_AISLE && b > PUNE_PARK_AISLE ? [PUNE_PARK_AISLE - 2.6, PUNE_PARK_AISLE + 2.6] : null;   // the dropped kerb at the car park's driveway
+      for (const [p, q] of cut ? [[a, cut[0]], [cut[1], b]] : [[a, b]]) box(q - p, .16, .22, MAT.concrete, cx + (p + q) / 2, 0, cz + z, { cast: false });
+    }
   }
   for (const sx of [PUNE_RX, PUNE_RX2]) {
     { const g = new THREE.PlaneGeometry(6, 230); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * 230 / 9);   // the strip once across, a tile every 9 m along
@@ -254,23 +260,51 @@ function puneABZ(cx, cz) {
   portal(cx + ax, tf + 1.6, 0x9fd8ff, 'pune', 'abz', 'ABZ Office');
 }
 
+// Crescent Bay car park, laid out like a real one: a 5 m two-way aisle down the middle that runs on south as a driveway over the footpath, through a dropped
+// kerb (PUNE_PARK_GAP, cut in puneGround) onto the main road; five 2.8 m car bays along the west side, cars nose-in to the aisle; a two-wheeler row on the east
 function puneParking(cx, cz, asphalt) {
-  const lot = cx - 14.6;
+  const lot = cx - 14.6, ax = cx + PUNE_PARK_AISLE, W = MAT.white;
   plane(12.8, 15, asphalt, lot, .02, cz - 1.5, 1.5);
-  for (const z of [-8, -5.2, -2.4, .4, 3.2]) box(4.8, .015, .1, MAT.white, cx - 18.3, .02, cz + z, { cast: false });
-  const BA = Math.PI * .75;
-  for (const x of [-17.2, -15.2, -13.2, -11.2, -9.2]) box(.08, .015, 2.6, MAT.white, cx + x, .02, cz + 3.2, { ry: BA, cast: false });
-  sportsCar('bmw', cx - 18.3, cz - 6.6, Math.PI / 2); sportsCar('jesko', cx - 18.3, cz - 3.8, Math.PI / 2); sportsCar('m4', cx - 18.3, cz - 1, Math.PI / 2);   // nose out, towards the lane
-  INTER.push({ x: cx - 15.6, z: cz - 3.8, r: 1.4, label: 'Koenigsegg Jesko', verb: 'Look', act: () => talk('Koenigsegg Jesko', ['A Koenigsegg Jesko in orange, all carbon wing and gold wheels.', 'Somebody at Crescent Bay is doing very well.']) });
-  INTER.push({ x: cx - 15.6, z: cz - 6.6, r: 1.4, label: 'BMW M3 GTR', verb: 'Look', act: () => talk('BMW M3 GTR', ['The BMW M3 GTR in its racing livery.', 'It looks like it would rather be on a highway than in a car park.']) });
-  const BIKES = [['r15', -16.2, 'Yamaha R15M', 'A Yamaha R15M in metallic grey, with blue wheels and gold forks.'],
-    ['vstrom', -14.2, 'Suzuki V-Strom', 'A yellow Suzuki V-Strom SX, ready for a long ride.'],
-    ['avenger', -12.2, 'Bajaj Avenger', 'A black Bajaj Avenger cruiser, all chrome and low seat.'],
-    ['thruxton', -10.2, 'Royal Enfield Thruxton', 'A red and black café racer with wire wheels and clip-on bars.']];
-  for (const [kind, x, name, line] of BIKES) { bike(cx + x, cz + 3.2, BA, kind); INTER.push({ x: cx + x, z: cz + 4.7, r: 1, label: name, verb: 'Look', act: () => talk(name, [line]) }); }
-  ledSign(['Crescent Bay Parking'], '#9fd0ff', lot, 2.4, cz - 8.9, 4.6, .5, 0, [480, 52], PLAIN);
-  for (const s2 of [-2, 2]) box(.1, 2.2, .1, MAT.metal, lot + s2, 0, cz - 8.96);
-  colBox(lot - 2.2, cz - 9.1, lot + 2.2, cz - 8.8);
+  plane(5, 4.2, asphalt, ax, .03, cz + 8, 1.5);   // the driveway over the footpath to the road
+  // car bays: lines across the west strip (x 279.2-284.2), a stop line at the head of each
+  const BAYS = [-7.2, -4.4, -1.6, 1.2, 4];
+  for (let k = 0; k <= BAYS.length; k++) box(5, .015, .1, W, cx - 18.3, .022, cz - 8.6 + k * 2.8, { cast: false });
+  box(.1, .015, 14, W, ax - 2.5, .022, cz - 1.6, { cast: false });
+  // the aisle: a dashed centre line, then IN / OUT arrows and a give-way line at the road
+  for (let z = -8; z < 9; z += 2) box(.1, .015, 1, W, ax, .022, cz + z, { cast: false });
+  // a painted arrow along z, pointing dir (+1 south to the road, -1 north into the lot): a flat decal, drawn once
+  const ARROW = pOnce('parkArrow', () => new THREE.MeshBasicMaterial({ map: canvasTex(64, 128, (g) => { g.fillStyle = '#eeeae2'; g.beginPath(); g.moveTo(32, 4); g.lineTo(60, 44); g.lineTo(42, 44); g.lineTo(42, 124); g.lineTo(22, 124); g.lineTo(22, 44); g.lineTo(4, 44); g.closePath(); g.fill(); }, { smooth: true }), transparent: true, depthWrite: false }));
+  const arrow = (x, z, dir) => { const m = plane(.7, 1.6, ARROW, x, .024, z); m.rotation.z = dir > 0 ? Math.PI : 0; };
+  arrow(ax - 1.25, cz + 4.5, -1); arrow(ax + 1.25, cz + 4.5, 1);   // in on the left lane, out on the right (Indian roads drive on the left)
+  for (let x = -2.3; x <= 2.3; x += .7) box(.4, .015, .14, W, ax + x, .032, cz + 9.6, { cast: false });
+  // the parked cars, nose-in to the aisle
+  const CARS = [['bmw', 'BMW M3 GTR', ['The BMW M3 GTR in its racing livery.', 'It looks like it would rather be on a highway than in a car park.']], ['jesko', 'Koenigsegg Jesko', ['A Koenigsegg Jesko in orange, all carbon wing and gold wheels.', 'Somebody at Crescent Bay is doing very well.']],
+    ['m4', 'BMW M4', ['A widebody BMW M4 in deep teal.']], ['creta', 'Hyundai Creta', ['A white Creta. Parked politely, for once.']], ['scorpio', 'Mahindra Scorpio-N', ['A red Scorpio-N, big enough to park two Omnis in.']]];
+  CARS.forEach(([kind, name, lines], i) => { sportsCar(kind, cx - 18.3, cz + BAYS[i], Math.PI / 2); INTER.push({ x: ax - 1.4, z: cz + BAYS[i], r: 1.3, label: name, verb: 'Look', act: () => talk(name, lines) }); });
+  // two-wheelers along the east strip (x 289.2-291.8), angled to the aisle
+  const BIKES = [['r15', 'Yamaha R15M', 'A Yamaha R15M in metallic grey, with blue wheels and gold forks.'], ['vstrom', 'Suzuki V-Strom', 'A yellow Suzuki V-Strom SX, ready for a long ride.'],
+    ['avenger', 'Bajaj Avenger', 'A Bajaj Avenger 180 cruiser, all chrome and low seat.'], ['thruxton', 'Royal Enfield Thruxton', 'A red and black café racer with wire wheels and clip-on bars.'],
+    ['gsxr', 'Suzuki GSX-R 750', 'A 2010 Suzuki GSX-R 750. Somebody here likes their mornings fast.']];
+  box(.1, .015, 11, W, ax + 2.5, .022, cz - 2.5, { cast: false });
+  for (let k = 0; k <= BIKES.length; k++) box(2.4, .015, .08, W, cx - 9.6, .022, cz - 8 + k * 2, { cast: false });   // inside the lot's east edge
+  BIKES.forEach(([kind, name, line], i) => { const z = cz - 7 + i * 2; if (kind === 'avenger' || kind === 'gsxr') bikeModel(kind, cx - 8.9, z, -Math.PI / 2 - .35, { lean: .1 }); else bike(cx - 8.9, z, -Math.PI / 2 - .35, kind);   // the modelled ones where we have them
+    INTER.push({ x: ax + 1.6, z, r: 1, label: name, verb: 'Look', act: () => talk(name, [line]) }); });
+  // floodlights: two tall poles over the bays, lit day and night (the building's shadow falls across the lot all afternoon), outside the daylight's lamp dimming
+  for (const [x, z] of [[cx - 15.8, cz - 5.5], [cx - 15.8, cz + 1.8]]) {
+    streetProp('lamp', x, 0, z, -Math.PI / 2).scale.setScalar(1.25);
+    const l = new THREE.PointLight(0xfff1dc, 2.4, 14, 1.4); l.position.set(x - 1.1, 4.4, z); scene.add(l);
+    const fill = new THREE.SpotLight(0xfff6ea, 1.6, 18, .9, .6, 1); fill.position.set(x + 2, 7, z); fill.target.position.set(x - 2.5, 0, z); scene.add(fill, fill.target);
+  }
+  // the name board is a gantry over the entrance, where the driveway meets the footpath, high enough to drive under; at the back of the lot a small P sign
+  ledSign(['Crescent Bay Parking'], '#9fd0ff', ax, 3.4, cz + 8.6, 5.4, .55, 0, [480, 52], PLAIN);
+  for (const s2 of [-2.9, 2.9]) { box(.14, 3.7, .14, MAT.metal, ax + s2, 0, cz + 8.6); colCirc(ax + s2, cz + 8.6, .15); }
+  ledSign(['P'], '#9fd0ff', lot, 1.9, cz - 8.85, .6, .6, 0, [64, 64], PLAIN); box(.08, 1.6, .08, MAT.metal, lot, 0, cz - 8.9);
+  // a low kerb round the lot (cut only for the driveway) and bollards along the footpath side: where the parking ends and the walkway begins
+  const KERB = pOnce('parkKerb', () => new THREE.MeshStandardMaterial({ color: 0xd9d2c4, roughness: .8 })), x0 = lot - 6.4, x1 = lot + 6.4, z0 = cz - 9, z1 = cz + 6;
+  box(.18, .14, z1 - z0, KERB, x0, 0, (z0 + z1) / 2); box(.18, .14, z1 - z0, KERB, x1, 0, (z0 + z1) / 2); box(x1 - x0, .14, .18, KERB, lot, 0, z0);
+  for (const [a, b] of [[x0, ax - 2.5], [ax + 2.5, x1]]) { box(b - a, .14, .18, KERB, (a + b) / 2, 0, z1); for (let x = a + .6; x < b - .3; x += 1.6) post(.09, .7, MAT.metal, x, 0, z1 + .3, .08); }
+  for (const z of [cz + 6, cz + 10]) for (const s2 of [-1, 1]) box(.18, .14, .01, KERB, ax + s2 * 2.5, 0, z);
+  for (const s2 of [-1, 1]) box(.18, .14, 4, KERB, ax + s2 * 2.5, 0, cz + 8);   // the driveway's own kerbs out to the road
 }
 
 // ---------------------------------------------------------------- street furniture, parked autos, traffic
@@ -295,7 +329,7 @@ function puneStreet(cx, cz) {
   lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, nextCar()], [cx + 40, 'auto', PAL.gold], [cx + 100, nextCar()], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, nextCar()]]);
   lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, nextCar()], [cx + 70, nextCar()], [cx + 125, 'auto', PAL.sage], [cx + 30, 'scooter', PAL.coral], [cx + 100, nextCar()]]);
   lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, nextCar()], [cx + 20, 'auto', PAL.gold], [cx + 80, nextCar()], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, nextCar()]]);
-  lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', PAL.sage], [cx - 20, nextCar()], [cx + 50, nextCar()], [cx + 130, nextCar()], [cx + 15, 'scooter', 0x3f8a4a]]);
+  lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', PAL.sage], [cx - 20, nextCar()], [cx + 50, nextCar()], [cx + 130, nextCar()], [cx + 15, 'scooter', 0x3f8a4a], [cx + 160, 'evel']]);   // Evel Knievel, riding the main road
   for (const [J, cars] of [[J1, [[cz - 40, nextCar()], [cz + 40, 'auto', PAL.gold]]], [J2, [[cz - 20, 'auto', PAL.gold], [cz + 55, nextCar()]]]]) {
     lane('z', J - 1.5, 1, cz - 70, cz + 80, M - 6.8, 'ns', cars);
     lane('z', J + 1.5, -1, cz + 80, cz - 70, M + 6.8, 'ns', cars.map(([s, k, c]) => [s + 30, ROTA.includes(k) ? nextCar() : k, c ^ 0x202020]));   // the other way: its own cars from the rotation
@@ -458,15 +492,17 @@ function bikeTaxi(cx, cz) {
 }
 
 // ---------------------------------------------------------------- Pune
+// the sandy stone tiles (stone_pavement_tiles.glb via tools/roads-pack.py): the Crescent Bay forecourt and the ground all round it, ~25 cm each,
+// laid with a 2 m step (the texture holds 8 x 3 of them)
+const cbStone = () => pOnce('cbStone', () => { const t = new THREE.TextureLoader().load(window.ROAD_TEX.stone); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 8 / 3); t.anisotropy = 8; return std(t, 0, { roughness: .9 }); });
 function buildPune(a) {
   const { cx, cz } = a;
-  areaShell(a, MAT.paver, MAT.concrete, false, false, [7, 3.5]);
+  areaShell(a, MAT.paver, cbStone(), false, false, [7, 3.5]);   // the ground round Crescent Bay: the forecourt's stone tiles, not grey concrete
   withSideRandom(() => {
     const M = puneMaterials(), asphalt = std(TX.concrete, 1.5, { roughness: .8 }); asphalt.color.setRGB(.36, .37, .41);
     puneGround(cx, cz, M);
     // the Crescent Bay forecourt (and only this): the sandy stone tiles, ~25 cm each (the texture holds 8 x 3 of them, laid every 2 m)
-    { const t = new THREE.TextureLoader().load(window.ROAD_TEX.stone); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 8 / 3); t.anisotropy = 8;
-      plane(36, 17, std(t, 0, { roughness: .9 }), cx - 3, .016, cz - .5, 2); }
+    plane(36, 17, cbStone(), cx - 3, .016, cz - .5, 2);
     WALK.push([cx - 24, cz - 14, cx + 130, cz + PUNE_MZ - 6], [cx - 55, cz + PUNE_MZ - 6, cx + 145, cz + PUNE_MZ + 9]);
     WALK.push([cx + PUNE_GALLI[0], cz + PUNE_GALLI[1] - 1, cx + PUNE_GALLI[2], cz + PUNE_GALLI[3] + 1], [cx + PUNE_SQUARE[0], cz + PUNE_SQUARE[1], cx + PUNE_SQUARE[2], cz + PUNE_SQUARE[3]]);
     WALK.push([cx + PUNE_CAMPUS[0] - 2, cz + PUNE_MZ + 9, cx + PUNE_CAMPUS[2] + 2, cz + PUNE_CAMPUS[3] + .5]);

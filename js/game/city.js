@@ -98,12 +98,12 @@ function lane(axis, fixed, d, from, to, stopAt, light, cars) {
   const L = { axis, fixed, d, from, to, stopAt, light, cars: [] };
   for (const [s, kind, color] of cars) {
     let v = null;
-    const g = MODEL_CARS.includes(kind) ? sportsCar(kind, 0, 0, 0, { collide: false, onSize: (len, wide) => { v.len = len; v.wide = wide / 2; } }) : kind === 'auto' ? autoRickshaw(color) : kind === 'scooter' ? scooter(color, { rider: true, jacket: [0x2a3a5a, PAL.coral, 0x3f6a3a, PAL.paint][rnd() * 4 | 0], helmet: [0x1c1c20, 0xe8e6e0, PAL.coral][rnd() * 3 | 0] }) : car(0, 0, 0, color, { collide: false });
+    const g = kind === 'evel' ? bikeModel('evel', 0, 0, 0) : MODEL_CARS.includes(kind) ? sportsCar(kind, 0, 0, 0, { collide: false, onSize: (len, wide) => { v.len = len; v.wide = wide / 2; } }) : kind === 'auto' ? autoRickshaw(color) : kind === 'scooter' ? scooter(color, { rider: true, jacket: [0x2a3a5a, PAL.coral, 0x3f6a3a, PAL.paint][rnd() * 4 | 0], helmet: [0x1c1c20, 0xe8e6e0, PAL.coral][rnd() * 3 | 0] }) : car(0, 0, 0, color, { collide: false });
     g.userData.dyn = true; if (!MODEL_CARS.includes(kind)) compact(g);   // the sports cars fill in later (their model loads async)
     g.rotation.y = axis === 'z' ? (d > 0 ? 0 : Math.PI) : (d > 0 ? Math.PI / 2 : -Math.PI / 2);
     const rash = kind === 'creta';   // a Creta always drives rash: fast, hard on the pedals, overtaking, and now and then it does not stop for you
-    v = { g, s, v: 0, kind, rash, cruise: rash ? 8.5 : kind === 'auto' ? 4.2 : kind === 'scooter' ? 6.2 : 5.5, len: kind === 'auto' ? 2.8 : kind === 'scooter' ? 1.9 : 4.4,
-      wide: kind === 'scooter' ? .4 : kind === 'auto' ? .75 : .95, lat: 0, latV: 0, reckless: 0, passT: 0 };
+    v = { g, s, v: 0, kind, rash, cruise: kind === 'evel' ? 10 : rash ? 8.5 : kind === 'auto' ? 4.2 : kind === 'scooter' ? 6.2 : 5.5, len: kind === 'auto' ? 2.8 : kind === 'scooter' || kind === 'evel' ? 2.4 : 4.4,
+      wide: kind === 'scooter' || kind === 'evel' ? .45 : kind === 'auto' ? .75 : .95, lat: 0, latV: 0, reckless: 0, passT: 0 };
     L.cars.push(v); place(L, v);
   }
   traffic.lanes.push(L);

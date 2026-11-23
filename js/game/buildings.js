@@ -197,6 +197,22 @@ function sportsCar(kind, x, z, ry, o = {}) {
   });
   return g;
 }
+// the modelled motorbikes (js/models/bikes.js, tools/bikes-pack.py): 'avenger' (Bajaj Avenger), 'gsxr' (Suzuki GSX-R 750), 'evel' (Evel Knievel on his Triumph),
+// front at +z; o.lean tips it onto its side stand. Parsed once each with GLTFLoader, lit like the rest of the game
+const BIKE_MODEL = {};
+function bikeModel(kind, x, z, ry, o = {}) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.set(0, ry, o.lean || 0); scene.add(g);
+  if (!window.BIKE_MODELS || !window.BIKE_MODELS[kind]) return g;
+  if (!BIKE_MODEL[kind]) BIKE_MODEL[kind] = new Promise((done) => {
+    const bin = atob(window.BIKE_MODELS[kind]), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    new THREE.GLTFLoader().parse(buf.buffer, '', (gl) => {
+      gl.scene.traverse((m) => { if (!m.isMesh) return; m.castShadow = m.receiveShadow = true; const mt = m.material; if (mt.map) { mt.map.encoding = THREE.LinearEncoding; mt.map.needsUpdate = true; } mt.metalness = 0; mt.roughness = Math.max(mt.roughness, .4); mt.needsUpdate = true; });
+      done(gl.scene);
+    }, (e) => console.warn('bike model', kind, e));
+  });
+  BIKE_MODEL[kind].then((m) => g.add(m.clone(true)));
+  return g;
+}
 // parked motorbikes, leaning on their side stands: 'r15' (Yamaha R15M), 'vstrom' (Suzuki V-Strom SX),
 // 'avenger' (Bajaj Avenger), 'thruxton' (café racer). Local axes: x across the bike, z forward.
 function bike(x, z, ry, kind) {

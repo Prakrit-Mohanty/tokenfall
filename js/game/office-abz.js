@@ -55,8 +55,8 @@ function buildABZ(a) {
   // the back (plan east) wall is one long window from end to end
   {
     const zc = (Z(-1.46) + Z(16.8)) / 2, len = Z(16.8) - Z(-1.46), wx = X(20.06);
-    box(.3, .55, len, MAT.plaster, wx, 0, zc); box(.12, H - .85, len, MAT.window, wx, .55, zc); box(.3, .3, len, MAT.plaster, wx, H - .3, zc);
-    for (let t = 0; t <= len + .01; t += len / 7) box(.32, H, .14, MAT.charcoal, wx, 0, Z(-1.46) + t);
+    box(.3, .55, len, MAT.plaster, wx, 0, zc); box(.06, H - .85, len, MAT.paneGlass, wx, .55, zc, { cast: false }); box(.3, .3, len, MAT.plaster, wx, H - .3, zc);
+    for (let t = 0; t <= len + .01; t += len / 7) box(.32, H, .14, MAT.paneFrame, wx, 0, Z(-1.46) + t);
     colBox(X(20), Z(-1.46), X(20.12), Z(16.8));
   }
   // the wall between the lobby and the office (south once turned): door with garlands, the Calfus logo on the lobby side

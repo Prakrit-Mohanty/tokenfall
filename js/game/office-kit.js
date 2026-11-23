@@ -144,6 +144,9 @@ function officeMaterials() {
   MAT.charcoal = new THREE.MeshStandardMaterial({ color: PAL.plum, roughness: .8 });
   MAT.chrome = new THREE.MeshStandardMaterial({ color: 0xc4c8cc, roughness: .25, metalness: .8 });
   MAT.window = std(T.window, 2, { emissive: 0xffffff, emissiveMap: T.window, emissiveIntensity: .55 });
+  // the HQ and ABZ window walls: plain glass panes, and their frame posts in a warm stone grey that goes with the plaster and wood
+  MAT.paneGlass = new THREE.MeshStandardMaterial({ color: 0xe6f2f4, roughness: .05, metalness: 0, transparent: true, opacity: .18, depthWrite: false });
+  MAT.paneFrame = new THREE.MeshStandardMaterial({ color: 0xb9ad96, roughness: .7, metalness: 0 });
   MAT.pane = new THREE.MeshStandardMaterial({ color: 0xd2e8ee, transparent: true, opacity: .16, roughness: .05, depthWrite: false });
   MAT.ledStrip = new THREE.MeshStandardMaterial({ color: 0xffc070, emissive: 0xffa040, emissiveIntensity: 2.2 });
   MAT.shade = new THREE.MeshStandardMaterial({ color: 0xf3e6c8, emissive: 0xffc888, emissiveIntensity: .45, side: THREE.DoubleSide });

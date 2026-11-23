@@ -24,8 +24,8 @@ function buildOffice(a) {
   const windowRun = (x0, z0, x1, z1) => {
     const len = Math.hypot(x1 - x0, z1 - z0), ry = x0 === x1 ? Math.PI / 2 : 0;
     const g = new THREE.Group(); g.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); g.rotation.y = ry; scene.add(g);
-    box(len, .55, .3, MAT.plaster, 0, 0, 0, { p: g }); box(len, 2.55, .12, MAT.window, 0, .55, 0, { p: g, cast: false });   // glass lets the sun in; sill, header and mullions cast box(len, .3, .3, MAT.plaster, 0, 3.1, 0, { p: g });
-    for (let s = 0; s <= len; s += 3.6) box(.14, 3.4, .32, MAT.charcoal, s - len / 2, 0, 0, { p: g });
+    box(len, .55, .3, MAT.plaster, 0, 0, 0, { p: g }); box(len, 2.55, .06, MAT.paneGlass, 0, .55, 0, { p: g, cast: false });   // glass lets the sun in; sill, header and mullions cast box(len, .3, .3, MAT.plaster, 0, 3.1, 0, { p: g });
+    for (let s = 0; s <= len; s += 3.6) box(.14, 3.4, .32, MAT.paneFrame, s - len / 2, 0, 0, { p: g });
   };
   windowRun(X(-7.2), Z(-12.8), X(2), Z(-12.8));
   windowRun(X(2), Z(-14.1), X(7.2), Z(-14.1));
