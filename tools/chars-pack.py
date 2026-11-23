@@ -27,16 +27,18 @@ CHARS = {
                {'idle': (0, 8, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 11, 56, True), 'jump': (12, 12, 80, False)}, 56, (4, 8)),
     'sudhanshu': ('Sudhanshu', 'sudhanshu-3d-extras/sudhanshu3d.png',   # the lossless copy of sudhanshu-3d/sprites/sudhanshu3d.webp
                   {'idle': (0, 11, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 10, 60, True), 'jump': (12, 11, 80, False)}, 34, (3, 7)),
-    # the tokenfall-characters roster as lobby NPCs: idle (one still frame, the game's own sway and breathing do the rest) and walk, from the 8-direction rows
-    'saanvi': ('Saanvi', 'tokenfall-characters-extras/saanvi.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True)}, 0, (0, 0)),
-    'mehta': ('Mr. Mehta', 'tokenfall-characters-extras/mehta.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True)}, 0, (0, 0)),
-    'aarav': ('Aarav', 'tokenfall-characters-extras/aarav.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True)}, 0, (0, 0)),
-    'riya': ('Riya', 'tokenfall-characters-extras/riya.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True)}, 0, (0, 0)),
+    # the tokenfall-characters roster as lobby NPCs and player picks: idle (one still frame, the game's own sway and breathing do the rest), walk, run and jump from the 8-direction rows (riya's run and jump are 4-direction rows, down up left right)
+    'saanvi': ('Saanvi', 'tokenfall-characters-extras/saanvi.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True), 'run': ({d: 16 + ROW8[d] for d in DIRS}, 8, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 8, 100, False)}, 36, (1, 6)),
+    'mehta': ('Mr. Mehta', 'tokenfall-characters-extras/mehta.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True), 'run': ({d: 16 + ROW8[d] for d in DIRS}, 8, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 8, 100, False)}, 51, (2, 6)),
+    'aarav': ('Aarav', 'tokenfall-characters-extras/aarav.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True), 'run': ({d: 16 + ROW8[d] for d in DIRS}, 12, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 12, 75, False)}, 61, (3, 8)),
+    'riya': ('Riya', 'tokenfall-characters-extras/riya.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True), 'run': ({d: 16 + i for i, d in enumerate(DIRS)}, 12, 56, True), 'jump': ({d: 24 + i for i, d in enumerate(DIRS)}, 12, 75, False)}, 66, (3, 9)),
     # Prakrit on his Yamaha, the Pune bike taxi's rider: the bike pack's own 8 still poses (named by angle: 0 faces the camera, 90 faces right) and its leaned-in riding frame (last of the 4) for right and left
     'prakrit': ('Prakrit', 'prakrit-extras/prakrit-bike.png',
                 {'idle': ({str(a): i for i, a in enumerate(range(0, 360, 45))}, 1, 200, True), 'ride': ({'right': (8, 3), 'left': (9, 3)}, 1, 200, True)}, 0, (0, 0)),
-    # the same bike with the player (Aditya) riding pillion, for the ride itself: right and left only, still and leaned in (built by pillion_sheet below)
-    'prakrit_ride': ('Prakrit', 'pillion', {'idle': ({'right': 0, 'left': 1}, 1, 200, True), 'ride': ({'right': 2, 'left': 3}, 1, 200, True)}, 0, (0, 0)),
+    # the bike with the player riding pillion behind Prakrit, one sheet per roster pick (prakrit-passengers duo-*): the still pose facing right and left, and the lean-in frames (4, Saanvi's 3) that play when the bike pulls away and hold the last
+    **{f'prakrit_ride_{p}': ('Prakrit', f'prakrit-passengers-extras/duo-{p}.png',
+                             {'idle': ({'right': 2, 'left': 6}, 1, 200, True), 'ride': ({'right': (8, 0), 'left': (9, 0)}, n, 110, False)}, 0, (0, 0))
+       for p, n in (('saanvi', 3), ('riya', 4), ('mehta', 4), ('aarav', 4))},
     'gaurav': ('Gaurav', 'gaurav-npc-extras/gaurav.png',   # an NPC: idle and walk only (the lossless copy of gaurav-npc/sprites/gaurav.webp)
                {'idle': (0, 11, 200, True), 'walk': (4, 10, 95, True)}, 0, (0, 0)),
 }
@@ -85,43 +87,11 @@ def upscale(frame, box, k):
 
 # The bike pack's cells are 418x385 (ground point 209,381) and Prakrit sits ~1.32x bigger on it than he stands on foot (hair 82 px vs 62 px across, the same 172 px foot frames as the roster), so it
 # is drawn at 0.755 (`fit`, read as sizeK) and upscaled by 2.5 * 0.755 to keep the roster's texel density: his head then matches Aditya's.
-BIKES = ('prakrit', 'prakrit_ride')
-CELLS = {b: ((418, 385), (209, 381)) for b in BIKES}
+RIDES = tuple(c for c in CHARS if c.startswith('prakrit_ride_'))   # the duo sheets' cells are 418x390 (ground point 209,386), at the same scale as the bike's
+BIKES = ('prakrit',) + RIDES
+CELLS = {'prakrit': ((418, 385), (209, 381)), **{r: ((418, 390), (209, 386)) for r in RIDES}}
 BIKE_FIT = 0.755
 SCALES = {b: SCALE * BIKE_FIT for b in BIKES}
-
-
-# The passenger: the bike has only a small tail cowl, so Aditya's profile sprite is scaled to the bike's world size (1 / BIKE_FIT), his hips set on the tail behind Prakrit, his legs cut off just
-# below them, and the bike and its rider drawn over him: the cowl hides the cut and the driver's back hides his side, so he reads as seated, a head and shoulders behind Prakrit.
-# Per frame: bike (column, row), the hero's row (3 = facing right, 2 = left), and where his hips go (x, y in the 418x385 cell; the left frames mirror x).
-PILLION_HIP = 0.78   # Aditya's hips, as a fraction of his figure's height from its top (a big head: the legs are short)
-PILLION = [(0, 2, 3, 128, 226, False), (0, 6, 2, 128, 226, True), (3, 8, 3, 128, 246, False), (3, 9, 2, 128, 246, True)]
-
-
-def pillion_sheet():
-    bike = Image.open(os.path.join(ROOT, 'prakrit-extras/prakrit-bike.png')).convert('RGBA')
-    hero = Image.open(os.path.join(ROOT, CHARS['aditya'][1])).convert('RGBA')
-    bw, bh = CELLS['prakrit'][0]
-    sheet = Image.new('RGBA', (bw, bh * len(PILLION)), (0, 0, 0, 0))
-    k = 1 / BIKE_FIT
-    for i, (bc, br, hr, hx, hy, mirror) in enumerate(PILLION):
-        h = hero.crop((0, hr * CELL[1], CELL[0], (hr + 1) * CELL[1]))
-        alpha = np.asarray(h)[..., 3]
-        ys = np.where(alpha > 8)[0]
-        hip = ys.min() + PILLION_HIP * (ys.max() - ys.min() + 1)
-        cols = np.where(alpha[int(hip)] > 8)[0]
-        if mirror:
-            hx = bw - hx
-        big = h.convert('RGBa').resize((round(CELL[0] * k), round(CELL[1] * k)), Image.LANCZOS).convert('RGBA')
-        px, py = round(hx - (cols.min() + cols.max()) / 2 * k), round(hy - hip * k)
-        layer = Image.new('RGBA', (bw, bh), (0, 0, 0, 0))
-        layer.alpha_composite(big, (max(px, 0), max(py, 0)), (max(-px, 0), max(-py, 0), big.width, big.height))
-        arr = np.asarray(layer).copy()
-        arr[hy + 6:, :, 3] = 0
-        cell = Image.fromarray(arr, 'RGBA')
-        cell.alpha_composite(bike.crop((bc * bw, br * bh, (bc + 1) * bw, (br + 1) * bh)))
-        sheet.alpha_composite(cell, (0, i * bh))
-    return sheet
 
 
 FIT = {'saanvi', 'mehta', 'aarav', 'riya'}   # their figures are drawn 1-5% shorter than the first three's 172 px: `fit` (written to chars-data.js, read by characters.js as sizeK) scales them to match
@@ -200,7 +170,7 @@ def pack(cid, img, anims):
 
 data, sheets, auxes, total = {}, {}, {}, 0
 for cid, (name, src, anims, lift, air) in CHARS.items():
-    img = pillion_sheet() if src == 'pillion' else Image.open(os.path.join(ROOT, src)).convert('RGBA')
+    img = Image.open(os.path.join(ROOT, src)).convert('RGBA')
     atlas, aux, rects = pack(cid, img, anims)
     table, order, air_ms = {}, [], None
     for anim, (r0, frames, ms, loop) in anims.items():

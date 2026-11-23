@@ -1,4 +1,4 @@
-// Shows the launcher over the game; window.TokenFallStart resolves when the player presses Enter, and main.js waits on it.
+// Shows the launcher over the game; window.TokenFallStart resolves when the player has pressed Enter and picked a character (launcher/char-select-screen.js), and main.js waits on it.
 // Deep links (?zone= / ?at=) skip straight into the game, and so does a reload of a tab that already got past the menu.
 window.TokenFallStart = new Promise((start) => {
   const el = document.getElementById('launcher');
@@ -13,6 +13,9 @@ window.TokenFallStart = new Promise((start) => {
   el.addEventListener('keyup', swallow);
 
   const launcher = TokenfallLauncher.mount(el, {
-    onStart: () => { try { sessionStorage.setItem('tf.started', '1'); } catch (e) {} launcher.destroy(); el.remove(); start(); },
+    onStart: () => {
+      launcher.destroy(); el.remove();
+      window.CharSelectScreen.run().then(() => { try { sessionStorage.setItem('tf.started', '1'); } catch (e) {} start(); });
+    },
   });
 });

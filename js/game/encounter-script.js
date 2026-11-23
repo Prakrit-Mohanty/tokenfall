@@ -8,7 +8,7 @@
 
   const PARTS = {
     carrom: { id: 'factcheck', name: 'Fact-check', icon: '✓', game: 'House Rules Carrom', where: 'Crescent Bay, Pune', gain: 'TOKEN-1 stops making things up. When he is not sure, he says so.', lesson: 'AI can say false things confidently. Check what it tells you.' },
-    kitchen: { id: 'memory', name: 'Memory', icon: '◎', game: 'Prompt Kitchen', where: 'off the lobby', gain: 'TOKEN-1 remembers you, where you have been and what you told him.', lesson: 'AI only knows what is in the conversation. Give it the context it needs.' },
+    kitchen: { id: 'memory', name: 'Memory', icon: '◎', game: 'Token Brew Kitchen', where: 'off the lobby', gain: 'TOKEN-1 remembers you, where you have been and what you told him.', lesson: 'AI only knows what is in the conversation. Give it the context it needs.' },
     bridge: { id: 'understanding', name: 'Understanding', icon: '?', game: 'The Glass Bridge', where: 'the south gate of the lobby', gain: 'TOKEN-1 reads what you mean, not just your words, and asks when unsure.', lesson: 'Vague instructions get literal results. Be specific with AI.' },
     mill: { id: 'askfirst', name: 'Ask-first', icon: '✋', game: 'Token Mill', where: 'Baggage Sorting, Pune Airport', gain: 'Before anything big, TOKEN-1 checks with you first.', lesson: 'Give AI limits. People make the final call on things that matter.' },
     gallery: { id: 'examples', name: 'Good examples', icon: '▦', game: 'Spot Shot', where: 'the lobby lawn', gain: 'TOKEN-1 recognises things correctly, and knows he is only as good as what he learned from.', lesson: 'AI learns from examples. Bad examples make bad answers.' },
@@ -30,9 +30,9 @@
     },
     {
       id: 'abz', kind: 'door', glitch: 'slate', points: 'kitchen', who: 'rohan_t', at: { portal: { zone: 'pune', to: 'abz' } },
-      hello: ['Hey! Heading up to ABZ?', 'Our chatbot forgets everything we tell it. TOKEN-1\'s Memory part ended up in the Prompt Kitchen, back in the lobby.', 'Let\'s see if your robot can keep up with my Blank Slate!'],
-      win: ['It remembered! Go finish a shift in the Prompt Kitchen for TOKEN-1\'s Memory.'],
-      lose: ['Forgot again! The Memory part is in the Prompt Kitchen. Try me again any time.'],
+      hello: ['Hey! Heading up to ABZ?', 'Our chatbot forgets everything we tell it. TOKEN-1\'s Memory part ended up in the Token Brew Kitchen, back in the lobby.', 'Let\'s see if your robot can keep up with my Blank Slate!'],
+      win: ['It remembered! Go finish a shift in the Token Brew Kitchen for TOKEN-1\'s Memory.'],
+      lose: ['Forgot again! The Memory part is in the Token Brew Kitchen. Try me again any time.'],
     },
     {
       id: 'airport-road', kind: 'door', glitch: 'pilot', points: 'mill', who: 'jess.m', at: { portal: { zone: 'lobby', to: 'airport' } },

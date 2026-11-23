@@ -108,9 +108,13 @@ Promise.all([fontsReady, sheetReady]).then(() => {
   }
   LOBBY.build(); buildAreas(); mergeStatic(); buildDust(); buildLife();
   applyTextureRefines(); softenTextures();
-  hero = makeChar('aditya', LOBBY.spawn[0], LOBBY.spawn[1], { me: true });
+  // the world is built behind the launcher; the hero and the NPCs wait for the player's pick (the picker saves it, see launcher/char-select-screen.js)
+  return window.TokenFallStart || Promise.resolve();
+}).then(() => {
+  const look = CharSelect.getChoice();
+  hero = makeChar(look, LOBBY.spawn[0], LOBBY.spawn[1], { me: true, look, style: CharSelect.getLook() });
   hero.dir = LOBBY.spawnDir; hero.zone = 'lobby';
-  npcs = NPC_NAMES.map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2, look: CHARS[n] ? n : undefined }); c.wait = Math.random() * 3000; return c; });
+  npcs = CharSelect.npcNames(NPC_NAMES, look).map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2, look: CHARS[n] ? n : undefined }); c.wait = Math.random() * 3000; return c; });
   for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['ananya.r', 288, 9.2], ['kabir_m', 296, 6.4], ['sneha.d', 318, 2]]) { const c = makeChar(n, x, z, { speed: 1.9, zone: 'pune' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['sana.k', 7.4, 298.6], ['arjun_p', -.3, 291.6]]) { const c = makeChar(n, x, z, { speed: 2.1, zone: 'abz' }); c.wait = Math.random() * 3000; npcs.push(c); }
@@ -121,12 +125,11 @@ Promise.all([fontsReady, sheetReady]).then(() => {
   if (q.get('at')) { const [ax, az] = q.get('at').split(',').map(Number); hero.x = ax; hero.y = az; }
   setZone(hero.zone); resize(); snapCamera();
   document.getElementById('loading').remove();
-  // the world is built behind the launcher; start rendering and greeting once the player presses Enter
-  return window.TokenFallStart || Promise.resolve();
 }).then(() => {
+  // start rendering and greeting once the player has picked a character and pressed Enter
   fadeEl.style.opacity = 0;
   showBanner('TokenFall', 'Main Plaza');
   log('', 'Welcome to TokenFall! Walk through a glowing gate to visit an area.', true);
-  setTimeout(() => say(npcs[0], 'hi aditya! 👋'), 1800);
+  setTimeout(() => say(npcs[0], `hi ${CHARS[hero.name].name}! 👋`), 1800);
   requestAnimationFrame(t => { last = t; frame(t); });
 });

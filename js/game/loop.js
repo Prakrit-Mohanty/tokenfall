@@ -16,7 +16,7 @@ function setZone(z) {
   TF.enter(prevZone, z);
   const a = AREAS[z];
   locName.textContent = a ? a.name : 'TokenFall Lobby'; locSub.textContent = a ? a.sub : 'Main Plaza';
-  const here = ['aditya', ...npcs.filter(c => c.zone === z).map(c => c.name)];
+  const here = [hero.name, ...npcs.filter(c => c.zone === z).map(c => c.name)];
   document.querySelector('#party h4 span').textContent = a ? a.name.toUpperCase() : 'LOBBY';
   document.getElementById('count').textContent = `${here.length} / 20`;
   document.getElementById('plist').innerHTML = here.map((n, i) => `<div class="${i ? '' : 'me'}"><i></i>${esc(n)}${i ? '' : ' (you)'}</div>`).join('');

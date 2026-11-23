@@ -1,0 +1,30 @@
+/* The character pick after the launcher's START (launcher/char-select-screen.js). Same night-violet, pink and mint palette as the launcher. */
+#charpick {
+  position: fixed; inset: 0; z-index: 200; outline: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 16px;
+  background: radial-gradient(ellipse at 50% 40%, #2a1f4a 0%, #140F24 70%);
+  color: #FFE6EC; font-family: 'Baloo 2', 'Nunito', sans-serif;
+  opacity: 0; transition: opacity .6s ease;
+}
+#charpick.on { opacity: 1; }
+#charpick h1 { margin: 0; font-size: 40px; font-weight: 700; color: #FF6F91; text-shadow: 3px 3px 0 #5B3FA8; }
+#charpick .cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+#charpick .card {
+  width: 200px; padding: 14px 14px 16px; text-align: center; cursor: pointer;
+  border: 3px solid #5B3FA8; border-radius: 14px; background: #1A1430;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+#charpick .card img { display: block; width: 100%; height: 250px; object-fit: contain; }
+#charpick .name { font-size: 22px; font-weight: 700; margin-top: 6px; }
+#charpick .blurb { font-size: 16px; line-height: 1.35; color: #FFB3C6; margin-top: 4px; min-height: 2.7em; }
+#charpick .card.sel { border-color: #9FE7FF; box-shadow: 0 0 0 4px #9FE7FF44, 0 0 24px #9FE7FF55; transform: translateY(-6px); }
+#charpick .hint { font-size: 16px; color: #9FE7FF; }
+#charpick .look { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+#charpick .row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
+#charpick .label { width: 90px; font-size: 16px; font-weight: 700; color: #FFB3C6; text-align: right; margin-right: 6px; }
+#charpick .pill {
+  padding: 6px 16px; font-size: 16px; font-weight: 700; cursor: pointer; border-radius: 999px;
+  border: 2px solid #5B3FA8; background: #1A1430; color: #FFE6EC;
+}
+#charpick .pill.on { background: #FF6F91; border-color: #FF6F91; color: #140F24; }
+#charpick .pill.focus { border-color: #9FE7FF; box-shadow: 0 0 0 3px #9FE7FF55; }

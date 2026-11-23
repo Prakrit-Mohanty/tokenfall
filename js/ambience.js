@@ -1,7 +1,7 @@
 // TokenFall — gentle sound. Browser only: window.Ambience. Everything is synthesised with the Web Audio API (no audio files):
 // a slow music box wandering over a pentatonic scale, a few bird chirps by day, crickets at night, and a soft three-note chime when something changes (a zone, the time of day).
 // Quiet by design, softer still under a minigame's own sounds; it starts at the first key press or click (browsers insist), and the Daylight Console has the switch.
-//   Ambience.install(TF)   TF.ambience = { apply(p, inside, zone), chime(), set(on), state }
+//   Ambience.install(TF)   TF.ambience = { apply(p, inside, zone), chime(), horn(), engine(speed, level), set(on), state }
 (function (root) {
   const PENT = [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.25, 783.99, 880];   // C major pentatonic, C4 to A5
 
@@ -40,8 +40,28 @@
         g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.012, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); o.connect(g); g.connect(S.master); o.start(t); o.stop(t + 0.06);
       }
     }
+    // the bike's engine: a square and a saw a hair apart through a low-pass that opens with speed, chugging through a square tremolo that quickens too. Built on the first ride and
+    // then left running at zero gain (ponytail: two idle oscillators; stop them if more voices ever share the context).
+    let eng = null;
+    function engine(speed, level) {
+      if (!eng && level <= 0) return;
+      if (!S.on || !ensure() || S.ctx.state !== 'running') return;
+      const c = S.ctx, t = c.currentTime, f = 55 + speed * 14;
+      if (!eng) {
+        const o1 = c.createOscillator(), o2 = c.createOscillator(), lfo = c.createOscillator(), lp = c.createBiquadFilter(), chug = c.createGain(), lfoAmt = c.createGain(), out = c.createGain();
+        o1.type = 'square'; o2.type = 'sawtooth'; lfo.type = 'square'; lp.type = 'lowpass'; lp.Q.value = 3; chug.gain.value = 0.65; lfoAmt.gain.value = 0.35; out.gain.value = 0;
+        o1.connect(lp); o2.connect(lp); lp.connect(chug); chug.connect(out); lfo.connect(lfoAmt); lfoAmt.connect(chug.gain); out.connect(S.master);
+        for (const o of [o1, o2, lfo]) o.start();
+        eng = { o1, o2, lfo, lp, out };
+      }
+      eng.o1.frequency.setTargetAtTime(f, t, 0.08); eng.o2.frequency.setTargetAtTime(f * 1.012, t, 0.08);
+      eng.lfo.frequency.setTargetAtTime(7 + speed * 2.2, t, 0.1); eng.lp.frequency.setTargetAtTime(420 + speed * 110, t, 0.1);
+      eng.out.gain.setTargetAtTime(0.2 * level, t, 0.15);
+    }
     const world = {
       state: S,
+      horn() { if (!S.on || !ensure() || S.ctx.state !== 'running') return; [0, 0.2].forEach((d) => setTimeout(() => S.on && tone(698, 0.07, 0.13, 'square', false), d * 1000)); },
+      engine,
       chime() { if (!S.on || !ensure() || S.ctx.state !== 'running') return; [1046.5, 1318.5, 1568, 2093].forEach((f, i) => setTimeout(() => S.on && tone(f, 0.05, 1.2, 'sine'), i * 75)); },
       set(on) { S.on = !!on; try { localStorage.setItem('tokenfall.sound', on ? '1' : '0'); } catch (e) { /* not saved */ } if (on) { ensure(); resume(); } },
       apply(p, inside, zone) { S.p = p; S.inside = inside; S.zone = zone; },

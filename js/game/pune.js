@@ -351,22 +351,24 @@ function laneTraffic(lanes, x, back, front, dir) {
 
 // the rider is Prakrit on his Yamaha, a character sprite (SHAPE.prakrit in characters.js)
 function bikeTaxi(cx, cz) {
-  const g = new THREE.Object3D(), drv = makeChar('Prakrit', 0, 0, { look: 'prakrit', zone: 'pune' }), drvP = makeChar('Prakrit', 0, 0, { look: 'prakrit_ride', zone: 'pune-ride' }), stands = {}, names = { cb: 'Crescent Bay', abz: 'ABZ' };
+  const g = new THREE.Object3D(), drv = makeChar('Prakrit', 0, 0, { look: 'prakrit', zone: 'pune' }), stands = {}, names = { cb: 'Crescent Bay', abz: 'ABZ' };
   for (const [k, [x, z]] of Object.entries(PUNE_TAXI_STANDS)) {
     stands[k] = [cx + x, cz + z];
     box(.12, 2.2, .12, MAT.metal, cx + x - 1.4, 0, cz + z - .4); colCirc(cx + x - 1.4, cz + z - .4, .15);
     ledSign(['BIKE TAXI'], '#ffd27a', cx + x - 1.4, 2.5, cz + z - .4, 1.8, .4);
     box(3, .015, 1.2, new THREE.MeshStandardMaterial({ color: PAL.gold, roughness: .9 }), cx + x, .03, cz + PUNE_TAXI_BAY, { cast: false });
   }
-  drvP.dir = 'right';   // its atlas has only right and left
+  let drvP = null;   // the bike with you behind Prakrit: the sheet for your pick, made on the first ride (there is no hero yet while the world is being built)
   const S = { at: 'cb', mode: 'idle', path: null, s: 0, v: 0, dest: null, model: g };
   // g is the bike's path-follower; a sprite takes its spot and heading. Empty (fetching you, or parked): one of the 8 still poses, or the leaned-in riding frame on the straight.
-  // With you aboard: drvP, the bike with you seated behind Prakrit (profile only, still or leaned in), and you are hidden; its zone is not the world's, so it has no second name tag.
+  // With you aboard: drvP, the bike with you seated behind Prakrit (profile only: upright when still, leaning in as it pulls away), and you are hidden; its zone is not the world's, so it has no second name tag.
   const face = (moving) => {
-    const ry = g.rotation.y, side = Math.sin(ry), riding = S.mode === 'ride', d = riding ? drvP : drv;
-    drv.g.visible = !riding; drvP.g.visible = riding; if (hero) hero.g.visible = !riding;   // (no hero yet while the world is being built)
+    const ry = g.rotation.y, side = Math.sin(ry), riding = S.mode === 'ride';
+    if (riding && !drvP) { drvP = makeChar('Prakrit', 0, 0, { look: 'prakrit_ride_' + CharSelect.getChoice(), zone: 'pune-ride' }); drvP.noLift = true; }
+    const d = riding ? drvP : drv;
+    drv.g.visible = !riding; if (drvP) drvP.g.visible = riding; if (hero) hero.g.visible = !riding;   // (no hero yet while the world is being built)
     d.x = g.position.x; d.y = g.position.z; d.moving = moving;
-    if (riding) { d.anim = moving ? 'ride' : 'idle'; d.dir = side >= 0 ? 'right' : 'left'; }
+    if (riding) { const anim = moving ? 'ride' : 'idle'; if (d.anim !== anim) d.t = 0; d.anim = anim; d.dir = side >= 0 ? 'right' : 'left'; }   // the lean-in restarts each time it pulls away
     else if (moving && Math.abs(side) > .9) { d.anim = 'ride'; d.dir = side > 0 ? 'right' : 'left'; }
     else { d.anim = 'idle'; d.dir = String(Math.round((((ry * 180 / Math.PI) % 360) + 360) % 360 / 45) % 8 * 45); }
   };
@@ -394,7 +396,7 @@ function bikeTaxi(cx, cz) {
     if (S.mode !== 'idle') { talk('Bike taxi', ['Prakrit is on the way. Watch the road!']); return; }
     const other = here === 'cb' ? 'abz' : 'cb';
     if (S.at !== here) { go(S.at, here, false); talk('Bike taxi', [`Ride booked to ${names[other]}. Prakrit is coming from ${names[S.at]}.`, 'Wait by the yellow box, then press E again to hop on.']); return; }
-    TF.lockPlayer(true); go(here, other, true); face(false);
+    TF.lockPlayer(true); go(here, other, true); face(false); TF.ambience?.horn();
   };
   for (const k of Object.keys(stands)) {
     const other = k === 'cb' ? 'abz' : 'cb';
@@ -418,17 +420,20 @@ function bikeTaxi(cx, cz) {
   };
 
   life.push((t, dt) => {
-    if (S.mode === 'idle') return;
+    if (drvP && S.mode === 'ride') drvP.t += dt * 1000;   // nothing else steps this sprite's clock
+    if (S.mode === 'idle') { TF.ambience?.engine(0, 0); return; }
     const here = at(S.path, S.s), cap = allowed(t, here);
     S.v = cap < S.v ? Math.max(cap, S.v - 9 * dt) : Math.min(cap, S.v + 3.5 * dt);
     S.s = Math.min(S.path.total, S.s + S.v * dt);
     const p = at(S.path, S.s);
     g.position.set(p.x, 0, p.z); g.rotation.y += Math.atan2(Math.sin(p.ry - g.rotation.y), Math.cos(p.ry - g.rotation.y)) * Math.min(1, dt * 8);
     face(S.v > .3);
+    TF.ambience?.engine(S.v, zone !== 'pune' ? 0 : S.mode === 'ride' ? 1 : Math.max(0, 1 - Math.hypot(p.x - hero.x, p.z - hero.y) / 45));   // heard in Pune, fading with distance when it is only fetching you
     if (S.mode === 'ride') { hero.x = p.x; hero.y = p.z; hero.dir = Math.sin(g.rotation.y) >= 0 ? 'right' : 'left'; }
     if (S.s < S.path.total) return;
     const riding = S.mode === 'ride';
-    S.mode = 'idle'; S.at = S.dest; park(S.at);
+    S.mode = 'idle'; S.at = S.dest; park(S.at); TF.ambience?.engine(0, 0);
+    if (!riding && zone === 'pune') TF.ambience?.horn();   // here: beep-beep
     if (riding) {
       const [x, z] = stands[S.at]; hero.x = x; hero.y = z - .6; hero.dir = 'down'; TF.lockPlayer(false);
       log('', `Bike taxi: dropped at ${names[S.at]}. ₹${S.at === 'abz' ? 32 : 30}, paid by UPI. Rate Prakrit: ★★★★★`, true);

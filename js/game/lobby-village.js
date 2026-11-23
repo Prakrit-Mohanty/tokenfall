@@ -67,7 +67,7 @@ function vDoorPath(c) {
   return null;
 }
 const V_PATHS = [...V_HOMES.map(vDoorPath).filter(Boolean), ...V_EXTRA_PATHS];
-// the Prompt Kitchen's staff door is Token Brew's own door: where it is, where to stand, where the hero comes back out (kitchen-world.js adds the board, the twinkle and the prompt)
+// the Token Brew Kitchen's staff door is Token Brew's own door: where it is, where to stand, where the hero comes back out (kitchen-world.js adds the board, the twinkle and the prompt)
 V_GAME_SPOTS.kitchen = (() => { const d = vDoor(V_HOMES.find((h) => h.cafe)); return { door: [d.x, d.z], dir: [d.dirX, d.dirZ], stand: [d.x + d.dirX * 1.4, d.z + d.dirZ * 1.4], ret: [d.x + d.dirX * 2.1, d.z + d.dirZ * 2.1] }; })();
 const vPaved = (x, z, m = 0) => vInRect(V_PLAZA, x, z, m) || V_ROADS.some((r) => vInRect(r, x, z, m)) || V_PATHS.some(([px, pz, w, d]) => vInRect([px - w / 2, pz - d / 2, px + w / 2, pz + d / 2], x, z, m));
 const vWater = (x, z, m = 0) => vInRect(V_RIVER, x, z, m) || Math.hypot(x - V_POND[0], z - V_POND[1]) < V_POND[2] + m;
@@ -185,7 +185,7 @@ function vHome(c) {
   }
   if (inter) {
     const [name, verb, lines] = inter;
-    // the cafe's counter is its glass front; its own door is the way into the Prompt Kitchen (kitchen-world.js), so the two prompts are a few metres apart
+    // the cafe's counter is its glass front; its own door is the way into the Token Brew Kitchen (kitchen-world.js), so the two prompts are a few metres apart
     const at = cafe ? { x: x + cs * mx + s * (d / 2 + 1.4), z: z - s * mx + cs * (d / 2 + 1.4) } : { x: door.x + door.dirX * 1.4, z: door.z + door.dirZ * 1.4 };
     INTER.push({ x: at.x, z: at.z, r: 1.7, label: name, verb, act: () => talk(name, lines) });
   }
