@@ -8,7 +8,7 @@ const VS = 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,
 function fsPass(fragmentShader, uniforms) {
   const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader, uniforms, depthTest: false, depthWrite: false });
   const s = new THREE.Scene(); s.add(new THREE.Mesh(fsGeo, mat));
-  return { u: uniforms, run(target) { renderer.setRenderTarget(target); renderer.render(s, fsCam); } };
+  return { u: uniforms, mat, run(target) { renderer.setRenderTarget(target); renderer.render(s, fsCam); } };
 }
 const rtOpts = { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
 const rtScene = new THREE.WebGLRenderTarget(4, 4, rtOpts);
@@ -54,8 +54,8 @@ const final = fsPass(`uniform sampler2D tColor, tDepth, tBloom, tBloomW; uniform
     float zl=lin(texture2D(tDepth,ue-vec2(lpx.x,0.)).x), zr=lin(texture2D(tDepth,ue+vec2(lpx.x,0.)).x), zu=lin(texture2D(tDepth,ue+vec2(0.,lpx.y)).x), zd=lin(texture2D(tDepth,ue-vec2(0.,lpx.y)).x);
     float edge=smoothstep(.035,.1,(abs(zl+zr-2.*zc)+abs(zu+zd-2.*zc))/max(zc,1.))*(1.-smoothstep(16.,48.,zc))*(1.-clamp(cc/maxR,0.,1.)*.85);   // the ink fades out with distance: far, sub-pixel lines only shimmer
     vec3 acc=texture2D(tColor,uvW).rgb; float ws=1.;
-    for(int i=1;i<36;i++){
-      float r=sqrt(float(i)/36.), a=float(i)*2.39996;
+    for(int i=1;i<DOF_TAPS;i++){
+      float r=sqrt(float(i)/float(DOF_TAPS)), a=float(i)*2.39996;
       vec2 uv=uvW+vec2(cos(a),sin(a))*r*maxR/res;
       float zs=lin(texture2D(tDepth,uv).x), cs=coc(zs,uv);
       float ce=zs<zc?cs:min(cs,cc);
@@ -64,12 +64,12 @@ const final = fsPass(`uniform sampler2D tColor, tDepth, tBloom, tBloomW; uniform
     }
     // ambient occlusion from depth: darken creases and the ground right next to things standing on it
     float ao=0., rad=clamp(30./zc,1.5,9.);
-    for(int i=0;i<10;i++){
-      float a=float(i)*2.39996+fract(sin(dot(gl_FragCoord.xy,vec2(12.9,78.2)))*43758.5)*6.28, r=rad*(.35+.65*float(i)/10.);
+    for(int i=0;i<AO_TAPS;i++){
+      float a=float(i)*2.39996+fract(sin(dot(gl_FragCoord.xy,vec2(12.9,78.2)))*43758.5)*6.28, r=rad*(.35+.65*float(i)/float(AO_TAPS));
       float d=zc-lin(texture2D(tDepth,uvW+vec2(cos(a),sin(a))*r*res.y/720./res).x);
       ao+=smoothstep(.04,.5,d)*(1.-smoothstep(.9,2.4,d));
     }
-    ao=ao/10.*(1.-smoothstep(60.,120.,zc));
+    ao=ao/float(AO_TAPS)*(1.-smoothstep(60.,120.,zc));
     // contact shadows darken toward the palette's deep plum, not black (palette.js: nothing in the world is darker than its deep tones)
     vec3 c=acc/ws*mix(vec3(1.),aoTint,clamp(ao*aoAmt,0.,1.)) + (texture2D(tBloom,uvW).rgb*.35+texture2D(tBloomW,uvW).rgb*.65)*bloomAmt;   // mostly the wide halo: a soft glow, not a hot tight one
     // drifting cloud shadows (cloudAmt, from the mood): the world position under the pixel (from its depth) samples a slow, soft noise; under a cloud the light dims a
@@ -102,6 +102,12 @@ const final = fsPass(`uniform sampler2D tColor, tDepth, tBloom, tBloomW; uniform
   inkCol: { value: new THREE.Color(PAL.plum).multiplyScalar(.85) }, aoTint: { value: new THREE.Color(PAL.plum).multiplyScalar(1.6) }, sketch: { value: .7 }, lineAmt: { value: .75 }, lift: { value: new THREE.Vector3(.01, .01, .01) },
   res: { value: new THREE.Vector2() }, focus: { value: 19 }, nearP: { value: camera.near }, farP: { value: camera.far }, maxR: { value: 8 }, time: { value: 0 }, exposure: { value: .86 }, aoAmt: { value: .6 }, sat: { value: 1.04 }, vig: { value: 1.05 }, bloomAmt: { value: .5 }, gradeMul: { value: new THREE.Vector3(1, 1, 1) }, shadowTint: { value: new THREE.Vector3(1, 1, 1) }, hiTint: { value: new THREE.Vector3(1, 1, 1) }, farStart: { value: 3 }, farRange: { value: 14 }, edgeBlur: { value: 1 },
 });
+// the depth-of-field and contact-shadow sample counts follow the quality tier (setup.js); loop.js calls this again when the tier steps down
+function applyPostQuality() {
+  final.mat.defines = { DOF_TAPS: Q.dofTaps, AO_TAPS: Q.aoTaps }; final.mat.needsUpdate = true;
+  final.u.tBloomW.value = Q.bloomWide ? rtD.texture : rtA.texture;   // low tier: no 1/8 halo level, the 1/4 glow stands in for it
+}
+applyPostQuality();
 function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setPixelRatio(PR * resScale); renderer.setSize(w, h, false);
@@ -122,7 +128,7 @@ function render() {
     blur.u.t.value = rtB.texture; blur.u.dir.value.set(0, 1 / rtA.height); blur.run(rtA);
   }
   // the wide level: the blurred 1/4 bloom, downsampled to 1/8 and blurred twice more there
-  for (let i = 0, src = rtA; i < 2; i++, src = rtD) {
+  if (Q.bloomWide) for (let i = 0, src = rtA; i < 2; i++, src = rtD) {
     blur.u.t.value = src.texture; blur.u.dir.value.set(1 / rtC.width, 0); blur.run(rtC);
     blur.u.t.value = rtC.texture; blur.u.dir.value.set(0, 1 / rtC.height); blur.run(rtD);
   }

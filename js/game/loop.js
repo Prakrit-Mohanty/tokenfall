@@ -7,6 +7,7 @@ const locName = document.getElementById('locName'), locSub = document.getElement
 function setZone(z) {
   const prevZone = zone; zone = z;
   for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) { l.intensity = k === z ? l.userData.base : 0; l.visible = k === z; }
+  capLamps();   // low tier: trims to the nearest lamps straight away
   const indoor = z === 'lab' || z === 'abz' || z === 'us' || z === 'airport';
   scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
   sun.intensity = indoor ? .42 : 1.1; hemi.intensity = indoor ? .6 : .6;
@@ -48,15 +49,50 @@ function setCamView(i) {
   tween(camera, { fov: v.fov }, ms, { onUpdate: () => camera.updateProjectionMatrix() });
 }
 
+// ================= quality: lamp cap, tier step-down, F3 overlay =================
+// low tier keeps only the zone's Q.lamps nearest lamps lit; the count stays fixed, so swapping which ones are lit never recompiles a shader
+function capLamps() {
+  const ls = ZONE_LIGHTS[zone]; if (!ls || ls.length <= Q.lamps) return;
+  const d = l => (l.position.x - camTarget.x) ** 2 + (l.position.z - camTarget.z) ** 2;
+  const keep = new Set(ls.slice().sort((a, b) => d(a) - d(b)).slice(0, Q.lamps));
+  for (const l of ls) l.visible = keep.has(l);
+}
+// frames still slow at the lowest resolution: one tier down (shadow map, blur taps, halo, lamps)
+function stepTierDown() {
+  Q = QUALITY[--tier]; RES_MAX = 1;
+  sun.shadow.mapSize.set(Q.shadow, Q.shadow); sun.shadow.radius = 3.2 * Q.shadow / 3072;
+  if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+  applyPostQuality(); capLamps();
+}
+const perfEl = Object.assign(document.createElement('pre'), { id: 'perf' });
+perfEl.style.cssText = 'position:fixed;top:8px;left:8px;z-index:9999;margin:0;padding:6px 9px;background:rgba(0,0,0,.65);color:#9f9;font:12px/1.35 monospace;pointer-events:none;display:none';
+document.body.appendChild(perfEl);
+addEventListener('keydown', e => { if (e.code === 'F3') { e.preventDefault(); perfEl.style.display = perfEl.style.display === 'none' ? 'block' : 'none'; } });
+let perfT = 0, perfN = 0, perfMs = 0;
+function perfFrame(raw) {
+  perfT += raw; perfN++;
+  if (perfT < 500) return;
+  if (perfEl.style.display !== 'none') {
+    const i = renderer.info.render;
+    perfEl.textContent = `${(perfN * 1000 / perfT).toFixed(0)} fps  ${(perfT / perfN).toFixed(1)} ms\ncalls ${i.calls}  tris ${(i.triangles / 1000).toFixed(0)}k\ntier ${Q.name}  res ${(PR * resScale).toFixed(2)}${MOBILE ? '  mobile' : ''}`;
+  }
+  perfT = perfN = 0;
+}
+
 // ================= main loop =================
 let hero, nearest = null, nearP = null, last = performance.now(), T = 0, chatterT = 4000;
 const chatter = window.Chatter.create();   // each bot's own lines, never repeated within the last 10 messages (chatter.js)
+const camDir = new THREE.Vector3();
+let lampT = 0;
 function frame(now) {
   const raw = now - last, dt = Math.min(50, raw); last = now;
+  renderer.info.reset(); perfFrame(raw);
+  if ((lampT -= dt) < 0) { lampT = 500; capLamps(); }
   if (!document.hidden) { ftAcc += raw; ftN++; }
   if (ftAcc > 2500) {
     const avg = ftAcc / ftN; ftAcc = ftN = 0;
-    if (avg > 24 && resScale > .55) { resScale -= .15; resize(); } else if (avg < 12 && resScale < RES_MAX) { resScale = Math.min(RES_MAX, resScale + .15); resize(); }
+    if (avg > 24 && resScale < .56 && tier > 0) stepTierDown();
+    else if (avg > 24 && resScale > .55) { resScale -= .15; resize(); } else if (avg < 12 && resScale < RES_MAX) { resScale = Math.min(RES_MAX, resScale + .15); resize(); }
   } T += dt / 1000; timeU.value = T; final.u.time.value = T % 100;
   anime.engine.update();   // every tween (daylight, camera view, the leaderboard card) steps here, on the frame it is drawn
   // hero
@@ -97,7 +133,7 @@ function frame(now) {
   camTarget.lerp(tmp.set(hero.x, CAM_VIEWS[camView].y, hero.y), 1 - Math.pow(.004, dt / 1000));
   camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget);
   sun.position.copy(camTarget).add(SUN_DIR); sun.target.position.copy(camTarget);
-  final.u.focus.value = tmp.copy(camTarget).sub(camera.position).dot(camera.getWorldDirection(new THREE.Vector3()));
+  final.u.focus.value = tmp.copy(camTarget).sub(camera.position).dot(camera.getWorldDirection(camDir));
   // dust drifts around the camera
   const dp = dust.geometry.attributes.position;
   for (let i = 0; i < dp.count; i++) {

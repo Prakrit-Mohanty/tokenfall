@@ -9,12 +9,31 @@ THREE.ConeGeometry = smoother(THREE.ConeGeometry, [[2, 28]]);
 THREE.SphereGeometry = smoother(THREE.SphereGeometry, [[1, 28], [2, 18]]);
 THREE.TorusGeometry = smoother(THREE.TorusGeometry, [[2, 14], [3, 40]]);
 const canvas = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+// ================= quality tier =================
+// 2 high (desktop, today's look), 1 mid (fewer blur taps), 0 low (phones and weak machines: 1024 shadows, light bloom, fewer lamps, no tiny shadow casters).
+// Picked once here from the device, the GPU's texture limit, the core count and a ~5 ms CPU benchmark; loop.js steps it down if frames stay slow. ?q=0|1|2 forces it.
+const MOBILE = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));   // iPadOS reports a Mac
+const glAttrs = { alpha: false, depth: true, stencil: true, antialias: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' };   // three's defaults
+const gl = canvas.getContext('webgl2', glAttrs) || canvas.getContext('webgl', glAttrs);
+const GPU_MAX_TEX = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+if (MOBILE) { const gp = gl.getParameter.bind(gl); gl.getParameter = p => p === gl.MAX_TEXTURE_SIZE ? Math.min(2048, GPU_MAX_TEX) : gp(p); }   // three then halves the 4096 atlases on upload: ~4x less texture memory on phones
+const BENCH_MS = (() => { const t = performance.now(); let s = 0; for (let i = 0; i < 2e6; i++) s += Math.sqrt(i) * Math.sin(i); return performance.now() - t + s * 0; })();   // s * 0 keeps the loop from being optimised away
+const QUALITY = [
+  { name: 'low', shadow: 1024, dofTaps: 12, aoTaps: 5, bloomWide: false, lamps: 4, smallCast: .35 },
+  { name: 'mid', shadow: 2048, dofTaps: 24, aoTaps: 8, bloomWide: true, lamps: 99, smallCast: 0 },
+  { name: 'high', shadow: 2048, dofTaps: 36, aoTaps: 10, bloomWide: true, lamps: 99, smallCast: 0 },
+];
+const cores = navigator.hardwareConcurrency || 4;
+let tier = MOBILE ? (cores >= 8 && GPU_MAX_TEX >= 8192 && BENCH_MS < 25 ? 1 : 0) : (cores >= 4 && GPU_MAX_TEX >= 8192 && BENCH_MS < 30 ? 2 : 1);
+{ const f = new URLSearchParams(location.search).get('q'); if (f !== null && QUALITY[+f]) tier = +f; }
+let Q = QUALITY[tier];
+const renderer = new THREE.WebGLRenderer({ canvas, context: gl, antialias: false, powerPreference: 'high-performance' });
+renderer.info.autoReset = false;   // the post passes render many times a frame: loop.js resets once per frame so the counts cover the whole frame
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;   // PCF honours shadow.radius (PCFSoft ignores it): soft-edged shadows like the characters' render
 const PR = Math.min(window.devicePixelRatio || 1, 1.5);
-// drops render resolution if the machine can't keep up, and on a high-dpi screen raises it toward a pixel ratio of 2 (RES_MAX) while frames stay fast
-const RES_MAX = Math.min(window.devicePixelRatio || 1, 2) / PR;
+// drops render resolution if the machine can't keep up, and on a high-dpi desktop at the high tier raises it toward a pixel ratio of 2 (RES_MAX) while frames stay fast
+let RES_MAX = tier === 2 ? Math.min(window.devicePixelRatio || 1, 2) / PR : 1;
 let resScale = 1, ftAcc = 0, ftN = 0;
 
 const scene = new THREE.Scene();

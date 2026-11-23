@@ -43,6 +43,17 @@ function mergeStatic(root = scene) {   // the root is optional: a module that bu
   }
 }
 
+// low tier: tiny things (cups, pens, bolts) stop casting shadows; each one is a draw in the shadow pass. Run before mergeStatic so it sees single meshes.
+function trimCasters(root = scene) {
+  if (!Q.smallCast) return;
+  root.updateMatrixWorld(true);
+  root.traverse(o => {
+    if (!o.isMesh || !o.castShadow || o.material === proxyMat) return;   // the characters' shadow stand-ins always cast
+    const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
+    if (g.boundingSphere.radius * o.matrixWorld.getMaxScaleOnAxis() < Q.smallCast) o.castShadow = false;
+  });
+}
+
 // ================= life: butterflies, drifting petals, cafe string lights =================
 const life = [];
 function buildLife() {
@@ -101,9 +112,9 @@ function buildDust() {
 // ================= lights =================
 const hemi = new THREE.HemisphereLight(0xdfe6ee, 0x8a8b7c, .6); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff6ec, 1.1);
-sun.castShadow = true; sun.shadow.mapSize.set(3072, 3072);
+sun.castShadow = true; sun.shadow.mapSize.set(Q.shadow, Q.shadow);   // the quality tier's size (setup.js): 2048 desktop, 1024 low
 Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20, near: 1, far: 90 });   // a 40 m square round the player at 3072 px: ~77 px per metre (it was 43); groundlife.js snaps it to the texel grid
-sun.shadow.bias = -.0006; sun.shadow.normalBias = .03; sun.shadow.radius = 3.2;   // a wider blur kernel: soft shadow edges instead of hard ones
+sun.shadow.bias = -.0006; sun.shadow.normalBias = .03; sun.shadow.radius = 3.2 * Q.shadow / 3072;   // a wider blur kernel: soft shadow edges instead of hard ones (in texels, scaled so the softness in metres matches the old 3072 map)
 scene.add(sun, sun.target);
 const SUN_DIR = new THREE.Vector3(-26, 19, 14);   // low, late-afternoon sun: long warm shadows
 // gradient sky dome around the camera: horizon matches the fog, blue overhead, a soft glow around the sun
