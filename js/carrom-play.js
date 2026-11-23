@@ -230,7 +230,7 @@
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.h.innerHTML = `<h3>HOUSE RULES</h3><ul><li>The four pockets are the four answers. Flick the coin into the one you think is right.</li>${S && S.easy ? '<li>Easy mode: press <kbd>1</kbd>-<kbd>4</kbd> or click a pocket, and the coin is shot into it for you. </li>' : '<li>Pull back from the striker and let go: the farther you pull, the harder the shot. Or <kbd>←</kbd><kbd>→</kbd> turn, hold <kbd>Space</kbd> and release. <kbd>A</kbd><kbd>D</kbd> slide the striker.</li><li>A hit pushes the coin away from the striker. So shoot from a side facing away from your pocket. <kbd>Tab</kbd> or a click on a baseline moves the striker there. The dotted line shows where the coin will go.</li>'}<li>Wrong pocket: a mistake and a Concept Card (<kbd>E</kbd> continues). Two mistakes, or no time, and the ghost shows the answer. A coin that stops on the board only costs time.</li><li><kbd>S</kbd> skips talk, cards and waits. <kbd>M</kbd> sound. <kbd>Esc</kbd> leave (progress is kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>`;
+      if (on) hud.h.innerHTML = `<h3>HOUSE RULES</h3><ul><li>The four pockets are the four answers. Flick the coin into the one you think is right.</li>${S && S.easy ? '<li>Easy mode: press <kbd>1</kbd>-<kbd>4</kbd> or click a pocket, and the coin is shot into it for you. </li>' : '<li>Pull back from the striker and let go: the farther you pull, the harder the shot. Or <kbd>←</kbd><kbd>→</kbd> turn, hold <kbd>Space</kbd> and release. <kbd>A</kbd><kbd>D</kbd> slide the striker.</li><li>A hit pushes the coin away from the striker. So shoot from a side facing away from your pocket. <kbd>Tab</kbd> or a click on a baseline moves the striker there. The dotted line shows where the coin will go.</li>'}<li>Wrong pocket: a mistake and a Concept Card (<kbd>Enter</kbd> continues). Two mistakes, or no time, and the ghost shows the answer. A coin that stops on the board only costs time.</li><li><kbd>Esc</kbd> skips talk, cards and waits. <kbd>M</kbd> sound. <kbd>Esc</kbd> leave (progress is kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>`;
       hud.h.style.display = on ? 'block' : 'none';
     }
     const helpOpen = () => !!hud && hud.h.style.display === 'block';
@@ -305,7 +305,7 @@
     // Normal / Easy first (keys 1 / 2, Enter = the last choice), then Quick / Full
     function pickMode(easy) {
       S.easy = TF.easy = easy; S.phase = 'pick'; hud.qKey = '';
-      hud.p.innerHTML = '<h3>CHOOSE YOUR RUN</h3><p><kbd>1</kbd> Quick: 3 rounds, about 3 minutes</p><p><kbd>2</kbd> or <kbd>E</kbd> Full: 5 rounds</p>';
+      hud.p.innerHTML = '<h3>CHOOSE YOUR RUN</h3><p><kbd>1</kbd> Quick: 3 rounds, about 3 minutes</p><p><kbd>2</kbd> or <kbd>Enter</kbd> Full: 5 rounds</p>';
     }
     // the Quick / Full choice (keys 1 / 2, E = Full), then the brief: the full one on the first play, one line after that. Quick = rounds 1, 2 and the finale.
     function pickLength(quick) {
@@ -474,6 +474,7 @@
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
       if (play.modal && play.modal.open()) { if (['KeyE', 'Escape', 'Enter'].includes(e.code) && !e.repeat) play.modal.close(); else if (play.modal.key) play.modal.key(e); return true; }
+      { const code = e.code === 'Enter' ? 'KeyE' : e.code === 'Escape' && cardOpen() && !helpOpen() ? 'KeyS' : e.code; if (code !== e.code) e = { code, key: e.key, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault() {}, stopPropagation() {} }; }   // Enter works as E; Esc skips like S while a concept card is up (otherwise it leaves)
       if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
@@ -559,7 +560,7 @@
       TF.life.push((t, dt) => frame(t, dt));
       const prev = TF.onKey; TF.onKey = (e) => (S && S.on ? onKey(e) : prev ? prev(e) : false);
       addEventListener('keyup', onKeyUp);
-      addEventListener('keydown', (e) => { if (e.code === 'KeyS' && !e.repeat && S && S.on && TF.talking && bridge && bridge.skipTalk) bridge.skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
+      addEventListener('keydown', (e) => { if ((e.code === 'KeyS' || e.code === 'Escape') && !e.repeat && S && S.on && TF.talking && bridge && bridge.skipTalk) bridge.skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
       const el = TF.renderer.domElement; el.style.touchAction = 'none';
       el.addEventListener('pointerdown', onPointerDown); el.addEventListener('pointermove', onPointerMove); el.addEventListener('pointerup', onPointerUp); el.addEventListener('pointercancel', onPointerUp);
       addEventListener('blur', () => { A.charging = false; A.drag = false; for (const k in held) held[k] = false; });

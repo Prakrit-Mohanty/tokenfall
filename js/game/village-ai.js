@@ -117,12 +117,18 @@ function dogPickTarget(dog) {
 }
 function vaiRobotDog(x, z) {
   const g = new THREE.Group(); g.name = 'robotDog'; g.userData.dyn = true; scene.add(g);
+  // its body is the modelled robot dog (js/models/robodog.js, tools/dog-pack.py): one posed mesh with no rig, so it trots with a bob and a rock,
+  // sits by leaning back, and wags its whole body when you are close; parsed once with GLTFLoader, lit like the rest of the game (linear colour, no metal)
   const body = new THREE.Group(); g.add(body);
-  box(.9, .32, .4, vaiShell(), 0, .42, 0, { p: body }); box(.36, .3, .32, vaiShell(), .55, .66, 0, { p: body });
-  box(.03, .1, .24, vaiFace('o o'), .74, .66, 0, { p: body, cast: false });
-  const tail = new THREE.Group(); tail.position.set(-.45, .6, 0); body.add(tail);
-  box(.05, .3, .05, MAT.metal, 0, 0, 0, { p: tail }); box(.08, .08, .08, vGlow(V_LED), 0, .3, 0, { p: tail, cast: false });
-  const legs = [[.32, .15], [.32, -.15], [-.32, .15], [-.32, -.15]].map(([lx, lz]) => { const p = new THREE.Group(); p.position.set(lx, .42, lz); body.add(p); box(.09, .42, .09, MAT.metal, 0, -.42, 0, { p }); return p; });
+  { const bin = atob(window.ROBODOG_MODEL), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    new THREE.GLTFLoader().parse(buf.buffer, '', (gl) => {
+      gl.scene.traverse((m) => {
+        if (!m.isMesh) return; m.castShadow = m.receiveShadow = true;
+        for (const k of ['map', 'emissiveMap']) if (m.material[k]) { m.material[k].encoding = THREE.LinearEncoding; m.material[k].needsUpdate = true; }
+        m.material.metalness = 0; m.material.roughness = Math.max(m.material.roughness, .45); m.material.needsUpdate = true;
+      });
+      body.add(gl.scene);
+    }, (e) => console.warn('robot dog model', e)); }
   const dog = { x, z, target: null, wait: 1, heading: 0, sit: 0 };
   let last = 0;
   anim.push((t) => {
@@ -138,10 +144,10 @@ function vaiRobotDog(x, z) {
     }
     dog.sit += ((moving ? 0 : 1) - dog.sit) * Math.min(1, dt * 4);
     g.position.set(dog.x, 0, dog.z); g.rotation.y = dog.heading;
-    body.rotation.z = dog.sit * .32; body.position.y = -dog.sit * .08;
-    legs.forEach((l, i) => { l.rotation.z = moving ? Math.sin(t * 12 + (i % 3 ? Math.PI : 0)) * .5 : (i > 1 ? -dog.sit * .9 : 0); });
     const happy = hero.zone === 'lobby' && Math.hypot(hero.x - dog.x, hero.y - dog.z) < 2.5;
-    tail.rotation.x = happy ? Math.sin(t * 16) * .5 : Math.sin(t * 2) * .1;
+    body.rotation.z = dog.sit * .22 + (moving ? Math.sin(t * 12) * .04 : 0);   // leans back to sit; a rock on the trot
+    body.position.y = moving ? Math.abs(Math.sin(t * 12)) * .05 : 0;
+    body.rotation.y = happy ? Math.sin(t * 16) * .12 : 0;   // the whole-body wag
   });
 }
 

@@ -29,8 +29,9 @@
     root.append(layer, hud, bub); document.getElementById('ui').appendChild(root);
 
     let onIcon = () => {}, card = null, cardClose = null, toastEl = null, toastT = 0, bubT = 0;
-    hud.addEventListener('click', () => onIcon());
-    hud.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onIcon(); } });
+    // a click lets go of focus straight away, and only Enter works it from the keyboard: Space is always the jump, never 'send TOKEN-1 away'
+    hud.addEventListener('click', () => { onIcon(); hud.blur(); });
+    hud.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); onIcon(); } });
 
     const setHud = ({ accuracy, stage, stageName, away }) => {
       hud.className = `t1-hud panel s${stage}${away ? ' t1-away' : ''}`;
@@ -51,9 +52,11 @@
       const hit = cardActions.find((a) => a.key === e.key);
       if (hit) closeCard(hit.act);
     };
+    // a card without buttons also closes on a left click anywhere (any key closes it too); one with buttons waits for a choice (Esc or Enter)
+    const onCardClick = (e) => { if (e.button !== 0 || cardActions) return; e.preventDefault(); e.stopPropagation(); closeCard(); };
     const closeCard = (then) => {
       if (!card) return;
-      removeEventListener('keydown', onCardKey, true);
+      removeEventListener('keydown', onCardKey, true); removeEventListener('mousedown', onCardClick, true);
       const el = card, done = cardClose; card = null; cardClose = null; cardActions = null;
       animate(el, { opacity: 0, duration: 160, ease: 'inQuad', onComplete: () => el.remove() });
       if (typeof then === 'function') then();
@@ -64,12 +67,11 @@
       card = document.createElement('div'); card.className = 't1-card panel'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', title);
       const foot = actions
         ? `<div class="t1-btns">${actions.map((a, i) => `<button type="button" class="t1-btn${a.primary ? ' t1-primary' : ''}" data-i="${i}">${a.label} <kbd>${a.key === 'Enter' ? '⏎' : 'Esc'}</kbd></button>`).join('')}</div>`
-        : '<div class="t1-foot">press any key ▸</div>';
+        : '<div class="t1-foot">press any key or click ▸</div>';
       card.innerHTML = `${kicker ? `<div class="t1-kicker">${kicker}</div>` : ''}<h2>${title}</h2><div class="t1-line"></div><div class="t1-body">${html}</div>${foot}`;
       cardActions = actions || null; cardClose = onClose || null;
       if (actions) card.querySelectorAll('.t1-btn').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); closeCard(actions[+b.dataset.i].act); }));
-      else card.addEventListener('click', () => closeCard());
-      root.appendChild(card); addEventListener('keydown', onCardKey, true);
+      root.appendChild(card); addEventListener('keydown', onCardKey, true); addEventListener('mousedown', onCardClick, true);
       const primary = card.querySelector('.t1-primary'); if (primary) primary.focus({ preventScroll: true });
       animate(card, { opacity: [0, 1], scale: [.96, 1], duration: 260, ease: 'outQuad' });
     };

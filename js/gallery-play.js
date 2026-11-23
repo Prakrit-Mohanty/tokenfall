@@ -208,7 +208,7 @@
     const COACH = ['Click or <kbd>Space</kbd> to shoot a threat. Aim for the bullseye: the middle scores most. Let real ones pass.', 'Not sure about a card? Hold <kbd>F</kbd> on it to check it. You get 5 checks a run.', 'Three right calls in a row make a combo.'];
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.help.innerHTML = '<h3>SPOT SHOT</h3><ul><li>Paper ducks, each wearing a card, slide along three shelves towards the ticket windows. <b>Aim for the bullseye</b>: dead centre scores 100, the rings 50 and 25, the edge only 10. <b>Shoot the threats</b> (fakes, scams, poisoned inputs) with a click, a tap or <kbd>Space</kbd>; <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move the reticle.</li><li><b>Spare the real ones:</b> let them pass and they are delivered. Shooting a real card is friendly fire. A threat that reaches the window is a leak.</li><li>Each round gives threats + 2 shots, and a shot that hits nothing still costs one. <b>Inspect</b> a card (hold <kbd>F</kbd>, the right button or a long press, about 0.6 s) to read its verification line: five inspections for the whole run.</li><li>Some cards are traps: they look the wrong way round. A right call on a trap you did not inspect is a lucky shot and never counts towards mastery.</li><li><kbd>Tab</kbd> lists the cards in big text. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>Esc</kbd> leaves (finished rounds are kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.help.innerHTML = '<h3>SPOT SHOT</h3><ul><li>Paper ducks, each wearing a card, slide along three shelves towards the ticket windows. <b>Aim for the bullseye</b>: dead centre scores 100, the rings 50 and 25, the edge only 10. <b>Shoot the threats</b> (fakes, scams, poisoned inputs) with a click, a tap or <kbd>Space</kbd>; <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move the reticle.</li><li><b>Spare the real ones:</b> let them pass and they are delivered. Shooting a real card is friendly fire. A threat that reaches the window is a leak.</li><li>Each round gives threats + 2 shots, and a shot that hits nothing still costs one. <b>Inspect</b> a card (hold <kbd>F</kbd>, the right button or a long press, about 0.6 s) to read its verification line: five inspections for the whole run.</li><li>Some cards are traps: they look the wrong way round. A right call on a trap you did not inspect is a lucky shot and never counts towards mastery.</li><li><kbd>Tab</kbd> lists the cards in big text. <kbd>M</kbd> sound. <kbd>Enter</kbd> continues. <kbd>Esc</kbd> leaves (finished rounds are kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>';
       hud.help.style.display = on ? 'block' : 'none';
     }
 
@@ -230,9 +230,9 @@
       const run = S.run, R = run.begin(i), r = R.r;
       world.clearRound(); world.loadRound(r); world.run(false); S.combo = 0; S.phase = 'brief'; S.inspectText = {}; S.landing = {}; S.hint = 0; S.read = false; S.endT = 0; hud.topKey = hud.statKey = hud.readKey = '';
       if (!S.tutorial) emit('round', { index: i, items: r.items.map((c) => c.itemId) });
-      if (S.tutorial) { hud.brief.innerHTML = '<div class="k">PRACTICE DUCK</div><div class="t">One slow duck. Read it, inspect it, decide.</div><div class="m">No timer and nothing is scored.</div><p class="go"><kbd>E</kbd> Start ▼</p>'; hud.brief.style.display = 'block'; S.briefT = 8; return; }
+      if (S.tutorial) { hud.brief.innerHTML = '<div class="k">PRACTICE DUCK</div><div class="t">One slow duck. Read it, inspect it, decide.</div><div class="m">No timer and nothing is scored.</div><p class="go"><kbd>Enter</kbd> Start ▼</p>'; hud.brief.style.display = 'block'; S.briefT = 8; return; }
       if (r.kind === 'finale') { TF.banner(r.banner[0], r.banner[1]); hud.brief.style.display = 'none'; S.briefT = 3; return; }
-      hud.brief.innerHTML = `<div class="k">ROUND ${i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}</div><div class="t">${esc(r.brief)}</div>${S.oneLine ? '' : `<div class="m">${R.ammoStart} shots this round · ${run.charges} inspection${run.charges === 1 ? '' : 's'} left</div>`}<p class="go"><kbd>E</kbd> Start ▼</p>`;
+      hud.brief.innerHTML = `<div class="k">ROUND ${i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}</div><div class="t">${esc(r.brief)}</div>${S.oneLine ? '' : `<div class="m">${R.ammoStart} shots this round · ${run.charges} inspection${run.charges === 1 ? '' : 's'} left</div>`}<p class="go"><kbd>Enter</kbd> Start ▼</p>`;
       hud.brief.style.display = 'block'; S.briefT = 8;
     }
     function startPlay() {
@@ -283,14 +283,14 @@
       for (const e of log.entries) emit('answer', { credit: true, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, shoot: e.shoot, action: e.action, correct: e.correct, lucky: e.lucky, inspected: e.inspected });
       S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 2); S.queueN = S.queue.length; world.run(false); S.read = false; hud.statKey = '';
       const name = sideName(log.side);
-      hud.rs.innerHTML = `<h5>ROUND ${run.i + 1} · ${esc(name.toUpperCase())}</h5>${esc(roundLine(sc))}${recap(log.entries)}<div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>S</kbd> skip ▼</div>`; hud.rs.style.display = 'block';
+      hud.rs.innerHTML = `<h5>ROUND ${run.i + 1} · ${esc(name.toUpperCase())}</h5>${esc(roundLine(sc))}${recap(log.entries)}<div class="go"><kbd>Enter</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>Esc</kbd> skip ▼</div>`; hud.rs.style.display = 'block';
       sfx('chime'); TF.sys(`Round ${run.i + 1}: stopped ${sc.stopped} of ${sc.threats} threats, accuracy ${sc.accuracy == null ? '–' : Math.round(100 * sc.accuracy) + '%'}.`);
     }
     // the practice duck is done: the worked example, then the real run
     function endPractice() {
       const R = S.run.round, it = R.r.items[0], e = R.done.get(it.uid), said = !e ? '' : e.event === 'stopped' ? 'You shot it: the right call.' : 'You let it through, but it was a fake.';
       S.phase = 'lesson'; world.run(false); S.read = false; hud.statKey = '';
-      hud.rs.innerHTML = `<h5>WORKED EXAMPLE</h5>The card said: “${esc(it.card.body)}” (${esc(it.card.from)}).<br>Checking it showed: <b>${esc(it.inspect)}</b><br>${said} ${esc(it.tell)}<br>Had the check shown a real source you can open, you would spare it, even if a detector score looked scary.<div class="go"><kbd>E</kbd> Start round 1 ▼</div>`; hud.rs.style.display = 'block'; sfx('chime');
+      hud.rs.innerHTML = `<h5>WORKED EXAMPLE</h5>The card said: “${esc(it.card.body)}” (${esc(it.card.from)}).<br>Checking it showed: <b>${esc(it.inspect)}</b><br>${said} ${esc(it.tell)}<br>Had the check shown a real source you can open, you would spare it, even if a detector score looked scary.<div class="go"><kbd>Enter</kbd> Start round 1 ▼</div>`; hud.rs.style.display = 'block'; sfx('chime');
     }
     function endLesson() {
       hud.rs.style.display = 'none'; S.run = S.real; S.tutorial = false; world.clearRound(); beginRound(0);
@@ -340,6 +340,7 @@
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
       if (play.modal && play.modal.open()) { if (['KeyE', 'Escape', 'Enter'].includes(e.code) && !e.repeat) play.modal.close(); else if (play.modal.key) play.modal.key(e); return true; }
+      { const code = e.code === 'Enter' ? 'KeyE' : e.code === 'Escape' && S.phase === 'debrief' && !helpOpen() ? 'KeyS' : e.code; if (code !== e.code) e = { code, key: e.key, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault() {}, stopPropagation() {} }; }   // Enter works as E; Esc skips like S while the round's cards are up (otherwise it leaves)
       if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }

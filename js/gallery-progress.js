@@ -147,7 +147,7 @@
         + `<div class="stat">Lucky shots vs verified: <b>${lucky}</b> right without inspecting a trap · <b>${verified}</b> right after inspecting one</div>`
         + '<h4>REVISIT</h4>' + (rev.length ? `<ul>${rev.map((r) => `<li><b>${esc(r.title)}</b> <small>(${esc(r.sideName)}: ${esc(r.note)})</small><br><small>${esc(r.idea)}</small></li>`).join('')}</ul>` : '<div class="none">Nothing to revisit yet. Keep spotting.</div>')
         + `<div class="note">Bridge mastery: ${br.mastered} of ${br.total} topics. Mastered = clean handling in two different variants on two different runs; a trap counts only if you inspected it.</div>`
-        + `<div class="acts"><button data-act="export" type="button">Export progress (JSON) <kbd>J</kbd></button><button data-act="close" type="button">Close <kbd>E</kbd></button></div>`;
+        + `<div class="acts"><button data-act="export" type="button">Export progress (JSON) <kbd>J</kbd></button><button data-act="close" type="button">Close <kbd>Enter</kbd></button></div>`;
     }
     function open(sum) { if (!panel) panel = makePanel(); render(sum); panel.style.display = 'block'; panel.scrollTop = 0; panelOpen = true; }
     function hide() { if (panel) panel.style.display = 'none'; panelOpen = false; }

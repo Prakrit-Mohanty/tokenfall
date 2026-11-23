@@ -31,28 +31,37 @@ function puneMaterials() {
     for (let y = 0; y < 16; y += 8) for (let x = (y / 8) * 4; x < 36; x += 8) { g.fillStyle = [PAL.paint, PAL.paintLight, PAL.plum][rnd() * 3 | 0]; g.fillRect(x - 4, y, 7, 7); }
     for (const x of [6, 22]) { g.fillStyle = PAL.paintLight; g.fillRect(x, 2, 2, 5); g.fillRect(x + 4, 10, 2, 5); }
   }, { nearest: false }), 1.2, { roughness: .7, metalness: 0 }));
-  const concrete = pOnce('roadConcrete', () => { const m = std(TX.concrete, 2, { roughness: .9 }); m.color.setRGB(.74, .74, .72); return m; });
+  // the road surfaces (js/models/road-tex.js, tools/roads-pack.py): asphalt for every road, and the two-lane street strip (edge lines and a dashed centre) for the side streets
+  const roadTex = (k) => { const t = new THREE.TextureLoader().load(window.ROAD_TEX[k]); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; };
+  const concrete = pOnce('roadConcrete', () => std(roadTex('asphalt'), 4, { roughness: .92 }));
+  const street = pOnce('roadStreet', () => std(roadTex('street'), 0, { roughness: .92 }));
   const tabebuia = pOnce('tabebuia', () => std(canvasTex(16, 16, (g) => {
     g.fillStyle = '#e88ab0'; g.fillRect(0, 0, 16, 16);
     for (let i = 0; i < 40; i++) { g.fillStyle = ['#f4a8c8', '#c8648c', '#5f8a3a'][i % 3]; g.fillRect(rnd() * 16 | 0, rnd() * 16 | 0, 1, 1); }
   }, { nearest: true }), 0));
-  return { brick, granite, concrete, tabebuia };
+  return { brick, granite, concrete, tabebuia, street };
 }
 
 // ---------------------------------------------------------------- ground: the concrete road, brick footpaths, two side streets
 function puneGround(cx, cz, M) {
   plane(460, 360, std(TX.concrete, 1.5, { roughness: 1, color: 0x8a8c90 }), cx + 50, -.012, cz + 20, 1.5);
-  const [x0, x1] = PUNE_ROAD_X, rl = x1 - x0, rm = (x0 + x1) / 2, joint = pOnce('joint', () => new THREE.MeshStandardMaterial({ color: 0x55565a, roughness: 1 }));
-  plane(rl, 12, M.concrete, cx + rm, .02, cz + PUNE_MZ, 2);
-  for (let x = x0; x < x1; x += 5) box(.05, .01, 12, joint, cx + x, .02, cz + PUNE_MZ, { cast: false });
-  box(rl, .01, .05, joint, cx + rm, .02, cz + PUNE_MZ, { cast: false });
+  const [x0, x1] = PUNE_ROAD_X, rl = x1 - x0, rm = (x0 + x1) / 2;
+  plane(rl, 12, M.concrete, cx + rm, .02, cz + PUNE_MZ, 4);
+  // lane markings on the main road, kept out of the junctions: a solid double centre line, dashed lines between the two lanes each way, solid edge lines
+  const paint = pOnce('roadPaint', () => new THREE.MeshStandardMaterial({ color: 0xf2eee6, roughness: .8 })), amber = pOnce('roadAmber', () => new THREE.MeshStandardMaterial({ color: 0xf0c060, roughness: .8 }));
+  for (const [a, b] of [[x0, PUNE_RX - 6], [PUNE_RX + 6, PUNE_RX2 - 6], [PUNE_RX2 + 6, x1]]) {
+    for (const dz of [-.14, .14]) box(b - a, .01, .1, amber, cx + (a + b) / 2, .021, cz + PUNE_MZ + dz, { cast: false });
+    for (const dz of [-5.4, 5.4]) box(b - a, .01, .12, paint, cx + (a + b) / 2, .021, cz + PUNE_MZ + dz, { cast: false });
+    for (const dz of [-2.4, 2.4]) for (let x = a + 1; x + 3 <= b; x += 6) box(3, .01, .12, paint, cx + x + 1.5, .021, cz + PUNE_MZ + dz, { cast: false });
+  }
   const runs = [[x0, PUNE_RX - 3], [PUNE_RX + 3, PUNE_RX2 - 3], [PUNE_RX2 + 3, x1]];
   for (const [a, b] of runs) {
     for (const z of [PUNE_MZ - 7.5, PUNE_MZ + 7.5]) plane(b - a, 3, M.brick, cx + (a + b) / 2, .024, cz + z, 3);
     for (const z of [PUNE_MZ - 6.1, PUNE_MZ + 6.1]) box(b - a, .16, .22, MAT.concrete, cx + (a + b) / 2, 0, cz + z, { cast: false });
   }
   for (const sx of [PUNE_RX, PUNE_RX2]) {
-    plane(6, 230, M.concrete, cx + sx, .021, cz - 5, 2);
+    { const g = new THREE.PlaneGeometry(6, 230); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * 230 / 9);   // the strip once across, a tile every 9 m along
+      const me = new THREE.Mesh(g, M.street); me.position.set(cx + sx, .021, cz - 5); me.receiveShadow = true; scene.add(me); }
     for (const s of [-3.9, 3.9]) for (const [z0, z1] of [[-120, PUNE_MZ - 6], [PUNE_MZ + 6, 110]]) plane(1.8, z1 - z0, M.brick, cx + sx + s, .025, cz + (z0 + z1) / 2, 3);
   }
   const yb = pOnce('yb', () => std(canvasTex(8, 2, (g) => { for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#1c1c20' : '#f2c418'; g.fillRect(i, 0, 1, 2); } }, { nearest: true }), 1));
@@ -197,8 +206,8 @@ function puneFiller(x, z, w, d, h, M) {
 
 function puneCityFill(cx, cz, M) {
   for (const [axis, at, a, b] of PUNE_BACK_STREETS) {
-    if (axis === 'x') { plane(b - a, 10, M.concrete, cx + (a + b) / 2, .019, cz + at, 2); for (const s of [-4.1, 4.1]) plane(b - a, 1.8, M.brick, cx + (a + b) / 2, .022, cz + at + s, 3); }
-    else { plane(10, b - a, M.concrete, cx + at, .019, cz + (a + b) / 2, 2); for (const s of [-4.1, 4.1]) plane(1.8, b - a, M.brick, cx + at + s, .022, cz + (a + b) / 2, 3); }
+    if (axis === 'x') { plane(b - a, 10, M.concrete, cx + (a + b) / 2, .019, cz + at, 4); for (const s of [-4.1, 4.1]) plane(b - a, 1.8, M.brick, cx + (a + b) / 2, .022, cz + at + s, 3); }
+    else { plane(10, b - a, M.concrete, cx + at, .019, cz + (a + b) / 2, 4); for (const s of [-4.1, 4.1]) plane(1.8, b - a, M.brick, cx + at + s, .022, cz + (a + b) / 2, 3); }
   }
   const streets = PUNE_BACK_STREETS.map(([axis, at]) => (axis === 'x' ? [-1e9, at - 6, 1e9, at + 6] : [at - 6, -1e9, at + 6, 1e9]))
     .concat([PUNE_RX, PUNE_RX2].map((sx) => [sx - 6, -1e9, sx + 6, 1e9]), [[-1e9, PUNE_MZ - 9, 1e9, PUNE_MZ + 9]]);
@@ -251,7 +260,9 @@ function puneParking(cx, cz, asphalt) {
   for (const z of [-8, -5.2, -2.4, .4, 3.2]) box(4.8, .015, .1, MAT.white, cx - 18.3, .02, cz + z, { cast: false });
   const BA = Math.PI * .75;
   for (const x of [-17.2, -15.2, -13.2, -11.2, -9.2]) box(.08, .015, 2.6, MAT.white, cx + x, .02, cz + 3.2, { ry: BA, cast: false });
-  car(cx - 18.3, cz - 6.6, -Math.PI / 2, 0xe8e8ec); car(cx - 18.3, cz - 3.8, -Math.PI / 2, PAL.coral); car(cx - 18.3, cz - 1, -Math.PI / 2, PAL.paint);
+  sportsCar('bmw', cx - 18.3, cz - 6.6, -Math.PI / 2); sportsCar('jesko', cx - 18.3, cz - 3.8, -Math.PI / 2); sportsCar('m4', cx - 18.3, cz - 1, -Math.PI / 2);
+  INTER.push({ x: cx - 15.6, z: cz - 3.8, r: 1.4, label: 'Koenigsegg Jesko', verb: 'Look', act: () => talk('Koenigsegg Jesko', ['A Koenigsegg Jesko in orange, all carbon wing and gold wheels.', 'Somebody at Crescent Bay is doing very well.']) });
+  INTER.push({ x: cx - 15.6, z: cz - 6.6, r: 1.4, label: 'BMW M3 GTR', verb: 'Look', act: () => talk('BMW M3 GTR', ['The BMW M3 GTR in its racing livery.', 'It looks like it would rather be on a highway than in a car park.']) });
   const BIKES = [['r15', -16.2, 'Yamaha R15M', 'A Yamaha R15M in metallic grey, with blue wheels and gold forks.'],
     ['vstrom', -14.2, 'Suzuki V-Strom', 'A yellow Suzuki V-Strom SX, ready for a long ride.'],
     ['avenger', -12.2, 'Bajaj Avenger', 'A black Bajaj Avenger cruiser, all chrome and low seat.'],
@@ -274,14 +285,15 @@ function puneStreet(cx, cz) {
   for (const x of [26, 29.3, 44, 47.3]) parked(cx + x, cz + PUNE_MZ - 5.35, Math.PI / 2, rnd() < .85 ? PAL.gold : PAL.sage);
   for (const x of [-36, -32.7, -20, -16.7, 70, 73.3, 92]) parked(cx + x, cz + PUNE_MZ + 5.35, -Math.PI / 2, rnd() < .85 ? PAL.gold : PAL.sage);
   bins(cx + 104, nz - .9); bins(cx - 6, sz + 1);
+  for (const [x, z] of [[cx + 106.4, nz - .9], [cx - 3.6, sz + 1]]) { streetProp('hydrant', x, 0, z, 0); colCirc(x, z, .25); }   // a fire hydrant by each pair of bins
   const M = cz + PUNE_MZ, J1 = cx + PUNE_RX, J2 = cx + PUNE_RX2, [x0, x1] = PUNE_LANE_X, L = PUNE_LANES;
   trafficLights(J1, M, 4.6, 6.7); trafficLights(J2, M, 4.6, 6.7);
   const eastStops = [J1 - 6.8, J2 - 6.8], westStops = [J1 + 6.8, J2 + 6.8];
-  lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, 'car', PAL.paint], [cx + 40, 'auto', PAL.gold], [cx + 100, 'car', 0xd8d4c8], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, 'scooter', PAL.periwinkle]]);
-  lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, 'car', PAL.periwinkle], [cx + 70, 'car', PAL.coral], [cx + 125, 'auto', PAL.sage], [cx + 30, 'scooter', PAL.coral], [cx + 100, 'car', 0xe8e8ec]]);
-  lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, 'car', 0xe8e8ec], [cx + 20, 'auto', PAL.gold], [cx + 80, 'car', PAL.paint], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, 'car', 0xd8d4c8]]);
-  lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', PAL.sage], [cx - 20, 'car', 0x3a7a5a], [cx + 50, 'car', 0x8a2a5a], [cx + 130, 'scooter', 0xe8e6e0], [cx + 15, 'scooter', 0x3f8a4a]]);
-  for (const [J, cars] of [[J1, [[cz - 40, 'car', 0xe8e8ec], [cz + 40, 'auto', PAL.gold]]], [J2, [[cz - 20, 'auto', PAL.gold], [cz + 55, 'car', PAL.periwinkle]]]]) {
+  lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, 'creta'], [cx + 40, 'auto', PAL.gold], [cx + 100, 'bmw'], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, 'eeco']]);
+  lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, 'scorpio'], [cx + 70, 'creta'], [cx + 125, 'auto', PAL.sage], [cx + 30, 'scooter', PAL.coral], [cx + 100, 'creta']]);
+  lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, 'eeco'], [cx + 20, 'auto', PAL.gold], [cx + 80, 'creta'], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, 'creta']]);
+  lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', PAL.sage], [cx - 20, 'jesko'], [cx + 50, 'creta'], [cx + 130, 'omni'], [cx + 15, 'scooter', 0x3f8a4a]]);
+  for (const [J, cars] of [[J1, [[cz - 40, 'omni'], [cz + 40, 'auto', PAL.gold]]], [J2, [[cz - 20, 'auto', PAL.gold], [cz + 55, 'creta']]]]) {
     lane('z', J - 1.5, 1, cz - 70, cz + 80, M - 6.8, 'ns', cars);
     lane('z', J + 1.5, -1, cz + 80, cz - 70, M + 6.8, 'ns', cars.map(([s, k, c]) => [s + 30, k, c ^ 0x202020]));
   }

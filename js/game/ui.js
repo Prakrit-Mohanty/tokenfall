@@ -38,6 +38,8 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyV' && !e.repeat) setCamView(camView ^ 1);
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
+// a left click anywhere also moves a dialogue on (like E, Space, Enter or Escape), and the click goes no further
+addEventListener('mousedown', e => { if (dialog && e.button === 0) { advanceDialog(); e.preventDefault(); e.stopPropagation(); } }, true);
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
 // ================= large text =================

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaurav Clay · Tokenfall</title>
+<style>
+  html,body{margin:0;background:#15131D;color:#EDE9F7;font-family:system-ui,sans-serif}
+  main{max-width:900px;margin:0 auto;padding:24px 16px}
+  h1{font-size:24px;margin:0 0 4px} p{margin:0 0 16px;color:#A9A3BC}
+</style>
+</head>
+<body>
+<main>
+  <h1>Gaurav · Clay</h1>
+  <p>Arrows/WASD walk · Shift run · Space jump</p>
+  <div id="stage"></div>
+</main>
+<script src="js/gaurav-clay.js"></script>
+<script>
+  GauravClay.mount(document.getElementById('stage'), { src: 'sprites/gaurav-clay.webp' });
+</script>
+</body>
+</html>

@@ -70,14 +70,14 @@
   const BRIEFING = [
     'Welcome to the Glass Bridge! Each row asks a question. The tiles are the answers.',
     'Jump onto the tile you think is right. A wrong tile shatters.',
-    'Space jumps (tap it alone to hop forward). Shift runs. E closes a card. F gives a hint, three times per run. M mutes. S skips talk.',
+    'Space jumps (tap it alone to hop forward). Shift runs. Enter closes a card. F gives a hint, three times per run. M mutes. Esc skips talk.',
     'The parkour bits are just for fun: fall there and you only lose time. Fun fact: this sentence is about 12 tokens long.',
   ], BRIEF_SHORT = 'Back on the bridge. Jump onto the tile you think is right. Space jumps, F hints, M mutes.';
   // easy (chosen on arrival, before the run): the rows touch and there is no parkour, so you just walk onto your answer. Same questions, same scoring.
   const BRIEF_EASY = [
     'Welcome to the Glass Bridge! Each row asks a question. The tiles are the answers.',
     'Walk onto the tile you think is right. A wrong tile shatters. No jumping needed.',
-    'F gives a hint, three times per run. E closes a card. M mutes. S skips talk.',
+    'F gives a hint, three times per run. E closes a card. M mutes. Esc skips talk.',
   ];
   const STAGE_RULE = ['Read the question on the board above the row, then hop onto the tile with the right answer.', 'A wrong tile means a fall and a card. Then the row is dealt again.', 'F gives a hint: it cracks one wrong tile, but caps you at 2 stars.', 'The boss is one case with three calls. Same rules.'];
 
@@ -304,7 +304,7 @@
     }
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.h.innerHTML = `<h3>HOW TO PLAY</h3><ul><li>Every row asks a question. Every tile is an answer.</li><li>Jump onto the tile you think is right. A wrong tile breaks. You fall, read why, and the row is dealt again.</li>${S && S.spec.easy ? '<li>Easy mode: walk onto a tile to choose it. No jumping.</li><li>An answered row links up. Walk to any lane, then walk on.</li>' : '<li><kbd>Space</kbd> jumps (tap it alone to hop forward). <kbd>Shift</kbd> runs.</li><li>An answered row links up. Walk to any lane, then jump on.</li>'}<li><kbd>F</kbd> hint (3 per run) cracks one wrong tile, but caps you at 2 stars.</li><li><kbd>M</kbd> sound. <kbd>R</kbd> report card. <kbd>E</kbd> closes cards. <kbd>S</kbd> skips talk and cards.</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>`;
+      if (on) hud.h.innerHTML = `<h3>HOW TO PLAY</h3><ul><li>Every row asks a question. Every tile is an answer.</li><li>Jump onto the tile you think is right. A wrong tile breaks. You fall, read why, and the row is dealt again.</li>${S && S.spec.easy ? '<li>Easy mode: walk onto a tile to choose it. No jumping.</li><li>An answered row links up. Walk to any lane, then walk on.</li>' : '<li><kbd>Space</kbd> jumps (tap it alone to hop forward). <kbd>Shift</kbd> runs.</li><li>An answered row links up. Walk to any lane, then jump on.</li>'}<li><kbd>F</kbd> hint (3 per run) cracks one wrong tile, but caps you at 2 stars.</li><li><kbd>M</kbd> sound. <kbd>R</kbd> report card. <kbd>Enter</kbd> closes cards. <kbd>Esc</kbd> skips talk and cards.</li></ul><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>`;
       hud.h.style.display = on ? 'block' : 'none';
     }
     // The Concept Card panel, shared with the other games (play.card): show({ lead, text, breaks, idea, hint }) / hide() / open.
@@ -315,7 +315,7 @@
         hud = hud || makeHud();
         // the idea is the one-sentence takeaway and comes first; what you chose and why it breaks follow (ideaLabel is no longer shown: the headline is the idea)
         hud.c.innerHTML = `<h3>CONCEPT CARD</h3>` + (o.idea ? `<p class="tk"><b>${esc(o.idea)}</b></p>` : '') + (o.line ? `<p><b>${esc(o.line)}</b></p>` : `<p>${esc(o.lead || 'You chose:')} <b>“${esc(o.text)}”</b></p>`) + (o.breaks ? `<p class="w">${esc(o.breaksLabel || 'Why it breaks:')} ${esc(o.breaks)}</p>` : '')
-          + `<p class="go"><kbd>E</kbd> ${esc(o.hint || 'Continue')} ▼${o.skippable ? ' · <kbd>S</kbd> skip' : ''}</p>`;
+          + `<p class="go"><kbd>Enter</kbd> ${esc(o.hint || 'Continue')} ▼${o.skippable ? ' · <kbd>Esc</kbd> skip' : ''}</p>`;
         hud.c.style.display = 'block';
       },
       hide() { if (hud) hud.c.style.display = 'none'; },
@@ -500,6 +500,7 @@
         else if (e.code === 'KeyM') audio.toggle();
         return true;
       }
+      { const code = e.code === 'Enter' ? 'KeyE' : e.code === 'Escape' && S.card && !helpOpen() ? 'KeyS' : e.code; if (code !== e.code) e = { code, key: e.key, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault() {}, stopPropagation() {} }; }   // Enter works as E; Esc skips like S while a concept card is up
       if (e.code === 'Space') { if (!e.repeat && !S.spec.easy) S.jumpQ = true; return true; }
       if ((e.code === 'KeyE' || e.code === 'KeyS') && S.card) { if (!e.repeat) closeCard(); return true; }   // S on a card: the same as E (the row is re-dealt at once)
       if (e.code === 'KeyM' && !e.repeat) { audio.toggle(); return true; }
@@ -535,7 +536,7 @@
       world.register(null, { specFor: newRun, referee });
       world.on('build', buildCoins);
       TF.on('enter', (prev, z) => { if (z === 'bridge') enterZone(); else if (prev === 'bridge') leaveZone(); });
-      addEventListener('keydown', (e) => { if (e.code === 'KeyS' && !e.repeat && TF.zone === 'bridge' && S && TF.talking) skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
+      addEventListener('keydown', (e) => { if ((e.code === 'KeyS' || e.code === 'Escape') && !e.repeat && TF.zone === 'bridge' && S && TF.talking) skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
       TF.zoneTick.bridge = (dt) => { if (play.autotick) tick(dt); };
       TF.onKey = onKey;
       if (progress.attach) progress.attach(play, TF);   // after our key handler is in place, so it can sit in front of it

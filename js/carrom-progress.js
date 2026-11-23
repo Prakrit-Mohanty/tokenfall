@@ -147,7 +147,7 @@
         + `<div class="stat">Knew it first time: <b>${knew}</b> of ${total} · Knew it, missed the shot (3+ shots): <b>${slow}</b></div>`
         + '<h4>REVISIT</h4>' + (rev.length ? `<ul>${rev.map((r) => `<li><b>${esc(r.title)}</b> <small>(${esc(r.sideName)}: ${esc(r.note)})</small><br><small>${esc(r.idea)}</small></li>`).join('')}</ul>` : '<div class="none">Nothing to revisit yet. Keep playing.</div>')
         + `<div class="note">Bridge mastery: ${br.mastered} of ${br.total} topics. Mastered = a first-try right answer in two different variants on two different runs.</div>`
-        + '<div class="acts"><button data-act="export" type="button">Export progress (JSON) <kbd>J</kbd></button><button data-act="close" type="button">Close <kbd>E</kbd></button></div>';
+        + '<div class="acts"><button data-act="export" type="button">Export progress (JSON) <kbd>J</kbd></button><button data-act="close" type="button">Close <kbd>Enter</kbd></button></div>';
     }
     function open(sum) { if (!panel) panel = makePanel(); render(sum); panel.style.display = 'block'; panel.scrollTop = 0; panelOpen = true; }
     function close() { if (panel) panel.style.display = 'none'; panelOpen = false; if (play) play.leave(); }
