@@ -180,7 +180,7 @@
         + '<h4>REVISIT</h4>' + (rev.length ? `<ul>${rev.map((r) => `<li><b>${esc(r.title)}</b> <small>(${esc(r.topicName)}: ${esc(r.note)})</small><br><small>${esc(r.idea)}</small></li>`).join('')}</ul>` : '<div class="none">Nothing to revisit yet. Keep crossing.</div>')
         + (seen.length ? `<div class="note">Next run leans towards: ${esc(next.join(' and '))}.${best && worst && best !== worst ? ` Steadiest: ${esc(best.name)}. Wobbliest: ${esc(worst.name)}.` : ''}</div>` : '')
         + '<div class="note">Mastered = a first-try correct answer in two different variants on two different runs.</div>'
-        + '<div class="acts"><button data-act="export" type="button">Export progress (JSON) <kbd>J</kbd></button><button data-act="close" type="button">Close <kbd>E</kbd></button></div>';
+        + '<div class="acts"><button data-act="export" type="button">Export progress (JSON) <kbd>J</kbd></button><button data-act="close" type="button">Close <kbd>Enter</kbd></button></div>';
     }
     function show(summary) { if (!panel) panel = makePanel(); render(summary); panel.style.display = 'block'; panel.scrollTop = 0; }
     function hide() { if (panel) panel.style.display = 'none'; }
@@ -217,7 +217,7 @@
           if (TF.zone === 'bridge' && !e.repeat) {
             if (e.code === 'KeyJ') { download(); return true; }
             if (e.code === 'KeyR') { open() ? hide() : show(null); return true; }
-            if (open() && (e.code === 'KeyE' || e.code === 'Escape')) { hide(); return true; }
+            if (open() && ['KeyE', 'Enter', 'Escape'].includes(e.code)) { hide(); return true; }
           }
           return prev ? prev(e) : false;
         };

@@ -191,7 +191,7 @@
     }
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.help.innerHTML = `<h3>TOKEN MILL</h3><ul><li>Crates ride past four bins, from loosest (1) to strictest (4). Read the <b>rule</b> on the board. Send each crate to the bin it names.</li><li>To route: <b>drag</b> it onto a bin, or <b>click</b> it then a bin, or <kbd>Tab</kbd> then <kbd>1</kbd>-<kbd>4</kbd>.</li><li>Too lax is unsafe. Two bins too lax is a <b>spill</b>. Too strict wastes capacity. A crate that reaches the pit is lost.</li><li>Hold <kbd>Space</kbd> to slow the belt: 3 seconds a shift. <kbd>R</kbd> shows crates in large text. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>S</kbd> skips cards. <kbd>Esc</kbd> leaves (settled crates are kept, without mastery credit).</li></ul><label><input type="checkbox" id="mpRelax" ${relaxed ? 'checked' : ''}> Relaxed belt (0.75× speed; the run is longer)</label><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>`;
+      if (on) hud.help.innerHTML = `<h3>TOKEN MILL</h3><ul><li>Crates ride past four bins, from loosest (1) to strictest (4). Read the <b>rule</b> on the board. Send each crate to the bin it names.</li><li>To route: <b>drag</b> it onto a bin, or <b>click</b> it then a bin, or <kbd>Tab</kbd> then <kbd>1</kbd>-<kbd>4</kbd>.</li><li>Too lax is unsafe. Two bins too lax is a <b>spill</b>. Too strict wastes capacity. A crate that reaches the pit is lost.</li><li>Hold <kbd>Space</kbd> to slow the belt: 3 seconds a shift. <kbd>R</kbd> shows crates in large text. <kbd>M</kbd> sound. <kbd>Enter</kbd> continues. <kbd>Esc</kbd> skips cards. <kbd>Esc</kbd> leaves (settled crates are kept, without mastery credit).</li></ul><label><input type="checkbox" id="mpRelax" ${relaxed ? 'checked' : ''}> Relaxed belt (0.75× speed; the run is longer)</label><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>`;
       hud.help.style.display = on ? 'block' : 'none';
     }
 
@@ -216,7 +216,7 @@
       hud.topKey = hud.statKey = hud.readKey = hud.legKey = '';
       emit('shift', { index: i, items: sh.crates.map((c) => c.itemId) });
       const first = sh.kind === 'finale' ? sh.waves[0] : sh, name = sh.kind === 'finale' ? `RUSH HOUR · WAVE 1 OF 4 · ${sideName(first.side).toUpperCase()}` : sideName(sh.side).toUpperCase();
-      hud.brief.innerHTML = `<div class="k">SHIFT ${i + 1} OF ${run.spec.shifts.length} · ${esc(name)}</div>${S.seen >= 2 ? '' : `<div class="s">${esc(C.SAMPLE_NOTICE)}</div>`}<div class="t">${esc(first.brief)}</div>${S.seen >= 2 ? '' : `<div class="bins">${first.bins.map((b, k) => `<div><b style="color:${STYLE[k].css}">${STYLE[k].mark}${k + 1}</b> ${esc(b.label)}<span>${esc(b.legend)}</span></div>`).join('')}</div>${sh.kind === 'finale' ? `<div class="s" style="color:var(--gold)">Four waves. The plates flip between them: read the banner.</div>` : ''}`}<p class="go"><kbd>E</kbd> Start the belt ▼</p>`;
+      hud.brief.innerHTML = `<div class="k">SHIFT ${i + 1} OF ${run.spec.shifts.length} · ${esc(name)}</div>${S.seen >= 2 ? '' : `<div class="s">${esc(C.SAMPLE_NOTICE)}</div>`}<div class="t">${esc(first.brief)}</div>${S.seen >= 2 ? '' : `<div class="bins">${first.bins.map((b, k) => `<div><b style="color:${STYLE[k].css}">${STYLE[k].mark}${k + 1}</b> ${esc(b.label)}<span>${esc(b.legend)}</span></div>`).join('')}</div>${sh.kind === 'finale' ? `<div class="s" style="color:var(--gold)">Four waves. The plates flip between them: read the banner.</div>` : ''}`}<p class="go"><kbd>Enter</kbd> Start the belt ▼</p>`;
       hud.brief.style.display = 'block'; S.briefT = RUN.brief;
     }
     function startPlay() { if (!S || S.phase !== 'brief') return; hud.brief.style.display = 'none'; S.phase = 'play'; S.humT = 0; sfx('bell'); world.run(true); }
@@ -250,7 +250,7 @@
       for (const e of log.entries) emit('answer', { credit: true, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, correct: e.correct, direction: e.direction, severe: e.severe });
       S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 2); world.run(false); S.read = false; hud.statKey = '';
       const name = log.kind === 'finale' ? 'RUSH HOUR' : sideName(log.side).toUpperCase(), maxc = Math.max(sc.cost, sc.idealCost, 1);
-      hud.rs.innerHTML = `<h5>SHIFT ${run.i + 1} · ${esc(name)}</h5>${esc(shiftLine(sc))}<div class="go"><kbd>E</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>S</kbd> skip ▼</div>`; hud.rs.style.display = 'block'; void maxc;
+      hud.rs.innerHTML = `<h5>SHIFT ${run.i + 1} · ${esc(name)}</h5>${esc(shiftLine(sc))}<div class="go"><kbd>Enter</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>Esc</kbd> skip ▼</div>`; hud.rs.style.display = 'block'; void maxc;
       sfx('bell'); TF.sys(`Shift ${run.i + 1}: ${sc.correct} of ${sc.total} routed right, ${sc.severe} spill${sc.severe === 1 ? '' : 's'}, ${sc.dropped} dropped.`);
     }
     function nextCard() {
@@ -295,6 +295,7 @@
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
       if (play.modal && play.modal.open()) { if (['KeyE', 'Escape', 'Enter'].includes(e.code) && !e.repeat) play.modal.close(); else if (play.modal.key) play.modal.key(e); return true; }
+      { const code = e.code === 'Enter' ? 'KeyE' : e.code === 'Escape' && S.phase === 'debrief' && !helpOpen() && !TF.talking ? 'KeyS' : e.code; if (code !== e.code) e = { code, key: e.key, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault() {}, stopPropagation() {} }; }   // Enter works as E; Esc skips like S while the shift's cards are up (otherwise it leaves)
       if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }

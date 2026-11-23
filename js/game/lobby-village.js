@@ -432,7 +432,7 @@ function vTotem(x, z, title, body, name, talkLines) {
 function vEvBay() {
   const ch = (x, z) => { box(.4, 1.5, .3, MAT.metal, x, 0, z); box(.3, .3, .04, MAT.screen, x, 1, z + .16, { cast: false }); box(.42, .06, .32, vGlow(V_LED), x, 1.5, z, { cast: false }); colBox(x - .25, z - .2, x + .25, z + .2); };
   ch(29.9, -7.2);
-  carBody(vGroup(32.3, -6.2, Math.PI / 2), PAL.teal);
+  sportsCar('cybertruck', 32.3, -6.2, Math.PI / 2);   // on charge; solid to the edges of its own 5.7 m body
   const cable = new THREE.MeshStandardMaterial({ color: V_LED, emissive: V_LED, emissiveIntensity: 1 });
   box(.06, .06, 1.4, cable, 30.4, .9, -6.6, { cast: false }).userData.dyn = true;
   anim.push((t) => { cable.emissiveIntensity = .6 + (Math.sin(t * 4) * .5 + .5) * 1.4; });

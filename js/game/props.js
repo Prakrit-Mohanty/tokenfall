@@ -34,12 +34,25 @@ function flushContacts() {
   CONTACTS.length = POOLS.length = 0; contactOn = false;
 }
 
+// a street prop from the modelled pack (js/models/street-props.js, from tools/props-pack.py): lamp, signal, trashCan, litterBin, hydrant.
+// The geometry is shared by every copy; ry turns the model (the lamp's arm and the signal's lights face +z); o.p: a parent group
+const SPROPS = { geo: {}, mat: null };
+function streetProp(name, x, y, z, ry = 0, o = {}) {
+  if (!SPROPS.mat) { const t = new THREE.TextureLoader().load(window.STREET_PROPS_TEX); t.flipY = false; SPROPS.mat = new THREE.MeshStandardMaterial({ map: t, roughness: .55, metalness: .15 }); }   // glTF UVs: no flip
+  let geo = SPROPS.geo[name];
+  if (!geo) {
+    const d = window.STREET_PROPS[name]; geo = SPROPS.geo[name] = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(d.p, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(d.uv, 2)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(d.n, 3)); geo.setIndex(d.i);
+  }
+  const m = add(new THREE.Mesh(geo, SPROPS.mat), o.p); m.position.set(x, y, z); m.rotation.y = ry; return m;
+}
+
+// the curved street lamp; its glowing bulb sits under the shade at the end of the arm, which points along +x (as the old lamp's did)
 function streetLamp(x, z, zone, light = true) {
-  post(.3, .26, MAT.metal, x, 0, z, .26); post(.12, 3.4, MAT.metal, x, .26, z, .1); box(.98, .13, .13, MAT.metal, x + .42, 3.56, z);
-  const globe = add(new THREE.Mesh(new THREE.SphereGeometry(.27, 20, 14), MAT.warmGlow), undefined, false); globe.position.set(x + .8, 3.36, z);   // a soft glowing globe under a round cap
-  const cap = add(new THREE.Mesh(new THREE.SphereGeometry(.34, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), MAT.metal)); cap.position.set(x + .8, 3.5, z); cap.scale.y = .6;
-  colCirc(x, z, .22); contact(x, z, .8); if (light) lampPool(x + .74, z + .2);
-  if (light) pointLight(zone, 0xffc27a, 1.6, 9, x + .74, 3.2, z + .2);
+  streetProp('lamp', x, 0, z, Math.PI / 2);
+  const bulb = add(new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 10), MAT.warmGlow), undefined, false); bulb.position.set(x + .89, 3.3, z);
+  colCirc(x, z, .22); contact(x, z, .8); if (light) lampPool(x + .89, z);
+  if (light) pointLight(zone, 0xffc27a, 1.6, 9, x + .89, 3.1, z);
 }
 function bollard(x, z) {
   post(.15, .55, MAT.metal, x, 0, z, .12); const g = add(new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 12), MAT.warmGlow), undefined, false); g.position.set(x, .66, z);

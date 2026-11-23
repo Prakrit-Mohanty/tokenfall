@@ -172,6 +172,31 @@ function car(x, z, ry, color, o = {}) {
   if (o.collide !== false) { colCirc(x - Math.sin(ry), z - Math.cos(ry), 1); colCirc(x + Math.sin(ry), z + Math.cos(ry), 1); }
   return g;
 }
+// the modelled sports cars (js/models/cars.js, from tools/cars-pack.py): 'bmw' (BMW M3 GTR), 'jesko' (Koenigsegg Jesko), 'creta' (Hyundai Creta), 'm4' (BMW M4 widebody), 'cybertruck' (Tesla Cybertruck), 'scorpio' (Mahindra Scorpio-N), 'eeco' (Maruti Suzuki Eeco) or 'omni' (Maruti Omni), 4.4 m like car(),
+// facing +z. Each model is parsed once (GLTFLoader, async) and every copy shares its geometry and materials; the group is returned at once and fills in
+const SPORTS = {};
+function sportsCar(kind, x, z, ry, o = {}) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+  if (!SPORTS[kind]) SPORTS[kind] = new Promise((done) => {
+    const bin = atob(window.CAR_MODELS[kind]), buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    new THREE.GLTFLoader().parse(buf.buffer, '', (gl) => { gl.scene.traverse((m) => {
+      if (!m.isMesh) return;
+      m.castShadow = !m.material.transparent; m.receiveShadow = true;
+      // lit like the rest of the game: its textures are plain (linear) colour, not sRGB, and nothing is metal (with no environment map metalness only darkens)
+      const mat = m.material; if (mat.map) { mat.map.encoding = THREE.LinearEncoding; mat.map.needsUpdate = true; }
+      mat.metalness = 0; mat.roughness = Math.max(mat.roughness, .45); mat.needsUpdate = true;
+    }); done(gl.scene); }, (e) => console.warn('car model', kind, e));
+  });
+  // the collider is the model's own footprint, measured once it has loaded (so a long truck or a wide body is solid right to its edges); o.onSize(len, wide) gets its size
+  SPORTS[kind].then((model) => {
+    const m = model.clone(true), b = new THREE.Box3().setFromObject(m), len = b.max.z - b.min.z, wide = b.max.x - b.min.x;   // measured in the model's own frame, before it is turned
+    g.add(m);
+    if (o.onSize) o.onSize(len, wide);
+    if (o.collide !== false) { g.updateMatrixWorld(true); const w = new THREE.Box3().setFromObject(m); colBox(w.min.x + .05, w.min.z + .05, w.max.x - .05, w.max.z - .05); }
+  });
+  return g;
+}
 // parked motorbikes, leaning on their side stands: 'r15' (Yamaha R15M), 'vstrom' (Suzuki V-Strom SX),
 // 'avenger' (Bajaj Avenger), 'thruxton' (café racer). Local axes: x across the bike, z forward.
 function bike(x, z, ry, kind) {
@@ -262,11 +287,11 @@ function bike(x, z, ry, kind) {
   const sx = Math.sin(ry) * .55, sz = Math.cos(ry) * .55;
   colCirc(x + sx, z + sz, .45); colCirc(x - sx, z - sz, .45);
 }
+// the modelled street lamp, its arm reaching out along (dx, dz), scaled up a little to the old 4.2 m pole
 function streetLight(x, z, dx, dz) {
-  box(.12, 4.2, .12, MAT.metal, x, 0, z);
-  box(dx ? 1.4 : .08, .08, dz ? 1.4 : .08, MAT.metal, x + dx * .7, 4.1, z + dz * .7);
-  box(.5, .1, .5, MAT.warmGlow, x + dx * 1.3, 4, z + dz * 1.3, { cast: false });
-  colCirc(x, z, .15);
+  const s = 1.1; streetProp('lamp', x, 0, z, Math.atan2(dx, dz)).scale.setScalar(s);
+  const b = add(new THREE.Mesh(new THREE.SphereGeometry(.14, 16, 10), MAT.warmGlow), undefined, false); b.position.set(x + dx * .89 * s, 3.3 * s, z + dz * .89 * s);
+  colCirc(x, z, .2);
 }
 function modernHouse(cx, cz) {
   const W = 6.4, D = 5, front = cz + D / 2;

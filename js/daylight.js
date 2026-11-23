@@ -103,6 +103,7 @@
     const { THREE, scene, sun, hemi, MAT, post, skyU, SUN_DIR } = TF;
     const S = { hour: 15, bright: 0, warm: 0, sketch: 0.7, auto: false, open: false, zone: 'lobby', base: null, orb: null, face: null, drawn: '', acc: 0 };
     try { Object.assign(S, JSON.parse(localStorage.getItem('tokenfall.daylight') || '{}')); } catch (e) { /* private window: the default day */ }
+    { const h = parseFloat(new URLSearchParams(location.search).get('hour')); if (h >= 0 && h < 24) { S.hour = h; S.auto = false; } }   // ?hour=21 starts at that hour, held
     S.open = false;
     const save = () => { try { localStorage.setItem('tokenfall.daylight', JSON.stringify({ hour: S.hour, bright: S.bright, warm: S.warm, sketch: S.sketch, auto: S.auto })); } catch (e) { /* not saved */ } };
     // glare: strong emitters were set far too hot, so they are eased (SOFT), and the solid-colour ones (strips, lamps, lanterns) follow the day: dim by day, bright at night. The named

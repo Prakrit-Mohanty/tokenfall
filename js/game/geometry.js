@@ -166,8 +166,10 @@ const colBox = (x0, z0, x1, z1) => COL.push({ x0, z0, x1, z1 });
 const colCirc = (x, z, r) => COL.push({ x, z, r });
 function walkable(x, z) { for (const r of WALK) if (x > r[0] && x < r[2] && z > r[1] && z < r[3]) return true; return false; }
 function floorAt(x, z) { let y = 0; for (const f of FLOORS) if (f[4] > y && x > f[0] && x < f[2] && z > f[1] && z < f[3]) y = f[4]; return y; }
-function blocked(x, z, pad = .32) {
+const VEH = [];        // moving vehicles' footprints this frame ({ x0, z0, x1, z1 }), kept by stepTraffic: nobody walks through traffic
+function blocked(x, z, pad = .32, veh = true) {
   if (!walkable(x, z)) return true;
+  if (veh) for (const c of VEH) if (x > c.x0 - pad && x < c.x1 + pad && z > c.z0 - pad && z < c.z1 + pad) return true;
   for (const c of COL) {
     if (c.r !== undefined) { if ((x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + pad) ** 2) return true; }
     else if (c.ex !== undefined) { if (((x - c.ex) / (c.rx + pad)) ** 2 + ((z - c.ez) / (c.rz + pad)) ** 2 < 1) return true; }

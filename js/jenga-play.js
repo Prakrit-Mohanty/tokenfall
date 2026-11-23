@@ -172,7 +172,7 @@
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
     function showHelp(on) {
       if (!hud) return;
-      if (on) hud.h.innerHTML = '<h3>TOKEN TOWER</h3><ul><li>Four blocks carry four answers. Press <kbd>1</kbd>-<kbd>4</kbd> or click the block you think is right. Then hold <kbd>Space</kbd> to pull it.</li><li>Right block: it slides out and hovers. Set it on top where the gauge stays steady. Use <kbd>←</kbd><kbd>→</kbd> or the mouse, then <kbd>Space</kbd> or a click.</li><li>Wrong block: it jams and slides back. A Concept Card shows why, and the tower gets shakier. Three wrong tries in a run bring it down. A stack that tips does too.</li><li><kbd>A</kbd><kbd>D</kbd> or a drag turn the view. <kbd>Tab</kbd> hides the answer list. <kbd>M</kbd> sound. <kbd>E</kbd> continues. <kbd>S</kbd> skips talk and cards. <kbd>Esc</kbd> leaves (progress is kept, without mastery credit for an unfinished run).</li></ul><p class="go"><kbd>H</kbd> or <kbd>E</kbd> to close</p>';
+      if (on) hud.h.innerHTML = '<h3>TOKEN TOWER</h3><ul><li>Four blocks carry four answers. Press <kbd>1</kbd>-<kbd>4</kbd> or click the block you think is right. Then hold <kbd>Space</kbd> to pull it.</li><li>Right block: it slides out and hovers. Set it on top where the gauge stays steady. Use <kbd>←</kbd><kbd>→</kbd> or the mouse, then <kbd>Space</kbd> or a click.</li><li>Wrong block: it jams and slides back. A Concept Card shows why, and the tower gets shakier. Three wrong tries in a run bring it down. A stack that tips does too.</li><li><kbd>A</kbd><kbd>D</kbd> or a drag turn the view. <kbd>Tab</kbd> hides the answer list. <kbd>M</kbd> sound. <kbd>Enter</kbd> continues. <kbd>Esc</kbd> skips talk and cards. <kbd>Esc</kbd> leaves (progress is kept, without mastery credit for an unfinished run).</li></ul><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>';
       hud.h.style.display = on ? 'block' : 'none';
     }
 
@@ -306,6 +306,7 @@
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
       if (play.modal && play.modal.open()) { if (['KeyE', 'Escape', 'Enter'].includes(e.code) && !e.repeat) play.modal.close(); else if (play.modal.key) play.modal.key(e); return true; }
+      { const code = e.code === 'Enter' ? 'KeyE' : e.code === 'Escape' && cardOpen() && !helpOpen() ? 'KeyS' : e.code; if (code !== e.code) e = { code, key: e.key, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault() {}, stopPropagation() {} }; }   // Enter works as E; Esc skips like S while a concept card is up (otherwise it leaves)
       if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
@@ -356,7 +357,7 @@
       TF.life.push((t, dt) => frame(t, dt));
       const prev = TF.onKey; TF.onKey = (e) => (S && S.on ? onKey(e) : prev ? prev(e) : false);
       addEventListener('keyup', onKeyUp);
-      addEventListener('keydown', (e) => { if (e.code === 'KeyS' && !e.repeat && S && S.on && TF.talking && bridge && bridge.skipTalk) bridge.skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
+      addEventListener('keydown', (e) => { if ((e.code === 'KeyS' || e.code === 'Escape') && !e.repeat && S && S.on && TF.talking && bridge && bridge.skipTalk) bridge.skipTalk(); });   // the lobby's dialogue takes the keys first, so S is read here
       TF.renderer.domElement.addEventListener('pointermove', onPointerMove);
       world.on('pull', onPull); world.on('click', () => release());
       world.on('friction', () => sfx('friction')); world.on('clunk', () => sfx('clunk')); world.on('lift', () => sfx('lift')); world.on('rumble', () => sfx('rumble'));
