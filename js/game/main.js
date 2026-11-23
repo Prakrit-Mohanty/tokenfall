@@ -106,7 +106,7 @@ Promise.all([fontsReady, sheetReady]).then(() => {
     t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy()); t.needsUpdate = true;
     const a = auxTex[id] = new THREE.Texture(auxImgs[id]); a.magFilter = a.minFilter = THREE.LinearFilter; a.generateMipmaps = false; a.needsUpdate = true;   // data, not colour: never premultiplied, never mipmapped
   }
-  LOBBY.build(); buildAreas(); mergeStatic(); buildDust(); buildLife();
+  LOBBY.build(); buildAreas(); trimCasters(); mergeStatic(); buildDust(); buildLife();
   applyTextureRefines(); softenTextures();
   // the world is built behind the launcher; the hero and the NPCs wait for the player's pick (the picker saves it, see launcher/char-select-screen.js)
   return window.TokenFallStart || Promise.resolve();
@@ -118,7 +118,7 @@ Promise.all([fontsReady, sheetReady]).then(() => {
   for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['ananya.r', 288, 9.2], ['kabir_m', 296, 6.4], ['sneha.d', 318, 2]]) { const c = makeChar(n, x, z, { speed: 1.9, zone: 'pune' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of [['sana.k', 7.4, 298.6], ['arjun_p', -.3, 291.6]]) { const c = makeChar(n, x, z, { speed: 2.1, zone: 'abz' }); c.wait = Math.random() * 3000; npcs.push(c); }
-  TF.boot();
+  TF.boot(); trimCasters();   // again for what the minigames add at boot
   for (const [k, r] of Object.entries(LOBBY.returns)) AREAS[k].ret = r;
   const q = new URLSearchParams(location.search);
   if (q.get('zone') && AREAS[q.get('zone')]) { const a = AREAS[q.get('zone')], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.zone = q.get('zone'); }
