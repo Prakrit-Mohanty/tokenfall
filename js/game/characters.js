@@ -82,8 +82,6 @@ function makeChar(name, x, z, opt = {}) {
       vBendX = 2. * uBend * xn / (${BW.toFixed(1)} * ${SPU.toFixed(6)});   // the slope of the bend, for the normal
       vec3 transformed = vec3((cp.x - ${AX.toFixed(1)}) * ${SPU.toFixed(6)}, (${AY.toFixed(1)} - cp.y) * ${SPU.toFixed(6)}, -uBend * xn * xn);   // the card curves away from the viewer toward its edges`);
   };
-  // the hero's look (opt.style, from the picker): hair colour and accessories. NPCs get the original look.
-  const style = opt.style || {}, shift = CharSelect.hairShift(look, style.hair), hairU = shift ? new THREE.Vector4(shift.dh, shift.ks, shift.kv, 1) : new THREE.Vector4(0, 1, 1, 0), hairKeyU = shift ? new THREE.Vector3(shift.from, shift.vMax, shift.hMax) : new THREE.Vector3(1, 0, .14);
   const mat = new THREE.MeshBasicMaterial({ map: t, alphaTest: .5, fog: true });   // its colour (the charLight tint) is set each frame by lightChar
   // The outline is drawn into the empty texels next to the figure, one SCREEN pixel wide whatever the texture size (the uv step of a pixel, from fwidth), in a darkened copy of the colour it
   // borders mixed with a little of the world's ink, so it reads as the figure's own edge and not a sticker border. The atlas is premultiplied (no fringe when it is filtered): un-premultiplied here.
@@ -95,17 +93,12 @@ function makeChar(name, x, z, opt = {}) {
     sh.uniforms.uMargin = { value: new THREE.Vector2(3 / atlas.w, 3 / atlas.h) };   // never reach further than the empty margin round the figure
     sh.uniforms.uInk = { value: new THREE.Color(PAL.plum) }; sh.uniforms.uAux = { value: aux }; sh.uniforms.uLampC = lampC; sh.uniforms.uLampCol = lampCol;
     for (const k in charU) sh.uniforms[k] = charU[k];
-    sh.uniforms.uHair = { value: hairU }; sh.uniforms.uHairKey = { value: hairKeyU };
     sh.vertexShader = useCell(sh);
     sh.fragmentShader = `uniform vec2 uMargin, uCardY, uP;
       uniform vec3 uInk, uSunC, uKey, uSunCol, uSky, uGnd, uRimCol, uLampC, uLampCol;
-      uniform vec4 uHair;   // the hair recolour: hue turn, saturation and value ratios, and on (1) or off (0). Set per hero by hairShift (js/game/char-select.js)
-      uniform vec3 uHairKey;   // and the character's key: the height the hair starts at (standing heights), the brightest pixel it takes, and the highest hue
       uniform float uBulge, uShadeAmt;
       uniform sampler2D uAux;
       varying float vCellY, vBendX, vViewZ;
-      vec3 rgb2hsv(vec3 c) { vec4 K = vec4(0., -1. / 3., 2. / 3., -1.); vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g)); vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r)); float d = q.x - min(q.w, q.y); return vec3(abs(q.z + (q.w - q.y) / (6. * d + 1e-10)), d / (q.x + 1e-10), q.x); }
-      vec3 hsv2rgb(vec3 c) { vec3 p = abs(fract(c.xxx + vec3(0., 2. / 3., 1. / 3.)) * 6. - 3.); return c.z * mix(vec3(1.), clamp(p - 1., 0., 1.), c.y); }
       vec3 cLight(vec3 n) {
         float up = n.y * uCardY.x + n.z * uCardY.y;
         float ws = clamp((dot(n, uKey) + .4) / 1.4, 0., 1.), wl = clamp((dot(n, uLampC) + .4) / 1.4, 0., 1.);
@@ -113,13 +106,6 @@ function makeChar(name, x, z, opt = {}) {
       }
     ` + sh.fragmentShader.replace('#include <map_fragment>', `vec4 sc = texture2D(map, vUv);
       sc.rgb /= max(sc.a, .004);
-      // hair: dark, warm, saturated pixels above the character's hair line, turned to the chosen colour; the key matches the hair measured for hairShift
-      vec3 hs0 = rgb2hsv(sc.rgb);
-      float hfH = (vCellY - .035) * ${CH.toFixed(1)} / 172.;
-      float crown = smoothstep(.84, .9, hfH);   // above the forehead there is only hair: the key opens to any warm hue and brightness there (Riya's bun highlights)
-      float hMaxE = mix(uHairKey.z, .14, crown), vMaxE = mix(uHairKey.y, .9, crown);
-      float hairM = uHair.w * smoothstep(.85, .95, sc.a) * smoothstep(uHairKey.x - .03, uHairKey.x + .03, hfH) * (1. - smoothstep(hMaxE - .02, hMaxE + .02, hs0.x)) * (1. - smoothstep(vMaxE - .05, vMaxE + .05, hs0.z)) * smoothstep(.15, .25, hs0.y);
-      sc.rgb = mix(sc.rgb, hsv2rgb(vec3(fract(hs0.x + uHair.x), clamp(hs0.y * uHair.y, 0., 1.), clamp(hs0.z * uHair.z, 0., 1.))), hairM);
       vec2 ow = min(fwidth(vUv) * .9, uMargin);
       vec3 nc = vec3(0.); float nw = 0.;
       for (int i = 0; i < 8; i++) { float an = float(i) * .785398; vec4 s = texture2D(map, vUv + vec2(cos(an), sin(an)) * ow); float k = step(.5, s.a); nc += s.rgb / max(s.a, .004) * k; nw += k; }
@@ -144,7 +130,6 @@ function makeChar(name, x, z, opt = {}) {
   const mesh = new THREE.Mesh(spriteGeoBent, mat); mesh.frustumCulled = false; mesh.scale.setScalar(CHAR_SCALE);   // the unit quad's own bounds mean nothing: the shader places the vertices
   // in card metres (before CHAR_SCALE): a 1.6 m figure, big round head
   for (const [sx, sy, sz, x, y, z] of shape.proxy || [[.26, .58, .2, 0, .56, .08], [.37, .36, .33, 0, 1.24, .1]]) { const m = new THREE.Mesh(proxyGeo, proxyMat); m.scale.set(sx, sy, sz); m.position.set(x, y, z); m.castShadow = true; mesh.add(m); }
-  if (style.acc) addAccessories(mesh, style.acc);
   const g = new THREE.Group(), tilt = new THREE.Group(); g.userData.dyn = true; tilt.rotation.x = CHAR_LEAN; tilt.add(mesh); g.add(tilt);
   const sh = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); sh.rotation.x = -Math.PI / 2; sh.position.set(0, .025, .1); sh.material.opacity = .85; g.add(sh);   // g.children[1]: the bridge toggles it
   scene.add(g);
@@ -154,15 +139,6 @@ function makeChar(name, x, z, opt = {}) {
   c.tag = document.createElement('div'); c.tag.className = 'tag' + (opt.me ? ' me' : ''); c.tag.textContent = name; tagsEl.appendChild(c.tag);
   c.bubble = null;
   chars.push(c); return c;
-}
-// the hero's accessories: small 3D pieces on the card, in card metres (before CHAR_SCALE). They stay on the card, so each one sits where it reads from the front, and the
-// side views keep them too. Positions are in the mesh's own frame, which the figure's stretch and lean carry (head centre ~1.05, neck ~0.8, belt ~0.58); placed from close-up renders of all four roster sprites.
-function addAccessories(mesh, acc) {
-  const at = (o, x, y, z) => { o.position.set(x, y, z); mesh.add(o); };
-  const pink = new THREE.MeshLambertMaterial({ color: 0xFF6F91 }), mint = new THREE.MeshLambertMaterial({ color: 0x9FE7FF });
-  if (acc.clip) { const clip = new THREE.Group(); clip.add(new THREE.Mesh(new THREE.BoxGeometry(.13, .05, .05), pink)); const dot = new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), mint); dot.position.set(.06, .02, .03); clip.add(dot); clip.rotation.z = -.35; at(clip, -.25, 1.05, .55); }   // z .6: the card leans back and the head's depth bulges forward, so a piece at head height needs this far to show in front
-  if (acc.scarf) { const scarf = new THREE.Mesh(new THREE.TorusGeometry(.17, .06, 8, 20), pink); scarf.rotation.x = Math.PI / 2; at(scarf, 0, .79, .03); }
-  if (acc.charm) { const charm = new THREE.Group(); charm.add(new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, .12, 6), mint).translateY(-.06)); charm.add(new THREE.Mesh(new THREE.SphereGeometry(.05, 12, 10), pink).translateY(-.17)); at(charm, .16, .58, .22); }
 }
 function stepChar(c, dt) {
   const px = c.x, pz = c.y; c.update(dt);
