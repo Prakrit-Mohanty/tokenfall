@@ -114,6 +114,9 @@ def solid(o, glass=False):
         b = next((n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
         if b is None or (not glass and not b.inputs['Alpha'].links and b.inputs['Alpha'].default_value < 1):
             continue
+        if glass and not b.inputs['Alpha'].links and b.inputs['Alpha'].default_value < 1 and not b.inputs['Base Color'].links:
+            b.inputs['Base Color'].default_value = (.24, .3, .36, 1)   # solid glass: a lit blue-grey with a gloss, not a black hole
+            b.inputs['Roughness'].default_value = .15
         for link in list(b.inputs['Alpha'].links):
             m.node_tree.links.remove(link)
         b.inputs['Alpha'].default_value = 1

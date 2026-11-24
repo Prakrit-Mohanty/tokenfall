@@ -162,7 +162,7 @@ function stepTraffic(t, dt) {
       if (ahead) target = Math.min(target, Math.max(0, gap - (v.rash ? .6 : 1.2)) * (v.rash ? 2 : 1.2));
       // a rash car stuck behind a slower one pulls out into the other lane when there is room
       v.passT -= dt;
-      if (v.rash && ahead && gap < 9 && ahead.v < v.cruise * .8 && v.passT <= 0 && Math.abs(v.lat) < .2) {
+      if ((v.rash || v.kind === 'evel') && ahead && gap < 9 && ahead.v < v.cruise * .8 && v.passT <= 0 && Math.abs(v.lat) < .2) {   // Evel weaves past too
         const to = L.sib.find((o) => o.cars.every((c) => { const d = (c.s - v.s) * L.d; return d < -7 || d > 9; }));
         if (to) { moves.push([L, to, v]); v.passT = 3; }
       }

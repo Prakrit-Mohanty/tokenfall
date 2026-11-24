@@ -17,6 +17,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CELL, ANCHOR, STAND = (250, 230), (125, 222), 172
 DIRS = ['down', 'up', 'left', 'right']
 ROW8 = {'down': 0, 'up': 4, 'left': 6, 'right': 2}   # the 8-direction rows of tokenfall-characters (0, 45 ... 315 degrees) that are the game's four facings
+# and the diagonals between them (45 front-right, 135 back-right, 225 back-left, 315 front-left): the four playable characters walk and stand in all eight
+DIAG = {'downright': 1, 'upright': 3, 'upleft': 5, 'downleft': 7}
+ROW8X = {**ROW8, **DIAG}
 SCALE = 2.5     # 172 px standing -> 430 px: ~220 texels per metre at the game's size, what the paving has (190-470) and what the default camera draws (~215 px/m)
 PAD = 2         # source px of empty margin kept round each figure (room for the outline and the resample)
 GUTTER = 4      # output px between frames in an atlas, so mip levels do not mix neighbours
@@ -28,10 +31,21 @@ CHARS = {
     'sudhanshu': ('Sudhanshu', 'sudhanshu-3d-extras/sudhanshu3d.png',   # the lossless copy of sudhanshu-3d/sprites/sudhanshu3d.webp
                   {'idle': (0, 11, 160, True), 'walk': (4, 11, 83, True), 'run': (8, 10, 60, True), 'jump': (12, 11, 80, False)}, 34, (3, 7)),
     # the tokenfall-characters roster as lobby NPCs and player picks: idle (one still frame, the game's own sway and breathing do the rest), walk, run and jump from the 8-direction rows (riya's run and jump are 4-direction rows, down up left right)
-    'saanvi': ('Saanvi', 'tokenfall-characters-extras/saanvi.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True), 'run': ({d: 16 + ROW8[d] for d in DIRS}, 8, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 8, 100, False)}, 36, (1, 6)),
-    'mehta': ('Mr. Mehta', 'tokenfall-characters-extras/mehta.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 8, 100, True), 'run': ({d: 16 + ROW8[d] for d in DIRS}, 8, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 8, 100, False)}, 51, (2, 6)),
-    'aarav': ('Aarav', 'tokenfall-characters-extras/aarav.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True), 'run': ({d: 16 + ROW8[d] for d in DIRS}, 12, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 12, 75, False)}, 61, (3, 8)),
-    'riya': ('Riya', 'tokenfall-characters-extras/riya.png', {'idle': ({d: ROW8[d] for d in DIRS}, 1, 200, True), 'walk': ({d: 8 + ROW8[d] for d in DIRS}, 12, 71, True), 'run': ({d: 16 + i for i, d in enumerate(DIRS)}, 12, 56, True), 'jump': ({d: 24 + i for i, d in enumerate(DIRS)}, 12, 75, False)}, 66, (3, 9)),
+    'saanvi': ('Saanvi', 'tokenfall-characters-extras/saanvi.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 8, 100, True), 'run': ({d: 16 + r for d, r in ROW8X.items()}, 8, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 8, 100, False)}, 36, (1, 6)),
+    'mehta': ('Mr. Mehta', 'tokenfall-characters-extras/mehta.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 8, 100, True), 'run': ({d: 16 + r for d, r in ROW8X.items()}, 8, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 8, 100, False)}, 51, (2, 6)),
+    'aarav': ('Aarav', 'tokenfall-characters-extras/aarav.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 12, 71, True), 'run': ({d: 16 + r for d, r in ROW8X.items()}, 12, 56, True), 'jump': ({d: 28 + ROW8[d] for d in DIRS}, 12, 75, False)}, 61, (3, 8)),
+    'riya': ('Riya', 'tokenfall-characters-extras/riya.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 12, 71, True), 'run': ({d: 16 + i for i, d in enumerate(DIRS)}, 12, 56, True), 'jump': ({d: 24 + i for i, d in enumerate(DIRS)}, 12, 75, False)}, 66, (3, 9)),
+    # the senior folk at Calfus (Bigshot-npcs): office NPCs, the same eight-way clay sheets (idle, a 6-frame walk; their talk rows are not packed)
+    'murali': ('Murali', 'Bigshot-npcs/tokenfall-final-extras/murali.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'salim': ('Salim', 'Bigshot-npcs/tokenfall-final-extras/salim.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'amit': ('Amit', 'Bigshot-npcs/tokenfall-final-extras/amit.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'jacintha': ('Jacintha', 'Bigshot-npcs/tokenfall-final-extras/jacintha.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'kartik': ('Kartik', 'Bigshot-npcs/tokenfall-final-extras/kartik.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'arvind': ('Arvind', 'Bigshot-npcs/tokenfall-final-extras/arvind.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'rajiv': ('Rajiv', 'Bigshot-npcs/tokenfall-final-extras/rajiv.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'brian': ('Brian', 'Bigshot-npcs/tokenfall-final-extras/brian.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'baljeet': ('Baljeet', 'Bigshot-npcs/tokenfall-final-extras/baljeet.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
+    'rohit': ('Rohit', 'Bigshot-npcs/tokenfall-final-extras/rohit.png', {'idle': ({d: r for d, r in ROW8X.items()}, 1, 200, True), 'walk': ({d: 8 + r for d, r in ROW8X.items()}, 6, 110, True)}, 0, (0, 0)),
     # Prakrit on his Yamaha, the Pune bike taxi's rider: the bike pack's own 8 still poses (named by angle: 0 faces the camera, 90 faces right) and its leaned-in riding frame (last of the 4) for right and left
     'prakrit': ('Prakrit', 'prakrit-extras/prakrit-bike.png',
                 {'idle': ({str(a): i for i, a in enumerate(range(0, 360, 45))}, 1, 200, True), 'ride': ({'right': (8, 3), 'left': (9, 3)}, 1, 200, True)}, 0, (0, 0)),
@@ -94,7 +108,7 @@ BIKE_FIT = 0.755
 SCALES = {b: SCALE * BIKE_FIT for b in BIKES}
 
 
-FIT = {'saanvi', 'mehta', 'aarav', 'riya'}   # their figures are drawn 1-5% shorter than the first three's 172 px: `fit` (written to chars-data.js, read by characters.js as sizeK) scales them to match
+FIT = {'saanvi', 'mehta', 'aarav', 'riya', 'murali', 'salim', 'amit', 'jacintha', 'kartik', 'arvind', 'rajiv', 'brian', 'baljeet', 'rohit'}   # their figures are drawn 1-5% shorter than the first three's 172 px: `fit` (written to chars-data.js, read by characters.js as sizeK) scales them to match
 
 AUXDIV = 5   # the volume maps are drawn at 1/5 of the upscaled frames (0.5x the source): they are smooth, so the sampler fills in the rest
 

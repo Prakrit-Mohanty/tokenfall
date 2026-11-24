@@ -41,7 +41,7 @@ class SpriteCharacter {
     if (action === 'run' || action === 'ride') { this.input.run = !this.input.run; return; }
     if (this.oneShot && this.oneShot.name === 'jump') return;
     this.pose = null;
-    const until = action === 'emote' ? 1000 : this._total(action + '_' + this.dir);
+    const until = action === 'emote' ? 1000 : this._total(action + '_' + (this.data.animations[action + '_' + this.dir] ? this.dir : this.dir.replace(/^(down|up)(?=left|right)/, '')));
     this.oneShot = { name: action, t: 0, until };
   }
 
@@ -65,7 +65,8 @@ class SpriteCharacter {
       const v = this.speed * this.scale * this.mult * dt / 1000;
       this.x += dx / len * v;
       this.y += dy / len * v;
-      this.dir = dx !== 0 ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+      const four = dx !== 0 ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'), diag = dx !== 0 && dy !== 0 ? (dy > 0 ? 'down' : 'up') + (dx > 0 ? 'right' : 'left') : null;
+      this.dir = diag && this.data.animations['walk_' + diag] ? diag : four;   // the eight-way characters face the diagonals too
       if (bounds) {
         const m = this.data.anchor.x * 0.8 * this.scale;
         this.x = Math.max(m, Math.min(bounds.width - m, this.x));
@@ -91,7 +92,8 @@ class SpriteCharacter {
 
   /** current { row, start, col, lift } — useful if you render with CSS or a game engine */
   frame() {
-    const a = this.data.animations[this.anim + '_' + this.dir] || this.data.animations['idle_' + this.dir];
+    const side = this.dir.replace(/^(down|up)(?=left|right)/, '');   // a diagonal an animation lacks (Riya's run has four facings) falls back to its side
+    const a = this.data.animations[this.anim + '_' + this.dir] || this.data.animations[this.anim + '_' + side] || this.data.animations['idle_' + this.dir] || this.data.animations['idle_' + side];
     let t = this.oneShot ? this.oneShot.t : this.t;
     const total = a.durations.reduce((s, d) => s + d, 0);
     t = a.loop ? t % total : Math.min(t, total - 1);

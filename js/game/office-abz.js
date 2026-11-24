@@ -57,7 +57,20 @@ function buildABZ(a) {
     const zc = (Z(-1.46) + Z(16.8)) / 2, len = Z(16.8) - Z(-1.46), wx = X(20.06);
     box(.3, .55, len, MAT.plaster, wx, 0, zc); box(.06, H - .85, len, MAT.paneGlass, wx, .55, zc, { cast: false }); box(.3, .3, len, MAT.plaster, wx, H - .3, zc);
     for (let t = 0; t <= len + .01; t += len / 7) box(.32, H, .14, MAT.paneFrame, wx, 0, Z(-1.46) + t);
+    // roller blinds inside the glass, one per window bay (frame post to frame post): pulled down in front of the meeting rooms (Black Diamond, Yorker,
+    // Half Dome), rolled up into a neat band under the header everywhere else
+    const BLIND = new THREE.MeshStandardMaterial({ map: canvasTex(16, 32, (g) => { for (let y = 0; y < 32; y++) { g.fillStyle = y % 4 === 3 ? '#cdc5b4' : '#e6dfd0'; g.fillRect(0, y, 16, 1); } }, { smooth: true }), roughness: .9 });
+    const rooms = [[Z(-1.46), Z(4.95)], [Z(10.86), Z(16.8)]], n = 7, pw = len / n, top = H - .3, bx = wx - .14;
+    for (let i = 0; i < n; i++) {
+      const z0 = Z(-1.46) + i * pw, zm = z0 + pw / 2, meeting = rooms.some(([a, b]) => zm > a && zm < b);
+      const h = meeting ? top - .6 : .32;
+      box(.03, h, pw - .2, BLIND, bx, top - h, zm, { cast: false });
+      box(.05, .05, pw - .2, MAT.paneFrame, bx, top - h - .05, zm, { cast: false });   // the weighted bottom rail
+    }
     colBox(X(20), Z(-1.46), X(20.12), Z(16.8));
+    // the view out of the window: the city below, in 3D (abz-city.js), built in the window's frame (+x out of the glass)
+    const city = abzCity(); city.name = 'abzCity'; city.position.set(wx, 0, zc); scene.add(city);
+    anim.push(() => { city.visible = hero.zone === 'abz'; });   // only while you are in ABZ: the window faces the lobby, and the city runs far out over it
   }
   // the wall between the lobby and the office (south once turned): door with garlands, the Calfus logo on the lobby side
   const lobbyWall = solidF(-.12, -1.46, 0, 11.95, H, wallM, g => {

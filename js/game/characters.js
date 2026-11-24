@@ -199,6 +199,16 @@ const CHATTER_OFFICE = ['who booked the Prompt Lab again?', 'chai break in 5?', 
 const NPC_BOUNDS = { lobby: [-16, -10.5, 16, 17.5], lab: [-9.6, -317.5, 9.6, -282.3], abz: [-12.2, 286.7, 12, 313.3], pune: [279, -8.5, 336, 9] };
 const OFFICE_NPCS = ['rahul.k', 'meera_s', 'devansh'];
 Object.assign(NPC_TALK, {
+  Murali: ['Good to see you on the floor.', 'Ship small, check often. That is most of the job.'],
+  Salim: ['Hello! Settling in?', 'If an answer sounds too sure of itself, ask where it came from.'],
+  Amit: ['Ah, the new face. Welcome.', 'My door is always open. Well, the glass one.'],
+  Jacintha: ['Hi there! Have you met the team yet?', 'Good questions beat clever prompts every time.'],
+  Kartik: ['Morning! Grab a chai, then come find me.', 'Tokens cost money. Short and clear wins.'],
+  Arvind: ['Welcome to ABZ. Great view, right?', 'Fifteen floors up, and still the metro is louder than standup.'],
+  Rajiv: ['Hey! How is the first week going?', 'Always tell the model what you actually want. It cannot read minds.'],
+  Brian: ['Hi! Brian. Good to meet you.', 'Check the facts, then check them again.'],
+  Baljeet: ['Oye, welcome! You will like it here.', 'The best demos are the ones that fail in rehearsal.'],
+  Rohit: ['Hey, welcome aboard.', 'When in doubt, write it down and ask.'],
   'rahul.k': ['Welcome to the office!', 'Fair warning: the Prompt Lab meeting room is always booked.'],
   'meera_s': ['The chai machine is by the lounge. Probably.', 'Ask me about tokens. Actually, ask the Token Room.'],
   'devansh': ['I\'m on carrom duty today.', 'Did you see the chandeliers? Nobody knows who picked them, but we love them.'],

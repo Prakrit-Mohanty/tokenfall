@@ -167,7 +167,7 @@ function puneCampus(cx, cz, M) {
 
 function puneViaduct(cx, cz) {
   const z = cz + PUNE_MZ, x0 = cx - 58, x1 = cx + 8, len = x1 - x0;
-  for (let x = x0 + 4; x < x1; x += 12) { box(1.6, 8, .8, MAT.concrete, x, 0, z); box(3.2, .8, 2.2, MAT.concrete, x, 7.2, z); colBox(x - .85, z - .45, x + .85, z + .45); }
+  // (no pillars: the deck runs clear over the road in front of Crescent Bay)
   box(len, 1.2, 8, MAT.concrete, (x0 + x1) / 2, 8, z); for (const s of [-1, 1]) box(len, 1, .3, MAT.concrete, (x0 + x1) / 2, 9.2, z + s * 3.85);
   box(len, .2, .2, MAT.metal, (x0 + x1) / 2, 9.4, z, { cast: false });
 }
@@ -287,13 +287,13 @@ function puneParking(cx, cz, asphalt) {
     ['gsxr', 'Suzuki GSX-R 750', 'A 2010 Suzuki GSX-R 750. Somebody here likes their mornings fast.']];
   box(.1, .015, 11, W, ax + 2.5, .022, cz - 2.5, { cast: false });
   for (let k = 0; k <= BIKES.length; k++) box(2.4, .015, .08, W, cx - 9.6, .022, cz - 8 + k * 2, { cast: false });   // inside the lot's east edge
-  BIKES.forEach(([kind, name, line], i) => { const z = cz - 7 + i * 2; if (kind === 'avenger' || kind === 'gsxr') bikeModel(kind, cx - 8.9, z, -Math.PI / 2 - .35, { lean: .1 }); else bike(cx - 8.9, z, -Math.PI / 2 - .35, kind);   // the modelled ones where we have them
+  BIKES.forEach(([kind, name, line], i) => { const z = cz - 7 + i * 2; if (kind === 'avenger' || kind === 'gsxr') bikeModel(kind, cx - 9.6, z, -Math.PI / 2, { lean: .08 }); else bike(cx - 9.6, z, -Math.PI / 2, kind);   // rear wheel to the kerb, front to the aisle   // the modelled ones where we have them
     INTER.push({ x: ax + 1.6, z, r: 1, label: name, verb: 'Look', act: () => talk(name, [line]) }); });
   // floodlights: two tall poles over the bays, lit day and night (the building's shadow falls across the lot all afternoon), outside the daylight's lamp dimming
-  for (const [x, z] of [[cx - 15.8, cz - 5.5], [cx - 15.8, cz + 1.8]]) {
-    streetProp('lamp', x, 0, z, -Math.PI / 2).scale.setScalar(1.25);
-    const l = new THREE.PointLight(0xfff1dc, 2.4, 14, 1.4); l.position.set(x - 1.1, 4.4, z); scene.add(l);
-    const fill = new THREE.SpotLight(0xfff6ea, 1.6, 18, .9, .6, 1); fill.position.set(x + 2, 7, z); fill.target.position.set(x - 2.5, 0, z); scene.add(fill, fill.target);
+  for (const [x, z] of [[cx - 21.4, cz - 5.5], [cx - 21.4, cz + 1.8]]) {   // behind the cars, outside the lot, the lamp arms reaching over them
+    streetProp('lamp', x, 0, z, Math.PI / 2).scale.setScalar(1.25); colCirc(x, z, .25);
+    const l = new THREE.PointLight(0xfff1dc, 2.4, 14, 1.4); l.position.set(x + 1.1, 4.4, z); scene.add(l);
+    const fill = new THREE.SpotLight(0xfff6ea, 1.6, 18, .9, .6, 1); fill.position.set(x + 6, 7, z); fill.target.position.set(x + 3, 0, z); scene.add(fill, fill.target);
   }
   // the name board is a gantry over the entrance, where the driveway meets the footpath, high enough to drive under; at the back of the lot a small P sign
   ledSign(['Crescent Bay Parking'], '#9fd0ff', ax, 3.4, cz + 8.6, 5.4, .55, 0, [480, 52], PLAIN);
@@ -326,9 +326,9 @@ function puneStreet(cx, cz) {
   // the cars in traffic take turns from one fixed rotation, so every model shows up as often as the others (two each), spread out instead of bunched
   const ROTA = ['creta', 'm4', 'scorpio', 'eeco', 'omni', 'bmw', 'jesko', 'cybertruck'];
   let rota = 0; const nextCar = () => ROTA[rota++ % ROTA.length];
-  lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, nextCar()], [cx + 40, 'auto', PAL.gold], [cx + 100, nextCar()], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, nextCar()]]);
-  lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, nextCar()], [cx + 70, nextCar()], [cx + 125, 'auto', PAL.sage], [cx + 30, 'scooter', PAL.coral], [cx + 100, nextCar()]]);
-  lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, nextCar()], [cx + 20, 'auto', PAL.gold], [cx + 80, nextCar()], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, nextCar()]]);
+  lane('x', cz + L.eastOuter, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 30, nextCar()], [cx + 40, 'auto', PAL.gold], [cx + 100, nextCar()], [cx + 10, 'scooter', 0xe8e6e0], [cx + 72, nextCar()], [cx + 130, 'evel']]);
+  lane('x', cz + L.eastInner, 1, cx + x0, cx + x1, eastStops, 'ew', [[cx - 10, nextCar()], [cx + 70, nextCar()], [cx + 125, 'auto', PAL.sage], [cx + 30, 'scooter', PAL.coral], [cx + 100, nextCar()], [cx - 40, 'evel']]);
+  lane('x', cz + L.westInner, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 120, nextCar()], [cx + 20, 'auto', PAL.gold], [cx + 80, nextCar()], [cx + 50, 'scooter', 0x1c1c20], [cx - 20, nextCar()], [cx + 60, 'evel']]);
   lane('x', cz + L.westOuter, -1, cx + x1, cx + x0, westStops, 'ew', [[cx + 95, 'auto', PAL.sage], [cx - 20, nextCar()], [cx + 50, nextCar()], [cx + 130, nextCar()], [cx + 15, 'scooter', 0x3f8a4a], [cx + 160, 'evel']]);   // Evel Knievel, riding the main road
   for (const [J, cars] of [[J1, [[cz - 40, nextCar()], [cz + 40, 'auto', PAL.gold]]], [J2, [[cz - 20, 'auto', PAL.gold], [cz + 55, nextCar()]]]]) {
     lane('z', J - 1.5, 1, cz - 70, cz + 80, M - 6.8, 'ns', cars);

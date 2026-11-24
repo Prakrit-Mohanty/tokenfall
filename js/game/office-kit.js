@@ -3,8 +3,10 @@
 
 // marigold garlands: every bead is collected here and drawn as one instanced mesh at the end of buildOffice
 const BEADS = [];
-function garlandV(x, z, y0, y1, pink) { for (let y = y0; y < y1; y += .075) BEADS.push([x + Math.sin(y * 9) * .012, y, z, pink]); }
+function garlandV(x, z, y0, y1, pink) { return;   // the offices no longer have garlands
+  for (let y = y0; y < y1; y += .075) BEADS.push([x + Math.sin(y * 9) * .012, y, z, pink]); }
 function garlandSwag(x0, x1, z, y, sag, loops) {
+  return;   // the offices no longer have garlands
   const w = (x1 - x0) / loops;
   for (let l = 0; l < loops; l++) for (let t = 0; t <= 1; t += .028) BEADS.push([x0 + (l + t) * w, y - sag * 4 * t * (1 - t), z]);
 }

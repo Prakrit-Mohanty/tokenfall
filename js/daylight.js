@@ -301,7 +301,7 @@
     }
     function set(o, ms = 0) { const was = nameOf(S.hour); Object.assign(S, o); apply(ms); sync(); save(); if (o.hour != null && nameOf(S.hour) !== was && TF.ambience) TF.ambience.chime(); }
     function open() {
-      if (S.open || TF.talking || TF.traveling || TF.locked || TF.cameraHeld || TF.zone !== 'lobby') return false;
+      if (S.open || TF.talking || TF.traveling || TF.locked || TF.cameraHeld) return false;   // from the console in the lobby, or the sun button anywhere
       S.open = true; TF.lockPlayer(true); ui.style.display = 'block'; sync();
       TF.tween(ui, { opacity: [0, 1], translateY: [10, 0] }, 200, { ease: 'out(3)' });   // the console rises in, eased (and replaces a close still fading out)
       return true;
@@ -331,6 +331,14 @@
     TF.on('boot', () => { hookKeys(); softDust(); build(); buildAir(); buildPools(); collectEmitters(); record(); apply(); });
     TF.on('enter', (prevZone, z) => { S.zone = z; record(); apply(S.live ? 900 : 0); });   // the first zone set while the world is still loading just lands
     TF.on('boot', () => { const u = uiEl(); if (u && window.MutationObserver) new MutationObserver(() => apply(600)).observe(u, { attributes: true, attributeFilter: ['class'] }); });
+    // a sun button at the top right, always there: opens the console from any zone
+    // (left of the party panel, which takes the top-right corner)
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'panel dl-btn'; btn.setAttribute('aria-label', 'Time of day');
+    btn.style.cssText = 'position:absolute;top:18px;right:222px;z-index:5;pointer-events:auto;cursor:pointer;font:600 15px var(--font-secondary,inherit);color:var(--ink,#f3ead6);padding:8px 14px;display:flex;gap:8px;align-items:center';
+    const label = () => { btn.innerHTML = `<span style="font-size:20px">${(MOODS.find((m) => m[0] === nameOf(S.hour).toLowerCase()) || MOODS[1])[3]}</span>${clock(S.hour)}`; };
+    label(); setInterval(label, 1000);
+    btn.addEventListener('click', () => { S.open ? close() : open(); btn.blur(); });
+    document.getElementById('ui').appendChild(btn);
     TF.daylight = { state: S, apply, set, open, close };
     if (typeof window !== 'undefined') window.daylight = TF.daylight;
     return TF.daylight;
