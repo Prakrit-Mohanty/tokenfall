@@ -7,7 +7,7 @@
 var FONT_UI = '"Baloo 2", "Nunito", system-ui, sans-serif';
 var PAL = {
   oak: '#E9CFA6', oakEdge: '#D9B988', steel: '#4A4D55', charcoal: '#3A3D44', granite: '#26272C',
-  plaster: '#ECE5D8', blind: '#E9D6B2', floor: '#C9BBA8', haze: '#EDB09A', sky: '#F2A07A',
+  plaster: '#F0DCC2', blind: '#E9D6B2', floor: '#C9BBA8', haze: '#EDB09A', sky: '#F2A07A',
   ink: '#6B5B45', paper: '#FFF8EA'
 };
 
@@ -56,25 +56,32 @@ function drawSky(g, w, h) {
   g.fillStyle = sun; g.fillRect(0, 0, w, h);
 }
 function drawFloor(g, w, h) {
-  g.fillStyle = PAL.floor; g.fillRect(0, 0, w, h);
-  for (var r = 0; r < 8; r++) {
-    var y = r * h / 8, off = (r % 3) * w / 3;
-    g.fillStyle = r % 2 ? 'rgba(255,255,255,.06)' : 'rgba(90,70,50,.05)'; g.fillRect(0, y, w, h / 8);
-    g.fillStyle = 'rgba(100,84,66,.28)'; g.fillRect(0, y, w, 2);
-    [0, w / 2].forEach(function (x) { g.fillRect((x + off) % w, y, 2, h / 8); });
-    for (var i = 0; i < 6; i++) {
-      g.strokeStyle = 'rgba(120,100,80,.12)'; g.lineWidth = 2; g.beginPath();
-      var gy = y + 8 + hash(r, i) * (h / 8 - 16); g.moveTo(hash(i, r) * w, gy); g.lineTo(hash(i, r) * w + 120, gy + 2); g.stroke();
+  // warm honey oak planks: each plank its own tone, soft grain, staggered joints
+  var rows = 8, ph = h / rows;
+  for (var r = 0; r < rows; r++) {
+    var y = r * ph, off = hash(r, 3) * w;
+    for (var k = -1; k < 3; k++) {
+      var x0 = off + k * w / 2, t = hash(r, k + 5);
+      g.fillStyle = 'hsl(' + (30 + t * 6) + ',' + (52 + t * 12) + '%,' + (60 + t * 9) + '%)';
+      g.fillRect(((x0 % w) + w) % w - (k === -1 ? w : 0), y, w / 2, ph);
+      g.fillRect(((x0 % w) + w) % w - w, y, w / 2, ph);
     }
+    for (var i = 0; i < 9; i++) {
+      g.strokeStyle = i % 2 ? 'rgba(150,90,40,.18)' : 'rgba(255,230,190,.22)'; g.lineWidth = 1.5 + hash(r, i) * 2; g.beginPath();
+      var gy = y + 6 + hash(r, i + 20) * (ph - 12), gx = hash(i, r) * w;
+      g.moveTo(gx, gy); g.bezierCurveTo(gx + 60, gy + 3, gx + 120, gy - 3, gx + 200, gy); g.stroke();
+    }
+    g.fillStyle = 'rgba(110,64,30,.35)'; g.fillRect(0, y, w, 2);
+    [0, 1].forEach(function (k) { g.fillRect(((off + k * w / 2) % w + w) % w, y, 2, ph); });
   }
 }
-function drawCarpet(g, w, h) {
-  g.fillStyle = '#6E7F94'; g.fillRect(0, 0, w, h);
-  for (var y = 0; y < h; y += 32) for (var x = 0; x < w; x += 32) {
-    g.fillStyle = (x / 32 + y / 32) % 2 ? '#7E90A6' : '#62738A'; rr(g, x + 4, y + 4, 24, 24, 8);
-    g.fill();
-    g.fillStyle = 'rgba(200,214,230,.35)'; g.beginPath(); g.arc(x + 16, y + 16, 4, 0, Math.PI * 2); g.fill();
-  }
+function drawRug(g, w, h) {
+  var cx = w / 2, cy = h / 2;
+  [['#D98C6A', 1], ['#F6DDB8', 0.86], ['#E9B48A', 0.74], ['#FFF1DC', 0.62], ['#F2C6A0', 0.38], ['#FFF1DC', 0.22]].forEach(function (c) {
+    g.fillStyle = c[0]; g.beginPath(); g.arc(cx, cy, w / 2 * c[1], 0, Math.PI * 2); g.fill();
+  });
+  g.fillStyle = 'rgba(255,255,255,.5)';
+  for (var i = 0; i < 24; i++) { var a = i / 24 * Math.PI * 2; g.beginPath(); g.arc(cx + Math.cos(a) * w * 0.4, cy + Math.sin(a) * w * 0.4, 5, 0, Math.PI * 2); g.fill(); }
 }
 function drawOak(g, w, h) {
   g.fillStyle = PAL.oak; g.fillRect(0, 0, w, h);
@@ -109,22 +116,25 @@ function build(THREE) {
   var box = function (parent, material, w, h, d, r, x, y, z) { return add(parent, roundedBox(THREE, w, h, d, r), material, x, y, z); };
   var tex = function (w, h, draw) { var t = canvasTex(THREE, w, h, draw); textures.push(t); return t; };
   var plane = function (parent, w, h, material, x, y, z) { var m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material); m.position.set(x, y, z); m.receiveShadow = true; parent.add(m); return m; };
-  var FY = -105, WZ = -60, CEIL = 250, WX0 = -246, WX1 = 246, SILL = -38;
+  var FY = -105, WZ = -60, CEIL = 250, WX0 = -246, WX1 = 246, SILL = FY + 20;
   var plaster = M(PAL.plaster, { roughness: 0.95 }), charcoal = M(PAL.charcoal, { roughness: 0.45, metalness: 0.3 });
 
   /* the room */
   var floorTex = tex(512, 512, drawFloor); floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(5, 5);
-  plane(group, 1400, 1400, M('#FFFFFF', { map: floorTex, roughness: 0.55 }), 0, FY, 300).rotation.x = -Math.PI / 2;
-  var carpet = plane(group, 300, 260, M('#FFFFFF', { map: tex(256, 256, drawCarpet), roughness: 1 }), -150, FY + 0.4, 240);
-  carpet.rotation.x = -Math.PI / 2;
+  floorTex.repeat.set(4, 6);
+  plane(group, 1400, 1100, M('#FFFFFF', { map: floorTex, roughness: 0.38, metalness: 0.05 }), 0, FY, WZ + 550).rotation.x = -Math.PI / 2;
+  var rug = new THREE.Mesh(new THREE.CircleGeometry(70, 48), M('#FFFFFF', { map: tex(256, 256, drawRug), roughness: 1 }));
+  rug.rotation.x = -Math.PI / 2; rug.position.set(-62, FY + 0.5, 90); rug.receiveShadow = true; group.add(rug);
   // window wall: a continuous glass façade of three tall bays; only a low plaster upstand under the sill
   var WALLH = CEIL - FY, BAY = (WX1 - WX0) / 3;
-  box(group, plaster, WX1 - WX0 + 40, SILL - FY - 6, 20, 2, 0, (SILL + FY) / 2 - 3, WZ - 10);
   box(group, plaster, 600, WALLH, 20, 2, WX1 + 310, (CEIL + FY) / 2, WZ - 10);
   box(group, plaster, 600, WALLH, 20, 2, WX0 - 310, (CEIL + FY) / 2, WZ - 10);
-  box(group, plaster, 1400, 10, 900, 2, 0, CEIL + 5, 380).castShadow = false;
-  var walnut = M('#8A5A3A', { roughness: 0.6 });
-  for (var b = 0; b < 20; b++) box(group, walnut, 7, 9, 520, 3, WX0 - 40 - b * 13, CEIL - 5, 200).castShadow = false;
+  // warm walnut slat ceiling across the whole room, slats running front to back, with a glowing linear LED and pendant lamps
+  box(group, M('#4A3020', { roughness: 0.9 }), 1500, 10, 900, 2, 0, CEIL + 12, 380).castShadow = false;
+  var walnut = M('#9A6440', { roughness: 0.55 }), slatG = roundedBox(THREE, 8, 9, 880, 3);
+  for (var b = -52; b <= 52; b++) { var sl = add(group, slatG, b % 3 ? walnut : M('#8A5636', { roughness: 0.55 }), b * 13, CEIL + 2, 380); sl.castShadow = false; }
+  var led = new THREE.Mesh(roundedBox(THREE, 1300, 3, 5, 1.4), new THREE.MeshBasicMaterial({ color: '#FFE2A8', toneMapped: false })); led.position.set(0, CEIL - 3, 70); group.add(led);
+  box(group, M('#2E2A28'), 1310, 4, 12, 1.5, 0, CEIL - 1, 70).castShadow = false;
   // left: frosted pale-green glass partition in a black frame, an office desk glimpsed through it
   var PX = WX0 - 30; // the meeting-room partitions sit at ±PX
   var frost = new THREE.MeshStandardMaterial({ color: '#D5E6D6', transparent: true, opacity: 0.84, roughness: 1, depthWrite: false });
@@ -142,7 +152,7 @@ function build(THREE) {
   for (var c = 0; c <= 3; c++) box(group, M('#F6F3EE', { roughness: 0.6 }), 9, WH + 6, 14, 3, WX0 + c * BAY, SILL + WH / 2, WZ);
   for (var n = 0; n < 3; n++) {
     var bx = WX0 + BAY * (n + 0.5);
-    box(group, charcoal, BAY - 8, 4, 7, 1.5, bx, SILL + 34, WZ);
+    box(group, charcoal, BAY - 8, 4, 7, 1.5, bx, -14, WZ);
     box(group, charcoal, 3.5, WH, 6, 1.2, bx - BAY / 2 + 6, SILL + WH / 2, WZ - 1);
     box(group, charcoal, 3.5, WH, 6, 1.2, bx + BAY / 2 - 6, SILL + WH / 2, WZ - 1);
     // blinds rolled right up into their slim cassettes
@@ -153,7 +163,7 @@ function build(THREE) {
     }
   }
   box(group, charcoal, WX1 - WX0, 5, 9, 2, 0, CEIL - 3, WZ);
-  box(group, M(PAL.granite, { roughness: 0.18, metalness: 0.1 }), WX1 - WX0 + 30, 5, 36, 2, 0, SILL - 2, WZ + 8);
+  box(group, M(PAL.granite, { roughness: 0.18, metalness: 0.1 }), 1300, SILL - FY, 30, 3, 0, (SILL + FY) / 2, WZ + 4);
   var glass = new THREE.Mesh(new THREE.PlaneGeometry(WX1 - WX0, WH), new THREE.MeshStandardMaterial({ color: '#DDEBF2', transparent: true, opacity: 0.05, roughness: 0.05, depthWrite: false }));
   glass.position.set(0, SILL + WH / 2, WZ - 2); group.add(glass);
   // a little potted plant on the counter
@@ -166,7 +176,7 @@ function build(THREE) {
   });
   // clear acrylic Wi-Fi card on the sill
   var acr = new THREE.MeshStandardMaterial({ color: '#FFFFFF', transparent: true, opacity: 0.3, roughness: 0.05 });
-  var stand = new THREE.Group(); stand.position.set(-60, SILL + 0.5, WZ + 14); stand.rotation.y = 0.25; group.add(stand);
+  var stand = new THREE.Group(); stand.position.set(-60, SILL + 0.5, WZ + 12); stand.rotation.y = 0.25; group.add(stand);
   box(stand, acr, 14, 1.6, 6, 0.6, 0, 0.8, 0);
   box(stand, acr, 12, 16, 0.8, 0.3, 0, 9, -1).rotation.x = -0.15;
   plane(stand, 10, 13, M('#FFFFFF', { map: tex(160, 208, drawWifi) }), 0, 9, -0.4).rotation.x = -0.15;
@@ -194,10 +204,60 @@ function build(THREE) {
   var DW = (WX1 + 30) - PX - 6;
   box(group, M('#FFFFFF', { map: oakTex, roughness: 0.5 }), DW, 3.2, 58, 1.4, 0, -1.6, 2);
   var gun = M(PAL.steel, { roughness: 0.35, metalness: 0.55 });
-  [-1, -0.5, 0.5, 1].forEach(function (f) { [-22, 26].forEach(function (z) { var p = [f * (DW / 2 - 8), z]; box(group, gun, 4.5, -FY - 3, 4.5, 1, p[0], (FY - 3) / 2, p[1]); }); });
-  box(group, gun, DW - 16, 4, 4, 1, 0, -18, -22);
-  [-0.75, 0, 0.75].forEach(function (f) { box(group, gun, 4, 4, 44, 1, f * (DW / 2 - 8), FY + 22, 2); });
+  var oakM = M('#FFFFFF', { map: oakTex, roughness: 0.5 });
+  [-1, 1].forEach(function (f) { box(group, oakM, 4, -FY - 3.2, 54, 1.6, f * (DW / 2 - 4), (FY - 3.2) / 2, 2); });
+  box(group, gun, 6, -FY - 3.2, 6, 1.5, 0, (FY - 3.2) / 2, -16);
+  box(group, gun, 36, 2.4, 24, 1, 0, FY + 1.2, -16);
+  box(group, gun, DW - 12, 5, 2, 0.8, 0, -8, -22);
   box(group, M('#1E1F23', { roughness: 0.5 }), 38, 9, 16, 2.5, 18, -9, -12);
+
+  /* cosy touches: pendant lamps over the counter, a hanging plant, a big floor plant and a backpack */
+  var lampDot = softDot(THREE); textures.push(lampDot);
+  var shadeM = M('#FFF1DC', { roughness: 0.5, emissive: '#FFB866', emissiveIntensity: 0.35, side: THREE.DoubleSide });
+  var lamps = [];
+  [-200, 0, 200].forEach(function (x, i) {
+    var lp = new THREE.Group(); lp.position.set(x, 0, 6); group.add(lp);
+    var drop = 132 + (i % 2) * 10;
+    add(lp, new THREE.CylinderGeometry(6, 6, 2, 20), M('#2E2A28'), 0, CEIL - 1, 0);
+    add(lp, new THREE.CylinderGeometry(0.35, 0.35, CEIL - drop, 6), M('#2E2A28'), 0, (CEIL + drop) / 2, 0).castShadow = false;
+    var shade = add(lp, new THREE.SphereGeometry(16, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), shadeM, 0, drop - 12, 0); shade.scale.y = 0.85; shade.castShadow = false;
+    add(lp, new THREE.TorusGeometry(16, 1, 8, 32), M('#E8A85C', { roughness: 0.4 }), 0, drop - 12, 0).rotation.x = Math.PI / 2;
+    add(lp, new THREE.SphereGeometry(5, 16, 12), new THREE.MeshBasicMaterial({ color: '#FFE7B0', toneMapped: false }), 0, drop - 13, 0).castShadow = false;
+    var g = new THREE.Sprite(new THREE.SpriteMaterial({ map: lampDot, color: '#FFC27A', transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending, depthWrite: false }));
+    g.scale.set(90, 90, 1); g.position.set(0, drop - 14, 0); lp.add(g);
+    var pl = new THREE.PointLight('#FFB868', 0.55, 320, 2); pl.position.set(0, drop - 16, 0); lp.add(pl);
+    lamps.push(g);
+  });
+  var hang = new THREE.Group(); hang.position.set(-238, 0, 40); group.add(hang);
+  add(hang, new THREE.CylinderGeometry(0.3, 0.3, 50, 4), M('#C8B29A'), 0, CEIL - 25, 0).castShadow = false;
+  var hpot = add(hang, new THREE.SphereGeometry(13, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M('#F1E2CC', { roughness: 0.6 }), 0, CEIL - 50, 0);
+  add(hang, new THREE.CylinderGeometry(12.6, 12.6, 1, 20), M('#6B4A32'), 0, CEIL - 50, 0);
+  var vineM = [M('#6FAE5C'), M('#8FCB74'), M('#5E9A4E')], vg = new THREE.SphereGeometry(1, 10, 8);
+  for (var v = 0; v < 9; v++) {
+    var va = v / 9 * Math.PI * 2, len = 5 + (v % 4) * 3;
+    for (var k = 0; k < len; k++) {
+      var leaf = add(hang, vg, vineM[(v + k) % 3], Math.cos(va) * (11 + k * 0.5) + Math.sin(k * 0.9 + v) * 1.5, CEIL - 50 - k * 5, Math.sin(va) * (11 + k * 0.5));
+      leaf.scale.set(3.4, 2, 2.6); leaf.rotation.y = va + k; leaf.castShadow = false;
+    }
+  }
+  // monstera in a big pot, front right
+  var mon = new THREE.Group(); mon.position.set(205, FY, 70); group.add(mon);
+  add(mon, new THREE.CylinderGeometry(22, 17, 40, 32), M('#E8D2B4', { roughness: 0.6 }), 0, 20, 0);
+  add(mon, new THREE.TorusGeometry(21.5, 2.6, 10, 32), M('#F2E2CA'), 0, 40, 0).rotation.x = Math.PI / 2;
+  add(mon, new THREE.CylinderGeometry(20, 20, 1, 24), M('#6B4A32'), 0, 39, 0);
+  var stemM = M('#5E9A4E'), monLeaf = [M('#4F9A4A', { roughness: 0.5 }), M('#63AE55', { roughness: 0.5 }), M('#3F8740', { roughness: 0.5 })];
+  for (var ml = 0; ml < 11; ml++) {
+    var ma = ml * 2.4, mh = 70 + (ml % 4) * 18, mr = 16 + (ml % 3) * 9;
+    var st = add(mon, new THREE.CylinderGeometry(0.9, 1.1, mh - 30, 6), stemM, Math.cos(ma) * mr * 0.45, 40 + (mh - 30) / 2, Math.sin(ma) * mr * 0.45);
+    st.rotation.z = -Math.cos(ma) * 0.3; st.rotation.x = Math.sin(ma) * 0.3; st.castShadow = false;
+    var lf = add(mon, new THREE.SphereGeometry(1, 20, 10), monLeaf[ml % 3], Math.cos(ma) * mr, mh, Math.sin(ma) * mr);
+    lf.scale.set(17, 1.6, 12); lf.rotation.set(Math.sin(ma) * 0.5, -ma, -Math.cos(ma) * 0.6);
+  }
+  // a backpack leaning by the stool
+  var bag = new THREE.Group(); bag.position.set(-140, FY, 120); bag.rotation.y = 0.6; group.add(bag);
+  box(bag, M('#E8826A', { roughness: 0.8 }), 28, 38, 16, 7, 0, 19, 0);
+  box(bag, M('#F2A58A', { roughness: 0.8 }), 20, 16, 6, 4, 0, 12, 9);
+  add(bag, new THREE.TorusGeometry(5, 1.2, 8, 16, Math.PI), M('#C9634E'), 0, 38, 0);
 
   /* black bar stool front-left: round padded seat, hoop back, footrest ring */
   var stool = new THREE.Group(); stool.position.set(-62, FY, 80); stool.rotation.y = 0.5; group.add(stool);
@@ -255,6 +315,7 @@ function build(THREE) {
       });
       cityApi.update(t);
       glow.material.opacity = 0.2 + Math.sin(t * 0.6) * 0.03;
+      lamps.forEach(function (g, i) { g.material.opacity = 0.42 + Math.sin(t * 1.3 + i) * 0.03; });
       shaftM.opacity = 0.28 + Math.sin(t * 0.4 + 1) * 0.05;
     },
     redraw: function () { textures.forEach(function (tx) { tx.redraw(); }); }

@@ -1,4 +1,4 @@
-// The character pick, shown once after the launcher's START. A cream panel over a blurred picture of the lobby: the chosen character stands big on a grass platform on the left; on
+// The character pick, shown once after the launcher's START. A cream panel over the same sunny sky and hills as the launcher's menu: the chosen character stands big on a bobbing grass island on the left; on
 // the right are their name, specialty chip, line, a tip and a clip of them walking round the real lobby (launcher/preview-<id>.mp4, recorded from the game by
 // tools/record-previews.mjs); below, all four to choose from. The look is in css/char-select.css, the roster, specialties and tips in js/game/char-select.js.
 // Left / Right (or A / D) choose, Enter or the Start button begins; a click on a character chooses them. Keys stop at the screen, so the hero does not move while picking.
@@ -56,9 +56,9 @@
 
       const el = document.createElement('div');
       el.id = 'charpick'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Choose your character');
-      el.innerHTML = `<div class="cp-backdrop"></div>
+      el.innerHTML = `<div class="cp-backdrop"><i class="c1"></i><i class="c2"></i><i class="c3"></i><b class="h1"></b><b class="h2"></b></div>
       <div class="cp-frame">
-        <div class="cp-top">Choose your character</div>
+        <div class="cp-top"><span>Choose your character</span></div>
         <div class="cp-main">
           <div class="cp-stage"><div class="cp-platform"></div>${roster.map(() => '<div class="cp-art"></div>').join('')}</div>
           <div class="cp-info">

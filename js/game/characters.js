@@ -196,7 +196,7 @@ const NPC_TALK = {
 };
 let npcs = [];
 const CHATTER_OFFICE = ['who booked the Prompt Lab again?', 'chai break in 5?', 'the carrom queen is MINE', 'standup in the Token Room', 'love the marigolds', 'anyone seen my charger?'];
-const NPC_BOUNDS = { lobby: [-16, -10.5, 16, 17.5], lab: [-9.6, -317.5, 9.6, -282.3], abz: [-12.2, 286.7, 12, 313.3], pune: [279, -8.5, 336, 9] };
+const NPC_BOUNDS = { us: [-309.5, -307, -290.5, -293], lobby: [-16, -10.5, 16, 17.5], lab: [-9.6, -317.5, 9.6, -282.3], abz: [-12.2, 286.7, 12, 313.3], pune: [279, -8.5, 336, 9] };
 const OFFICE_NPCS = ['rahul.k', 'meera_s', 'devansh'];
 Object.assign(NPC_TALK, {
   Murali: ['Good to see you on the floor.', 'Ship small, check often. That is most of the job.'],

@@ -18,7 +18,7 @@
   if (typeof window !== 'undefined') window.TokenfallLauncher = api;
 })(this, function () {
 'use strict';
-var DESIGN_W = 1280, DESIGN_H = 800;
+var DESIGN_W = 1280, DESIGN_H = 800, DESIGN_A = 1280 / 800;   // the stage is 800 tall and as wide as the window's shape (fit() resizes DESIGN_W), so the scene fills any window
 function DCLogic() {}
 DCLogic.prototype.setState = function (o) { Object.assign(this.state, o); this._render && this._render(); };
 DCLogic.prototype.forceUpdate = function () { this._render && this._render(); };
@@ -28,7 +28,7 @@ var MENU_START = 0, MENU_CONTROLS = 1, MENU_SETTINGS = 2;
 var VOLS = [['LOW', 0.22], ['MEDIUM', 0.45], ['HIGH', 0.75]];
 function sanitizeCfg(sv) {
   var vol = Number.isInteger(sv.vol) && sv.vol >= 0 && sv.vol < VOLS.length ? sv.vol : 1;
-  return { vol: vol, sfx: sv.sfx !== false, motion: sv.motion !== false, scan: sv.scan !== false };
+  return { vol: vol, sfx: sv.sfx !== false, motion: sv.motion !== false, scan: sv.scan === true };
 }
 
 /* ---------- tiny chiptune: square lead, pulse arp, triangle bass, noise drums ---------- */
@@ -137,22 +137,24 @@ Chip.prototype.close = function () { if (this.timer) clearInterval(this.timer); 
 var BOOT = ['CALFUS-86 BIOS v1.0', 'MEMORY CHECK ... 640K OK', 'LOADING OFFICE ... OK', 'STARTING TOKENFALL'];
 
 /* ---------- the PC, built from soft rounded Three.js shapes; the office around it is launcher/office-room.js ---------- */
-var SCREEN = { x0: -30, x1: 30, y0: 12, y1: 57.8, z: -1 };
+var SCREEN = { x0: -48, x1: 48, y0: 34, y1: 88, z: -2 };
 function drawStartScreen(g, w, h, blink) {
   var room = window.TokenfallOfficeRoom, F = room.FONT_UI;
-  var bg = g.createRadialGradient(w / 2, h * 0.45, 10, w / 2, h / 2, w * 0.7);
-  bg.addColorStop(0, '#3E7A72'); bg.addColorStop(1, '#1D3F45');
+  var bg = g.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#A9DDF2'); bg.addColorStop(0.5, '#D6EEF2'); bg.addColorStop(1, '#FFF1D6');
   g.fillStyle = bg; g.fillRect(0, 0, w, h);
-  g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.shadowColor = 'rgba(190,255,220,.8)'; g.shadowBlur = 24;
-  g.fillStyle = '#FFF1D6'; g.font = '600 ' + Math.round(h * 0.2) + 'px ' + F;
-  g.fillText('TOKEN', w / 2, h * 0.3); g.fillText('FALL', w / 2, h * 0.5);
-  g.shadowBlur = 0;
-  room.rr(g, w * 0.2, h * 0.64, w * 0.6, 4, 2, 'rgba(190,255,220,.35)');
+  g.fillStyle = '#9DD17A'; g.beginPath(); g.ellipse(w / 2, h * 1.18, w * 0.75, h * 0.36, 0, 0, Math.PI * 2); g.fill();
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  g.font = '600 ' + Math.round(h * 0.2) + 'px ' + F;
+  [['TOKEN', 0.28], ['FALL', 0.48]].forEach(function (l) {
+    g.lineWidth = h * 0.035; g.strokeStyle = '#6E4020'; g.strokeText(l[0], w / 2, h * l[1]);
+    g.fillStyle = '#FFD27A'; g.fillText(l[0], w / 2, h * l[1]);
+  });
   if (blink) {
-    g.shadowColor = 'rgba(255,160,190,.9)'; g.shadowBlur = 20;
-    g.fillStyle = '#FFB3C6'; g.font = '600 ' + Math.round(h * 0.13) + 'px ' + F;
-    g.fillText('▶ START', w / 2, h * 0.79);
+    room.rr(g, w * 0.32, h * 0.66, w * 0.36, h * 0.16, h * 0.08, '#FFF6E6');
+    g.lineWidth = 4; g.strokeStyle = '#8A5A34'; g.stroke();
+    g.fillStyle = '#7A4A26'; g.font = '600 ' + Math.round(h * 0.1) + 'px ' + F;
+    g.fillText('▶ START', w / 2, h * 0.745);
   }
 }
 function buildPC(THREE) {
@@ -160,42 +162,61 @@ function buildPC(THREE) {
   var M = function (col, o) { return room.mat(THREE, col, o); };
   var add = function (parent, geo, material, x, y, z) { var m = new THREE.Mesh(geo, material); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m; };
   var box = function (parent, material, w, h, d, r, x, y, z) { return add(parent, room.roundedBox(THREE, w, h, d, r), material, x, y, z); };
-  var black = M('#0B0C0E', { roughness: 0.6, metalness: 0 }), silver = M('#C9CCD2', { roughness: 0.3, metalness: 0.6 });
-  var cy = (SCREEN.y0 + SCREEN.y1) / 2;
-  // slim black flat monitor on a silver stand
-  box(group, silver, 34, 1.6, 22, 0.8, 0, 0.8, -6);
-  box(group, silver, 7, 34, 3, 1.4, 0, 18, -10).rotation.x = -0.08;
-  box(group, silver, 12, 10, 3, 1.4, 0, cy - 6, SCREEN.z - 5);
-  box(group, black, SCREEN.x1 - SCREEN.x0 + 4.4, SCREEN.y1 - SCREEN.y0 + 5.6, 2.6, 1.2, 0, cy - 0.6, SCREEN.z - 1.4);
-  var scrGeo = new THREE.PlaneGeometry(SCREEN.x1 - SCREEN.x0, SCREEN.y1 - SCREEN.y0);
-  var blink = true;
-  var scrTex = room.canvasTex(THREE, 640, 488, function (g, w, h) { drawStartScreen(g, w, h, blink); });
+  var alu = M('#E6E6EA', { roughness: 0.3, metalness: 0.55, emissive: '#5A4A40', emissiveIntensity: 0.55 }), white = M('#F7F7F5', { roughness: 0.35 });
+  var pink = M('#F7C3CF', { roughness: 0.32, metalness: 0.35, emissive: '#5A3A3A', emissiveIntensity: 0.4 }), pinkDeep = M('#EFA9BA', { roughness: 0.32, metalness: 0.35, emissive: '#4A2E30', emissiveIntensity: 0.4 }), pinkStand = M('#EDB3C1', { roughness: 0.3, metalness: 0.4, emissive: '#4A2E30', emissiveIntensity: 0.4 });
+  var bezel = M('#FBF9F6', { roughness: 0.2, emissive: '#5A4A40', emissiveIntensity: 0.35 });
+  var W = SCREEN.x1 - SCREEN.x0, H = SCREEN.y1 - SCREEN.y0, cy = (SCREEN.y0 + SCREEN.y1) / 2, B = 1.8, CHIN = 15;
+  // pastel-pink all-in-one: white bezel round the screen, a soft pink chin and a pink blade stand
+  var bodyH = H + 2 * B + CHIN, bodyY = SCREEN.y0 - B - CHIN + bodyH / 2;
+  box(group, pinkDeep, W + 2 * B + 0.6, bodyH + 0.6, 2.2, 1.1, 0, bodyY, SCREEN.z - 1.7);
+  box(group, pink, W + 2 * B - 0.4, CHIN + 0.6, 0.8, 0.35, 0, SCREEN.y0 - B - CHIN / 2, SCREEN.z - 0.45);
+  box(group, bezel, W + 2 * B, H + 2 * B, 0.6, 0.28, 0, cy, SCREEN.z - 0.35);
+  add(group, new THREE.SphereGeometry(0.3, 10, 8), M('#2A2A30', { roughness: 0.2 }), 0, SCREEN.y1 + B * 0.5, SCREEN.z - 0.02);
+  var mark = room.canvasTex(THREE, 128, 32, function (g, w, h) { g.fillStyle = 'rgba(190,110,130,.35)'; g.font = '600 18px ' + room.FONT_UI; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('tokenfall', w / 2, h / 2 + 1); });
+  var markM = new THREE.Mesh(new THREE.PlaneGeometry(9, 2.2), new THREE.MeshBasicMaterial({ map: mark, transparent: true }));
+  markM.position.set(0, SCREEN.y0 - B - CHIN / 2, SCREEN.z - 0.38); group.add(markM);
+  // flat pink blade stand on a rectangular foot
+  var blade = box(group, pinkStand, 24, 32, 1.4, 0.6, 0, 17, SCREEN.z - 6); blade.rotation.x = -0.12;
+  box(group, pinkStand, 24, 1, 18, 0.45, 0, 0.5, SCREEN.z - 9);
+  // the screen itself
+  var scrGeo = new THREE.PlaneGeometry(W, H), blink = true;
+  var scrTex = room.canvasTex(THREE, 640, 360, function (g, w, h) { drawStartScreen(g, w, h, blink); });
   var screen = new THREE.Mesh(scrGeo, new THREE.MeshBasicMaterial({ map: scrTex, toneMapped: false })); screen.position.set(0, cy, SCREEN.z); group.add(screen);
-  var off = new THREE.Mesh(scrGeo, M('#16181C', { roughness: 0.2 })); off.position.set(0, cy, SCREEN.z - 0.05); group.add(off);
+  var off = new THREE.Mesh(scrGeo, M('#0B0C0F', { roughness: 0.2 })); off.position.set(0, cy, SCREEN.z - 0.02); group.add(off);
+  // soft warm reflection streak across the glass
+  var streakTex = room.canvasTex(THREE, 256, 128, function (g, w, h) {
+    var gr = g.createLinearGradient(0, 0, w, h);
+    gr.addColorStop(0.3, 'rgba(255,220,170,0)'); gr.addColorStop(0.45, 'rgba(255,220,170,.55)'); gr.addColorStop(0.52, 'rgba(255,230,190,.2)'); gr.addColorStop(0.6, 'rgba(255,220,170,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  });
+  var streak = new THREE.Mesh(new THREE.PlaneGeometry(W + 2 * B, H + 2 * B), new THREE.MeshBasicMaterial({ map: streakTex, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false }));
+  streak.position.set(0, cy, SCREEN.z + 0.08); group.add(streak);
   var glowTex = room.canvasTex(THREE, 128, 128, function (g) {
     var gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
     gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
   });
-  var glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#9FF0C8', transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false }));
-  glow.scale.set(76, 60, 1); glow.position.set(0, cy, SCREEN.z + 1); group.add(glow);
-  var led = add(group, new THREE.SphereGeometry(0.6, 10, 8), M('#555', { emissive: '#7CF29A', emissiveIntensity: 0 }), SCREEN.x1 - 2, SCREEN.y0 - 2.4, SCREEN.z + 0.1);
-  // slim pale keyboard and mouse
-  var kb = new THREE.Group(); kb.position.set(-4, 0, 16); kb.rotation.x = 0.04; group.add(kb);
-  box(kb, M('#F2F0EA', { roughness: 0.45 }), 44, 1.4, 13, 0.6, 0, 0.7, 0);
-  var capG = room.roundedBox(THREE, 2.6, 0.9, 2.4, 0.4), capM = M('#FFFFFF', { roughness: 0.4 });
-  for (var r = 0; r < 4; r++) for (var k = 0; k < 14; k++) {
-    if (r === 3 && k > 0 && k < 13 && k !== 4) continue;
-    var wide = r === 3 && k === 4;
-    var cap = add(kb, wide ? room.roundedBox(THREE, 2.6 + 3 * 8, 0.9, 2.4, 0.4) : capG, capM, -19.5 + k * 3 + (wide ? 12 : 0), 1.7, -4.5 + r * 3);
+  var glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#9FF0C8', transparent: true, opacity: 0.08, blending: THREE.AdditiveBlending, depthWrite: false }));
+  glow.scale.set(W * 1.2, H * 1.25, 1); glow.position.set(0, cy, SCREEN.z + 1); group.add(glow);
+  var led = add(group, new THREE.SphereGeometry(0.18, 8, 6), M('#555', { emissive: '#7CF29A', emissiveIntensity: 0 }), 1.2, SCREEN.y1 + B * 0.5, SCREEN.z - 0.02);
+  // slim pink-framed keyboard with white keys, a trackpad and a white mouse with a pink underside
+  var kb = new THREE.Group(); kb.position.set(-6, 0, 16); kb.rotation.x = 0.03; group.add(kb);
+  box(kb, pink, 42, 1, 12.5, 0.45, 0, 0.5, 0);
+  var capG = room.roundedBox(THREE, 2.5, 0.5, 2.3, 0.22);
+  for (var r = 0; r < 5; r++) for (var k = 0; k < 14; k++) {
+    if (r === 4 && k > 0 && k < 13 && k !== 4) continue;
+    var wide = r === 4 && k === 4;
+    var cap = add(kb, wide ? room.roundedBox(THREE, 2.5 + 2.8 * 8, 0.5, 2.3, 0.22) : capG, white, -18.2 + k * 2.8 + (wide ? 11.2 : 0), 1.15, -5 + r * 2.5);
     cap.castShadow = false;
   }
-  var mouse = add(group, new THREE.SphereGeometry(1, 24, 16), M('#F2F0EA', { roughness: 0.45 }), 30, 0, 18); mouse.scale.set(3.2, 1.8, 5);
+  box(group, alu, 13, 0.6, 11, 0.28, 24, 0.3, 17);
+  var mouse = add(group, new THREE.SphereGeometry(1, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2), white, 36, 0.35, 18); mouse.scale.set(2.8, 1.1, 5);
+  add(group, new THREE.CylinderGeometry(1, 1, 0.35, 24), pinkDeep, 36, 0.18, 18).scale.set(2.8, 1, 5);
   return {
-    group: group, textures: [scrTex, glowTex],
+    group: group, textures: [scrTex, glowTex, mark, streakTex],
     setOn: function (on, t) {
       screen.visible = !on;
-      glow.material.color.set(on ? '#C9B6FF' : '#9FF0C8');
-      led.material.emissiveIntensity = on ? 1.6 : 0.2;
+      glow.material.color.set(on ? '#FFE9C0' : '#CFEFFF');
+      led.material.emissiveIntensity = on ? 1.2 : 0;
       var b = Math.floor(t * 1.6) % 2 === 0;
       if (b !== blink) { blink = b; scrTex.redraw(); }
     }
@@ -204,9 +225,9 @@ function buildPC(THREE) {
 
 // camera orbits a target point; dist/fov set the zoom
 var POSES = {
-  idle: { dist: 360, fov: 50, pitch: -6, yaw: 2, tx: 0, ty: 84, tz: -20, swing: 4 },
-  near: { dist: 150, fov: 30, pitch: 1, yaw: 0, tx: 0, ty: 34.9, tz: SCREEN.z },
-  into: { dist: 36, fov: 30, pitch: 0, yaw: 0, tx: 0, ty: 34.9, tz: SCREEN.z }
+  idle: { dist: 360, fov: 50, pitch: -6, yaw: 2, tx: 0, ty: 61, tz: SCREEN.z, swing: 4 },   // aimed at the screen centre, so the start button sits in the middle of the window
+  near: { dist: 178, fov: 30, pitch: 1, yaw: 0, tx: 0, ty: 60.4, tz: SCREEN.z },
+  into: { dist: 42, fov: 30, pitch: 0, yaw: 0, tx: 0, ty: 61, tz: SCREEN.z }
 };
 
 class Component extends DCLogic {
@@ -220,7 +241,7 @@ class Component extends DCLogic {
     this.ov = { l: 0, t: 0, w: 0, h: 0, o: 0 };
     var self = this;
     this.musicOn = true;
-    this.cfg = { vol: 1, sfx: true, motion: true, scan: true };
+    this.cfg = { vol: 1, sfx: true, motion: true, scan: false };
     try { var sv = JSON.parse(localStorage.getItem('tokenfall.settings') || 'null'); if (sv && typeof sv === 'object') { this.musicOn = sv.music !== false; this.cfg = sanitizeCfg(sv); } } catch (e) {}
     this.settingsOpen = false; this.setSel = 0;
     this.saveCfg = function () { try { localStorage.setItem('tokenfall.settings', JSON.stringify(Object.assign({ music: self.musicOn }, self.cfg))); } catch (e) {} };
@@ -322,7 +343,9 @@ class Component extends DCLogic {
     if (!this.renderer) return;
     var THREE = window.THREE, c = this.cam, cam = this.camera, on = this.state.phase !== 'off';
     var yaw = c.yaw * Math.PI / 180, pit = c.pitch * Math.PI / 180;
-    cam.fov = c.fov; cam.updateProjectionMatrix();
+    // a window narrower than the 16:10 design keeps the same width of scene in view (wider vertical angle) rather than cropping the sides
+    var a = DESIGN_W / DESIGN_H; cam.aspect = a;
+    cam.fov = a >= DESIGN_A ? c.fov : 2 * Math.atan(Math.tan(c.fov * Math.PI / 360) * DESIGN_A / a) * 180 / Math.PI; cam.updateProjectionMatrix();
     cam.position.set(c.tx + c.dist * Math.sin(yaw) * Math.cos(pit), c.ty + c.dist * Math.sin(pit), c.tz + c.dist * Math.cos(yaw) * Math.cos(pit));
     cam.lookAt(c.tx, c.ty, c.tz);
     cam.updateMatrixWorld();
@@ -334,7 +357,7 @@ class Component extends DCLogic {
     [[SCREEN.x0, SCREEN.y0], [SCREEN.x1, SCREEN.y0], [SCREEN.x1, SCREEN.y1], [SCREEN.x0, SCREEN.y1]].forEach(function (q) {
       v.set(q[0], q[1], SCREEN.z).project(cam); xs.push((v.x + 1) / 2 * DESIGN_W); ys.push((1 - v.y) / 2 * DESIGN_H);
     });
-    var facing = Math.abs(c.yaw) < 1.5 && Math.abs(c.pitch) < 4 && c.dist < 230;
+    var facing = Math.abs(c.yaw) < 1.5 && Math.abs(c.pitch) < 4 && c.dist < 260;
     this.ov = { l: Math.min.apply(0, xs), t: Math.min.apply(0, ys), w: Math.max.apply(0, xs) - Math.min.apply(0, xs), h: Math.max.apply(0, ys) - Math.min.apply(0, ys), o: on && facing ? 1 : 0 };
   }
   componentDidMount() {
@@ -381,14 +404,13 @@ class Component extends DCLogic {
       settingRows: this.ROWS.map(function (r, i) {
         var on3 = i === self.setSel, v = r.get();
         return { label: r.label, value: v, mark: on3 ? '▶' : '', change: self.rowChange[i], hover: self.rowHover[i],
-          bg: on3 ? '#FFE7EC' : '#F7EBD8', color: on3 ? '#C9577A' : '#6B5B45', valColor: v === 'OFF' ? '#B3A28A' : '#5FA88E' };
+          bg: on3 ? '#FFE9C4' : '#F7EBD8', color: on3 ? '#B5651D' : '#6B5B45', valColor: v === 'OFF' ? '#B3A28A' : '#5FA88E' };
       }),
       musicLabel: !this.musicOn ? '♪ Music: off' : this.musicPlaying ? '♪ Music: on' : '♪ Click to play music',
       musicPressed: this.musicOn && this.musicPlaying ? 'true' : 'false',
       onAnyInput: this.onAnyInput, toggleMusic: this.toggleMusic,
       ovLeft: o.l.toFixed(1), ovTop: o.t.toFixed(1), ovW: o.w.toFixed(1), ovH: o.h.toFixed(1),
-      ovScale: (o.w / 552 || 0.01).toFixed(4), ovOpacity: o.o, ovPointer: o.o ? 'auto' : 'none',
-      isOff: p === 'off',
+      ovScale: (o.w / 640 || 0.01).toFixed(4), ovOpacity: o.o, ovPointer: o.o ? 'auto' : 'none',
       showOff: on && p !== 'done' && p !== 'zoom',
       isOn: on && p !== 'done',
       isBoot: p === 'boot',
@@ -399,7 +421,7 @@ class Component extends DCLogic {
       bootPct: Math.min(100, st.step * 20),
       menu: MENU.map(function (label, i) {
         var sel = i === st.sel;
-        return { label: label, mark: sel ? '▶' : '', color: sel ? '#FFB3C6' : '#FFF1D6', go: self.menuGo[i], hover: self.menuHover[i] };
+        return { label: label, mark: sel ? '▶' : '', color: sel ? '#FFC46A' : '#FFF1D6', go: self.menuGo[i], hover: self.menuHover[i] };
       }),
       rootRef: this.rootRef, canvasRef: this.canvasRef,
       onKey: this.onKey, onPower: this.onPower, onPcClick: this.onPcClick,
@@ -409,33 +431,47 @@ class Component extends DCLogic {
 }
 
 /* ---------------- DOM layer (replaces the design-tool template) ---------------- */
-var CSS = "\n.root:focus{outline:none}\n.scan{background:repeating-linear-gradient(to bottom,rgba(255,255,255,.035) 0 2px,rgba(0,20,30,.12) 2px 4px);pointer-events:none}\n.vig{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 60%,rgba(10,30,36,.45) 100%);pointer-events:none}\n.blink{animation:blink 1.2s ease-in-out infinite}\n@keyframes blink{50%{opacity:.25}}\n.crton{animation:crton .5s ease-out both}\n@keyframes crton{0%{transform:scale(1,.01);filter:brightness(3)}55%{transform:scale(1,.01);filter:brightness(3)}100%{transform:scale(1,1);filter:brightness(1)}}\n.item{background:none;border:0;border-radius:999px;padding:4px 22px 4px 12px;min-height:48px;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:30px;cursor:pointer;text-align:left;display:flex;gap:12px;align-items:center;transition:background .15s}\n.item.on{background:rgba(255,179,198,.16)}\n.back{background:#FFF6E6;border:0;border-radius:999px;color:#6B5B45;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:16px;padding:8px 18px;min-height:44px;cursor:pointer;box-shadow:0 3px 0 #E2C9A4}\n.back:hover{background:#FFE7EC}\n.setrow{box-sizing:border-box!important;display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;margin:0;min-height:48px;padding:0 16px;border:0;border-radius:16px;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:18px;cursor:pointer;text-align:left;transition:background .15s}\n.setrow:focus-visible{outline:3px solid #F59AB0;outline-offset:1px}\n.hud{display:inline-flex;align-items:center;gap:8px;background:#FFF6E6;color:#6B5B45;border:0;border-radius:999px;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:17px;padding:0 24px;min-height:50px;cursor:pointer;box-shadow:0 4px 0 #E2C9A4,0 10px 24px rgba(120,80,40,.25);transition:transform .15s,box-shadow .15s}\n.hud:hover{transform:translateY(-2px);box-shadow:0 6px 0 #E2C9A4,0 14px 28px rgba(120,80,40,.28)}\n.hud:active{transform:translateY(2px);box-shadow:0 2px 0 #E2C9A4,0 6px 14px rgba(120,80,40,.25)}\n.hud.go{background:#F59AB0;color:#FFFFFF;font-size:20px;padding:0 32px;min-height:58px;box-shadow:0 5px 0 #D97A94,0 12px 28px rgba(200,90,120,.35)}\n.hud.go:hover{box-shadow:0 7px 0 #D97A94,0 16px 32px rgba(200,90,120,.38)}\n.hud .dot{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.3);font-size:12px}\n.hud:focus-visible,.back:focus-visible,.item:focus-visible{outline:3px solid #F59AB0;outline-offset:3px}\n\n.tf-host{position:relative;overflow:hidden;background:#F6E2C2}\n.tf-stage{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0}\n.tf-crt{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#3E7A72,#1D3F45)}\n.tf-host button{font-family:'Baloo 2','Nunito',sans-serif}\n.hud kbd{font:inherit;font-size:13px;margin-left:6px;padding:1px 9px;border-radius:999px;background:rgba(255,255,255,.3)}\n";
+var CSS = "\n.root:focus{outline:none}\n.scan{background:repeating-linear-gradient(to bottom,rgba(255,255,255,.05) 0 2px,rgba(90,60,30,.04) 2px 4px);pointer-events:none}\n.vig{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 60%,rgba(120,80,40,.18) 100%);pointer-events:none}\n.blink{animation:blink 1.2s ease-in-out infinite}\n@keyframes blink{50%{opacity:.25}}\n.crton{animation:crton .5s ease-out both}\n@keyframes crton{0%{transform:scale(1,.01);filter:brightness(3)}55%{transform:scale(1,.01);filter:brightness(3)}100%{transform:scale(1,1);filter:brightness(1)}}\n.item{background:none;border:0;border-radius:999px;padding:4px 22px 4px 12px;min-height:48px;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:30px;cursor:pointer;text-align:left;display:flex;gap:12px;align-items:center;transition:background .15s}\n.item.on{background:rgba(255,196,106,.16)}\n.back{background:#FFF6E6;border:0;border-radius:999px;color:#6B5B45;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:16px;padding:8px 18px;min-height:44px;cursor:pointer;box-shadow:0 3px 0 #E2C9A4}\n.back:hover{background:#FFE9C4}\n.setrow{box-sizing:border-box!important;display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;margin:0;min-height:48px;padding:0 16px;border:0;border-radius:16px;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:18px;cursor:pointer;text-align:left;transition:background .15s}\n.setrow:focus-visible{outline:3px solid #E98A3A;outline-offset:1px}\n.hud{display:inline-flex;align-items:center;gap:8px;background:#FFF6E6;color:#6B5B45;border:0;border-radius:999px;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:17px;padding:0 24px;min-height:50px;cursor:pointer;box-shadow:0 4px 0 #E2C9A4,0 10px 24px rgba(120,80,40,.25);transition:transform .15s,box-shadow .15s}\n.hud:hover{transform:translateY(-2px);box-shadow:0 6px 0 #E2C9A4,0 14px 28px rgba(120,80,40,.28)}\n.hud:active{transform:translateY(2px);box-shadow:0 2px 0 #E2C9A4,0 6px 14px rgba(120,80,40,.25)}\n.hud:focus-visible,.back:focus-visible,.item:focus-visible{outline:3px solid #E98A3A;outline-offset:3px}\n\n.tf-host{position:relative;overflow:hidden;background:#F6E2C2}\n.tf-stage{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0}\n.tf-crt{position:absolute;inset:0;background:#D6EEF2}\n.tf-sky{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#A9DDF2 0%,#D6EEF2 45%,#FFF1D6 100%)}\n.tf-sky i{position:absolute;background:#FFFFFF;border-radius:999px;opacity:.9;box-shadow:24px -14px 0 4px #FFFFFF,52px 0 0 -2px #FFFFFF;animation:tfdrift 40s linear infinite}\n.tf-sky .c1{left:40px;top:40px;width:70px;height:26px}.tf-sky .c2{left:470px;top:70px;width:60px;height:22px;animation-duration:55s}.tf-sky .c3{left:250px;top:24px;width:46px;height:18px;opacity:.7;animation-duration:70s}\n@keyframes tfdrift{from{transform:translateX(-30px)}to{transform:translateX(30px)}}\n.tf-hill{position:absolute;left:-60px;right:-60px;bottom:-150px;height:210px;border-radius:50%;background:radial-gradient(ellipse at 50% 20%,#B8E08E,#8CC46A);box-shadow:inset 0 6px 0 rgba(255,255,255,.35)}\n.tf-hill.b{left:300px;right:-200px;bottom:-170px;background:#9DD17A;opacity:.85}\n.tf-pane{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;box-sizing:border-box}\n.tf-logo{position:relative;display:flex;flex-direction:column;align-items:center;transform-origin:50% 0;animation:tfbob 3.2s ease-in-out infinite}\n@keyframes tfbob{0%,100%{translate:0 0;rotate:-1deg}50%{translate:0 -4px;rotate:1deg}}\n.tf-welcome{margin:0 0 -6px;font-family:'Nunito',sans-serif;font-style:italic;font-weight:700;font-size:17px;color:#7A4A26;position:relative;z-index:2;background:#FFF6E6;padding:0 12px;border-radius:999px;border:2px solid #C79A6A}\n.tf-plaque{padding:8px 26px 10px;border-radius:26px;background:linear-gradient(180deg,#F2C98F,#D99E5E);border:4px solid #8A5A34;box-shadow:0 5px 0 #8A5A34,0 10px 18px rgba(120,70,30,.3),inset 0 3px 0 rgba(255,255,255,.4);background-image:repeating-linear-gradient(180deg,rgba(150,90,40,.12) 0 2px,transparent 2px 14px),linear-gradient(180deg,#F2C98F,#D99E5E)}\n.tf-word{margin:0;font-family:'Baloo 2','Nunito',sans-serif;font-weight:600;font-size:58px;line-height:1;letter-spacing:1px;white-space:nowrap}\n.tf-l{display:inline-block;color:#FFD27A;-webkit-text-stroke:7px #6E4020;paint-order:stroke fill;text-shadow:0 4px 0 #6E4020,0 7px 6px rgba(80,40,10,.35)}\n.tf-leaf{position:absolute;top:-12px;right:22px;z-index:3;width:30px;height:24px}\n.tf-leaf i{position:absolute;width:20px;height:12px;border-radius:0 100% 0 100%;background:#6FBF5A;border:2px solid #3F7F3A}.tf-leaf i+i{left:12px;top:6px;transform:rotate(60deg);background:#8FD06A}\n.tf-tag{margin-top:-8px;position:relative;z-index:2;padding:1px 14px;border-radius:999px;background:#4FB3A9;color:#FFFFFF;font-family:'Baloo 2',sans-serif;font-weight:600;font-size:15px;border:2px solid #2F7F78;rotate:-3deg}\n.tf-start{display:inline-flex;align-items:center;gap:10px;margin-top:8px;padding:2px 34px;min-height:50px;border-radius:999px;background:#FFF6E6;border:3px solid #8A5A34;color:#7A4A26;font-family:'Baloo 2',sans-serif;font-weight:600;font-size:28px;cursor:pointer;box-shadow:0 4px 0 #8A5A34;transition:transform .15s}\n.tf-start.on{background:linear-gradient(180deg,#FFD27A,#F6B85A);border-color:#9A5418;color:#6E3A10;box-shadow:0 4px 0 #9A5418,0 0 0 5px rgba(255,236,190,.7);transform:scale(1.04)}\n.tf-arrow{font-size:16px;display:inline-block;opacity:0}.tf-start.on .tf-arrow{opacity:1;animation:tfnudge .8s ease-in-out infinite}\n@keyframes tfnudge{50%{transform:translateX(5px)}}\n.tf-sub{padding:2px 20px;min-height:36px;border-radius:999px;background:#FFF6E6;border:2px solid #B88A5C;color:#7A4A26;font-family:'Baloo 2',sans-serif;font-weight:600;font-size:17px;cursor:pointer;box-shadow:0 3px 0 #B88A5C}\n.tf-sub.on{background:#FFE3A8;border-color:#9A5418;box-shadow:0 3px 0 #9A5418,0 0 0 4px rgba(255,236,190,.7)}\n.tf-start:focus-visible,.tf-sub:focus-visible{outline:3px solid #E98A3A;outline-offset:3px}\n.tf-press{margin:4px 0 0;font-family:'Baloo 2',sans-serif;font-weight:600;font-size:15px;color:#4E6B3A;background:rgba(255,246,230,.75);padding:0 12px;border-radius:999px}\n.tf-press kbd{font:inherit;padding:0 8px;border-radius:999px;background:#7A4A26;color:#FFF6E6}\n.tf-ver{position:absolute;right:14px;bottom:8px;font-family:'Baloo 2',sans-serif;font-weight:600;font-size:12px;color:#5E7A48}\n.tf-card{display:flex;flex-direction:column;padding:14px 20px;border-radius:22px;background:rgba(255,248,236,.94);border:3px solid #C79A6A;box-shadow:0 4px 0 #C79A6A;color:#6B4A2E;font-family:'Baloo 2',sans-serif;font-weight:600}\n.tf-h2{margin:0;font-size:26px;color:#7A4A26}\n.tf-key{justify-self:start;padding:1px 10px;border-radius:10px;background:#FFE3A8;border:2px solid #C79A6A;color:#6E3A10;font-size:14px}\n.tf-bar{margin-top:6px;height:18px;border-radius:999px;background:#EADBC4;border:2px solid #C79A6A;padding:2px;box-sizing:border-box}.tf-bar div{height:100%;border-radius:999px;background:linear-gradient(90deg,#8FD06A,#F6B85A);transition:width .3s}\n.tf-loading{margin:6px 0 0;font-family:'Baloo 2',sans-serif;font-weight:600;font-size:26px;color:#7A4A26}\n.tf-loading span{display:inline-block;animation:tfhop 1s ease-in-out infinite}.tf-loading span+span{animation-delay:.15s}.tf-loading span+span+span{animation-delay:.3s}\n@keyframes tfhop{50%{transform:translateY(-6px)}}\n.tf-host button{font-family:'Baloo 2','Nunito',sans-serif}\n";
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
+// the New Horizons-style wooden sign logo; k scales it for the smaller boot / loading headers
+function logoHTML(k) {
+  var tilts = [-6, 4, -3, 5, -4, 0, 6, -5, 3];
+  var letters = 'TokenFall'.split('').map(function (ch, i) {
+    return '<span class="tf-l" style="transform:translateY(' + (i % 2 ? -3 : 2) * k + 'px) rotate(' + tilts[i] + 'deg)">' + ch + '</span>';
+  }).join('');
+  return '<div class="tf-logo" style="transform:scale(' + k + ')">' +
+    '<div class="tf-leaf"><i></i><i></i></div>' +
+    '<p class="tf-welcome">Welcome to</p>' +
+    '<div class="tf-plaque"><h1 class="tf-word" aria-label="TokenFall">' + letters + '</h1></div>' +
+    '<span class="tf-tag">Calfus</span></div>';
+}
 function screenHTML(v) {
   if (!v.isOn) return '';
-  var h = '';
+  var h = '<div class="tf-sky"><i class="c1"></i><i class="c2"></i><i class="c3"></i><div class="tf-hill"></div><div class="tf-hill b"></div></div>';
   if (v.isBoot) {
-    h += '<div style="position:absolute;inset:0;padding:40px 44px;display:flex;flex-direction:column;gap:12px;color:#CFF7E4;font-size:21px;font-weight:600">';
-    v.bootLines.forEach(function (l) { h += '<p style="margin:0">' + esc(l.text) + '</p>'; });
-    h += '<div style="margin-top:14px;width:360px;height:22px;border-radius:999px;background:rgba(255,255,255,.14);padding:4px;box-sizing:border-box"><div style="height:100%;border-radius:999px;transition:width .3s;width:' + v.bootPct + '%;background:#FFB3C6"></div></div></div>';
+    h += '<div class="tf-pane" style="justify-content:flex-start;padding-top:18px;gap:12px">' + logoHTML(0.62) +
+      '<div class="tf-card" style="width:420px;gap:6px">';
+    v.bootLines.forEach(function (l) { h += '<p style="margin:0;font-size:16px">' + esc(l.text) + '</p>'; });
+    h += '<div class="tf-bar"><div style="width:' + v.bootPct + '%"></div></div></div></div>';
   }
   if (v.isMenu) {
-    h += '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;box-sizing:border-box">' +
-      '<div style="padding:6px 34px;border-radius:999px;background:rgba(255,246,230,.1)"><h1 style="margin:0;font-size:48px;font-weight:600;letter-spacing:2px;color:#FFF1D6;text-shadow:0 0 18px rgba(190,255,220,.55),0 3px 0 #D97A94">TOKENFALL</h1></div>' +
-      '<div style="display:flex;flex-direction:column;gap:2px">';
-    v.menu.forEach(function (m, i) { h += '<button class="item' + (m.mark ? ' on' : '') + '" data-act="menu" data-i="' + i + '" style="color:' + m.color + '"><span style="width:22px;font-size:20px;color:#FFB3C6">' + m.mark + '</span><span>' + esc(m.label) + '</span></button>'; });
-    h += '</div>' +
-      '<p class="blink" style="margin:0;font-size:16px;font-weight:600;color:#CFF7E4">↑ ↓ to choose · Enter to select</p></div>';
+    var m = v.menu;
+    h += '<div class="tf-pane" style="padding-top:8px">' + logoHTML(0.9) +
+      '<button class="tf-start' + (m[0].mark ? ' on' : '') + '" data-act="menu" data-i="0"><span class="tf-arrow">▶</span>' + esc(m[0].label) + '</button>' +
+      '<div style="display:flex;gap:12px;margin-top:2px">' +
+      [1, 2].map(function (i) { return '<button class="tf-sub' + (m[i].mark ? ' on' : '') + '" data-act="menu" data-i="' + i + '">' + esc(m[i].label.charAt(0) + m[i].label.slice(1).toLowerCase()) + '</button>'; }).join('') +
+      '</div><p class="tf-press blink">Press <kbd>Enter</kbd> · ↑ ↓ to choose</p></div><span class="tf-ver">Ver. 1.0</span>';
   }
   if (v.isControls) {
-    h += '<div style="position:absolute;inset:0;padding:34px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0;font-size:30px;font-weight:600;color:#FFF1D6;text-shadow:0 3px 0 #D97A94">CONTROLS</h2><button class="back" data-act="toMenu">Back · Esc</button></div>' +
-      '<div style="display:grid;grid-template-columns:200px 1fr;gap:14px 16px;font-size:17px">' +
-      [['Arrows / WASD', 'Walk'], ['Shift', 'Run'], ['Space', 'Jump'], ['E', 'Interact'], ['V', 'Switch view'], ['G', 'Glitch Log']].map(function (r) { return '<span style="justify-self:start;padding:2px 12px;border-radius:10px;background:#FFF6E6;color:#6B5B45;font-weight:600">' + r[0] + '</span><span style="color:#FFF1D6;font-weight:600">' + r[1] + '</span>'; }).join('') +
-      '</div></div>';
+    h += '<div class="tf-pane" style="padding:22px 36px">' +
+      '<div class="tf-card" style="width:100%;box-sizing:border-box;gap:12px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center"><h2 class="tf-h2">Controls</h2><button class="back" data-act="toMenu">Back · Esc</button></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(2,auto 1fr);gap:10px 12px;align-items:center;font-size:16px">' +
+      [['Arrows / WASD', 'Walk'], ['Shift', 'Run'], ['Space', 'Jump'], ['E', 'Interact'], ['V', 'Switch view'], ['G', 'Glitch Log']].map(function (r) { return '<span class="tf-key">' + r[0] + '</span><span>' + r[1] + '</span>'; }).join('') +
+      '</div></div></div>';
   }
-  if (v.isZoom) h += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><p class="blink" style="margin:0;font-size:28px;font-weight:600;color:#FFB3C6">Loading…</p></div>';
+  if (v.isZoom) h += '<div class="tf-pane">' + logoHTML(0.75) + '<p class="tf-loading">Loading<span>.</span><span>.</span><span>.</span></p></div>';
   return h;
 }
 function chromeHTML(v) {
@@ -445,11 +481,10 @@ function chromeHTML(v) {
       '<div role="dialog" aria-label="Settings" data-act="stop" style="box-sizing:border-box;width:460px;background:#FFF8EC;border-radius:28px;box-shadow:0 8px 0 #E8CFA8,0 24px 50px rgba(110,70,40,.3);padding:26px 30px;display:flex;flex-direction:column;gap:18px">' +
       '<div style="display:flex;align-items:center;justify-content:space-between"><h2 style="margin:0;font-size:28px;font-weight:600;color:#6B5B45">Settings</h2><button class="back" data-act="closeSettings">Close · Esc</button></div><div style="display:flex;flex-direction:column;gap:6px">';
     v.settingRows.forEach(function (r, i) {
-      h += '<button class="setrow" data-act="setting" data-i="' + i + '" style="box-sizing:border-box;width:100%;background:' + r.bg + ';color:' + r.color + '"><span style="display:flex;gap:10px;align-items:center"><span style="width:18px;color:#F59AB0">' + r.mark + '</span>' + esc(r.label) + '</span><span style="margin-left:auto;text-align:right;white-space:nowrap;color:' + r.valColor + '">◀ ' + r.value + ' ▶</span></button>';
+      h += '<button class="setrow" data-act="setting" data-i="' + i + '" style="box-sizing:border-box;width:100%;background:' + r.bg + ';color:' + r.color + '"><span style="display:flex;gap:10px;align-items:center"><span style="width:18px;color:#E98A3A">' + r.mark + '</span>' + esc(r.label) + '</span><span style="margin-left:auto;text-align:right;white-space:nowrap;color:' + r.valColor + '">◀ ' + r.value + ' ▶</span></button>';
     });
     h += '</div><p style="margin:0;font-size:14px;color:#9C8468">↑ ↓ choose · ← → or Enter change · Esc close</p></div></div>';
   }
-  if (v.isOff) h += '<div style="position:absolute;left:0;right:0;bottom:36px;display:flex;justify-content:center"><button class="hud go" data-act="power"><span class="dot">▶</span>Power on<kbd>Enter</kbd></button></div>';
   if (v.showOff) h += '<div style="position:absolute;right:24px;bottom:24px"><button class="hud" data-act="power">Power off</button></div>';
   return h;
 }
@@ -470,8 +505,8 @@ function mount(container, opts) {
   injectStyle();
   container.classList.add('tf-host');
   container.innerHTML = '<div class="tf-stage"><div class="root" tabindex="0" style="width:1280px;height:800px;position:relative;overflow:hidden;background:#F6E2C2;font-family:\'Baloo 2\',\'Nunito\',sans-serif">' +
-    '<canvas role="img" aria-label="A cosy retro beige computer with a tower, keyboard and mouse on a sunny wooden office desk, between binders, a plant, a pen cup, a mug, a desk phone and a printer, under a window, a corkboard and a clock" style="position:absolute;left:0;top:0;width:1280px;height:800px"></canvas>' +
-    '<div class="tf-ov" style="position:absolute;overflow:hidden;background:#1D3F45"><div class="tf-ovin" style="position:absolute;left:0;top:0;width:552px;height:421px;transform-origin:0 0"><div class="tf-screen"></div>' +
+    '<canvas role="img" aria-label="A pink all-in-one computer on a long oak counter in front of tall office windows, looking over a golden-hour city. Its screen says Token Fall, Start: press Enter or click to power on" style="position:absolute;left:0;top:0;width:1280px;height:800px"></canvas>' +
+    '<div class="tf-ov" style="position:absolute;overflow:hidden;background:#D6EEF2"><div class="tf-ovin" style="position:absolute;left:0;top:0;width:640px;height:360px;transform-origin:0 0"><div class="tf-screen"></div>' +
     '<div class="scan" style="position:absolute;inset:0"></div><div class="vig" style="position:absolute;inset:0"></div></div></div>' +
     '<div style="position:absolute;right:24px;top:24px;z-index:5"><button class="hud" data-act="openSettings" aria-haspopup="dialog"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>Settings</button></div>' +
     '<div class="tf-chrome"></div></div></div>';
@@ -498,7 +533,7 @@ function mount(container, opts) {
   c._render = function () {
     vals = c.renderVals();
     var hadFocus = rootEl.contains(document.activeElement);
-    ov.style.cssText = 'position:absolute;overflow:hidden;background:#1D3F45;border-radius:' + (vals.ovW * 0.012).toFixed(1) + 'px;left:' + vals.ovLeft + 'px;top:' + vals.ovTop + 'px;width:' + vals.ovW + 'px;height:' + vals.ovH + 'px;opacity:' + vals.ovOpacity + ';pointer-events:' + vals.ovPointer;
+    ov.style.cssText = 'position:absolute;overflow:hidden;background:#D6EEF2;border-radius:' + (vals.ovW * 0.012).toFixed(1) + 'px;left:' + vals.ovLeft + 'px;top:' + vals.ovTop + 'px;width:' + vals.ovW + 'px;height:' + vals.ovH + 'px;opacity:' + vals.ovOpacity + ';pointer-events:' + vals.ovPointer;
     ovin.style.transform = 'scale(' + vals.ovScale + ')';
     scan.style.display = vals.scanDisplay;
     canvas.style.cursor = vals.cursor;
@@ -535,9 +570,10 @@ function mount(container, opts) {
     if (a === 'menu') vals.menu[i].hover(); else if (a === 'setting') vals.settingRows[i].hover();
   });
 
-  // fit 1280x800 design into the container
+  // fit the design (800 tall, the window's width) into the container
   function fit() {
     var w = container.clientWidth || DESIGN_W, h = container.clientHeight || DESIGN_H;
+    if (opts.fit !== false) { DESIGN_W = Math.max(480, Math.round(DESIGN_H * w / h)); rootEl.style.width = canvas.style.width = DESIGN_W + 'px'; }   // match the window's shape: no bars at the sides
     var k = opts.fit === false ? 1 : Math.min(w / DESIGN_W, h / DESIGN_H);
     stage.style.transform = 'translate(' + ((w - DESIGN_W * k) / 2) + 'px,' + ((h - DESIGN_H * k) / 2) + 'px) scale(' + k + ')';
     // render at the real on-screen resolution, not the 1280x800 design size
