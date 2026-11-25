@@ -106,6 +106,9 @@ function frame(now) {
   if (TF.zoneTick[zone]) TF.zoneTick[zone](dt);
   // NPCs
   for (const c of npcs) {
+    // characters are never frustum-culled (their shader places the card), so one in another zone, 300 m off and past the far plane, still cost a
+    // draw, a shadow-map draw and, the first time, the upload of its 4096-wide sprite sheet: draw only the ones in this zone
+    const here = c.zone === zone; if (c.g.visible !== here) c.g.visible = here;
     npcThink(c, dt);
     const ox = c.x, oz = c.y; stepChar(c, dt);
     if (c.moving && Math.hypot(c.x - ox, c.y - oz) < c.speed * dt / 1000 * .4) c.stuck += dt; else c.stuck = 0;
