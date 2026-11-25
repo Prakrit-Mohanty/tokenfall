@@ -1,0 +1,446 @@
+{
+ "abz": {
+  "zone": "abz",
+  "origin": [
+   -12.624000000000024,
+   286.2
+  ],
+  "step": 0.2,
+  "W": 126,
+  "H": 166,
+  "spawn": [
+   7.4,
+   316.8
+  ],
+  "reachedM2": 396.3,
+  "freeM2": 410.7,
+  "islands": [
+   {
+    "m2": 7.7,
+    "x": -10,
+    "z": 290.4
+   },
+   {
+    "m2": 6.7,
+    "x": -10,
+    "z": 287.1
+   }
+  ],
+  "inters": [
+   {
+    "label": "Pantry",
+    "verb": "Look",
+    "x": 0.4,
+    "z": 311.5,
+    "reachable": true
+   },
+   {
+    "label": "ACE",
+    "verb": "Read",
+    "x": 9.6,
+    "z": 312.3,
+    "reachable": true
+   },
+   {
+    "label": "ARENA",
+    "verb": "Read",
+    "x": 9.6,
+    "z": 307.6,
+    "reachable": true
+   },
+   {
+    "label": "Half Dome",
+    "verb": "Read",
+    "x": 8,
+    "z": 292.9,
+    "reachable": true
+   },
+   {
+    "label": "Black Diamond",
+    "verb": "Read",
+    "x": -10.4,
+    "z": 292.9,
+    "reachable": true
+   },
+   {
+    "label": "Yorker",
+    "verb": "Read",
+    "x": -6.9,
+    "z": 292.9,
+    "reachable": true
+   },
+   {
+    "label": "Center Court",
+    "verb": "Read",
+    "x": -7,
+    "z": 298.3,
+    "reachable": true
+   },
+   {
+    "label": "Minecraft",
+    "verb": "Read",
+    "x": -7,
+    "z": 294.5,
+    "reachable": true
+   },
+   {
+    "label": "Carrom Board",
+    "verb": "Play",
+    "x": 3.7,
+    "z": 289.4,
+    "reachable": true
+   },
+   {
+    "label": "ABZ Office",
+    "verb": "Read",
+    "x": 6.9,
+    "z": 315.3,
+    "reachable": true
+   }
+  ],
+  "portals": [
+   {
+    "label": "Pune",
+    "x": 10.4,
+    "z": 317.5,
+    "reachable": true
+   }
+  ],
+  "collidersOnFloor": 75
+ },
+ "lab": {
+  "zone": "lab",
+  "origin": [
+   -9.88,
+   -319.54
+  ],
+  "step": 0.2,
+  "W": 99,
+  "H": 191,
+  "spawn": [
+   -1.54,
+   -289.3
+  ],
+  "reachedM2": 275.9,
+  "freeM2": 283,
+  "islands": [
+   {
+    "m2": 5,
+    "x": -6.8,
+    "z": -282.4
+   },
+   {
+    "m2": 1.2,
+    "x": -9,
+    "z": -289.7
+   },
+   {
+    "m2": 0.9,
+    "x": 1.1,
+    "z": -294.2
+   }
+  ],
+  "inters": [
+   {
+    "label": "Electrical Duct",
+    "verb": "Read",
+    "x": 1,
+    "z": -287.1,
+    "reachable": true
+   },
+   {
+    "label": "Toilets",
+    "verb": "Read",
+    "x": 1.6,
+    "z": -296.7,
+    "reachable": true
+   },
+   {
+    "label": "Front Desk",
+    "verb": "Read",
+    "x": -0.7,
+    "z": -291.5,
+    "reachable": true
+   },
+   {
+    "label": "Emergency Exit",
+    "verb": "Read",
+    "x": 1.4,
+    "z": -290.1,
+    "reachable": true
+   },
+   {
+    "label": "Board Room",
+    "verb": "Read",
+    "x": -3,
+    "z": -287.1,
+    "reachable": true
+   },
+   {
+    "label": "Huddle Room",
+    "verb": "Read",
+    "x": -4,
+    "z": -289.2,
+    "reachable": true
+   },
+   {
+    "label": "Conference Room",
+    "verb": "Read",
+    "x": -3.4,
+    "z": -311.9,
+    "reachable": true
+   },
+   {
+    "label": "The Glass Bridge",
+    "verb": "Play",
+    "x": -4.9,
+    "z": -313.1,
+    "reachable": true
+   },
+   {
+    "label": "Prompt Lab",
+    "verb": "Read",
+    "x": -4,
+    "z": -293.7,
+    "reachable": true
+   },
+   {
+    "label": "Token Room",
+    "verb": "Read",
+    "x": -4,
+    "z": -299.2,
+    "reachable": true
+   },
+   {
+    "label": "Pantry",
+    "verb": "Look",
+    "x": 8.8,
+    "z": -298.5,
+    "reachable": true
+   },
+   {
+    "label": "Calling Rooms",
+    "verb": "Read",
+    "x": 7.2,
+    "z": -317.8,
+    "reachable": true
+   },
+   {
+    "label": "Carrom Board",
+    "verb": "Play",
+    "x": 0.5,
+    "z": -307.4,
+    "reachable": true
+   }
+  ],
+  "portals": [
+   {
+    "label": "Ground Floor",
+    "x": -1.5,
+    "z": -287.7,
+    "reachable": true
+   }
+  ],
+  "collidersOnFloor": 74
+ },
+ "us": {
+  "zone": "us",
+  "origin": [
+   -309.7,
+   -307.2
+  ],
+  "step": 0.2,
+  "W": 97,
+  "H": 72,
+  "spawn": [
+   -300,
+   -297.8
+  ],
+  "reachedM2": 150.7,
+  "freeM2": 153.3,
+  "islands": [
+   {
+    "m2": 2.5,
+    "x": -294.7,
+    "z": -293.9
+   }
+  ],
+  "inters": [
+   {
+    "label": "Calfus",
+    "verb": "Look",
+    "x": -292.4,
+    "z": -300.6,
+    "reachable": true
+   },
+   {
+    "label": "Whiteboard",
+    "verb": "Read",
+    "x": -293.1,
+    "z": -295.8,
+    "reachable": true
+   },
+   {
+    "label": "Silverton",
+    "verb": "Knock",
+    "x": -290.9,
+    "z": -296.4,
+    "reachable": true
+   },
+   {
+    "label": "Mission",
+    "verb": "Knock",
+    "x": -290.9,
+    "z": -294.6,
+    "reachable": true
+   },
+   {
+    "label": "Kitchen",
+    "verb": "Look",
+    "x": -302.9,
+    "z": -293.9,
+    "reachable": true
+   },
+   {
+    "label": "Whiteboard",
+    "verb": "Read",
+    "x": -300.5,
+    "z": -296.2,
+    "reachable": true
+   },
+   {
+    "label": "Diablo",
+    "verb": "Knock",
+    "x": -307.6,
+    "z": -293.5,
+    "reachable": true
+   }
+  ],
+  "portals": [
+   {
+    "label": "Fly to Pune",
+    "x": -291.7,
+    "z": -305.6,
+    "reachable": true
+   }
+  ],
+  "collidersOnFloor": 29
+ },
+ "airport": {
+  "zone": "airport",
+  "origin": [
+   -315.6,
+   -9.6
+  ],
+  "step": 0.2,
+  "W": 157,
+  "H": 96,
+  "spawn": [
+   -300,
+   6
+  ],
+  "reachedM2": 421.1,
+  "freeM2": 432.7,
+  "islands": [
+   {
+    "m2": 11.6,
+    "x": -310.6,
+    "z": -8.8
+   }
+  ],
+  "inters": [
+   {
+    "label": "Check-in",
+    "verb": "Ask",
+    "x": -313.3,
+    "z": -5.6,
+    "reachable": true
+   },
+   {
+    "label": "Bag drop",
+    "verb": "Drop bag",
+    "x": -310.8,
+    "z": -5.6,
+    "reachable": true
+   },
+   {
+    "label": "Priority",
+    "verb": "Ask",
+    "x": -308.3,
+    "z": -5.6,
+    "reachable": true
+   },
+   {
+    "label": "Lounge chair",
+    "verb": "Sit",
+    "x": -299.2,
+    "z": -5.8,
+    "reachable": true
+   },
+   {
+    "label": "Lounge chair",
+    "verb": "Sit",
+    "x": -297.8,
+    "z": -5.8,
+    "reachable": true
+   },
+   {
+    "label": "Lounge chair",
+    "verb": "Sit",
+    "x": -296.4,
+    "z": -5.8,
+    "reachable": true
+   },
+   {
+    "label": "Lounge chair",
+    "verb": "Sit",
+    "x": -295,
+    "z": -5.8,
+    "reachable": true
+   },
+   {
+    "label": "Sofa",
+    "verb": "Sit",
+    "x": -302.9,
+    "z": -5.3,
+    "reachable": true
+   },
+   {
+    "label": "Sofa",
+    "verb": "Sit",
+    "x": -302,
+    "z": -5.3,
+    "reachable": true
+   },
+   {
+    "label": "Sofa",
+    "verb": "Sit",
+    "x": -301.1,
+    "z": -5.3,
+    "reachable": true
+   },
+   {
+    "label": "Chai Corner",
+    "verb": "Order",
+    "x": -289,
+    "z": 4.6,
+    "reachable": true
+   }
+  ],
+  "portals": [
+   {
+    "label": "Board · Pleasanton",
+    "x": -288,
+    "z": -6.6,
+    "reachable": true
+   },
+   {
+    "label": "TokenFall Lobby",
+    "x": -300,
+    "z": 7.6,
+    "reachable": true
+   }
+  ],
+  "collidersOnFloor": 32
+ }
+}

@@ -102,3 +102,10 @@ The only differences outside that pattern are airport close-ups 4, 5 and 7, at 0
 4. **Material dedup plus `mergeStatic` after `TF.boot()`,** behind an explicit opt-in such as `userData.static = true` on the minigame and story-corner pieces.
 5. **Network:** enable gzip/brotli on the real host (the JS and `.json` compress about 4×), and set long cache lifetimes for `assets/`, since the files are content-stable.
 6. Keep `tools/perf-probe.mjs` and `tools/shots.mjs` in CI to catch regressions. One probe run over all zones takes about 5 min.
+
+## Phase 5 audit
+
+See `perf/audit/AUDIT.md`; I fixed nothing from it. In short:
+- **UI:** the minigame intro card runs off the left edge when Large text is on, and the keyboard diagram's key labels are 9 px.
+- **Console:** every zone is clean apart from a missing favicon; the airport also shows three GLTFLoader UV-set warnings that predate tonight.
+- **Walkability:** every portal and interactable in ABZ, HQ, US and the airport can be reached. The ABZ "Black Diamond" meeting room (and the one next to it) and the HQ Board Room have walkable floors but no door gap.

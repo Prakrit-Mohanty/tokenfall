@@ -1,0 +1,7920 @@
+{
+ "lobby": {
+  "hud": [
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "jess.m",
+    "rect": [
+     -859,
+     69,
+     70,
+     22
+    ],
+    "issues": [
+     "off-screen (-859,69 70x22)"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "ishaan.b",
+    "rect": [
+     596,
+     -11,
+     88,
+     22
+    ],
+    "issues": [
+     "off-screen (596,-11 88x22)"
+    ]
+   }
+  ],
+  "settings": [
+   {
+    "el": "#ui > #tags > .tag.me",
+    "text": "saanvi",
+    "rect": [
+     604,
+     272,
+     73,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "rosa_j",
+    "rect": [
+     872,
+     51,
+     69,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "chaiwala",
+    "rect": [
+     590,
+     142,
+     94,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-moods"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "pixelpriya",
+    "rect": [
+     851,
+     148,
+     104,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "bobby5",
+    "rect": [
+     1008,
+     59,
+     80,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "sudhanshu",
+    "rect": [
+     825,
+     64,
+     110,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "mehta",
+    "rect": [
+     407,
+     64,
+     72,
+     22
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-head > h2"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "aarav",
+    "rect": [
+     200,
+     116,
+     66,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "riya",
+    "rect": [
+     115,
+     91,
+     52,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "neel.a",
+    "rect": [
+     885,
+     169,
+     68,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "jess.m",
+    "rect": [
+     -860,
+     68,
+     70,
+     22
+    ],
+    "issues": [
+     "off-screen (-860,68 70x22)",
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "ishaan.b",
+    "rect": [
+     596,
+     -11,
+     88,
+     22
+    ],
+    "issues": [
+     "off-screen (596,-11 88x22)",
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .bubble",
+    "text": "brb",
+    "rect": [
+     1024,
+     20,
+     50,
+     39
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "TokenFall Lobby",
+    "rect": [
+     51,
+     28,
+     144,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Main Plaza",
+    "rect": [
+     51,
+     50,
+     144,
+     17
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "LOBBY",
+    "rect": [
+     1086,
+     86,
+     54,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "9 / 20",
+    "rect": [
+     1203,
+     86,
+     45,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "rosa_j",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "chaiwala",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "pixelpriya",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "bobby5",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "sudhanshu",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "mehta",
+    "rect": [
+     1080,
+     266,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "aarav",
+    "rect": [
+     1080,
+     291,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "riya",
+    "rect": [
+     1080,
+     316,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   }
+  ],
+  "glitch-log": [
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "TokenFall Lobby",
+    "rect": [
+     51,
+     28,
+     144,
+     22
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Main Plaza",
+    "rect": [
+     51,
+     50,
+     144,
+     17
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "LOBBY",
+    "rect": [
+     1086,
+     86,
+     54,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "9 / 20",
+    "rect": [
+     1203,
+     86,
+     45,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "rosa_j",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "chaiwala",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "pixelpriya",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "bobby5",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "sudhanshu",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "mehta",
+    "rect": [
+     1080,
+     266,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "aarav",
+    "rect": [
+     1080,
+     291,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "riya",
+    "rect": [
+     1080,
+     316,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   }
+  ],
+  "large-text": [
+   {
+    "el": "#ui.big > #tags > .tag",
+    "text": "jess.m",
+    "rect": [
+     -860,
+     68,
+     70,
+     22
+    ],
+    "issues": [
+     "off-screen (-860,68 70x22)"
+    ]
+   },
+   {
+    "el": "#ui.big > #tags > .tag",
+    "text": "ishaan.b",
+    "rect": [
+     596,
+     -11,
+     88,
+     22
+    ],
+    "issues": [
+     "off-screen (596,-11 88x22)"
+    ]
+   }
+  ],
+  "interact": [
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "TokenFall Lobby",
+    "rect": [
+     51,
+     28,
+     144,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .wm-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Main Plaza",
+    "rect": [
+     51,
+     50,
+     144,
+     17
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-head > h2"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "LOBBY",
+    "rect": [
+     1086,
+     86,
+     54,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .wm-back > .wm-card > .wm-head"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "9 / 20",
+    "rect": [
+     1203,
+     86,
+     45,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .wm-back > .wm-card > .wm-head"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "rosa_j",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "chaiwala",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "pixelpriya",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "bobby5",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "sudhanshu",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "mehta",
+    "rect": [
+     1080,
+     266,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "aarav",
+    "rect": [
+     1080,
+     291,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "riya",
+    "rect": [
+     1080,
+     316,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > .wm-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by .wm-card > .wm-map > svg > rect"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by .wm-card > .wm-map > svg > rect"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by .wm-back > .wm-card > .wm-map > svg"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .wm-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .wm-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .wm-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .wm-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .wm-back"
+    ]
+   },
+   {
+    "el": "#ui > #banner > .t",
+    "text": "Large text",
+    "rect": [
+     430,
+     208,
+     420,
+     52
+    ],
+    "issues": [
+     "covered by .wm-card > .wm-map > svg > path"
+    ]
+   },
+   {
+    "el": "#ui > #banner > .s",
+    "text": "Off",
+    "rect": [
+     430,
+     260,
+     420,
+     25
+    ],
+    "issues": [
+     "covered by .wm-card > .wm-map > svg > path"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > .wm-back"
+    ]
+   },
+   {
+    "el": ".wm-card > .wm-map > svg > text",
+    "text": "TOKENFALL",
+    "rect": [
+     803,
+     167,
+     28,
+     22
+    ],
+    "issues": [
+     "tiny text 7px"
+    ]
+   },
+   {
+    "el": ".wm-card > .wm-map > svg > text",
+    "text": "TOKEN BREW",
+    "rect": [
+     761,
+     313,
+     33,
+     26
+    ],
+    "issues": [
+     "tiny text 7.5px"
+    ]
+   },
+   {
+    "el": "g > g > g > text",
+    "text": "You are here",
+    "rect": [
+     533,
+     324,
+     52,
+     11
+    ],
+    "issues": [
+     "covered by .wm-card > .wm-map > svg > polygon"
+    ]
+   }
+  ],
+  "interactLabel": "Lobby map"
+ },
+ "pune": {
+  "hud": [
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "ananya.r",
+    "rect": [
+     -815,
+     360,
+     92,
+     22
+    ],
+    "issues": [
+     "off-screen (-815,360 92x22)"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "sneha.d",
+    "rect": [
+     1878,
+     197,
+     82,
+     22
+    ],
+    "issues": [
+     "off-screen (1878,197 82x22)"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "rohan_t",
+    "rect": [
+     5437,
+     109,
+     85,
+     22
+    ],
+    "issues": [
+     "off-screen (5437,109 85x22)"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .bubble",
+    "text": "House Rules Carrom is addictive",
+    "rect": [
+     -879,
+     296,
+     220,
+     64
+    ],
+    "issues": [
+     "off-screen (-879,296 220x64)"
+    ]
+   }
+  ],
+  "settings": [
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Prakrit",
+    "rect": [
+     820,
+     680,
+     80,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag.me",
+    "text": "saanvi",
+    "rect": [
+     604,
+     273,
+     73,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "ananya.r",
+    "rect": [
+     -816,
+     359,
+     92,
+     22
+    ],
+    "issues": [
+     "off-screen (-816,359 92x22)",
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "kabir_m",
+    "rect": [
+     59,
+     313,
+     90,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "sneha.d",
+    "rect": [
+     1879,
+     196,
+     82,
+     22
+    ],
+    "issues": [
+     "off-screen (1879,196 82x22)",
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "rohan_t",
+    "rect": [
+     5438,
+     108,
+     85,
+     22
+    ],
+    "issues": [
+     "off-screen (5438,108 85x22)",
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .bubble",
+    "text": "House Rules Carrom is addictive",
+    "rect": [
+     -880,
+     295,
+     220,
+     64
+    ],
+    "issues": [
+     "off-screen (-880,295 220x64)",
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #prompt.panel",
+    "text": "Step in · TokenFall Lobby",
+    "rect": [
+     817,
+     247,
+     224,
+     37
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "Pune",
+    "rect": [
+     51,
+     28,
+     127,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Crescent Bay · ABZ",
+    "rect": [
+     51,
+     50,
+     127,
+     17
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "PUNE",
+    "rect": [
+     1086,
+     86,
+     43,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "4 / 20",
+    "rect": [
+     1202,
+     86,
+     46,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "ananya.r",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "kabir_m",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "sneha.d",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   }
+  ],
+  "glitch-log": [
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "Pune",
+    "rect": [
+     51,
+     28,
+     127,
+     22
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Crescent Bay · ABZ",
+    "rect": [
+     51,
+     50,
+     127,
+     17
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "PUNE",
+    "rect": [
+     1086,
+     86,
+     43,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "4 / 20",
+    "rect": [
+     1202,
+     86,
+     46,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "ananya.r",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "kabir_m",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "sneha.d",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   }
+  ],
+  "large-text": [
+   {
+    "el": "#ui.big > #tags > .tag",
+    "text": "ananya.r",
+    "rect": [
+     -836,
+     365,
+     92,
+     22
+    ],
+    "issues": [
+     "off-screen (-836,365 92x22)"
+    ]
+   },
+   {
+    "el": "#ui.big > #tags > .tag",
+    "text": "sneha.d",
+    "rect": [
+     1879,
+     195,
+     82,
+     22
+    ],
+    "issues": [
+     "off-screen (1879,195 82x22)"
+    ]
+   },
+   {
+    "el": "#ui.big > #tags > .tag",
+    "text": "rohan_t",
+    "rect": [
+     5439,
+     107,
+     85,
+     22
+    ],
+    "issues": [
+     "off-screen (5439,107 85x22)"
+    ]
+   },
+   {
+    "el": "#ui.big > #tags > .bubble",
+    "text": "House Rules Carrom is addictive",
+    "rect": [
+     -900,
+     301,
+     220,
+     64
+    ],
+    "issues": [
+     "off-screen (-900,301 220x64)"
+    ]
+   }
+  ],
+  "interact": [],
+  "interactLabel": "Name plate"
+ },
+ "abz": {
+  "hud": [
+   {
+    "el": "#ui > #tags > .bubble",
+    "text": "quiet hours until three",
+    "rect": [
+     332,
+     -3,
+     197,
+     39
+    ],
+    "issues": [
+     "off-screen (332,-3 197x39)"
+    ]
+   }
+  ],
+  "settings": [
+   {
+    "el": "#ui > #tags > .tag.me",
+    "text": "saanvi",
+    "rect": [
+     604,
+     273,
+     73,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Amit",
+    "rect": [
+     388,
+     20,
+     60,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Arvind",
+    "rect": [
+     564,
+     34,
+     77,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card > .st-head"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Rajiv",
+    "rect": [
+     259,
+     81,
+     62,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "sana.k",
+    "rect": [
+     395,
+     35,
+     72,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "arjun_p",
+    "rect": [
+     484,
+     19,
+     84,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .bubble",
+    "text": "quiet hours until three",
+    "rect": [
+     332,
+     -4,
+     197,
+     39
+    ],
+    "issues": [
+     "off-screen (332,-4 197x39)",
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #prompt.panel",
+    "text": "Step in · Pune",
+    "rect": [
+     916,
+     290,
+     138,
+     37
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "ABZ",
+    "rect": [
+     51,
+     28,
+     126,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Calfus · ABZ Office",
+    "rect": [
+     51,
+     50,
+     126,
+     17
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "ABZ",
+    "rect": [
+     1086,
+     86,
+     33,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "6 / 20",
+    "rect": [
+     1202,
+     86,
+     46,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Amit",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Arvind",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Rajiv",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "sana.k",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "arjun_p",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   }
+  ],
+  "glitch-log": [
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "ABZ",
+    "rect": [
+     51,
+     28,
+     126,
+     22
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Calfus · ABZ Office",
+    "rect": [
+     51,
+     50,
+     126,
+     17
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "ABZ",
+    "rect": [
+     1086,
+     86,
+     33,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "6 / 20",
+    "rect": [
+     1202,
+     86,
+     46,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Amit",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Arvind",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Rajiv",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "sana.k",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "arjun_p",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   }
+  ],
+  "large-text": [
+   {
+    "el": "#ui.big > #tags > .bubble",
+    "text": "quiet hours until three",
+    "rect": [
+     332,
+     -4,
+     197,
+     39
+    ],
+    "issues": [
+     "off-screen (332,-4 197x39)"
+    ]
+   }
+  ],
+  "interact": [],
+  "interactLabel": "ABZ Office"
+ },
+ "lab": {
+  "hud": [],
+  "settings": [
+   {
+    "el": "#ui > #tags > .tag.me",
+    "text": "saanvi",
+    "rect": [
+     604,
+     273,
+     73,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "rahul.k",
+    "rect": [
+     767,
+     54,
+     79,
+     22
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-head > .st-x"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "meera_s",
+    "rect": [
+     782,
+     61,
+     90,
+     22
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-head > .st-x"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "devansh",
+    "rect": [
+     390,
+     117,
+     89,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Murali",
+    "rect": [
+     899,
+     57,
+     77,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Jacintha",
+    "rect": [
+     859,
+     34,
+     92,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Kartik",
+    "rect": [
+     719,
+     226,
+     73,
+     22
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .bubble",
+    "text": "the chandeliers though",
+    "rect": [
+     331,
+     78,
+     208,
+     39
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #prompt.panel",
+    "text": "Step in · Ground Floor",
+    "rect": [
+     539,
+     339,
+     201,
+     37
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "Calfus HQ",
+    "rect": [
+     51,
+     28,
+     102,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Calfus · Floor 2",
+    "rect": [
+     51,
+     50,
+     102,
+     17
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "CALFUS HQ",
+    "rect": [
+     1086,
+     86,
+     92,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "7 / 20",
+    "rect": [
+     1204,
+     86,
+     44,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "rahul.k",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "meera_s",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "devansh",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Murali",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Jacintha",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Kartik",
+    "rect": [
+     1080,
+     266,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   }
+  ],
+  "glitch-log": [
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "Calfus HQ",
+    "rect": [
+     51,
+     28,
+     102,
+     22
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Calfus · Floor 2",
+    "rect": [
+     51,
+     50,
+     102,
+     17
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "CALFUS HQ",
+    "rect": [
+     1086,
+     86,
+     92,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "7 / 20",
+    "rect": [
+     1204,
+     86,
+     44,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "rahul.k",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "meera_s",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "devansh",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Murali",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Jacintha",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Kartik",
+    "rect": [
+     1080,
+     266,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   }
+  ],
+  "large-text": [],
+  "interact": [],
+  "interactLabel": "Front Desk"
+ },
+ "airport": {
+  "hud": [],
+  "settings": [
+   {
+    "el": "#ui > #tags > .tag.me",
+    "text": "saanvi",
+    "rect": [
+     604,
+     274,
+     73,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": "#ui > #prompt.panel",
+    "text": "Step in · TokenFall Lobby",
+    "rect": [
+     528,
+     340,
+     224,
+     37
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "Pune Airport",
+    "rect": [
+     51,
+     28,
+     113,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Departures",
+    "rect": [
+     51,
+     50,
+     113,
+     17
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "PUNE AIRPORT",
+    "rect": [
+     1086,
+     86,
+     119,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "1 / 20",
+    "rect": [
+     1213,
+     86,
+     42,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   }
+  ],
+  "glitch-log": [
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "Pune Airport",
+    "rect": [
+     51,
+     28,
+     113,
+     22
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Departures",
+    "rect": [
+     51,
+     50,
+     113,
+     17
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "PUNE AIRPORT",
+    "rect": [
+     1086,
+     86,
+     119,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "1 / 20",
+    "rect": [
+     1213,
+     86,
+     42,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   }
+  ],
+  "large-text": [],
+  "interact": [],
+  "interactLabel": "Chai Corner"
+ },
+ "us": {
+  "hud": [],
+  "settings": [
+   {
+    "el": "#ui > #tags > .tag.me",
+    "text": "saanvi",
+    "rect": [
+     604,
+     273,
+     73,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Salim",
+    "rect": [
+     499,
+     237,
+     66,
+     22
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Brian",
+    "rect": [
+     704,
+     248,
+     65,
+     22
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Baljeet",
+    "rect": [
+     967,
+     178,
+     77,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Rohit",
+    "rect": [
+     480,
+     150,
+     65,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .tag",
+    "text": "Gaurav",
+    "rect": [
+     699,
+     169,
+     79,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": "#ui > #tags > .bubble",
+    "text": "who's doing the quiz later?",
+    "rect": [
+     627,
+     184,
+     220,
+     64
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": "#ui > #prompt.panel",
+    "text": "Talk · Brian",
+    "rect": [
+     669,
+     194,
+     150,
+     37
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": "#ui > #prompt.panel > kbd",
+    "text": "E",
+    "rect": [
+     688,
+     200,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "Calfus US",
+    "rect": [
+     51,
+     28,
+     149,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Pleasanton, California",
+    "rect": [
+     51,
+     50,
+     149,
+     17
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "CALFUS US",
+    "rect": [
+     1086,
+     86,
+     89,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "6 / 20",
+    "rect": [
+     1202,
+     86,
+     46,
+     26
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Salim",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Brian",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Baljeet",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Rohit",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Gaurav",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   }
+  ],
+  "glitch-log": [
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "Calfus US",
+    "rect": [
+     51,
+     28,
+     149,
+     22
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Pleasanton, California",
+    "rect": [
+     51,
+     50,
+     149,
+     17
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > span",
+    "text": "CALFUS US",
+    "rect": [
+     1086,
+     86,
+     89,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > h4 > #count",
+    "text": "6 / 20",
+    "rect": [
+     1202,
+     86,
+     46,
+     26
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .me",
+    "text": "saanvi (you)",
+    "rect": [
+     1086,
+     118,
+     162,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Salim",
+    "rect": [
+     1080,
+     142,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Brian",
+    "rect": [
+     1080,
+     167,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Baljeet",
+    "rect": [
+     1080,
+     192,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Rohit",
+    "rect": [
+     1080,
+     217,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #party.panel > #plist > .pl-go",
+    "text": "Gaurav",
+    "rect": [
+     1080,
+     242,
+     174,
+     25
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   },
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > #enc.live > .enc-dim"
+    ]
+   }
+  ],
+  "large-text": [
+   {
+    "el": "#ui.big > #tags > .tag",
+    "text": "Baljeet",
+    "rect": [
+     1150,
+     177,
+     77,
+     22
+    ],
+    "issues": [
+     "covered by #ui.big > #party.panel > #plist > .pl-go"
+    ]
+   }
+  ],
+  "interact": [],
+  "interactLabel": "Whiteboard"
+ },
+ "bridge": {
+  "hud": [
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "control",
+    "rect": [
+     649,
+     383,
+     32,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     696,
+     383,
+     29,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     739,
+     383,
+     44,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     951,
+     383,
+     44,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     1010,
+     383,
+     29,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   }
+  ],
+  "settings": [
+   {
+    "el": "#ui > #loc.panel > div > #locName",
+    "text": "The Glass Bridge",
+    "rect": [
+     51,
+     28,
+     148,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #loc.panel > div > #locSub",
+    "text": "Pick the right tile",
+    "rect": [
+     51,
+     50,
+     148,
+     17
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help",
+    "text": "move   run   jump interact   view   music   glitch log   lar",
+    "rect": [
+     736,
+     651,
+     526,
+     51
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "WASD",
+    "rect": [
+     911,
+     651,
+     70,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Shift",
+    "rect": [
+     1045,
+     651,
+     57,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "Space",
+    "rect": [
+     1148,
+     651,
+     66,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "E",
+    "rect": [
+     739,
+     676,
+     27,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "V",
+    "rect": [
+     847,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "M",
+    "rect": [
+     930,
+     676,
+     34,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "G",
+    "rect": [
+     1032,
+     676,
+     29,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "#ui > #help > kbd",
+    "text": "L",
+    "rect": [
+     1153,
+     676,
+     26,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.ghud.on > div > .r > .l",
+    "text": "Question",
+    "rect": [
+     1058,
+     90,
+     69,
+     19
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.ghud.on > div > .r > .v",
+    "text": "1 of 8",
+    "rect": [
+     1207,
+     88,
+     39,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.ghud.on > div > .r > .l",
+    "text": "Mistakes",
+    "rect": [
+     1058,
+     130,
+     67,
+     19
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.ghud.on > div > .r > .v",
+    "text": "0",
+    "rect": [
+     1218,
+     128,
+     28,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "div > .r > .v > .ic.x",
+    "text": "✕",
+    "rect": [
+     1218,
+     127,
+     12,
+     23
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.ghud.on > div > .r > .l",
+    "text": "Score",
+    "rect": [
+     1058,
+     158,
+     44,
+     19
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.ghud.on > div > .r > .v",
+    "text": "0",
+    "rect": [
+     1236,
+     156,
+     10,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.ghud.on > div > .r.x > .l",
+    "text": "Hints (F)",
+    "rect": [
+     1058,
+     187,
+     66,
+     19
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.ghud.on > div > .r.x > .v",
+    "text": "3 left",
+    "rect": [
+     1207,
+     185,
+     39,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "div > .keys > div > kbd",
+    "text": "H",
+    "rect": [
+     1061,
+     224,
+     30,
+     21
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "div > .keys > div > span",
+    "text": "Help",
+    "rect": [
+     1104,
+     225,
+     34,
+     20
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "div > .keys > div > kbd",
+    "text": "M",
+    "rect": [
+     1061,
+     249,
+     32,
+     21
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "div > .keys > div > span",
+    "text": "Mute",
+    "rect": [
+     1106,
+     250,
+     37,
+     20
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "div > .keys > div > kbd",
+    "text": "Esc",
+    "rect": [
+     1061,
+     274,
+     41,
+     21
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": "div > .keys > div > span",
+    "text": "Leave",
+    "rect": [
+     1115,
+     274,
+     44,
+     20
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > #gintro-bridge",
+    "text": "The Glass Bridge",
+    "rect": [
+     104,
+     138,
+     415,
+     39
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .goal",
+    "text": "Cross the bridge by stepping on the right answers.",
+    "rect": [
+     104,
+     184,
+     415,
+     59
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .gi-lab",
+    "text": "How to play",
+    "rect": [
+     104,
+     262,
+     415,
+     18
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Read the question above each row.",
+    "rect": [
+     104,
+     289,
+     415,
+     27
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Jump onto the tile with the right answer.",
+    "rect": [
+     104,
+     327,
+     415,
+     53
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "A wrong tile breaks: you fall and see why.",
+    "rect": [
+     104,
+     392,
+     415,
+     53
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .meta",
+    "text": "~5 min · 8 questions",
+    "rect": [
+     104,
+     470,
+     415,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-l > .gi-act > .row > label",
+    "text": "Don't show again",
+    "rect": [
+     104,
+     525,
+     155,
+     21
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-l > .gi-act > .row > button",
+    "text": "Start",
+    "rect": [
+     436,
+     516,
+     84,
+     39
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-keys > kbd"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > .gi-act > .hint",
+    "text": "Press Enter to start",
+    "rect": [
+     104,
+     563,
+     415,
+     21
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-r > .gi-lab",
+    "text": "Controls",
+    "rect": [
+     589,
+     138,
+     587,
+     18
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k.use.on",
+    "text": "esc",
+    "rect": [
+     605,
+     182,
+     51,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood.on"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F1",
+    "rect": [
+     660,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F2",
+    "rect": [
+     699,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F3",
+    "rect": [
+     738,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F4",
+    "rect": [
+     777,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F5",
+    "rect": [
+     815,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F6",
+    "rect": [
+     854,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F7",
+    "rect": [
+     893,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F8",
+    "rect": [
+     932,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F9",
+    "rect": [
+     970,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F10",
+    "rect": [
+     1009,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F11",
+    "rect": [
+     1048,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F12",
+    "rect": [
+     1087,
+     181,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "`",
+    "rect": [
+     605,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "1",
+    "rect": [
+     644,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "2",
+    "rect": [
+     682,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "3",
+    "rect": [
+     720,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "4",
+    "rect": [
+     759,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "5",
+    "rect": [
+     797,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "6",
+    "rect": [
+     836,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "7",
+    "rect": [
+     874,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "8",
+    "rect": [
+     912,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "9",
+    "rect": [
+     951,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "0",
+    "rect": [
+     989,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "-",
+    "rect": [
+     1028,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "=",
+    "rect": [
+     1066,
+     207,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "delete",
+    "rect": [
+     1104,
+     207,
+     56,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "tab",
+    "rect": [
+     605,
+     246,
+     53,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "Q",
+    "rect": [
+     662,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "W",
+    "rect": [
+     701,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "E",
+    "rect": [
+     739,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "R",
+    "rect": [
+     778,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "T",
+    "rect": [
+     817,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "Y",
+    "rect": [
+     855,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "U",
+    "rect": [
+     894,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "I",
+    "rect": [
+     932,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "O",
+    "rect": [
+     971,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "P",
+    "rect": [
+     1010,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "[",
+    "rect": [
+     1048,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "]",
+    "rect": [
+     1087,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "\\",
+    "rect": [
+     1125,
+     246,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "caps",
+    "rect": [
+     605,
+     285,
+     62,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "A",
+    "rect": [
+     671,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "S",
+    "rect": [
+     710,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "D",
+    "rect": [
+     748,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k.use",
+    "text": "F",
+    "rect": [
+     787,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "G",
+    "rect": [
+     825,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k.use",
+    "text": "H",
+    "rect": [
+     864,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "J",
+    "rect": [
+     902,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "K",
+    "rect": [
+     941,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "L",
+    "rect": [
+     979,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": ";",
+    "rect": [
+     1018,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "'",
+    "rect": [
+     1056,
+     285,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "return",
+    "rect": [
+     1095,
+     285,
+     65,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "shift",
+    "rect": [
+     605,
+     324,
+     79,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "Z",
+    "rect": [
+     688,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "X",
+    "rect": [
+     728,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "C",
+    "rect": [
+     767,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "V",
+    "rect": [
+     806,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "B",
+    "rect": [
+     845,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "N",
+    "rect": [
+     885,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "M",
+    "rect": [
+     924,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": ",",
+    "rect": [
+     963,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": ".",
+    "rect": [
+     1002,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "/",
+    "rect": [
+     1042,
+     324,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "shift",
+    "rect": [
+     1081,
+     324,
+     79,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "fn",
+    "rect": [
+     605,
+     363,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌃",
+    "rect": [
+     659,
+     369,
+     11,
+     12
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "control",
+    "rect": [
+     649,
+     383,
+     32,
+     9
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌥",
+    "rect": [
+     705,
+     369,
+     12,
+     12
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     696,
+     383,
+     29,
+     9
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌘",
+    "rect": [
+     756,
+     369,
+     11,
+     12
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     739,
+     383,
+     44,
+     9
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌘",
+    "rect": [
+     968,
+     369,
+     11,
+     12
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     951,
+     383,
+     44,
+     9
+    ],
+    "issues": [
+     "covered by #ui > .st-back",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌥",
+    "rect": [
+     1018,
+     369,
+     12,
+     12
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     1010,
+     383,
+     29,
+     9
+    ],
+    "issues": [
+     "covered by #ui > .st-back",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "◀",
+    "rect": [
+     1049,
+     363,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "▲▼",
+    "rect": [
+     1087,
+     363,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "▶",
+    "rect": [
+     1126,
+     363,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .kc",
+    "text": "Space",
+    "rect": [
+     589,
+     500,
+     61,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .act",
+    "text": "jump",
+    "rect": [
+     660,
+     499,
+     44,
+     24
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .kc",
+    "text": "F",
+    "rect": [
+     892,
+     500,
+     24,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .act",
+    "text": "hint (3 per run)",
+    "rect": [
+     925,
+     499,
+     128,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .kc",
+    "text": "H",
+    "rect": [
+     589,
+     534,
+     26,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-keys > span"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .act",
+    "text": "help",
+    "rect": [
+     625,
+     532,
+     37,
+     24
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-keys"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c.on > .kc",
+    "text": "Esc",
+    "rect": [
+     892,
+     534,
+     40,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c.on > .act",
+    "text": "leave",
+    "rect": [
+     941,
+     532,
+     46,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   }
+  ],
+  "glitch-log": [
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "control",
+    "rect": [
+     649,
+     383,
+     32,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     696,
+     383,
+     29,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     739,
+     383,
+     44,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     951,
+     383,
+     44,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     1010,
+     383,
+     29,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   }
+  ],
+  "large-text": [
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > #gintro-bridge",
+    "text": "The Glass Bridge",
+    "rect": [
+     -4,
+     95,
+     499,
+     47
+    ],
+    "issues": [
+     "off-screen (-4,95 499x47)"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .goal",
+    "text": "Cross the bridge by stepping on the right answers.",
+    "rect": [
+     -4,
+     149,
+     499,
+     71
+    ],
+    "issues": [
+     "off-screen (-4,149 499x71)"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .gi-lab",
+    "text": "How to play",
+    "rect": [
+     -4,
+     243,
+     499,
+     22
+    ],
+    "issues": [
+     "off-screen (-4,243 499x22)"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Read the question above each row.",
+    "rect": [
+     -4,
+     275,
+     499,
+     32
+    ],
+    "issues": [
+     "off-screen (-4,275 499x32)"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Jump onto the tile with the right answer.",
+    "rect": [
+     -4,
+     321,
+     499,
+     64
+    ],
+    "issues": [
+     "off-screen (-4,321 499x64)"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "A wrong tile breaks: you fall and see why.",
+    "rect": [
+     -4,
+     399,
+     499,
+     64
+    ],
+    "issues": [
+     "off-screen (-4,399 499x64)"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .meta",
+    "text": "~5 min · 8 questions",
+    "rect": [
+     -4,
+     492,
+     499,
+     27
+    ],
+    "issues": [
+     "off-screen (-4,492 499x27)"
+    ]
+   },
+   {
+    "el": ".gi-l > .gi-act > .row > label",
+    "text": "Don't show again",
+    "rect": [
+     -4,
+     558,
+     186,
+     25
+    ],
+    "issues": [
+     "off-screen (-4,558 186x25)"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > .gi-act > .hint",
+    "text": "Press Enter to start",
+    "rect": [
+     -4,
+     603,
+     499,
+     25
+    ],
+    "issues": [
+     "off-screen (-4,603 499x25)"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-r > .gi-lab",
+    "text": "Controls",
+    "rect": [
+     579,
+     95,
+     705,
+     22
+    ],
+    "issues": [
+     "off-screen (579,95 705x22)"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "control",
+    "rect": [
+     650,
+     388,
+     38,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     707,
+     388,
+     34,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     759,
+     388,
+     53,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     1014,
+     388,
+     53,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     1084,
+     388,
+     34,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   }
+  ]
+ },
+ "kitchen": {
+  "hud": [
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "control",
+    "rect": [
+     649,
+     390,
+     32,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     696,
+     390,
+     29,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     739,
+     390,
+     44,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     951,
+     390,
+     44,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     1010,
+     390,
+     29,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   }
+  ],
+  "settings": [
+   {
+    "el": "#ui > .st-btn",
+    "text": "Settings",
+    "rect": [
+     1130,
+     18,
+     132,
+     44
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > #gintro-kitchen",
+    "text": "Token Brew Kitchen",
+    "rect": [
+     104,
+     146,
+     415,
+     39
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .goal",
+    "text": "Cook each order with the right pot and only the cards it nee",
+    "rect": [
+     104,
+     191,
+     415,
+     59
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .gi-lab",
+    "text": "How to play",
+    "rect": [
+     104,
+     270,
+     415,
+     18
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Read the order, then tap Got it.",
+    "rect": [
+     104,
+     296,
+     415,
+     27
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Pick the small, medium or large pot.",
+    "rect": [
+     104,
+     335,
+     415,
+     27
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Add only needed cards. Stay under the line.",
+    "rect": [
+     104,
+     373,
+     415,
+     53
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .meta",
+    "text": "~4 min · 5 orders",
+    "rect": [
+     104,
+     451,
+     415,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-l > .gi-act > .row > label",
+    "text": "Don't show again",
+    "rect": [
+     104,
+     517,
+     155,
+     21
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-l > .gi-act > .row > button",
+    "text": "Start",
+    "rect": [
+     436,
+     508,
+     84,
+     39
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > .gi-act > .hint",
+    "text": "Press Enter to start",
+    "rect": [
+     104,
+     555,
+     415,
+     21
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-r > .gi-lab",
+    "text": "Controls",
+    "rect": [
+     589,
+     146,
+     587,
+     18
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k.use.on",
+    "text": "esc",
+    "rect": [
+     605,
+     189,
+     51,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-moods"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F1",
+    "rect": [
+     660,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F2",
+    "rect": [
+     699,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F3",
+    "rect": [
+     738,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F4",
+    "rect": [
+     777,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F5",
+    "rect": [
+     815,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-moods > .st-mood"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F6",
+    "rect": [
+     854,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F7",
+    "rect": [
+     893,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F8",
+    "rect": [
+     932,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F9",
+    "rect": [
+     970,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F10",
+    "rect": [
+     1009,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F11",
+    "rect": [
+     1048,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr.fn > .k",
+    "text": "F12",
+    "rect": [
+     1087,
+     188,
+     35,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "`",
+    "rect": [
+     605,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k.use",
+    "text": "1",
+    "rect": [
+     644,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k.use",
+    "text": "2",
+    "rect": [
+     682,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k.use",
+    "text": "3",
+    "rect": [
+     720,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "4",
+    "rect": [
+     759,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "5",
+    "rect": [
+     797,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "6",
+    "rect": [
+     836,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "7",
+    "rect": [
+     874,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "8",
+    "rect": [
+     912,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "9",
+    "rect": [
+     951,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "0",
+    "rect": [
+     989,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "-",
+    "rect": [
+     1028,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "=",
+    "rect": [
+     1066,
+     214,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "delete",
+    "rect": [
+     1104,
+     214,
+     56,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "tab",
+    "rect": [
+     605,
+     253,
+     53,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "Q",
+    "rect": [
+     662,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "W",
+    "rect": [
+     701,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "E",
+    "rect": [
+     739,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "R",
+    "rect": [
+     778,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "T",
+    "rect": [
+     817,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "Y",
+    "rect": [
+     855,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "U",
+    "rect": [
+     894,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "I",
+    "rect": [
+     932,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "O",
+    "rect": [
+     971,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "P",
+    "rect": [
+     1010,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "[",
+    "rect": [
+     1048,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "]",
+    "rect": [
+     1087,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "\\",
+    "rect": [
+     1125,
+     253,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "caps",
+    "rect": [
+     605,
+     292,
+     62,
+     35
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-row > input"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "A",
+    "rect": [
+     671,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-row > input"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "S",
+    "rect": [
+     710,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-row > input"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "D",
+    "rect": [
+     748,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-row > input"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "F",
+    "rect": [
+     787,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-row > input"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "G",
+    "rect": [
+     825,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "H",
+    "rect": [
+     864,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "J",
+    "rect": [
+     902,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "K",
+    "rect": [
+     941,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "L",
+    "rect": [
+     979,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": ";",
+    "rect": [
+     1018,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "'",
+    "rect": [
+     1056,
+     292,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "return",
+    "rect": [
+     1095,
+     292,
+     65,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "shift",
+    "rect": [
+     605,
+     331,
+     79,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "Z",
+    "rect": [
+     688,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "X",
+    "rect": [
+     728,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "C",
+    "rect": [
+     767,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "V",
+    "rect": [
+     806,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "B",
+    "rect": [
+     845,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back > .st-card"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "N",
+    "rect": [
+     885,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "M",
+    "rect": [
+     924,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": ",",
+    "rect": [
+     963,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": ".",
+    "rect": [
+     1002,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "/",
+    "rect": [
+     1042,
+     331,
+     35,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "shift",
+    "rect": [
+     1081,
+     331,
+     79,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "fn",
+    "rect": [
+     605,
+     370,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by .st-back > .st-card > .st-body > section"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌃",
+    "rect": [
+     659,
+     376,
+     11,
+     12
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "control",
+    "rect": [
+     649,
+     390,
+     32,
+     9
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌥",
+    "rect": [
+     705,
+     376,
+     12,
+     12
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     696,
+     390,
+     29,
+     9
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌘",
+    "rect": [
+     756,
+     376,
+     11,
+     12
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     739,
+     390,
+     44,
+     9
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > .st-row",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌘",
+    "rect": [
+     968,
+     376,
+     11,
+     12
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     951,
+     390,
+     44,
+     9
+    ],
+    "issues": [
+     "covered by #ui > .st-back",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > b",
+    "text": "⌥",
+    "rect": [
+     1018,
+     376,
+     12,
+     12
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     1010,
+     390,
+     29,
+     9
+    ],
+    "issues": [
+     "covered by #ui > .st-back",
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "◀",
+    "rect": [
+     1049,
+     370,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "▲▼",
+    "rect": [
+     1087,
+     370,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".kb > .kb-keys > .kr > .k",
+    "text": "▶",
+    "rect": [
+     1126,
+     370,
+     34,
+     35
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .kc",
+    "text": "Click / tap",
+    "rect": [
+     589,
+     507,
+     89,
+     22
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .act",
+    "text": "everything",
+    "rect": [
+     688,
+     506,
+     90,
+     24
+    ],
+    "issues": [
+     "covered by .st-card > .st-body > section > h3"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .kc",
+    "text": "1 2 3",
+    "rect": [
+     892,
+     507,
+     44,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .act",
+    "text": "pick a pot",
+    "rect": [
+     945,
+     506,
+     84,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .kc",
+    "text": "Space",
+    "rect": [
+     589,
+     541,
+     61,
+     22
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-keys > span"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c > .act",
+    "text": "go on",
+    "rect": [
+     660,
+     540,
+     49,
+     24
+    ],
+    "issues": [
+     "covered by .st-body > section > .st-keys > kbd"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c.on > .kc",
+    "text": "Esc",
+    "rect": [
+     892,
+     541,
+     40,
+     22
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   },
+   {
+    "el": ".gi-r > .ctl > .row-c.on > .act",
+    "text": "leave",
+    "rect": [
+     941,
+     540,
+     46,
+     24
+    ],
+    "issues": [
+     "covered by #ui > .st-back"
+    ]
+   }
+  ],
+  "glitch-log": [
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "control",
+    "rect": [
+     649,
+     390,
+     32,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     696,
+     390,
+     29,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     739,
+     390,
+     44,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     951,
+     390,
+     44,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     1010,
+     390,
+     29,
+     9
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   }
+  ],
+  "large-text": [
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > #gintro-kitchen",
+    "text": "Token Brew Kitchen",
+    "rect": [
+     -4,
+     103,
+     499,
+     47
+    ],
+    "issues": [
+     "off-screen (-4,103 499x47)"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .goal",
+    "text": "Cook each order with the right pot and only the cards it nee",
+    "rect": [
+     -4,
+     157,
+     499,
+     71
+    ],
+    "issues": [
+     "off-screen (-4,157 499x71)"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .gi-lab",
+    "text": "How to play",
+    "rect": [
+     -4,
+     252,
+     499,
+     22
+    ],
+    "issues": [
+     "off-screen (-4,252 499x22)"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Read the order, then tap Got it.",
+    "rect": [
+     -4,
+     283,
+     499,
+     32
+    ],
+    "issues": [
+     "off-screen (-4,283 499x32)"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Pick the small, medium or large pot.",
+    "rect": [
+     -4,
+     330,
+     499,
+     32
+    ],
+    "issues": [
+     "off-screen (-4,330 499x32)"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > ol > li",
+    "text": "Add only needed cards. Stay under the line.",
+    "rect": [
+     -4,
+     376,
+     499,
+     64
+    ],
+    "issues": [
+     "off-screen (-4,376 499x64)"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-l > .meta",
+    "text": "~4 min · 5 orders",
+    "rect": [
+     -4,
+     469,
+     499,
+     27
+    ],
+    "issues": [
+     "off-screen (-4,469 499x27)"
+    ]
+   },
+   {
+    "el": ".gi-l > .gi-act > .row > label",
+    "text": "Don't show again",
+    "rect": [
+     -4,
+     549,
+     186,
+     25
+    ],
+    "issues": [
+     "off-screen (-4,549 186x25)"
+    ]
+   },
+   {
+    "el": ".gi-cols > .gi-l > .gi-act > .hint",
+    "text": "Press Enter to start",
+    "rect": [
+     -4,
+     594,
+     499,
+     25
+    ],
+    "issues": [
+     "off-screen (-4,594 499x25)"
+    ]
+   },
+   {
+    "el": ".panel.gintro > .gi-cols > .gi-r > .gi-lab",
+    "text": "Controls",
+    "rect": [
+     579,
+     103,
+     705,
+     22
+    ],
+    "issues": [
+     "off-screen (579,103 705x22)"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "control",
+    "rect": [
+     650,
+     396,
+     38,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     707,
+     396,
+     34,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     759,
+     396,
+     53,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "command",
+    "rect": [
+     1014,
+     396,
+     53,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   },
+   {
+    "el": ".kb-keys > .kr > .k > small",
+    "text": "option",
+    "rect": [
+     1084,
+     396,
+     34,
+     11
+    ],
+    "issues": [
+     "tiny text 9px"
+    ]
+   }
+  ]
+ }
+}
