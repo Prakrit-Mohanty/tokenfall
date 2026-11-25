@@ -71,8 +71,10 @@ function apMerge(g) {
 const apLong = (g) => g.userData.size.x;
 function apLoadAssets() {
   if (AP_ASSETS.started) return; AP_ASSETS.started = true;
+  // the meshopt-compressed copies tools/models-pack.mjs makes of airport_pack_total.glb (13 -> 5 MB) and the A320 (20 -> 16 MB, PNGs as lossless WebP)
   const L = new THREE.GLTFLoader(), get = (u) => new Promise((res, rej) => L.load(u, res, undefined, rej));
-  get('airport_pack_total.glb').then((g) => {
+  if (window.MeshoptDecoder) L.setMeshoptDecoder(window.MeshoptDecoder);
+  get('assets/models/airport-pack.glb').then((g) => {
     g.scene.updateMatrixWorld(true);
     const root = g.scene.getObjectByName('RootNode');
     for (const n of root.children) {
@@ -80,7 +82,7 @@ function apLoadAssets() {
       const plane = /Airplane$/.test(n.name);
       AP_ASSETS.lib[n.name] = apSettle(apBake(n), plane);
     }
-    return get('a320-200_with_cockpit_ver_viii.glb');
+    return get('assets/models/airport-a320.glb');
   }).then((a) => {
     a.scene.updateMatrixWorld(true);
     AP_ASSETS.a320 = apMerge(apSettle(apBake(a.scene), true));

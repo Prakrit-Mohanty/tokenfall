@@ -41,6 +41,17 @@ for (const zone of ZONES) {
       if (Math.hypot(c.x - a.cx, c.z - a.cz) > 140) return;
       out.push({ c: [c.x, c.y, c.z], r: Math.max(sz.x, sz.y, sz.z), d: Math.hypot(c.x - hero.x, c.z - hero.y) });
     });
+    // the airport's models are baked copies (airport-assets.js), not glTF roots: the scene children that hold their geometry
+    if (typeof AP_ASSETS !== 'undefined' && AP_ASSETS.ready) {
+      const geos = new Set(), mark = (g) => g && g.traverse((m) => { if (m.isMesh) geos.add(m.geometry); });
+      Object.values(AP_ASSETS.lib).forEach(mark); mark(AP_ASSETS.a320);
+      for (const o of scene.children) {
+        let hit = false; o.traverse((m) => { if (m.isMesh && geos.has(m.geometry)) hit = true; }); if (!hit) continue;
+        b.setFromObject(o); if (b.isEmpty()) continue; b.getCenter(c); b.getSize(sz);
+        if (Math.hypot(c.x - a.cx, c.z - a.cz) > 140) continue;
+        out.push({ c: [c.x, c.y, c.z], r: Math.min(40, Math.max(sz.x, sz.y, sz.z)), d: Math.hypot(c.x - hero.x, c.z - hero.y) + (sz.x > 20 ? -1000 : 0) });   // the big ones (planes) first
+      }
+    }
     out.sort((p, q) => p.d - q.d || p.c[0] - q.c[0] || p.c[2] - q.c[2]);
     return out.slice(0, 8);
   }, zone);
