@@ -6,6 +6,7 @@ let zone = 'lobby', traveling = false, armed = true;
 const locName = document.getElementById('locName'), locSub = document.getElementById('locSub');
 function setZone(z) {
   const prevZone = zone; zone = z;
+  ModelFiles.enter(z);   // the cars, bikes and robot dog standing in this zone start loading (js/model-files.js)
   for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) { l.intensity = k === z ? l.userData.base : 0; l.visible = k === z; }
   capLamps();   // low tier: trims to the nearest lamps straight away
   const indoor = z === 'lab' || z === 'abz' || z === 'us' || z === 'airport';
@@ -24,6 +25,7 @@ function setZone(z) {
 }
 function travel(p) {
   traveling = true; fadeEl.style.opacity = 1;
+  ModelFiles.enter(p.to);   // start fetching the destination's models during the fade, not after it
   setTimeout(() => {
     const to = p.to;
     if (p.at) { hero.x = p.at[0]; hero.y = p.at[1]; hero.dir = 'down'; }

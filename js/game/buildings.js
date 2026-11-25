@@ -250,24 +250,21 @@ function car(x, z, ry, color, o = {}) {
   if (o.collide !== false) { colCirc(x - Math.sin(ry), z - Math.cos(ry), 1); colCirc(x + Math.sin(ry), z + Math.cos(ry), 1); }
   return g;
 }
-// the modelled sports cars (js/models/cars.js, from tools/cars-pack.py): 'bmw' (BMW M3 GTR), 'jesko' (Koenigsegg Jesko), 'creta' (Hyundai Creta), 'm4' (BMW M4 widebody), 'cybertruck' (Tesla Cybertruck), 'scorpio' (Mahindra Scorpio-N), 'eeco' (Maruti Suzuki Eeco) or 'omni' (Maruti Omni), 4.4 m like car(),
+// the modelled sports cars (assets/models/car-*.glb, from js/models/cars.js via tools/models-pack.mjs; the .js packs from tools/cars-pack.py): 'bmw' (BMW M3 GTR), 'jesko' (Koenigsegg Jesko), 'creta' (Hyundai Creta), 'm4' (BMW M4 widebody), 'cybertruck' (Tesla Cybertruck), 'scorpio' (Mahindra Scorpio-N), 'eeco' (Maruti Suzuki Eeco) or 'omni' (Maruti Omni), 4.4 m like car(),
 // facing +z. Each model is parsed once (GLTFLoader, async) and every copy shares its geometry and materials; the group is returned at once and fills in
 const SPORTS = {};
 function sportsCar(kind, x, z, ry, o = {}) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
-  if (!SPORTS[kind]) SPORTS[kind] = new Promise((done) => {
-    const bin = atob(window.CAR_MODELS[kind]), buf = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    new THREE.GLTFLoader().parse(buf.buffer, '', (gl) => { gl.scene.traverse((m) => {
+  // the model is fetched (assets/models/car-<kind>.glb, or the embedded pack from file://) once the zone this copy stands in is entered (js/model-files.js)
+  const load = () => SPORTS[kind] || (SPORTS[kind] = ModelFiles.parse('car-' + kind, window.CAR_MODELS && window.CAR_MODELS[kind]).then((gl) => { gl.scene.traverse((m) => {
       if (!m.isMesh) return;
       m.castShadow = !m.material.transparent; m.receiveShadow = true;
       // lit like the rest of the game: its textures are plain (linear) colour, not sRGB, and nothing is metal (with no environment map metalness only darkens)
       const mat = m.material; if (mat.map) { mat.map.encoding = THREE.LinearEncoding; mat.map.needsUpdate = true; }
       mat.metalness = 0; mat.roughness = Math.max(mat.roughness, .45); mat.needsUpdate = true;
-    }); done(gl.scene); }, (e) => console.warn('car model', kind, e));
-  });
+    }); return gl.scene; }, (e) => { console.warn('car model', kind, e); return new Promise(() => {}); }));
   // the collider is the model's own footprint, measured once it has loaded (so a long truck or a wide body is solid right to its edges); o.onSize(len, wide) gets its size
-  SPORTS[kind].then((model) => {
+  ModelFiles.when(g).then(load).then((model) => {
     const m = model.clone(true), b = new THREE.Box3().setFromObject(m), len = b.max.z - b.min.z, wide = b.max.x - b.min.x;   // measured in the model's own frame, before it is turned
     if (o.paint != null) m.traverse((k) => { if (k.isMesh && k.material.name === 'paint') { k.material = k.material.clone(); k.material.color.setHex(o.paint); } });   // a respray: this copy's own body paint (the packed supercars name theirs 'paint')
     g.add(m);
@@ -281,17 +278,15 @@ function sportsCar(kind, x, z, ry, o = {}) {
 const BIKE_MODEL = {};
 function bikeModel(kind, x, z, ry, o = {}) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.set(0, ry, o.lean || 0); scene.add(g);
-  if (!window.BIKE_MODELS || !window.BIKE_MODELS[kind]) return g;
-  if (!BIKE_MODEL[kind]) BIKE_MODEL[kind] = new Promise((done) => {
-    const bin = atob(window.BIKE_MODELS[kind]), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    new THREE.GLTFLoader().parse(buf.buffer, '', (gl) => {
+  if (ModelFiles.embedded && !(window.BIKE_MODELS && window.BIKE_MODELS[kind])) return g;
+  // fetched (assets/models/bike-<kind>.glb, or the embedded pack from file://) once the zone this copy stands in is entered (js/model-files.js)
+  const load = () => BIKE_MODEL[kind] || (BIKE_MODEL[kind] = ModelFiles.parse('bike-' + kind, window.BIKE_MODELS && window.BIKE_MODELS[kind]).then((gl) => {
       gl.scene.traverse((m) => { if (!m.isMesh) return; m.castShadow = true; m.receiveShadow = true; const mt = m.material; if (mt.map) { mt.map.encoding = THREE.LinearEncoding; mt.map.needsUpdate = true; } mt.metalness = 0; mt.roughness = Math.max(mt.roughness, .4);
         if (kind === 'evel') { mt.emissive = new THREE.Color(0xffffff); mt.emissiveMap = mt.map; mt.emissiveIntensity = .12; }   // his near-black leathers and bike: a touch of self-light so he is not a silhouette, but lit by the sun like the other bikes
         mt.needsUpdate = true; });
-      done(gl.scene);
-    }, (e) => console.warn('bike model', kind, e));
-  });
-  BIKE_MODEL[kind].then((m) => g.add(m.clone(true)));
+      return gl.scene;
+    }, (e) => { console.warn('bike model', kind, e); return new Promise(() => {}); }));
+  ModelFiles.when(g).then(load).then((m) => g.add(m.clone(true)));
   return g;
 }
 // parked motorbikes, leaning on their side stands: 'r15' (Yamaha R15M), 'vstrom' (Suzuki V-Strom SX),

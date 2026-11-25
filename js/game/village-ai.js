@@ -108,15 +108,15 @@ function vaiRobotDog(x, z) {
   // its body is the modelled robot dog (js/models/robodog.js, tools/dog-pack.py): one posed mesh with no rig, so it trots with a bob and a rock,
   // sits by leaning back, and wags its whole body when you are close; parsed once with GLTFLoader, lit like the rest of the game (linear colour, no metal)
   const body = new THREE.Group(); g.add(body);
-  { const bin = atob(window.ROBODOG_MODEL), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    new THREE.GLTFLoader().parse(buf.buffer, '', (gl) => {
+  // fetched (assets/models/robodog.glb, or the embedded pack from file://) once the lobby is entered (js/model-files.js)
+  ModelFiles.when(g).then(() => ModelFiles.parse('robodog', window.ROBODOG_MODEL)).then((gl) => {
       gl.scene.traverse((m) => {
         if (!m.isMesh) return; m.castShadow = m.receiveShadow = true;
         for (const k of ['map', 'emissiveMap']) if (m.material[k]) { m.material[k].encoding = THREE.LinearEncoding; m.material[k].needsUpdate = true; }
         m.material.metalness = 0; m.material.roughness = Math.max(m.material.roughness, .45); m.material.needsUpdate = true;
       });
       body.add(gl.scene);
-    }, (e) => console.warn('robot dog model', e)); }
+    }, (e) => console.warn('robot dog model', e));
   const dog = { x, z, target: null, wait: 1, heading: 0, sit: 0 };
   let last = 0;
   anim.push((t) => {
