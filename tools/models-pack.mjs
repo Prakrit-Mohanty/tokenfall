@@ -5,6 +5,7 @@
 //   assets/models/car-<kind>.glb    from js/models/cars.js + js/models/supercars.js (window.CAR_MODELS)
 //   assets/models/bike-<kind>.glb   from js/models/bikes.js (window.BIKE_MODELS)
 //   assets/models/robodog.glb       from js/models/robodog.js (window.ROBODOG_MODEL)
+//   assets/models/airport-*.glb     from airport_pack_total.glb and a320-200_with_cockpit_ver_viii.glb (meshopt, not quantised)
 //   assets/sprites/<id>.webp        from js/sprites/chars-sheet.js (window.CHAR_SHEETS), byte for byte
 //   assets/sprites/<id>.aux.<ext>   from js/sprites/chars-sheet.js (window.CHAR_AUX), byte for byte
 //   js/sprites/chars-sheet-files.js the sprite list the page loads (file URLs over http(s), chars-sheet.js from file://)
@@ -21,7 +22,8 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTMeshoptCompression, KHRMeshQuantization } from '@gltf-transform/extensions';
-import { reorder, quantize } from '@gltf-transform/functions';
+import { reorder, quantize, textureCompress } from '@gltf-transform/functions';
+import sharp from 'sharp';
 import { MeshoptEncoder } from 'meshoptimizer';
 
 const ROOT = path.dirname(path.dirname(new URL(import.meta.url).pathname));
@@ -44,6 +46,18 @@ async function packGlb(name, b64) {
   return [name, b64.length, out.length];
 }
 
+// a .glb that is already a file (the airport kit and the A320): meshopt-compressed with no quantisation, since airport-assets.js bakes and merges
+// their vertex arrays itself (three r128 reads quantised int attributes raw)
+// PNG textures become lossless WebP (EXT_texture_webp, which three r128's GLTFLoader reads): the same pixels, fewer bytes
+async function packFile(src, name) {
+  const raw = fs.readFileSync(at(src)), doc = await io.readBinary(new Uint8Array(raw));
+  await doc.transform(reorder({ encoder: MeshoptEncoder, target: 'size' }), textureCompress({ encoder: sharp, targetFormat: 'webp', formats: /png/i, lossless: true, effort: 80 }));
+  doc.createExtension(EXTMeshoptCompression).setRequired(true).setEncoderOptions({ method: EXTMeshoptCompression.EncoderMethod.QUANTIZE });
+  const out = await io.writeBinary(doc);
+  fs.writeFileSync(at('assets/models', name + '.glb'), out);
+  return [name, raw.length, out.length];
+}
+
 fs.mkdirSync(at('assets/models'), { recursive: true });
 fs.mkdirSync(at('assets/sprites'), { recursive: true });
 const rows = [];
@@ -51,6 +65,8 @@ const m = load('js/models/cars.js', 'js/models/supercars.js', 'js/models/bikes.j
 for (const [k, v] of Object.entries(m.CAR_MODELS)) rows.push(await packGlb('car-' + k, v));
 for (const [k, v] of Object.entries(m.BIKE_MODELS)) rows.push(await packGlb('bike-' + k, v));
 rows.push(await packGlb('robodog', m.ROBODOG_MODEL));
+rows.push(await packFile('airport_pack_total.glb', 'airport-pack'));
+rows.push(await packFile('a320-200_with_cockpit_ver_viii.glb', 'airport-a320'));
 
 // sprite sheets: data URIs -> files, unchanged bytes
 const s = load('js/sprites/chars-sheet.js');
