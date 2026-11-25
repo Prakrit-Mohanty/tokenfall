@@ -350,7 +350,7 @@ function puneStreet(cx, cz) {
     lane('z', J - 1.5, 1, cz - 70, cz + 80, M - 6.8, 'ns', cars);
     lane('z', J + 1.5, -1, cz + 80, cz - 70, M + 6.8, 'ns', cars.map(([s, k, c]) => [s + 30, ROTA.includes(k) ? nextCar() : k, c ^ 0x202020]));   // the other way: its own cars from the rotation
   }
-  life.push((t, dt) => stepTraffic(t, dt));
+  life.push((t, dt) => { if (zone === 'pune') stepTraffic(t, dt); });   // only while you are in Pune: the roads are 300 m from anywhere else, and the cars wait where they were
 }
 
 // ---------------------------------------------------------------- street life: trees, carts, parked two-wheelers, poles and wires, billboards
