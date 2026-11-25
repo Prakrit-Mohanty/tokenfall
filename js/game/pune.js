@@ -60,6 +60,8 @@ function puneGround(cx, cz, M) {
   const runs = [[x0, PUNE_RX - 3], [PUNE_RX + 3, PUNE_RX2 - 3], [PUNE_RX2 + 3, x1]];
   for (const [a, b] of runs) {
     for (const z of [PUNE_MZ - 7.5, PUNE_MZ + 7.5]) plane(b - a, 3, M.brick, cx + (a + b) / 2, .024, cz + z, 3);
+    { const p = a > x0 ? a + 1.8 : a, q = b < x1 ? b - 1.8 : b;   // stopped short of the side streets' own footpaths, so it never cuts across one
+      for (const z of [PUNE_MZ - 9.16, PUNE_MZ + 9.16]) box(q - p, .045, .32, MAT.concrete, cx + (p + q) / 2, 0, cz + z, { cast: false }); }   // the pale edging band at the back of every footpath, against the forecourts and the ground behind
     for (const z of [PUNE_MZ - 6.1, PUNE_MZ + 6.1]) {
       const cut = z < PUNE_MZ && a < PUNE_PARK_AISLE && b > PUNE_PARK_AISLE ? [PUNE_PARK_AISLE - 2.6, PUNE_PARK_AISLE + 2.6] : null;   // the dropped kerb at the car park's driveway
       for (const [p, q] of cut ? [[a, cut[0]], [cut[1], b]] : [[a, b]]) box(q - p, .16, .22, MAT.concrete, cx + (p + q) / 2, 0, cz + z, { cast: false });
@@ -69,6 +71,11 @@ function puneGround(cx, cz, M) {
     { const g = new THREE.PlaneGeometry(6, 230); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * 230 / 9);   // the strip once across, a tile every 9 m along
       const me = new THREE.Mesh(g, M.street); me.position.set(cx + sx, .021, cz - 5); me.receiveShadow = true; scene.add(me); }
     for (const s of [-3.9, 3.9]) for (const [z0, z1] of [[-120, PUNE_MZ - 6], [PUNE_MZ + 6, 110]]) plane(1.8, z1 - z0, M.brick, cx + sx + s, .025, cz + (z0 + z1) / 2, 3);
+    // the side streets' footpaths get what the main road's have: a kerb at the road (x ±3) and a pale edging band at the back (x ±4.8)
+    for (const s of [-1, 1]) for (const [z0, z1] of [[-120, PUNE_MZ - 9], [PUNE_MZ + 9, 110]]) {
+      box(.22, .16, z1 - z0, MAT.concrete, cx + sx + s * 3, 0, cz + (z0 + z1) / 2, { cast: false });
+      box(.32, .045, z1 - z0, MAT.concrete, cx + sx + s * 4.96, 0, cz + (z0 + z1) / 2, { cast: false });
+    }
   }
   const yb = pOnce('yb', () => std(canvasTex(8, 2, (g) => { for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#1c1c20' : '#f2c418'; g.fillRect(i, 0, 1, 2); } }, { nearest: true }), 1));
   for (const x of [36, 118]) box(.6, .08, 11.6, yb, cx + x, .02, cz + PUNE_MZ, { cast: false });
@@ -124,7 +131,7 @@ function puneBlock(x, front, w, d, h, { facing = -1, shops = true } = {}) {
 // the north side between the two junctions: a glass office tower on a plaza, and a mixed-use block with shops
 function puneTowers(cx, cz, M) {
   const front = cz + 4;
-  plane(30, 6, M.brick, cx + 37, .022, front + 3, 3);
+  plane(30, 2.84, cbStone(), cx + 37, .022, front + 1.42, 2);   // its plaza in the same stone as the forecourts round it, stopping at the footpath's edging band (z 6.84), not running over the footpath
   officeBlock(cx + 30, front - 8, 15, 16, 30, { floors: 9, fins: 2.5, front: MAT.glass, side: MAT.cladding });
   ledSign(['SKYLINE TOWER'], '#d6ecff', cx + 30, 3.6, front + .1, 3.6, .5);
   for (const x of [24, 36]) { box(1.8, .5, 1.8, MAT.concrete, cx + x, 0, front + 2.6); bush(cx + x, front + 2.6, .9, MAT.leafA); colBox(cx + x - .9, front + 1.7, cx + x + .9, front + 3.5); }
@@ -161,7 +168,7 @@ function puneCampus(cx, cz, M) {
   for (let k = 1; k < 4; k++) box(W + 3.2, .25, D + 2.2, MAT.white, mx, lift + .6 + k * H / 4, mz);
   pointLight('pune', 0xfff0d8, 1.2, 14, mx, lift - 1, mz);
   graniteWall(M, x0 - 3, x1 + 1.5, cz + PUNE_MZ + 9.3, [mx], -1, M.tabebuia);
-  for (const [x, z] of [[x0 + 3, z0 - .5], [x1 - 3, z0 - .5]]) tree(x, z, 1.1, M.tabebuia);
+  for (const [x, z] of [[x0 + 3, z0 - .5], [x1 - 3, z0 - .5]]) { treeGrate(x, z); tree(x, z, 1.1, M.tabebuia); }
   INTER.push({ x: mx, z: mz + 4, r: 2, label: 'Tech Park', verb: 'Look', act: () => talk('Tech Park', ['A glass office floating on white columns. The shade underneath is the best spot on the street at 2 pm.', 'Through the glass: rows of people in meetings about meetings.']) });
 }
 
@@ -255,7 +262,6 @@ function puneGalli(cx, cz) {
 function puneABZ(cx, cz) {
   const [ax, az] = PUNE_ABZ, tf = finTower(cx + ax, cz + az);
   plane(30, 11.5, cbStone(), cx + ax, .018, cz + az + 5.6, 2);   // the forecourt in Crescent Bay's sandy stone tiles, not the lobby's pastel pavers
-  for (const [p, q] of [[-15, -2.6], [2.6, 15]]) box(q - p, .045, .32, MAT.concrete, cx + ax + (p + q) / 2, 0, cz + 6.84, { cast: false });   // the edging band at the footpath, broken for the driveway
   for (const x of [-12, -6.6, 6.6, 12]) palm(cx + ax + x, tf + 3, rr(3.2, 3.8));
   ledSign(['ABZ'], '#9fd8ff', cx + ax, 2.15, tf + .45, 2.4, .5);
   portal(cx + ax, tf + 1.6, 0x9fd8ff, 'pune', 'abz', 'ABZ Office');
@@ -299,7 +305,15 @@ function puneParking(cx, cz, asphalt) {
   // the name board is a gantry over the entrance, where the driveway meets the footpath, high enough to drive under; at the back of the lot a small P sign
   ledSign(['Crescent Bay Parking'], '#9fd0ff', ax, 3.4, cz + 8.6, 5.4, .55, 0, [480, 52], PLAIN);
   for (const s2 of [-2.9, 2.9]) { box(.14, 3.7, .14, MAT.metal, ax + s2, 0, cz + 8.6); colCirc(ax + s2, cz + 8.6, .15); }
-  ledSign(['P'], '#9fd0ff', lot, 1.9, cz - 8.85, .6, .6, 0, [64, 64], PLAIN); box(.08, 1.6, .08, MAT.metal, lot, 0, cz - 8.9);
+  { // a proper parking sign (the old LED "P" read as a floating key): a blue plate with a white P and a white border, on a grey pole
+    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, 128, 128); g.fillStyle = '#1f5fbf'; g.fillRect(8, 8, 112, 112);
+    g.fillStyle = '#ffffff'; g.font = '700 96px Arial, Helvetica, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('P', 64, 70);
+    const t = new THREE.CanvasTexture(c); t.anisotropy = 8;
+    box(.1, 2.3, .1, MAT.metal, lot, 0, cz - 8.95);
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(.7, .7, .04), [MAT.metal, MAT.metal, MAT.metal, MAT.metal, new THREE.MeshStandardMaterial({ map: t, roughness: .6 }), MAT.metal]);
+    plate.position.set(lot, 2.0, cz - 8.88); plate.castShadow = true; scene.add(plate);
+  }
   // a low kerb round the lot (cut only for the driveway) and bollards along the footpath side: where the parking ends and the walkway begins
   const KERB = pOnce('parkKerb', () => new THREE.MeshStandardMaterial({ color: 0xd9d2c4, roughness: .8 })), x0 = lot - 6.4, x1 = lot + 6.4, z0 = cz - 9, z1 = cz + 6;
   box(.18, .14, z1 - z0, KERB, x0, 0, (z0 + z1) / 2); box(.18, .14, z1 - z0, KERB, x1, 0, (z0 + z1) / 2); box(x1 - x0, .14, .18, KERB, lot, 0, z0);
@@ -342,13 +356,13 @@ function puneStreet(cx, cz) {
 const PUNE_CARTS = [[106.8, 8.4, 'Vada Pav Cart', 0xc98a3a, ['Hot vada pav, ₹20. The bus-stop special.', 'The chutney recipe is a family secret. Not even the model knows it.']], [26, 23.6, 'Fruit Cart', PAL.leaf, ['Mangoes, bananas, chikoo.', 'Priced per dozen, haggled per piece.']], [86, 23.6, 'Coconut Water', 0x5f8a3a, ['One tender coconut, cut fresh.', 'Nature\'s electrolyte. No prompt needed.']], [-36, 23.6, 'Flower Stall', PAL.rose, ['Mogra and marigold garlands.', 'They smell better than any generated description of them.']]];
 const PUNE_BILLBOARDS = [[-27, 8.2, ['LEARN AI', 'one token at a time']], [124, 8.2, ['CHAI BREAK?', 'Amruttulya, 2 min ->']]];
 
-function puneTreeRows(cx, cz, M) {
+function puneTreeRows(cx, cz, M) {   // the street trees stand mid-footpath (3 m wide, kerb at 6.1 m from the road's centre line), so their 1.3 m surrounds stay off the kerb
   const keep = (x, avoid) => avoid.every(([a, r]) => Math.abs(x - a) > r);
   const lights = (base) => Array.from({ length: 16 }, (_, k) => [base + k * 14, 1.6]);
-  const north = [[PUNE_RX, 7], [PUNE_RX2, 7], [5, 3.5], [80, 3.5], [112, 3], ...PUNE_CARTS.map(([x]) => [x, 2.5]), ...lights(-52)];
+  const north = [[PUNE_RX, 7], [PUNE_RX2, 7], [5, 3.5], [80, 3.5], [112, 3], ...PUNE_CARTS.map(([x]) => [x, 2.5]), ...lights(-52), ...PUNE_BILLBOARDS.map(([x]) => [x, 4])];   // no tree in front of a billboard
   const south = [[PUNE_RX, 7], [PUNE_RX2, 7], [108, 6], [45.5, 6], ...PUNE_CARTS.map(([x]) => [x, 2.5]), ...lights(-45)];
-  for (let x = -20; x < 136; x += 9) if (keep(x, north)) { tree(cx + x, cz + PUNE_MZ - 6.75, rr(.85, 1.1), [MAT.leafA, MAT.leafC, M.tabebuia][rnd() * 3 | 0], false); colCirc(cx + x, cz + PUNE_MZ - 6.75, .35); }
-  for (let x = -54; x < 140; x += 9) if (keep(x, south)) { tree(cx + x, cz + PUNE_MZ + 6.75, rr(.85, 1.1), [MAT.leafA, MAT.leafB, M.tabebuia][rnd() * 3 | 0], false); colCirc(cx + x, cz + PUNE_MZ + 6.75, .35); }
+  for (let x = -20; x < 136; x += 9) if (keep(x, north)) { treeGrate(cx + x, cz + PUNE_MZ - 7.5, 1.3); tree(cx + x, cz + PUNE_MZ - 7.5, rr(.85, 1.1), [MAT.leafA, MAT.leafC, M.tabebuia][rnd() * 3 | 0], false); colCirc(cx + x, cz + PUNE_MZ - 7.5, .35); }
+  for (let x = -54; x < 140; x += 9) if (keep(x, south)) { treeGrate(cx + x, cz + PUNE_MZ + 7.5, 1.3); tree(cx + x, cz + PUNE_MZ + 7.5, rr(.85, 1.1), [MAT.leafA, MAT.leafB, M.tabebuia][rnd() * 3 | 0], false); colCirc(cx + x, cz + PUNE_MZ + 7.5, .35); }
 }
 
 function puneCart(cx, cz, [x, z, name, colour, lines]) {
@@ -399,7 +413,8 @@ function laneTraffic(lanes, x, back, front, dir) {
   return traffic.lanes.some((L) => L.axis === 'x' && lanes.includes(L) && L.cars.some((c) => { const rel = (c.s - x) * (dir || L.d); return rel > -back && rel < front; }));
 }
 
-// the rider is Prakrit on his Yamaha, a character sprite (SHAPE.prakrit in characters.js)
+// the rider is Prakrit on his Yamaha, a character sprite (SHAPE.prakrit in characters.js). RECKLESS: he speeds and weaves through the traffic
+const RECKLESS = true;
 function bikeTaxi(cx, cz) {
   const g = new THREE.Object3D(), drv = makeChar('Prakrit', 0, 0, { look: 'prakrit', zone: 'pune' }), stands = {}, names = { cb: 'Crescent Bay', abz: 'ABZ' };
   for (const [k, [x, z]] of Object.entries(PUNE_TAXI_STANDS)) {
@@ -456,10 +471,11 @@ function bikeTaxi(cx, cz) {
   // how fast the bike may go right now: the car ahead, the red light, and a clear gap before pulling out or cutting back in
   const allowed = (t, p) => {
     const P = S.path, x = g.position.x, d = P.dir;
-    let cap = S.mode === 'ride' ? 7 : 9;
-    cap = Math.min(cap, Math.max(1.2, Math.sqrt(2 * 3.5 * (P.total - S.s))));
+    // Prakrit rides flat out: well over the limit, no braking for the car ahead or the lights (he weaves past instead, see the lane swerve below)
+    let cap = S.mode === 'ride' ? 22 : 26;
+    cap = Math.min(cap, Math.max(1.2, Math.sqrt(2 * 10 * (P.total - S.s))));
     if (p.seg === 0 && S.s < .5 && laneTraffic(P.crossed, P.segs[0].b[0], 14, 6, null)) return 0;
-    if (p.seg === 1) {
+    if (p.seg === 1 && !RECKLESS) {
       for (const c of P.own.cars) { const gap = (c.s - x) * d - c.len / 2 - .9; if (gap > -1 && gap < 30) cap = Math.min(cap, Math.max(0, gap - 2) * 1.2); }
       const st = lightState('ew', t), toStop = Math.min(...[].concat(P.own.stopAt).map((s) => (s - x) * d).filter((q) => q > 0), Infinity);
       if (st !== 'green' && toStop < 14) cap = Math.min(cap, Math.max(0, toStop - .3) * 1.1);
@@ -473,13 +489,23 @@ function bikeTaxi(cx, cz) {
     if (drvP && S.mode === 'ride') drvP.t += dt * 1000;   // nothing else steps this sprite's clock
     if (S.mode === 'idle') { TF.ambience?.engine(0, 0); return; }
     const here = at(S.path, S.s), cap = allowed(t, here);
-    S.v = cap < S.v ? Math.max(cap, S.v - 9 * dt) : Math.min(cap, S.v + 3.5 * dt);
+    S.v = cap < S.v ? Math.max(cap, S.v - 14 * dt) : Math.min(cap, S.v + (RECKLESS ? 11 : 3.5) * dt);
     S.s = Math.min(S.path.total, S.s + S.v * dt);
     const p = at(S.path, S.s);
-    g.position.set(p.x, 0, p.z); g.rotation.y += Math.atan2(Math.sin(p.ry - g.rotation.y), Math.cos(p.ry - g.rotation.y)) * Math.min(1, dt * 8);
+    // the swerve: on the straight, a car close ahead in his lane sends him into the next lane over (the inner one), and back out past it
+    let wantLat = 0;
+    if (RECKLESS && p.seg === 1) {
+      const P = S.path, d = P.dir, other = P.laneZ === cz + PUNE_LANES.eastOuter ? cz + PUNE_LANES.eastInner : cz + PUNE_LANES.westInner, off = other - P.laneZ;
+      const close = (L) => L && L.cars.some((c) => { const gap = (c.s - p.x) * d; return gap > -3 && gap < 16; });
+      const ownL = P.own, innerL = traffic.lanes.find((L) => L.axis === 'x' && Math.abs(L.fixed - other) < .01);
+      S.weave = close(ownL) && !close(innerL) ? 1 : close(innerL) && !close(ownL) ? 0 : (S.weave ?? 0);
+      wantLat = S.weave * off;
+    }
+    S.lat = (S.lat || 0) + (wantLat - (S.lat || 0)) * Math.min(1, dt * 6);
+    g.position.set(p.x, 0, p.z + S.lat); g.rotation.y += Math.atan2(Math.sin(p.ry - g.rotation.y), Math.cos(p.ry - g.rotation.y)) * Math.min(1, dt * 8);
     face(S.v > .3);
     TF.ambience?.engine(S.v, zone !== 'pune' ? 0 : S.mode === 'ride' ? 1 : Math.max(0, 1 - Math.hypot(p.x - hero.x, p.z - hero.y) / 45));   // heard in Pune, fading with distance when it is only fetching you
-    if (S.mode === 'ride') { hero.x = p.x; hero.y = p.z; hero.dir = Math.sin(g.rotation.y) >= 0 ? 'right' : 'left'; }
+    if (S.mode === 'ride') { hero.x = p.x; hero.y = p.z + S.lat; hero.dir = Math.sin(g.rotation.y) >= 0 ? 'right' : 'left'; }
     if (S.s < S.path.total) return;
     const riding = S.mode === 'ride';
     S.mode = 'idle'; S.at = S.dest; park(S.at); TF.ambience?.engine(0, 0);
@@ -504,8 +530,9 @@ function buildPune(a) {
     puneGround(cx, cz, M);
     // the Crescent Bay forecourt (and only this): the sandy stone tiles, ~25 cm each (the texture holds 8 x 3 of them, laid every 2 m)
     // it stops where the footpath starts (z +7: the pavers run 7 to 10 m south), with a pale stone edging band between the two, so the office front reads apart from the street
-    plane(36, 16, cbStone(), cx - 3, .016, cz - 1, 2);
-    box(36, .045, .32, MAT.concrete, cx - 3, 0, cz + 6.84, { cast: false });
+    // and it stops at the side street's footpath (x +9.7): it used to run on over the footpath and the street itself
+    plane(30.7, 16, cbStone(), cx - 5.65, .016, cz - 1, 2);
+    box(.32, .045, 16, MAT.concrete, cx + 9.54, 0, cz - 1, { cast: false });   // its edge against the side street's footpath
     WALK.push([cx - 24, cz - 14, cx + 130, cz + PUNE_MZ - 6], [cx - 55, cz + PUNE_MZ - 6, cx + 145, cz + PUNE_MZ + 9]);
     WALK.push([cx + PUNE_GALLI[0], cz + PUNE_GALLI[1] - 1, cx + PUNE_GALLI[2], cz + PUNE_GALLI[3] + 1], [cx + PUNE_SQUARE[0], cz + PUNE_SQUARE[1], cx + PUNE_SQUARE[2], cz + PUNE_SQUARE[3]]);
     WALK.push([cx + PUNE_CAMPUS[0] - 2, cz + PUNE_MZ + 9, cx + PUNE_CAMPUS[2] + 2, cz + PUNE_CAMPUS[3] + .5]);
@@ -519,7 +546,6 @@ function buildPune(a) {
     puneTowers(cx, cz, M);
     puneFuel(cx, cz);
     puneCampus(cx, cz, M);
-    puneViaduct(cx, cz);
     puneGalli(cx, cz);
     puneSouthRow(cx, cz);
     puneNorthBlocks(cx, cz);
@@ -531,7 +557,7 @@ function buildPune(a) {
     puneTreeRows(cx, cz, M);
     PUNE_TAXI = bikeTaxi(cx, cz);
     puneCityFill(cx, cz, M);
-    for (const [x, z] of [[9.6, -3.5], [-6, 5.5], [20, -8], [108, 2], [79, -12], [-22, 7], [54, -8]]) tree(cx + x, cz + z, rr(1, 1.3), [MAT.leafA, MAT.leafC, M.tabebuia][rnd() * 3 | 0]);
+    for (const [x, z] of [[9.6, -3.5], [-6, 5.5], [20, -8], [108, 2], [79, -12], [-22, 7], [54, -8]]) { treeGrate(cx + x, cz + z, 2); tree(cx + x, cz + z, rr(1, 1.3), [MAT.leafA, MAT.leafC, M.tabebuia][rnd() * 3 | 0]); }
   });
   NPC_BOUNDS.pune = [cx - 20, cz - 10, cx + 120, cz + 8];
   TF.zoneEnv.pune = { near: 60, far: 190 };

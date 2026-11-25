@@ -43,20 +43,42 @@
     // the bike's engine: a square and a saw a hair apart through a low-pass that opens with speed, chugging through a square tremolo that quickens too. Built on the first ride and
     // then left running at zero gain (ponytail: two idle oscillators; stop them if more voices ever share the context).
     let eng = null;
+    const BIKE_FILE = 'sounds/prakrit-bike.mp3', bike = { state: 'new' };
     function engine(speed, level) {
       if (!eng && level <= 0) return;
       if (!S.on || !ensure() || S.ctx.state !== 'running') return;
       const c = S.ctx, t = c.currentTime, f = 55 + speed * 14;
-      if (!eng) {
-        const o1 = c.createOscillator(), o2 = c.createOscillator(), lfo = c.createOscillator(), lp = c.createBiquadFilter(), chug = c.createGain(), lfoAmt = c.createGain(), out = c.createGain();
-        o1.type = 'square'; o2.type = 'sawtooth'; lfo.type = 'square'; lp.type = 'lowpass'; lp.Q.value = 3; chug.gain.value = 0.65; lfoAmt.gain.value = 0.35; out.gain.value = 0;
-        o1.connect(lp); o2.connect(lp); lp.connect(chug); chug.connect(out); lfo.connect(lfoAmt); lfoAmt.connect(chug.gain); out.connect(S.master);
-        for (const o of [o1, o2, lfo]) o.start();
-        eng = { o1, o2, lfo, lp, out };
+      // Prakrit's real bike: a recording at sounds/prakrit-bike.mp3, looped, pitched up with speed. Fetched on the first ride; the synth below
+      // stands in until it decodes, and for good if the file is not there.
+      if (bike.state === 'new') { bike.state = 'loading'; fetch(BIKE_FILE).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status))).then((b) => c.decodeAudioData(b)).then((buf) => {
+        const src = c.createBufferSource(), out = c.createGain(); src.buffer = buf; src.loop = true; out.gain.value = 0; src.connect(out); out.connect(S.master); src.start();
+        bike.src = src; bike.out = out; bike.state = 'ready'; if (eng) eng.out.gain.setTargetAtTime(0, c.currentTime, .05);
+      }).catch(() => { bike.state = 'none'; }); }
+      if (bike.state === 'ready') {
+        bike.src.playbackRate.setTargetAtTime(.75 + Math.min(speed, 26) / 26 * .75, t, .12);
+        bike.out.gain.setTargetAtTime(.6 * level, t, .15);
+        return;
       }
-      eng.o1.frequency.setTargetAtTime(f, t, 0.08); eng.o2.frequency.setTargetAtTime(f * 1.012, t, 0.08);
-      eng.lfo.frequency.setTargetAtTime(7 + speed * 2.2, t, 0.1); eng.lp.frequency.setTargetAtTime(420 + speed * 110, t, 0.1);
-      eng.out.gain.setTargetAtTime(0.2 * level, t, 0.15);
+      // the synth: a supercharged inline-four screaming up the revs, like a Kawasaki H2R on the dyno. Two saws a hair apart for the howl (firing
+      // at two pulses a crank turn, idling ~1,800 rpm and wound out past 14,000), an octave-up square for the rasp through a resonant band-pass,
+      // a sine whine riding high above it for the supercharger, and a fast tremolo for the firing pulses that smooths out as the revs climb
+      if (!eng) {
+        const mk = (type) => { const o = c.createOscillator(); o.type = type; o.start(); return o; };
+        const o1 = mk('sawtooth'), o2 = mk('sawtooth'), rasp = mk('square'), whine = mk('sine'), lfo = mk('square');
+        const lp = c.createBiquadFilter(), bp = c.createBiquadFilter(), body = c.createGain(), raspG = c.createGain(), whineG = c.createGain(), pulse = c.createGain(), lfoAmt = c.createGain(), out = c.createGain();
+        lp.type = 'lowpass'; lp.Q.value = 6; bp.type = 'bandpass'; bp.Q.value = 4; body.gain.value = .55; raspG.gain.value = .22; whineG.gain.value = .04; pulse.gain.value = .75; lfoAmt.gain.value = .25; out.gain.value = 0;
+        o1.connect(lp); o2.connect(lp); lp.connect(body); body.connect(pulse);
+        rasp.connect(bp); bp.connect(raspG); raspG.connect(pulse);
+        lfo.connect(lfoAmt); lfoAmt.connect(pulse.gain); pulse.connect(out);
+        whine.connect(whineG); whineG.connect(out); out.connect(S.master);
+        eng = { o1, o2, rasp, whine, lfo, lp, bp, whineG, lfoAmt, out };
+      }
+      const k = Math.min(speed, 26) / 26, fire = 60 + k * k * 420 + k * 60;   // firing frequency, climbing faster near the top like a screaming redline
+      eng.o1.frequency.setTargetAtTime(fire, t, .06); eng.o2.frequency.setTargetAtTime(fire * 1.008, t, .06); eng.rasp.frequency.setTargetAtTime(fire * 2, t, .06);
+      eng.whine.frequency.setTargetAtTime(900 + k * 5200, t, .1); eng.whineG.gain.setTargetAtTime(.015 + k * .07, t, .1);
+      eng.lfo.frequency.setTargetAtTime(fire / 4, t, .06); eng.lfoAmt.gain.setTargetAtTime(.3 - k * .22, t, .1);
+      eng.lp.frequency.setTargetAtTime(700 + k * 4200, t, .08); eng.bp.frequency.setTargetAtTime(fire * 3, t, .08);
+      eng.out.gain.setTargetAtTime(0.22 * level, t, 0.15);
     }
     const world = {
       state: S,

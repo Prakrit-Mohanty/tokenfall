@@ -64,12 +64,12 @@ function fernPot(x, z) {
   colCirc(x, z, .35);
 }
 
-// the north windows: sill, blinds glass, red-brown mullions, a white column every few bays
+// the north windows: sill, plain glass, stone-grey frames, a white column every few bays
 function usWindows(x0, z0, x1, z1, M, columns = []) {
   const len = Math.hypot(x1 - x0, z1 - z0), ry = x0 === x1 ? Math.PI / 2 : 0, g = new THREE.Group(); g.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); g.rotation.y = ry; scene.add(g);
-  box(len, .8, .3, M.white, 0, 0, 0, { p: g }); box(len, 2.4, .1, MAT.window, 0, .8, 0, { p: g, cast: false }); box(len, .5, .3, M.white, 0, 3.2, 0, { p: g });
-  for (let s = 0; s <= len + .01; s += 1.8) box(.1, 2.4, .16, M.frame, s - len / 2, .8, 0, { p: g });
-  box(len, .08, .16, M.frame, 0, 1.95, 0, { p: g, cast: false });
+  // plain glass and stone-grey frames, as at HQ and ABZ (it was a painted blinds texture with red-brown mullions)
+  box(len, .8, .3, M.white, 0, 0, 0, { p: g }); box(len, 2.4, .04, MAT.paneGlass, 0, .8, 0, { p: g, cast: false }); box(len, .5, .3, M.white, 0, 3.2, 0, { p: g });
+  for (let s = 0; s <= len + .01; s += 1.8) box(.08, 2.4, .12, MAT.paneFrame, s - len / 2, .8, 0, { p: g });
   for (const c of columns) { box(.8, 3.7, .8, M.white, c - len / 2, 0, .4, { p: g }); if (!ry) colBox(x0 + c - .4, z0, x0 + c + .4, z0 + .8); }
   colBox(Math.min(x0, x1) - .2, Math.min(z0, z1) - .2, Math.max(x0, x1) + .2, Math.max(z0, z1) + .2);
 }
@@ -105,8 +105,11 @@ function buildUS(a) {
     const [ex, ez] = US_EXIT;
     box(.1, 2.3, 1.1, M.door, X(hx) - .2, 0, Z(-5.6)); box(.12, .3, .9, MAT.charcoal, X(hx) - .2, 2.4, Z(-5.6)); ledSign(['EXIT'], '#7dff8a', X(hx) - .25, 2.75, Z(-5.6), .8, .3, -Math.PI / 2);
     box(.4, 3.7, 6, M.white, X(hx) - .5, 0, Z(-.6));
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(.95, .2, 8, 36, Math.PI * 1.62), MAT.charcoal); ring.position.set(X(hx) - .8, 2.1, Z(-.6)); ring.rotation.set(0, -Math.PI / 2, Math.PI * .19); ring.castShadow = true; scene.add(ring);
-    const tip = Math.PI * .16, dot = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .1, 20), M.teal); dot.rotation.z = Math.PI / 2; dot.position.set(X(hx) - .86, 2.1 + .98 * Math.sin(tip), Z(-.6) + .98 * Math.cos(tip)); scene.add(dot);
+    // the Calfus C: the real one, cut from the wordmark (textures.js calfusLogo), as a thin acrylic plate standing off the wall
+    { const c = document.createElement('canvas'); c.width = 227; c.height = 256; const t = new THREE.CanvasTexture(c); t.anisotropy = 8;
+      const face = new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .05, roughness: .45, side: THREE.DoubleSide });
+      const logo = new THREE.Mesh(new THREE.PlaneGeometry(2 * 227 / 256, 2), face); logo.position.set(X(hx) - .72, 2.1, Z(-.6)); logo.rotation.y = -Math.PI / 2; logo.castShadow = true; scene.add(logo);
+      calfusLogo((img) => { c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); t.needsUpdate = true; }); }
     fernPot(X(hx) - 1, Z(-3.9));
     INTER.push({ x: X(hx) - 2.4, z: Z(-.6), r: 1.8, label: 'Calfus', verb: 'Look', act: () => talk('Calfus · Pleasanton', ['The Calfus C, on the wall of the US office.', 'Same company, eleven and a half hours apart. Someone is always awake.']) });
     // the ping-pong table runs parallel to the logo wall; cues on a shelf underneath, the ball holder on the end

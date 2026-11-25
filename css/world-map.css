@@ -12,3 +12,20 @@ html body #ui .wm-map { flex: 1; min-height: 0; background: #b0e0f4; }
 html body #ui .wm-map svg { display: block; width: 100%; height: auto; max-height: calc(100vh - 150px); }
 html body #ui .wm-map svg text { font-family: "Fredoka", "Baloo 2", sans-serif !important; }
 html body #ui .wm-x kbd { margin-left: 6px; padding: 1px 7px; border-radius: 6px; background: #fff; box-shadow: 0 2px 0 #e2c9a4; font: inherit; }
+/* the full leaderboard (leaderboard.js), dressed like the lobby board: orange frame, red ribbon, coloured rows, coins and points */
+html body #board .lb-card { width: min(480px, calc(100vw - 32px)); padding: 18px 16px 14px; border-radius: 26px; background: #f2a65a; box-shadow: 0 8px 0 #c9773a, 0 24px 50px rgba(40, 20, 10, .4); outline: none; border: 0; font-family: "Fredoka", var(--font-secondary) !important; }
+html body #board .lb-card * { font-family: "Fredoka", var(--font-secondary) !important; }
+html body #board .lb-card .title { margin: -34px auto 6px; width: max-content; padding: 6px 34px; border-radius: 14px; background: #e8566a; color: #fff; font-size: 24px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 4px 0 #8a1f30; text-shadow: 0 2px 0 #8a1f30; }
+html body #board .lb-card .sub { text-align: center; color: #7a3a1a; font-size: 14px; opacity: 1; margin: 0 0 10px; }
+html body #board .lb-card .rows { padding: 10px; border-radius: 18px; background: #c9773a; display: flex; flex-direction: column; gap: 8px; }
+html body #board .lb-card li { grid-template-columns: 40px 1fr auto; padding: 8px 12px; border-radius: 14px; background: #ffc89a; color: #8a4a2a; font-size: 17px; font-weight: 700; box-shadow: 0 4px 0 #e8a878; }
+html body #board .lb-card li:nth-child(odd) { background: #ffc89a; }
+html body #board .lb-card .r1 { background: #ffd86a !important; box-shadow: 0 4px 0 #f2b53a; color: #8a5a10; }
+html body #board .lb-card .r2 { background: #8fe0f6 !important; box-shadow: 0 4px 0 #4fb8e0; color: #1f5f80; }
+html body #board .lb-card .r3 { background: #ff9aa8 !important; box-shadow: 0 4px 0 #e8566a; color: #8a1f30; }
+html body #board .lb-card .rank { width: 30px; height: 30px; border-radius: 50%; background: transparent; color: inherit; font-size: 18px; }
+html body #board .lb-card .r1 .rank, html body #board .lb-card .r2 .rank, html body #board .lb-card .r3 .rank { color: #fff; border: 3px solid #fff; }
+html body #board .lb-card .r1 .rank { background: #f6c33a; } html body #board .lb-card .r2 .rank { background: #9fb4c8; } html body #board .lb-card .r3 .rank { background: #e08a5a; }
+html body #board .lb-card .score { display: inline-flex; align-items: center; gap: 8px; padding: 2px 14px 2px 4px; border-radius: 999px; background: rgba(0, 0, 0, .14); color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, .35); }
+html body #board .lb-card .score i { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle, #f6c33a 45%, #fff2b0 50%, #f6c33a 58%); border: 2px solid #c8901a; }
+html body #board .lb-card .hint { color: #7a3a1a; opacity: 1; }

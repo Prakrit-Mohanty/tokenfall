@@ -3,12 +3,12 @@
 // Classic script: shares one global scope with the other js/game/ files, loaded in order by index.html.
 
 const BOARD_TOP = 5;
+// until real scores come in, the board shows the lobby regulars, so it never stands blank
 const BOARD_SAMPLE = [
-  { name: 'pixelpriya', correct: 42 }, { name: 'rosa_j', correct: 37 }, { name: 'kabir_m', correct: 37 },
-  { name: 'a.very.long.username.from.marketing', correct: 31 }, { name: 'chaiwala', correct: 24 }, { name: 'ananya.r', correct: 19 },
-  { name: 'bobby5', correct: 12 }, { name: 'sneha.d', correct: 6 },
+  { name: 'pixelpriya', correct: 42 }, { name: 'rosa_j', correct: 37 }, { name: 'chaiwala', correct: 35 }, { name: 'sudhanshu', correct: 31 },
+  { name: 'riya', correct: 27 }, { name: 'gaurav', correct: 24 }, { name: 'aarav', correct: 19 }, { name: 'bobby5', correct: 12 }, { name: 'mehta', correct: 9 },
 ];
-const board = { rows: [], sample: false, tex: null, mat: null, el: null, open: false };
+const board = { rows: BOARD_SAMPLE, sample: true, tex: null, mat: null, el: null, open: false };
 
 function validateRows(rows) {
   if (!Array.isArray(rows)) throw new TypeError('leaderboard.set expects an array of { name, correct }');
@@ -30,42 +30,58 @@ function fitText(g, text, max) {
   return s + '…';
 }
 
+// the board's screen, in the style of a mobile game's leaderboard: a peach card in an orange frame, a red ribbon title, then one rounded row per
+// player: gold, sky and rose for the top three with a medal, peach below; the name on the left and a coin with the points on the right
+const BOARD_ROWS = 6;
 function drawBoardScreen() {
-  const c = board.tex.image, g = c.getContext('2d'), W = c.width, H = c.height;
-  g.fillStyle = PAL.plum; g.fillRect(0, 0, W, H);
-  g.fillStyle = PAL.coral; g.fillRect(0, 0, W, 22);
-  g.font = `600 13px ${SIGN_FONT}`; g.textBaseline = 'middle';
-  g.fillStyle = '#fff3dc'; g.textAlign = 'left'; g.fillText('MOST CORRECT ANSWERS', 8, 12);
-  if (board.sample) { g.textAlign = 'right'; g.fillStyle = '#ffd27a'; g.fillText('SAMPLE', W - 8, 12); }
-
-  if (!board.rows.length) {
-    g.textAlign = 'center'; g.fillStyle = '#d6ecff';
-    g.fillText('No answers yet.', W / 2, H / 2 + 2); g.fillText('Play a game to get on the board!', W / 2, H / 2 + 20);
-    board.tex.needsUpdate = true;
-    return;
-  }
-
-  rankRows(board.rows).slice(0, BOARD_TOP).forEach(({ rank, name, correct }, i) => {
-    const y = 36 + i * 19;
-    g.fillStyle = ['#f2b53a', '#cfd5dc', '#e0a878'][rank - 1] || PAL.periwinkle;
-    g.fillRect(8, y - 7, 16, 14);
-    g.fillStyle = rank <= 3 ? PAL.brown : '#fff3dc'; g.textAlign = 'center'; g.fillText(rank, 16, y + 1);
-    g.fillStyle = '#fff3dc'; g.textAlign = 'left'; g.fillText(fitText(g, name, W - 80), 32, y + 1);
-    g.fillStyle = '#8fe8ff'; g.textAlign = 'right'; g.fillText(correct, W - 8, y + 1);
+  const c = board.tex.image, g = c.getContext('2d'), W = c.width, H = c.height, F = (w, px) => `${w} ${px}px "Fredoka", ${SIGN_FONT}`;
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = '#f2a65a'; g.fillRect(0, 0, W, H);                                         // the orange frame
+  rr(18, 64, W - 36, H - 82, 26); g.fillStyle = '#c9773a'; g.fill();                         // the well
+  rr(30, 76, W - 60, H - 106, 20); g.fillStyle = '#ffe2c2'; g.fill();
+  // the ribbon
+  g.fillStyle = '#c23a4a'; for (const s2 of [-1, 1]) { g.beginPath(); g.moveTo(W / 2 + s2 * 150, 22); g.lineTo(W / 2 + s2 * 205, 22); g.lineTo(W / 2 + s2 * 185, 44); g.lineTo(W / 2 + s2 * 205, 66); g.lineTo(W / 2 + s2 * 150, 66); g.fill(); }
+  rr(W / 2 - 170, 10, 340, 58, 16); g.fillStyle = '#e8566a'; g.fill(); g.fillStyle = 'rgba(255,255,255,.25)'; rr(W / 2 - 160, 16, 320, 12, 6); g.fill();
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round'; g.font = F(700, 34); g.lineWidth = 7; g.strokeStyle = '#8a1f30'; g.strokeText('LEADERBOARD', W / 2, 41); g.fillStyle = '#ffffff'; g.fillText('LEADERBOARD', W / 2, 41);
+  const ranked = rankRows(board.rows).slice(0, BOARD_ROWS), x0 = 44, rw = W - 88, rh = 54, gap = 8, y0 = 88;
+  const TONE = [['#ffd86a', '#f2b53a', '#8a5a10'], ['#8fe0f6', '#4fb8e0', '#1f5f80'], ['#ff9aa8', '#e8566a', '#8a1f30']];
+  ranked.forEach(({ rank, name, correct }, i) => {
+    const y = y0 + i * (rh + gap), t = TONE[rank - 1];
+    rr(x0, y + 4, rw, rh, 16); g.fillStyle = t ? t[1] : '#e8a878'; g.fill();               // the row's lip
+    rr(x0, y, rw, rh, 16); g.fillStyle = t ? t[0] : '#ffc89a'; g.fill();
+    g.fillStyle = 'rgba(255,255,255,.3)'; rr(x0 + 12, y + 5, rw - 24, 9, 5); g.fill();
+    const ink = t ? t[2] : '#8a4a2a';
+    // the rank: a medal for the top three, a plain number after
+    if (t) { g.beginPath(); g.arc(x0 + 36, y + rh / 2, 20, 0, Math.PI * 2); g.fillStyle = ['#f6c33a', '#9fb4c8', '#e08a5a'][rank - 1]; g.fill(); g.lineWidth = 4; g.strokeStyle = '#fff'; g.stroke(); g.fillStyle = '#fff'; g.font = F(700, 22); g.fillText(rank, x0 + 36, y + rh / 2 + 1); }
+    else { g.fillStyle = ink; g.font = F(700, 28); g.fillText(rank, x0 + 36, y + rh / 2 + 1); }
+    // the avatar disc
+    g.beginPath(); g.arc(x0 + 92, y + rh / 2, 20, 0, Math.PI * 2); g.fillStyle = '#fff6ea'; g.fill(); g.lineWidth = 3; g.strokeStyle = t ? t[1] : '#e8a878'; g.stroke();
+    g.fillStyle = ink; g.font = F(700, 20); g.fillText(name.charAt(0).toUpperCase(), x0 + 92, y + rh / 2 + 1);
+    // the name
+    g.textAlign = 'left'; g.font = F(700, 26); g.fillStyle = ink; g.fillText(fitText(g, name, rw - 340), x0 + 126, y + rh / 2 + 1);
+    // the points: a coin and a pill
+    const px = x0 + rw - 190; rr(px + 18, y + 11, 160, 32, 16); g.fillStyle = 'rgba(0,0,0,.14)'; g.fill();
+    g.beginPath(); g.arc(px + 18, y + rh / 2, 20, 0, Math.PI * 2); g.fillStyle = '#f6c33a'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#c8901a'; g.stroke();
+    g.beginPath(); g.arc(px + 18, y + rh / 2, 11, 0, Math.PI * 2); g.strokeStyle = '#fff2b0'; g.lineWidth = 3; g.stroke();
+    g.textAlign = 'right'; g.font = F(700, 24); g.fillStyle = '#ffffff'; g.lineWidth = 5; g.strokeStyle = ink; g.strokeText(`${correct * 100}`, px + 168, y + rh / 2 + 1); g.fillText(`${correct * 100}`, px + 168, y + rh / 2 + 1);
+    g.textAlign = 'center';
   });
+  if (!ranked.length) { g.fillStyle = '#8a4a2a'; g.font = F(700, 26); g.fillText('No answers yet. Play a game to get on the board!', W / 2, H / 2 + 30); }
   board.tex.needsUpdate = true;
 }
 
 function boardScreenMaterial() {
-  board.tex = canvasTex(240, 132, () => {}, { nearest: true });
-  board.mat = new THREE.MeshStandardMaterial({ map: board.tex, emissive: 0xffffff, emissiveMap: board.tex, emissiveIntensity: 1.3, roughness: .5 });
+  board.tex = canvasTex(912, 500, () => {}, { smooth: true, keep: true }); board.tex.anisotropy = 8;
+  board.mat = new THREE.MeshStandardMaterial({ map: board.tex, emissive: 0xffffff, emissiveMap: board.tex, emissiveIntensity: .55, roughness: .5 });
   drawBoardScreen();
+  if (document.fonts && document.fonts.load) document.fonts.load('700 30px "Fredoka"').then(drawBoardScreen).catch(() => {});
   return board.mat;
 }
 
 function buildBoardPanel() {
   const el = document.createElement('div'); el.id = 'board';
-  el.innerHTML = '<div class="card panel"><div class="title">Leaderboard</div><div class="sub">Most correct answers, all games</div><ol class="rows"></ol><div class="hint"><kbd>E</kbd> or <kbd>Esc</kbd> to close</div></div>';
+  el.innerHTML = '<div class="card lb-card"><div class="title">Leaderboard</div><div class="sub">100 points for every correct answer, all games</div><ol class="rows"></ol><div class="hint"><kbd>E</kbd> or <kbd>Esc</kbd> to close</div></div>';
   el.addEventListener('click', (e) => { if (e.target === el) closeBoard(); });
   document.getElementById('ui').appendChild(el);
   board.el = el;
@@ -73,9 +89,9 @@ function buildBoardPanel() {
 
 function fillBoardPanel() {
   const list = board.el.querySelector('.rows'), ranked = rankRows(board.rows);
-  board.el.querySelector('.title').textContent = board.sample ? 'Leaderboard · sample' : 'Leaderboard';
+  board.el.querySelector('.title').textContent = 'Leaderboard';
   list.innerHTML = ranked.length
-    ? ranked.map(({ rank, name, correct }) => `<li class="r${Math.min(rank, 4)}"><span class="rank">${rank}</span><span class="name" title="${esc(name)}">${esc(name)}</span><span class="score">${correct}</span></li>`).join('')
+    ? ranked.map(({ rank, name, correct }) => `<li class="r${Math.min(rank, 4)}"><span class="rank">${rank}</span><span class="name" title="${esc(name)}">${esc(name)}</span><span class="score"><i></i>${correct * 100}</span></li>`).join('')
     : '<li class="empty">No answers yet. Play a game to get on the board!</li>';
 }
 

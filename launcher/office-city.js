@@ -1,6 +1,6 @@
 // TokenFall launcher: the golden-hour city outside the ABZ window (Baner, Pune, seen from the 15th floor).
 // Soft rounded toy blocks with rooftop tanks, stair cabins, balconies and laundry; roads with little cars and autos,
-// the metro on its viaduct, round trees and palms, a hazy hill line, puffy cumulus and drifting birds.
+// round trees and palms, a hazy hill line, puffy cumulus and drifting birds.
 // Buildings and clouds are merged into a few meshes with the sunset light baked into vertex colours (sunlit faces
 // orange-gold, shade faces violet), so the whole city costs a handful of draw calls. build(THREE, room) returns
 // { group, update(t) }; office-room.js adds it behind the window.
@@ -212,11 +212,6 @@ function build(THREE, room) {
     bare.add(boxG, c[0] + 160, G + 1280, c[1], { sx: 40, sy: 30, sz: 30, color: '#F2F0E6' });
   });
 
-  // metro viaduct on round pillars
-  var path = new THREE.CatmullRomCurve3([[3200, -900], [2400, -1200], [1500, -1600], [900, -2200], [400, -3100], [-300, -4300], [-1400, -6200]].map(function (q) { return new THREE.Vector3(q[0], G + 150, q[1]); }));
-  bare.add(new THREE.TubeGeometry(path, 120, 26, 8, false), 0, 0, 0, { color: '#EDE6DE', sy: 0.55 });
-  for (var qq = 0; qq <= 26; qq++) { var pt = path.getPoint(qq / 26); bare.add(cylG, pt.x, G + 70, pt.z, { sx: 15, sy: 150, sz: 15, color: '#DCD4CC' }); }
-
   [winB, balB, bare].forEach(function (b) { group.add(b.mesh()); });
 
   /* instanced trees (scene-lit so they catch the warm rim light) */
@@ -278,25 +273,6 @@ function build(THREE, room) {
     carMesh.instanceMatrix.needsUpdate = true; carLG.attributes.position.needsUpdate = true;
   });
 
-  // the metro gliding along the viaduct
-  var train = [], trainM = new THREE.MeshLambertMaterial({ color: lin('#F6F3EE') }), stripeM = new THREE.MeshBasicMaterial({ color: lin('#FFD58A'), toneMapped: false });
-  for (var tc = 0; tc < 3; tc++) {
-    var car = new THREE.Group(); group.add(car);
-    car.add(new THREE.Mesh(rbox(110, 26, 28, 9), trainM));
-    var st = new THREE.Mesh(new THREE.BoxGeometry(96, 6, 29), stripeM); st.position.y = 3; car.add(st);
-    var base = new THREE.Mesh(new THREE.BoxGeometry(104, 4, 29), new THREE.MeshLambertMaterial({ color: lin('#2E9AA8') })); base.position.y = -9; car.add(base);
-    train.push(car);
-  }
-  var tan = new THREE.Vector3();
-  anim.push(function (t) {
-    var u0 = (t / 70) % 1;
-    train.forEach(function (car, i) {
-      var u = u0 - i * 0.022, vis = u > 0.02 && u < 0.97;
-      car.visible = vis; if (!vis) return;
-      path.getPoint(u, car.position); car.position.y = G + 172; path.getTangent(u, tan);
-      car.rotation.y = Math.atan2(-tan.z, tan.x);
-    });
-  });
 
   /* hazy hill line on the horizon */
   var hillM = new THREE.MeshBasicMaterial({ color: lin('#C997A2'), fog: false });

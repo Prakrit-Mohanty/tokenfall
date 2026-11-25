@@ -1,6 +1,6 @@
 // TokenFall: the city outside the ABZ office window, built in 3D after photos taken from that window (kept in abz-view/): Baner from the 15th floor.
 // Low cream and white housing blocks in a sea of trees, the brick-red terraced Kenzo tower in front, a dark glass tower, the tall white high-rises and
-// two cranes on the skyline, the hill to the right and the metro viaduct curving along the left. Everything sits 45 m below the office floor and
+// two cranes on the skyline, the hill to the right. Everything sits 45 m below the office floor and
 // fades into the haze with distance (the game's fog stops at 95 m, so the city keeps its own haze and ignores the fog).
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
@@ -63,13 +63,6 @@ function abzCity() {
   }
   // the hill on the right, low and hazy
   const hill = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), new THREE.MeshBasicMaterial({ color: haze(0x5d6b52, 230), fog: false })); hill.scale.set(70, 38, 120); hill.position.set(250, FLOOR - 4, 95); city.add(hill);
-  // the metro viaduct: a deck on round piers curving along the left, close in
-  { const deck = mat('metro', () => new THREE.MeshBasicMaterial({ color: haze(0xbab6ae, 40), fog: false }));
-    for (let t = 0; t < 1; t += .04) {
-      const a = t * Math.PI * .55, x = 18 + Math.sin(a) * 70, z = -70 + (1 - Math.cos(a)) * 30 - t * 10, d = new THREE.Mesh(new THREE.BoxGeometry(9.5, 1.4, 3.2), deck);
-      d.position.set(x, FLOOR + 12, z); d.rotation.y = -Math.atan2(Math.cos(a) * 70, Math.sin(a) * 30 + 10) + Math.PI / 2; city.add(d);
-      if (Math.round(t * 25) % 3 === 0) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1, 12, 10), deck); p.position.set(x, FLOOR + 6, z); city.add(p); }
-    } }
   // the rest of the city: cream, white, pink and yellow housing blocks, low near the window and taller further out, thinning into the haze
   // packed tight right back to the skyline, so no sky shows between them: low near the window, taller further out
   for (let i = 0; i < 1400; i++) {

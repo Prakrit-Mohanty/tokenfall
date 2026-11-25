@@ -130,7 +130,9 @@ function frame(now) {
   }
   if (playerLocked) { nearest = null; nearP = null; }
   // camera follows with a little lag
-  camTarget.lerp(tmp.set(hero.x, CAM_VIEWS[camView].y, hero.y), 1 - Math.pow(.004, dt / 1000));
+  // the camera rides up with a jump (60% of the hop, eased by the same follow lag), so the leap reads as a leap and the landing settles
+  const jumpY = Math.max(0, hero.prevAir || 0) * .6;
+  camTarget.lerp(tmp.set(hero.x, CAM_VIEWS[camView].y + jumpY, hero.y), 1 - Math.pow(.004, dt / 1000));
   camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget);
   sun.position.copy(camTarget).add(SUN_DIR); sun.target.position.copy(camTarget);
   final.u.focus.value = tmp.copy(camTarget).sub(camera.position).dot(camera.getWorldDirection(camDir));

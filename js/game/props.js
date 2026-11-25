@@ -88,6 +88,39 @@ function treeBlossoms(g, blobs, s) {
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   const pts = new THREE.Points(geo, blossomMat); pts.userData.dyn = true; g.add(pts);
 }
+// a tree surround for a tree in paving: a ring of grey granite setts round a dark cast-iron grate of concentric slotted rings, split into
+// quarters, with a bed of soil, grass tufts and little white flowers round the trunk. One flat decal (drawn once, shared), d metres across.
+let TREE_GRATE = null;
+function treeGrate(x, z, d = 1.7) {
+  if (!TREE_GRATE) {
+    const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'), C = 256;
+    let sd = 4242; const r01 = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    // the granite setts: two rings of little rounded squares
+    for (const [r0, n, sz] of [[236, 58, 24], [212, 52, 22]]) for (let k = 0; k < n; k++) {
+      const a = k / n * Math.PI * 2 + (r0 === 212 ? .03 : 0), v = 150 + r01() * 50 | 0;
+      g.save(); g.translate(C + Math.cos(a) * r0, C + Math.sin(a) * r0); g.rotate(a);
+      g.fillStyle = `rgb(${v},${v},${v + 4})`; g.beginPath(); g.roundRect ? g.roundRect(-sz / 2, -sz / 2, sz, sz, 4) : g.rect(-sz / 2, -sz / 2, sz, sz); g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 2; g.stroke(); g.restore();
+    }
+    // the iron grate
+    g.fillStyle = '#2c2e33'; g.beginPath(); g.arc(C, C, 198, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#17181b'; g.lineWidth = 7; for (const r of [96, 120, 144, 168, 190]) { g.beginPath(); g.arc(C, C, r, 0, Math.PI * 2); g.stroke(); }
+    g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 2; for (const r of [100, 124, 148, 172]) { g.beginPath(); g.arc(C, C, r, Math.PI * 1.05, Math.PI * 1.7); g.stroke(); }
+    g.strokeStyle = '#3a3c42'; g.lineWidth = 8; for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; g.beginPath(); g.moveTo(C + Math.cos(a) * 86, C + Math.sin(a) * 86); g.lineTo(C + Math.cos(a) * 198, C + Math.sin(a) * 198); g.stroke(); }
+    g.strokeStyle = '#3a3c42'; g.lineWidth = 6; g.beginPath(); g.arc(C, C, 86, 0, Math.PI * 2); g.stroke();
+    // the soil bed with grass tufts and flowers
+    const soil = g.createRadialGradient(C, C, 10, C, C, 84); soil.addColorStop(0, '#4a3424'); soil.addColorStop(1, '#3a281a'); g.fillStyle = soil; g.beginPath(); g.arc(C, C, 83, 0, Math.PI * 2); g.fill();
+    for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2 + r01() * .4, r = 46 + r01() * 22, px = C + Math.cos(a) * r, py = C + Math.sin(a) * r;
+      g.strokeStyle = ['#4f8f3a', '#5fa84a', '#3f7a30'][k % 3]; g.lineWidth = 3; g.lineCap = 'round';
+      for (let b = 0; b < 7; b++) { const ba = r01() * Math.PI * 2, bl = 8 + r01() * 9; g.beginPath(); g.moveTo(px, py); g.lineTo(px + Math.cos(ba) * bl, py + Math.sin(ba) * bl); g.stroke(); }
+      if (k % 2) { for (let f = 0; f < 4; f++) { g.fillStyle = '#fbfbf2'; g.beginPath(); g.arc(px + (r01() - .5) * 14, py + (r01() - .5) * 14, 3.2, 0, Math.PI * 2); g.fill(); } g.fillStyle = '#f2c84a'; g.beginPath(); g.arc(px, py, 2, 0, Math.PI * 2); g.fill(); }
+    }
+    const t = new THREE.CanvasTexture(c); t.anisotropy = 8;
+    TREE_GRATE = new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: .8, metalness: .1, polygonOffset: true, polygonOffsetFactor: -2 });
+  }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(d, d), TREE_GRATE); m.rotation.x = -Math.PI / 2; m.position.set(x, .034, z); m.receiveShadow = true; scene.add(m);
+  return m;
+}
 function tree(x, z, s = 1, leaf = MAT.leafA, collide = true) {
   PAVE_U.addPlant(x, z, s, true);   // petals settle near plants, and the paving gets dappled light under trees (groundlife.js)
   const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
