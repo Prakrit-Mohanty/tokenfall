@@ -254,7 +254,8 @@ function puneGalli(cx, cz) {
 
 function puneABZ(cx, cz) {
   const [ax, az] = PUNE_ABZ, tf = finTower(cx + ax, cz + az);
-  plane(30, 11.5, MAT.paver, cx + ax, .018, cz + az + 5.6, 3);
+  plane(30, 11.5, cbStone(), cx + ax, .018, cz + az + 5.6, 2);   // the forecourt in Crescent Bay's sandy stone tiles, not the lobby's pastel pavers
+  for (const [p, q] of [[-15, -2.6], [2.6, 15]]) box(q - p, .045, .32, MAT.concrete, cx + ax + (p + q) / 2, 0, cz + 6.84, { cast: false });   // the edging band at the footpath, broken for the driveway
   for (const x of [-12, -6.6, 6.6, 12]) palm(cx + ax + x, tf + 3, rr(3.2, 3.8));
   ledSign(['ABZ'], '#9fd8ff', cx + ax, 2.15, tf + .45, 2.4, .5);
   portal(cx + ax, tf + 1.6, 0x9fd8ff, 'pune', 'abz', 'ABZ Office');
@@ -502,7 +503,9 @@ function buildPune(a) {
     const M = puneMaterials(), asphalt = std(TX.concrete, 1.5, { roughness: .8 }); asphalt.color.setRGB(.36, .37, .41);
     puneGround(cx, cz, M);
     // the Crescent Bay forecourt (and only this): the sandy stone tiles, ~25 cm each (the texture holds 8 x 3 of them, laid every 2 m)
-    plane(36, 17, cbStone(), cx - 3, .016, cz - .5, 2);
+    // it stops where the footpath starts (z +7: the pavers run 7 to 10 m south), with a pale stone edging band between the two, so the office front reads apart from the street
+    plane(36, 16, cbStone(), cx - 3, .016, cz - 1, 2);
+    box(36, .045, .32, MAT.concrete, cx - 3, 0, cz + 6.84, { cast: false });
     WALK.push([cx - 24, cz - 14, cx + 130, cz + PUNE_MZ - 6], [cx - 55, cz + PUNE_MZ - 6, cx + 145, cz + PUNE_MZ + 9]);
     WALK.push([cx + PUNE_GALLI[0], cz + PUNE_GALLI[1] - 1, cx + PUNE_GALLI[2], cz + PUNE_GALLI[3] + 1], [cx + PUNE_SQUARE[0], cz + PUNE_SQUARE[1], cx + PUNE_SQUARE[2], cz + PUNE_SQUARE[3]]);
     WALK.push([cx + PUNE_CAMPUS[0] - 2, cz + PUNE_MZ + 9, cx + PUNE_CAMPUS[2] + 2, cz + PUNE_CAMPUS[3] + .5]);

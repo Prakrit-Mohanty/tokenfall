@@ -250,7 +250,25 @@ function buildTextures() {
     g.strokeStyle = 'rgba(255,240,190,.55)'; g.lineWidth = 1.2 * k; g.beginPath(); g.arc(c, c, 23.5 * k, 0, Math.PI * 2); g.stroke();
     g.strokeStyle = '#161412'; g.lineWidth = 9.5 * k; g.beginPath(); g.arc(c, c, 12.75 * k, .55, Math.PI * 2 - 1.02); g.stroke();   // the Calfus "C"
     g.fillStyle = '#5fc0b0'; g.beginPath(); g.arc(c + 12.75 * k * Math.cos(-.6), c + 12.75 * k * Math.sin(-.6), 5.1 * k, 0, Math.PI * 2); g.fill();
+    logoOnCoin(g.canvas);
   });
+  // the real Calfus "C" (js/models/calfus-c.js, cropped from the wordmark), laid over the drawn one on the smooth coin: its white taken out
+  // (each pixel un-blended from white, so the black C and the teal dot keep their colour and soft edges), on a fresh gold face
+  let calfusC = null;
+  const logoOnCoin = (cv) => {
+    if (!calfusC || !cv || !cv.getContext || cv.width < 256) return false;
+    const g = cv.getContext('2d'), W = cv.width, k = W / 64, c = W / 2;
+    const gold = g.createLinearGradient(0, 0, W, W); gold.addColorStop(0, '#f6cf72'); gold.addColorStop(1, '#d9a23e');
+    g.fillStyle = gold; g.beginPath(); g.arc(c, c, 23 * k, 0, Math.PI * 2); g.fill();
+    const h = 30 * k, w = h * calfusC.width / calfusC.height; g.drawImage(calfusC, c - w / 2 - 1.2 * k, c - h / 2, w, h);
+    TX.coin.needsUpdate = true; return true;
+  };
+  if (window.CALFUS_C) { const im = new Image(); im.onload = () => {
+    const o = document.createElement('canvas'); o.width = im.width; o.height = im.height; const og = o.getContext('2d'); og.drawImage(im, 0, 0);
+    const d = og.getImageData(0, 0, o.width, o.height), p = d.data;
+    for (let q = 0; q < p.length; q += 4) { if (p[q + 3] < 255) continue; const a = 255 - Math.min(p[q], p[q + 1], p[q + 2]); for (let r = 0; r < 3; r++) p[q + r] = a ? Math.max(0, Math.min(255, (p[q + r] - (255 - a)) * 255 / a)) : 0; p[q + 3] = a; }   // a see-through pixel is already clear; an opaque one is un-blended from white
+    og.putImageData(d, 0, 0); calfusC = o; logoOnCoin(TX.coin.image);
+  }; im.src = window.CALFUS_C; }
   TX.coin.center.set(.5, .5); TX.coin.rotation = Math.PI / 2;
   // soft, rounded greenery, drawn smooth. Blade clumps and ferns are NEUTRAL light shapes, tinted per mood by daylight.js (a lighter cousin of the lawn colour, so they read against it); clover and the flower
   // specks carry their own palette colours. Their own little generator, so they draw nothing from decorRandom; the 77 values the old ones took are burnt, so the decor that follows is unchanged.

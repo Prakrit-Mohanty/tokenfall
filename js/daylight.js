@@ -330,7 +330,7 @@
     });
     TF.on('boot', () => { hookKeys(); softDust(); build(); buildAir(); buildPools(); collectEmitters(); record(); apply(); });
     TF.on('enter', (prevZone, z) => { S.zone = z; record(); apply(S.live ? 900 : 0); });   // the first zone set while the world is still loading just lands
-    TF.on('boot', () => { const u = uiEl(); if (u && window.MutationObserver) new MutationObserver(() => apply(600)).observe(u, { attributes: true, attributeFilter: ['class'] }); });
+    TF.on('boot', () => { const u = uiEl(); if (u && window.MutationObserver) new MutationObserver(() => { if (S.open && inPlay(S.zone)) close(); apply(600); }).observe(u, { attributes: true, attributeFilter: ['class'] }); });
     // a sun button at the top right, always there: opens the console from any zone
     // (left of the party panel, which takes the top-right corner)
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'panel dl-btn'; btn.setAttribute('aria-label', 'Time of day');

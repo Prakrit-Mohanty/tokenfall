@@ -429,6 +429,228 @@ function vTotem(x, z, title, body, name, talkLines) {
   INTER.push({ x, z: z + 1.2, r: 1.4, label: name, verb: 'Read', act: () => talk(name, talkLines) });
 }
 
+// the lobby's directory: a painted wooden signboard on two posts under a little roof, one coloured arrow plank per destination (pointing the way
+// it lies as you face the board), each with its picture, so it reads at a glance. Drawn at 512 x 640 and redrawn once the round sign face has loaded.
+const DIR_ROWS = [['HQ', '🏢', 'up', '#3fa89c', '#23705f'], ['Airport', '✈️', 'left', '#4f9fe0', '#2a63a0'], ['Pune', '🛺', 'right', '#f08a3c', '#b0521a'], ['Glass Bridge', '🌉', 'down', '#e2a93a', '#9a6a14']];
+function drawDirectory(g, W, H) {
+  const F = (px) => `700 ${px}px "Fredoka", ${SIGN_FONT}`;
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  // the painted board: cream, with soft vertical grain and a darker rim
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#fff6e2'); bg.addColorStop(1, '#f6e2c0'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.globalAlpha = .07; g.fillStyle = '#8a5a34'; for (let x = 0; x < W; x += 18) g.fillRect(x + ((x * 7) % 5), 0, 2, H); g.globalAlpha = 1;
+  g.lineWidth = 14; g.strokeStyle = '#e2c49a'; g.strokeRect(7, 7, W - 14, H - 14);
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+  // the heading on a teal ribbon
+  g.fillStyle = '#2f8f86'; g.beginPath(); g.moveTo(40, 50); g.lineTo(W - 40, 50); g.lineTo(W - 62, 92); g.lineTo(W - 40, 134); g.lineTo(40, 134); g.lineTo(62, 92); g.closePath(); g.fill();
+  rr(70, 44, W - 140, 84, 22); g.fillStyle = '#4fb3a9'; g.fill();
+  g.font = F(56); g.lineWidth = 10; g.strokeStyle = '#1f5f58'; g.strokeText('Welcome!', W / 2, 88); g.fillStyle = '#ffffff'; g.fillText('Welcome!', W / 2, 88);
+  g.font = F(24); g.fillStyle = '#a07850'; g.fillText('TokenFall Lobby', W / 2, 160);
+  // the arrow planks
+  DIR_ROWS.forEach(([name, icon, dir, col, dk], i) => {
+    const y = 196 + i * 106, h = 84, x0 = 40, x1 = W - 40, tip = 40;
+    const plank = (dy) => {
+      g.beginPath();
+      if (dir === 'left') { g.moveTo(x0, y + dy + h / 2); g.lineTo(x0 + tip, y + dy); g.lineTo(x1 - 14, y + dy); g.arcTo(x1, y + dy, x1, y + dy + h, 14); g.arcTo(x1, y + dy + h, x0, y + dy + h, 14); g.lineTo(x0 + tip, y + dy + h); }
+      else if (dir === 'right') { g.moveTo(x1, y + dy + h / 2); g.lineTo(x1 - tip, y + dy + h); g.lineTo(x0 + 14, y + dy + h); g.arcTo(x0, y + dy + h, x0, y + dy, 14); g.arcTo(x0, y + dy, x1, y + dy, 14); g.lineTo(x1 - tip, y + dy); }
+      else rr(x0, y + dy, x1 - x0, h, 18);
+      g.closePath();
+    };
+    plank(8); g.fillStyle = dk; g.fill();
+    plank(0); const pg = g.createLinearGradient(0, y, 0, y + h); pg.addColorStop(0, col); pg.addColorStop(1, dk); g.fillStyle = col; g.fill(); g.globalAlpha = .25; g.fillStyle = pg; g.fill(); g.globalAlpha = 1;
+    g.fillStyle = 'rgba(255,255,255,.28)'; rr(x0 + 22, y + 8, x1 - x0 - 44, 10, 5); g.fill();
+    // the picture in a white disc, at the end the plank does not point to
+    const ix = dir === 'right' ? x0 + 52 : dir === 'left' ? x1 - 52 : x0 + 52;
+    g.beginPath(); g.arc(ix, y + h / 2, 30, 0, Math.PI * 2); g.fillStyle = '#fffaf0'; g.fill();
+    g.font = '36px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.fillText(icon, ix, y + h / 2 + 2);
+    // the name, and for up / down a round arrow badge
+    let tx = (x0 + x1) / 2 + (dir === 'left' ? -16 : dir === 'right' ? 16 : 22);
+    let fs = 40; g.font = F(fs); while (g.measureText(name).width > 250 && fs > 24) g.font = F(--fs);
+    g.lineWidth = 8; g.strokeStyle = dk; g.strokeText(name, tx, y + h / 2 + 2); g.fillStyle = '#ffffff'; g.fillText(name, tx, y + h / 2 + 2);
+    if (dir === 'up' || dir === 'down') {
+      const bx = x1 - 46, by = y + h / 2; g.beginPath(); g.arc(bx, by, 24, 0, Math.PI * 2); g.fillStyle = '#fffaf0'; g.fill();
+      g.beginPath(); const s = dir === 'up' ? -1 : 1; g.moveTo(bx, by + 13 * s); g.lineTo(bx - 13, by - 6 * s); g.lineTo(bx + 13, by - 6 * s); g.closePath(); g.fillStyle = dk; g.fill();
+    }
+  });
+}
+function vDirectory(x, z, name, talkLines) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 640; const g = c.getContext('2d'); drawDirectory(g, 512, 640);
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 8;
+  if (document.fonts && document.fonts.load) document.fonts.load('700 40px "Fredoka"').then(() => { g.clearRect(0, 0, 512, 640); drawDirectory(g, 512, 640); t.needsUpdate = true; }).catch(() => {});
+  const W = 1.5, H = 1.875, base = .55;
+  for (const dx of [-W / 2 - .02, W / 2 + .02]) box(.14, base + H + .25, .14, MAT.darkWood, x + dx, 0, z);   // the two posts
+  box(W + .16, H + .16, .1, MAT.darkWood, x, base - .08, z);                                                  // the frame behind the board
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: t, roughness: .8, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .18 }));
+  add(face, null, false); face.position.set(x, base + H / 2, z + .06);
+  // a little gabled roof over it
+  for (const s of [-1, 1]) { const r = box(W / 2 + .32, .07, .4, MAT.wood, x + s * (W / 4 + .1), base + H + .28, z); r.rotation.z = -s * .32; }
+  box(.4, .3, .3, MAT.darkWood, x - W / 2 + .1, 0, z + .32); box(.4, .3, .3, MAT.darkWood, x + W / 2 - .1, 0, z + .32);   // two planter boxes at its foot
+  colBox(x - W / 2 - .2, z - .2, x + W / 2 + .2, z + .5); contact(x, z, 1.2, .6);
+  INTER.push({ x, z: z + 1.2, r: 1.4, label: name, verb: 'Read', act: () => talk(name, talkLines) });
+}
+
+// the lobby map: a park-style interpretive board on two legs, tilted back for reading, beside the directory. A drawn plan of the village (north up):
+// the plaza and fountain in the middle, HQ over the river, the airport west, Pune east, the pond and the Glass Bridge south, with a legend and a
+// "you are here" pin. 768 x 480, redrawn once the sign face has loaded.
+function drawLobbyMap(g, W, H) {
+  const F = (w, px) => `${w} ${px}px "Fredoka", ${SIGN_FONT}`;
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  g.fillStyle = '#4a2e36'; g.fillRect(0, 0, W, H);                                                    // the board's dark frame
+  g.fillStyle = '#9cc84a'; g.fillRect(14, 14, W - 28, 50);                                           // the title strip
+  g.textBaseline = 'middle'; g.textAlign = 'left'; g.font = F(700, 30); g.fillStyle = '#2f4a12'; g.fillText('TOKENFALL LOBBY  ·  MAP', 30, 40);
+  // the plan
+  const mx = 24, my = 78, mw = 470, mh = 378; rr(mx, my, mw, mh, 10); g.fillStyle = '#f4efe2'; g.fill();
+  g.save(); rr(mx, my, mw, mh, 10); g.clip();
+  const zone = (x, y, w, h, c, r = 18) => { rr(mx + x, my + y, w, h, r); g.fillStyle = c; g.fill(); };
+  g.fillStyle = '#7cc0e8'; g.beginPath(); g.moveTo(mx, my + 64); g.bezierCurveTo(mx + 150, my + 40, mx + 300, my + 92, mx + mw, my + 58); g.lineTo(mx + mw, my + 92); g.bezierCurveTo(mx + 300, my + 124, mx + 150, my + 72, mx, my + 98); g.closePath(); g.fill();   // the river
+  zone(170, 8, 130, 46, '#e04a5a');                // HQ, over the river
+  zone(8, 120, 120, 170, '#f2b23a');               // the airport, west
+  zone(342, 120, 120, 170, '#3fa89c');             // Pune, east
+  zone(150, 128, 170, 150, '#ecdcc0', 75);         // the plaza
+  g.beginPath(); g.arc(mx + 235, my + 203, 26, 0, Math.PI * 2); g.fillStyle = '#7cc0e8'; g.fill(); g.lineWidth = 5; g.strokeStyle = '#fff'; g.stroke();   // the fountain
+  zone(130, 300, 90, 60, '#7cc0e8', 30);           // the pond
+  zone(250, 300, 110, 66, '#8f6ad8');              // the Glass Bridge, south
+  g.strokeStyle = '#fff'; g.lineWidth = 12; g.lineCap = 'round';                                    // the paths out of the plaza
+  for (const [x0, y0, x1, y1] of [[235, 128, 235, 54], [150, 203, 128, 203], [320, 203, 342, 203], [270, 278, 300, 300]]) { g.beginPath(); g.moveTo(mx + x0, my + y0); g.lineTo(mx + x1, my + y1); g.stroke(); }
+  g.textAlign = 'center'; g.fillStyle = '#ffffff'; g.font = F(700, 20);
+  for (const [t, x, y] of [['HQ', 235, 31], ['Airport', 68, 205], ['Pune', 402, 205], ['Glass', 305, 324], ['Bridge', 305, 346]]) g.fillText(t, mx + x, my + y);
+  g.fillStyle = '#7a5a3a'; g.font = F(600, 15); g.fillText('Plaza', mx + 235, my + 250); g.fillText('Pond', mx + 175, my + 330);
+  // you are here: a red pin at the south-west of the plaza
+  const px = mx + 196, py = my + 262; g.beginPath(); g.arc(px, py - 16, 11, 0, Math.PI * 2); g.moveTo(px - 10, py - 12); g.lineTo(px, py + 2); g.lineTo(px + 10, py - 12); g.fillStyle = '#e8322a'; g.fill(); g.beginPath(); g.arc(px, py - 16, 4, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill();
+  g.restore();
+  // the compass
+  g.fillStyle = '#4a2e36'; g.font = F(700, 16); g.fillText('N', mx + mw - 24, my + mh - 46); g.beginPath(); g.moveTo(mx + mw - 24, my + mh - 38); g.lineTo(mx + mw - 31, my + mh - 18); g.lineTo(mx + mw - 17, my + mh - 18); g.closePath(); g.fill();
+  // the legend
+  const lx = 512; g.textAlign = 'left';
+  [['#e04a5a', 'HQ', 'Calfus HQ · carrom table'], ['#f2b23a', 'Airport', 'Flights to Pleasanton'], ['#3fa89c', 'Pune', 'Crescent Bay · ABZ'], ['#8f6ad8', 'Glass Bridge', 'Guess the right tile'], ['#ecdcc0', 'Plaza', 'Fountain · leaderboard']].forEach(([c, t, sub], i) => {
+    const y = 92 + i * 66; g.fillStyle = c; g.fillRect(lx, y, W - lx - 26, 6);
+    rr(lx, y + 16, 22, 22, 5); g.fill(); g.fillStyle = '#ffffff'; g.font = F(700, 21); g.fillText(t, lx + 32, y + 28);
+    g.fillStyle = '#d9c3cb'; g.font = F(500, 15); g.fillText(sub, lx + 32, y + 50);
+  });
+  g.fillStyle = '#e8322a'; g.beginPath(); g.arc(lx + 11, 438, 9, 0, Math.PI * 2); g.fill(); g.fillStyle = '#ffffff'; g.font = F(700, 19); g.fillText('You are here', lx + 32, 439);
+}
+// the board's face around the illustrated map: a wooden frame with corner bolts, a green title strip with a pin, the map, and a "press E" tag
+// the board's plain map: sea, a green island, the river, sandy paths to the four places, each a big coloured disc with its name, and the pin
+function simpleMap(g, x, y, w, h) {
+  const F = (px) => `700 ${px}px "Fredoka", ${SIGN_FONT}`, cx = x + w / 2, cy = y + h / 2 + 4, RX = w * .44, RY = h * .41;
+  const rr = (px, py, pw, ph, r) => { g.beginPath(); g.moveTo(px + r, py); g.arcTo(px + pw, py, px + pw, py + ph, r); g.arcTo(px + pw, py + ph, px, py + ph, r); g.arcTo(px, py + ph, px, py, r); g.arcTo(px, py, px + pw, py, r); g.closePath(); };
+  // sea with a few wave ticks
+  g.fillStyle = '#9fd8f2'; g.fillRect(x, y, w, h); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2;
+  for (const [a, b] of [[.08, .12], [.86, .18], [.1, .85], [.9, .82], [.5, .06], [.32, .93]]) { g.beginPath(); g.arc(x + w * a, y + h * b, 6, Math.PI * 1.1, Math.PI * 1.9); g.stroke(); }
+  // the island: a soil edge under a grass top, a lighter meadow
+  g.fillStyle = '#8a5a34'; g.beginPath(); g.ellipse(cx, cy + 12, RX, RY, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#5e9a2e'; g.beginPath(); g.ellipse(cx, cy + 5, RX, RY, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#9ed35a'; g.beginPath(); g.ellipse(cx, cy, RX, RY, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#b4e070'; g.beginPath(); g.ellipse(cx - RX * .45, cy - RY * .45, RX * .3, RY * .18, 0, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(cx + RX * .5, cy + RY * .5, RX * .28, RY * .16, 0, 0, Math.PI * 2); g.fill();
+  // the river and its bridge
+  const rv = (t) => [x + w * (.13 + .74 * t), cy - RY * .55 - Math.sin(t * Math.PI * 2) * 10 + (t - .5) * 10];
+  g.strokeStyle = '#3e9fd8'; g.lineWidth = 18; g.lineCap = 'round'; g.beginPath(); for (let t = 0; t <= 1.001; t += .05) { const [px, py] = rv(t); t ? g.lineTo(px, py) : g.moveTo(px, py); } g.stroke();
+  g.strokeStyle = '#7cc8f0'; g.lineWidth = 6; g.stroke();
+  // paths from the plaza, with a darker edge
+  const ends = { HQ: [cx, cy - RY * .82], Airport: [cx - RX * .8, cy], Pune: [cx + RX * .8, cy], 'Glass Bridge': [cx, cy + RY * .8] };
+  for (const [wd, col] of [[18, '#e2b06a'], [12, '#f8d8a0']]) { g.strokeStyle = col; g.lineWidth = wd; for (const k in ends) { g.beginPath(); g.moveTo(cx, cy); g.lineTo(ends[k][0], ends[k][1]); g.stroke(); } }
+  const [bx, by] = [cx, rv(.5)[1]]; g.fillStyle = '#a0683a'; g.fillRect(bx - 14, by - 13, 28, 26); g.fillStyle = '#c8915a'; for (let k = -10; k <= 10; k += 5) g.fillRect(bx - 14, by + k - 1, 28, 2.5);
+  // little buildings: HQ tower, cafe, homes; the pond; the tower block
+  const house = (hx, hy, bw, bh, wall, roof) => { g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(hx - bw / 2 + 3, hy - bh + 4, bw, bh); g.fillStyle = wall; g.fillRect(hx - bw / 2, hy - bh, bw, bh); g.fillStyle = roof; g.beginPath(); g.moveTo(hx - bw / 2 - 4, hy - bh); g.lineTo(hx, hy - bh - bw * .45); g.lineTo(hx + bw / 2 + 4, hy - bh); g.fill(); g.fillStyle = '#5a3a2a'; g.fillRect(hx - 3, hy - 9, 6, 9); };
+  { const hx = cx + 46, hy = cy - RY * .8; g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(hx - 13, hy - 40, 30, 44); g.fillStyle = '#d8d4cc'; g.fillRect(hx - 16, hy - 44, 30, 44); g.fillStyle = '#e04a5a'; g.fillRect(hx - 16, hy - 48, 30, 6); g.fillStyle = '#7ab8e0'; for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) g.fillRect(hx - 12 + c * 9, hy - 40 + r * 9, 6, 6); }
+  house(cx + RX * .4, cy - RY * .12, 26, 16, '#f6e2c0', '#c0503a'); g.fillStyle = '#e04a5a'; for (let k = 0; k < 4; k++) g.fillRect(cx + RX * .4 - 13 + k * 7, cy - RY * .12 - 18, 4, 4);   // Token Brew
+  house(cx - RX * .42, cy + RY * .2, 20, 14, '#f6e2c0', '#d06b4a'); house(cx - RX * .25, cy + RY * .32, 20, 14, '#f6e2c0', '#6a7cc0');
+  g.fillStyle = '#e8b04a'; for (let k = 0; k < 5; k++) g.fillRect(cx - RX * .38 - 6, cy - RY * .3 - k * 7, 14, 6); g.strokeStyle = '#a0701a'; g.lineWidth = 1; for (let k = 0; k < 5; k++) g.strokeRect(cx - RX * .38 - 6, cy - RY * .3 - k * 7, 14, 6);   // Token Tower
+  g.fillStyle = '#3e9fd8'; g.beginPath(); g.ellipse(cx - RX * .55, cy + RY * .52, 26, 13, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = '#7fbf4a'; g.beginPath(); g.arc(cx - RX * .55 - 8, cy + RY * .52, 4, 0, Math.PI * 2); g.fill();
+  // trees round the edge
+  const tree = (tx, ty) => { g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(tx + 2, ty + 2, 8, 4, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = '#6a4a2a'; g.fillRect(tx - 1.5, ty - 6, 3, 7); g.fillStyle = '#3f8f3a'; g.beginPath(); g.arc(tx, ty - 11, 8, 0, Math.PI * 2); g.fill(); g.fillStyle = '#5fb04c'; g.beginPath(); g.arc(tx - 2.5, ty - 13, 4, 0, Math.PI * 2); g.fill(); };
+  for (let k = 0; k < 26; k++) { const a = k / 26 * Math.PI * 2 + .1, r = .78 + ((k * 37) % 10) / 70; const tx = cx + Math.cos(a) * RX * r, ty = cy + Math.sin(a) * RY * r; if (Math.abs(Math.cos(a)) > .95 || Math.abs(Math.sin(a)) > .93) continue; tree(tx, ty); }
+  for (const [a, b] of [[.25, .45], [-.3, -.6], [.6, .3], [-.65, -.15], [.15, .62], [-.1, -.35]]) tree(cx + RX * a, cy + RY * b);
+  // the plaza and fountain
+  g.fillStyle = '#efd6a6'; g.beginPath(); g.arc(cx, cy, 30, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#d6b27a'; g.lineWidth = 3; g.stroke();
+  g.fillStyle = '#4fb0e6'; g.beginPath(); g.arc(cx, cy, 12, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 3; g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy, 3, 0, Math.PI * 2); g.fill();
+  // the portals at the ends of the paths, then their name tags
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const [t, col] of [['HQ', '#e04a5a'], ['Airport', '#f0a030'], ['Pune', '#3fae55'], ['Glass Bridge', '#8f6ad8']]) {
+    const [px, py] = ends[t];
+    if (t !== 'HQ') { g.fillStyle = col; g.globalAlpha = .35; g.beginPath(); g.ellipse(px, py, 18, 9, 0, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; g.strokeStyle = col; g.lineWidth = 4; g.beginPath(); g.ellipse(px, py, 14, 7, 0, 0, Math.PI * 2); g.stroke(); }
+    g.font = F(19); const tw = g.measureText(t).width + 26, ty = t === 'Glass Bridge' ? py + 22 : py - 26;
+    g.fillStyle = 'rgba(0,0,0,.2)'; rr(px - tw / 2, ty - 14, tw, 32, 16); g.fill();
+    g.fillStyle = col; rr(px - tw / 2, ty - 17, tw, 32, 16); g.fill(); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke(); g.fillStyle = '#fff'; g.fillText(t, px, ty - 1);
+  }
+  // you are here
+  const px = cx - 30, py = cy + 40; g.fillStyle = '#e8322a'; g.beginPath(); g.arc(px, py - 14, 10, 0, Math.PI * 2); g.moveTo(px - 9, py - 10); g.lineTo(px, py + 2); g.lineTo(px + 9, py - 10); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(px, py - 14, 4, 0, Math.PI * 2); g.fill();
+}
+function drawBoardArt(g, W, H) {
+  const F = (w, px) => `${w} ${px}px "Fredoka", ${SIGN_FONT}`;
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  const wood = g.createLinearGradient(0, 0, 0, H); wood.addColorStop(0, '#8a5a34'); wood.addColorStop(1, '#5e3a20'); g.fillStyle = wood; g.fillRect(0, 0, W, H);
+  g.globalAlpha = .12; g.fillStyle = '#2a160a'; for (let y = 4; y < H; y += 9) g.fillRect(0, y + ((y * 13) % 4), W, 1.5); g.globalAlpha = 1;
+  for (const [x, y] of [[14, 14], [W - 14, 14], [14, H - 14], [W - 14, H - 14]]) { g.beginPath(); g.arc(x, y, 5, 0, Math.PI * 2); g.fillStyle = '#d9c09a'; g.fill(); g.beginPath(); g.arc(x - 1, y - 1, 2, 0, Math.PI * 2); g.fillStyle = '#fff3dc'; g.fill(); }
+  // the title strip
+  rr(26, 22, W - 52, 54, 14); g.fillStyle = '#7cbf3a'; g.fill(); rr(26, 22, W - 52, 54, 14); g.lineWidth = 4; g.strokeStyle = '#4f8a22'; g.stroke();
+  g.beginPath(); g.arc(58, 49, 13, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill(); g.beginPath(); g.moveTo(58, 58); g.lineTo(51, 47); g.arc(58, 45, 7, Math.PI * .85, Math.PI * .15); g.closePath(); g.fillStyle = '#e8322a'; g.fill();
+  g.textBaseline = 'middle'; g.textAlign = 'left'; g.font = F(700, 30); g.lineWidth = 6; g.strokeStyle = '#3c6e18'; g.lineJoin = 'round'; g.strokeText('TokenFall Lobby Map', 82, 50); g.fillStyle = '#ffffff'; g.fillText('TokenFall Lobby Map', 82, 50);
+  // the map, cropped from the illustration's middle, on a cream mat
+  const mx = 26, my = 88, mw = W - 52, mh = H - 114; rr(mx, my, mw, mh, 16); g.fillStyle = '#fff8ec'; g.fill();
+  g.save(); rr(mx + 6, my + 6, mw - 12, mh - 12, 12); g.clip();
+  simpleMap(g, mx + 6, my + 6, mw - 12, mh - 12);
+  g.restore();
+  // press E
+  g.font = F(700, 18); const tw = g.measureText('Press E for the full map').width + 30; rr(W - 36 - tw, H - 50, tw, 32, 16); g.fillStyle = 'rgba(40,24,16,.85)'; g.fill();
+  g.fillStyle = '#ffe9b8'; g.textAlign = 'center'; g.fillText('Press E for the full map', W - 36 - tw / 2, H - 33);
+}
+function vLobbyMap(x, z, ry) {
+  const c = document.createElement('canvas'); c.width = 1536; c.height = 960; const g = c.getContext('2d'); g.scale(2, 2); drawLobbyMap(g, 768, 480);
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 8;
+  // once the sign face has loaded, the board shows the same illustrated map as the full-screen one (world-map.js), framed as a park board
+  // the board keeps it simple from a distance: a few big shapes and names; the full illustrated map opens with E (world-map.js)
+  if (document.fonts && document.fonts.load) document.fonts.load('700 30px "Fredoka"').then(() => {
+    g.clearRect(0, 0, 768, 480); drawBoardArt(g, 768, 480, null); t.needsUpdate = true;
+  }).catch(() => {});
+  const grp = vGroup(x, z, ry), W = 2.2, H = 1.375;
+  for (const dx of [-W / 2 + .2, W / 2 - .2]) gbox(grp, .08, 1.05, .08, MAT.metal, dx, 0, 0);                  // the two legs
+  const board = new THREE.Mesh(new THREE.BoxGeometry(W + .06, H + .06, .06), [MAT.darkWood, MAT.darkWood, MAT.darkWood, MAT.darkWood, new THREE.MeshStandardMaterial({ map: t, roughness: .75, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .15 }), MAT.darkWood]);
+  board.position.set(0, 1.05 + Math.sin(.5) * H / 2 - .1, .2); board.rotation.x = -.5; board.castShadow = true; grp.add(board);   // tilted back, like a park board
+  colBox(x - W / 2, z - .4, x + W / 2, z + .4); contact(x, z, 1.3, .5);
+  INTER.push({ x, z: z + 1.3, r: 1.5, label: 'Lobby map', verb: 'Open map', act: () => WorldMap.open() });   // the full-screen isometric map (world-map.js)
+}
+
+// the lobby's fingerpost: a weathered wooden post with a capped top and a brass knob, and four arrow arms pointing the real way to each place
+// (HQ north, Airport west, Pune east, the Glass Bridge south), each with a cream name plate carved in dark letters on both faces. The whole
+// post is turned a little so every arm shows a face to the camera, the way a photo of one catches it.
+function fingerLabel(text) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
+  const draw = () => {
+    g.clearRect(0, 0, 512, 128);
+    g.fillStyle = '#f4ecdc'; g.beginPath(); g.roundRect ? g.roundRect(6, 10, 500, 108, 16) : g.rect(6, 10, 500, 108); g.fill();
+    g.strokeStyle = 'rgba(80,60,40,.35)'; g.lineWidth = 4; g.stroke();
+    let fs = 78; const font = () => `700 ${fs}px "Fredoka", ${SIGN_FONT}`; g.font = font(); while (g.measureText(text).width > 460 && fs > 40) { fs -= 2; g.font = font(); }
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(text, 257, 69);   // the carved edge catching the light
+    g.fillStyle = '#2b2620'; g.fillText(text, 256, 66);
+  };
+  draw(); const t = new THREE.CanvasTexture(c); t.anisotropy = 8;
+  if (document.fonts && document.fonts.load) document.fonts.load('700 60px "Fredoka"').then(() => { draw(); t.needsUpdate = true; }).catch(() => {});
+  return t;
+}
+function vFingerpost(x, z, name, talkLines) {
+  const grp = vGroup(x, z, .55), H = 3.1;
+  const wood = MAT.wood, dark = MAT.darkWood;
+  gbox(grp, .26, H, .26, wood, 0, 0, 0);                                                       // the post
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(.26, .2, 4), dark); cap.rotation.y = Math.PI / 4; cap.position.y = H + .1; cap.castShadow = true; grp.add(cap);
+  gbox(grp, .36, .06, .36, dark, 0, H - .02, 0);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(.09, 16, 12), new THREE.MeshStandardMaterial({ color: 0xc8a050, roughness: .4, metalness: .3 })); knob.position.y = H + .26; grp.add(knob);
+  // one arm: an arrow board 1.55 m long, pointed at its far end, along the arm's own +x; name plates on both faces
+  const L = 1.55, T = .34, D = .07, shape = new THREE.Shape();
+  shape.moveTo(-.12, -T / 2); shape.lineTo(L - .26, -T / 2); shape.lineTo(L, 0); shape.lineTo(L - .26, T / 2); shape.lineTo(-.12, T / 2); shape.closePath();
+  const armGeo = new THREE.ExtrudeGeometry(shape, { depth: D, bevelEnabled: true, bevelThickness: .012, bevelSize: .012, bevelSegments: 1 }); armGeo.translate(0, 0, -D / 2);
+  // [text, the world direction it points (rad: 0 east, PI/2 north, PI west, -PI/2 south), height]
+  for (const [text, dir, y] of [['HQ', Math.PI / 2, 2.78], ['Pune', 0, 2.5], ['Airport', Math.PI, 2.16], ['Glass Bridge', -Math.PI / 2, 1.88]]) {
+    const arm = new THREE.Group(); arm.rotation.y = dir - .55; arm.position.y = y; grp.add(arm);
+    const board = new THREE.Mesh(armGeo, wood); board.castShadow = true; arm.add(board);
+    const lab = new THREE.MeshStandardMaterial({ map: fingerLabel(text), roughness: .85, transparent: true });
+    const plate = (side) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.08, .27), lab); m.position.set(.2 + .54, 0, side * (D / 2 + .016)); if (side < 0) { m.rotation.y = Math.PI; m.position.x = .2 + .54; } arm.add(m); };
+    plate(1); plate(-1);
+  }
+  colCirc(x, z, .3); contact(x, z, .5, .5);
+  INTER.push({ x, z: z + 1.2, r: 1.4, label: name, verb: 'Read', act: () => talk(name, talkLines) });
+}
+
 function vEvBay() {
   const ch = (x, z) => { box(.4, 1.5, .3, MAT.metal, x, 0, z); box(.3, .3, .04, MAT.screen, x, 1, z + .16, { cast: false }); box(.42, .06, .32, vGlow(V_LED), x, 1.5, z, { cast: false }); colBox(x - .25, z - .2, x + .25, z + .2); };
   ch(29.9, -7.2);
@@ -581,7 +803,8 @@ function buildVillageLobby() {
   for (const f of V_FENCES) vFence(...f);
   for (const [x, z] of [[-12.6, 3.6], [12.6, -3.6], [4.6, -10.8]]) pot(x, z);
   for (const [x, z, ry, text] of V_HOLOS) vHolo(x, z, ry, text);
-  vTotem(-5.6, 11.4, 'WELCOME', ['▲ HQ', '◀ Airport', 'Pune ▶', '▼ Glass Bridge'], 'Directory', ['Welcome to TokenFall!', 'West, past the food stalls: the airport, with flights to the Calfus US office in Pleasanton. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'Token Brew is short-staffed! Take a shift in the kitchen, through the staff door at the cafe: pack the pot light, leave room for the reply, never reuse a pot between customers.', 'The leaderboard by the plaza shows who has the most correct answers.']);
+  vLobbyMap(-3.9, 10.9, 0);   // on the grass corner where the south road leaves the plaza (road edge x -2.6, plaza edge z 10)
+  vFingerpost(-6.4, 11.6, 'Signpost', ['Welcome to TokenFall!', 'West, past the food stalls: the airport, with flights to the Calfus US office in Pleasanton. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'Token Brew is short-staffed! Take a shift in the kitchen, through the staff door at the cafe: pack the pot light, leave room for the reply, never reuse a pot between customers.', 'The leaderboard by the plaza shows who has the most correct answers.']);
   vTotem(5.6, 11.4, 'AI TIP', ['Sounding sure is not the same as being right.'], 'AI Tips', V_AI_TIPS);
 
   gate(-40, 0, Math.PI / 2, 'Airport', 0xffb347, 'lobby', 'airport');

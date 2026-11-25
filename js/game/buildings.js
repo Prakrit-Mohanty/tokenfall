@@ -206,8 +206,8 @@ function bikeModel(kind, x, z, ry, o = {}) {
   if (!BIKE_MODEL[kind]) BIKE_MODEL[kind] = new Promise((done) => {
     const bin = atob(window.BIKE_MODELS[kind]), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
     new THREE.GLTFLoader().parse(buf.buffer, '', (gl) => {
-      gl.scene.traverse((m) => { if (!m.isMesh) return; m.castShadow = true; m.receiveShadow = kind !== 'evel'; const mt = m.material; if (mt.map) { mt.map.encoding = THREE.LinearEncoding; mt.map.needsUpdate = true; } mt.metalness = 0; mt.roughness = Math.max(mt.roughness, .4);
-        if (kind === 'evel') { mt.emissive = new THREE.Color(0xffffff); mt.emissiveMap = mt.map; mt.emissiveIntensity = .75; mt.color.multiplyScalar(1.4); }   // his near-black leathers and bike: lit from within a little so he reads in the sun, not as a silhouette
+      gl.scene.traverse((m) => { if (!m.isMesh) return; m.castShadow = true; m.receiveShadow = true; const mt = m.material; if (mt.map) { mt.map.encoding = THREE.LinearEncoding; mt.map.needsUpdate = true; } mt.metalness = 0; mt.roughness = Math.max(mt.roughness, .4);
+        if (kind === 'evel') { mt.emissive = new THREE.Color(0xffffff); mt.emissiveMap = mt.map; mt.emissiveIntensity = .12; }   // his near-black leathers and bike: a touch of self-light so he is not a silhouette, but lit by the sun like the other bikes
         mt.needsUpdate = true; });
       done(gl.scene);
     }, (e) => console.warn('bike model', kind, e));

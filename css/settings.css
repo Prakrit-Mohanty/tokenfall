@@ -1,0 +1,67 @@
+/* the in-world Settings button and panel (js/game/settings.js): cream and wood, like the start screen's settings */
+html body #ui .dl-btn { display: none !important; }   /* the time of day now lives inside Settings */
+html body #ui .st-btn { position: absolute; top: 18px; right: 18px; z-index: 5; pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 0;
+  background: #fff6e6; color: #6b5b45; font: 600 16px var(--font-secondary, sans-serif); cursor: pointer; box-shadow: 0 4px 0 #e2c9a4, 0 10px 22px rgba(40, 20, 10, .3); transition: transform .14s, box-shadow .14s; }
+html body #ui .st-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #e2c9a4, 0 14px 26px rgba(40, 20, 10, .32); background: #fff6e6; }
+html body #ui .st-btn:focus-visible { outline: 3px solid #e98a3a; outline-offset: 3px; }
+html body #ui[data-play="1"] .st-btn { opacity: 0; visibility: hidden; pointer-events: none; }
+html body #ui .st-back { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; pointer-events: auto; background: rgba(60, 35, 30, .35); backdrop-filter: blur(3px); }
+html body #ui .st-back[hidden] { display: none; }
+html body #ui .st-card { box-sizing: border-box; width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; padding: 22px 26px; border-radius: 28px; background: #fff8ec; color: #6b5b45;
+  box-shadow: 0 8px 0 #e8cfa8, 0 24px 50px rgba(40, 20, 10, .35); font-family: var(--font-primary, sans-serif); }
+html body #ui .st-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+html body #ui .st-card h2 { margin: 0; font: 600 26px var(--font-secondary, sans-serif); color: #6b4a2e; }
+html body #ui .st-card h3 { margin: 0 0 8px; font: 600 13px var(--font-secondary, sans-serif); letter-spacing: .08em; text-transform: uppercase; color: #b08a62; }
+html body #ui .st-card section { padding: 14px 0; border-top: 2px dashed #efdcc0; }
+html body #ui .st-card button { font-family: var(--font-secondary, sans-serif) !important; cursor: pointer; }
+html body #ui .st-x { border: 0; border-radius: 999px; background: #fff0d8; color: #6b5b45; padding: 8px 16px; box-shadow: 0 3px 0 #e2c9a4; font-size: 14px; }
+html body #ui .st-moods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+html body #ui .st-mood { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 16px; border: 2px solid #ecd6b6; background: #fff; color: #6b5b45; font-size: 13px; box-shadow: 0 3px 0 #ecd6b6; }
+html body #ui .st-mood span { font-size: 24px; }
+html body #ui .st-mood.on { background: #ffe9c4; border-color: #e98a3a; box-shadow: 0 3px 0 #c9702a; color: #8a4a16; }
+html body #ui .st-link { margin-top: 8px; border: 0; background: none; color: #c9702a; font-size: 14px; padding: 4px 0; text-decoration: underline; box-shadow: none; }
+html body #ui .st-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 44px; font-size: 16px; }
+html body #ui .st-row input[type=range] { flex: 1; accent-color: #e98a3a; }
+html body #ui .st-tog { display: inline-flex; align-items: center; gap: 8px; min-width: 84px; padding: 6px 14px 6px 6px; border-radius: 999px; border: 0; background: #eadbc4; color: #8a7558; font-size: 15px; box-shadow: inset 0 2px 0 rgba(0, 0, 0, .06); }
+html body #ui .st-tog i { width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 0 rgba(0, 0, 0, .15); }
+html body #ui .st-tog.on { background: #8fd06a; color: #24521a; }
+html body #ui .st-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: #eadbc4; }
+html body #ui .st-seg button { border: 0; border-radius: 999px; padding: 6px 14px; background: none; color: #8a7558; font-size: 14px; box-shadow: none; }
+html body #ui .st-seg button.on { background: #fff; color: #6b4a2e; box-shadow: 0 2px 0 #d9c3a2; }
+html body #ui .st-keys { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 8px 10px; align-items: center; font-size: 14px; }
+html body #ui .st-keys kbd { justify-self: start; padding: 2px 9px; border-radius: 8px; background: #ffe3a8; border: 2px solid #e2c49a; color: #6e3a10; font-size: 13px; }
+/* the party roster moves down to make room for Settings in the corner */
+html body #ui #party { top: 74px; }
+/* an empty panel (the interact prompt or notice with nothing to say) shows nothing, not a blank pill */
+html body #ui .panel:empty { display: none !important; }
+/* the Daylight Console (daylight.js "More time controls…"): same markup, dressed like the Settings card */
+html body div:has(> .dl-box) { background: rgba(60, 35, 30, .35); backdrop-filter: blur(3px); }
+html body .panel.dl-box { width: min(460px, calc(100vw - 32px)); padding: 22px 26px; border-radius: 28px; border: 0; outline: none; background: #fff8ec; color: #6b5b45; box-shadow: 0 8px 0 #e8cfa8, 0 24px 50px rgba(40, 20, 10, .35); font-family: var(--font-primary, sans-serif) !important; }
+html body .panel.dl-box::before, html body .panel.dl-box::after { display: none !important; }
+html body .panel.dl-box * { color: inherit; }
+html body .panel.dl-box h3 { font: 600 26px var(--font-secondary, sans-serif) !important; color: #6b4a2e; letter-spacing: 0; }
+html body .panel.dl-box h3 button[data-x] { width: auto; padding: 8px 16px; border: 0; border-radius: 999px; background: #fff0d8; color: #6b5b45; font-size: 0 !important; box-shadow: 0 3px 0 #e2c9a4; }
+html body .panel.dl-box h3 button[data-x]::after { content: 'Close · Esc'; font: 600 14px var(--font-secondary, sans-serif); }
+html body .panel.dl-box .dl-clock { margin: 10px 0 14px; padding: 10px 16px; border-radius: 18px; background: #fff0d8; }
+html body .panel.dl-box .dl-clock b { font: 600 34px var(--font-secondary, sans-serif) !important; color: #6b4a2e; }
+html body .panel.dl-box .dl-clock i { color: #b08a62; font-size: 16px; }
+html body .panel.dl-box .dl-pre { gap: 8px; margin-bottom: 14px; }
+html body .panel.dl-box .dl-pre button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 16px; border: 2px solid #ecd6b6; background: #fff; color: #6b5b45; font: 600 13px var(--font-secondary, sans-serif) !important; box-shadow: 0 3px 0 #ecd6b6; }
+html body .panel.dl-box .dl-pre button span { font-size: 24px; }
+html body .panel.dl-box .dl-pre button:hover { background: #fff6e6; }
+html body .panel.dl-box .dl-pre button.on { background: #ffe9c4; border-color: #e98a3a; box-shadow: 0 3px 0 #c9702a; color: #8a4a16; }
+html body .panel.dl-box label { grid-template-columns: 110px 1fr; min-height: 36px; margin: 2px 0; font-size: 15px; }
+html body .panel.dl-box input[type=range] { accent-color: #e98a3a; }
+html body .panel.dl-box .chk { display: flex; justify-content: space-between; flex-direction: row-reverse; gap: 14px; min-height: 44px; margin: 0; padding-top: 6px; border-top: 2px dashed #efdcc0; }
+html body .panel.dl-box .chk input { appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 52px; height: 30px; margin: 0; border-radius: 999px; background: #eadbc4; cursor: pointer; transition: background .15s; }
+html body .panel.dl-box .chk input::after { content: ''; position: absolute; left: 4px; top: 4px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 0 rgba(0, 0, 0, .15); transition: transform .15s; }
+html body .panel.dl-box .chk input:checked { background: #8fd06a; }
+html body .panel.dl-box .chk input:checked::after { transform: translateX(22px); }
+html body .panel.dl-box .chk input:focus-visible { outline: 3px solid #e98a3a; outline-offset: 2px; }
+html body .panel.dl-box small { margin-top: 10px; color: #b08a62; opacity: 1; font-size: 13px; }
+html body .panel.dl-box h3 { gap: 10px; }
+html body .panel.dl-box h3 .dl-back { order: -1; padding: 8px 14px; border: 0; border-radius: 999px; background: #fff0d8; color: #6b5b45; font: 600 14px var(--font-secondary, sans-serif) !important; box-shadow: 0 3px 0 #e2c9a4; cursor: pointer; }
+html body .panel.dl-box h3 .dl-back[hidden] { display: none; }
+html body .panel.dl-box h3 .dl-back:hover { background: #ffe9c4; }
+html body .panel.dl-box h3 { justify-content: flex-start !important; } html body .panel.dl-box h3 button[data-x] { margin-left: auto; }
+html body .panel.dl-box h3 button { white-space: nowrap; flex: none; } html body .panel.dl-box h3 { font-size: 22px !important; white-space: nowrap; }

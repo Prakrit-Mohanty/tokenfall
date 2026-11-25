@@ -7,6 +7,7 @@
 const CW = CHARS.aditya.cell.w, CH = CHARS.aditya.cell.h, FIG_H = 1.6, SPU = FIG_H / CHARS.aditya.standHeight, AX = CHARS.aditya.anchor.x, AY = CHARS.aditya.anchor.y;   // SPU: world units per sprite px
 const spriteGeo = new THREE.PlaneGeometry(1, 1);   // a unit quad: the vertex shader stretches it onto the frame's own box in the cell, feet on the origin
 const blobGeo = new THREE.PlaneGeometry(1.1, .55);
+const JUMP_M = .8;   // how high everyone's jump peaks, in metres: a proper cartoon hop, half the figure's height
 const CHAR_SCALE = 1.0;   // was 1.1. The card also stands up now (see CHAR_LEAN), so the figure is still ~1.2x taller on screen than it was (1.3 read too big, 1.15 still a touch big)
 const CHAR_LEAN = -.25;   // the card leans its top AWAY from the camera, facing its downward look. It was +.28 (toward the camera: facing the ground, ~16% foreshortened, which read as short)
 const CHAR_STRETCH = 1.05;   // a touch of extra height, within what the painted face tolerates
@@ -169,7 +170,7 @@ function syncChar(c) {
   const beat = c.moving ? Math.abs(Math.sin(f.col / 11 * Math.PI * 2)) : Math.sin(performance.now() / 700) * .5;
   c.mesh.rotation.z = -lean * .07 + c.sw.v * (c.moving ? .008 : .02); c.mesh.rotation.x = fwd * .06;
   // start: a squat and a small push up; stop: a stretch settling down; landing (the sprite's hop or the bridge's own jump coming back to ground): a wide squash
-  const air = (c.noLift ? 0 : f.lift * .55 * SPU * CHAR_SCALE) + (c.alt || 0);   // the sprite's own hop grows with the figure; the bridge's alt is real metres
+  const air = (c.noLift ? 0 : c.anim === 'jump' && c.data.jumpHeight ? f.lift / c.data.jumpHeight * JUMP_M * CHAR_SCALE : f.lift * .55 * SPU * CHAR_SCALE) + (c.alt || 0);   // a jump peaks at JUMP_M whoever jumps (the sheets' own hops ran 0.2 to 0.35 m); the bridge's alt is real metres
   if (c.wasMoving !== undefined && c.moving !== c.wasMoving) c.moving ? charPulse(c, 1.04, .93, .035, 260) : charPulse(c, .97, 1.04, 0, 320);
   if (c.prevAir > .01 && Math.abs(air) < .001) charPulse(c, 1.09, .9, 0, 300);
   c.wasMoving = c.moving; c.prevAir = air;

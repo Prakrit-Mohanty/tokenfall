@@ -320,13 +320,13 @@
       const r = progress.newRun(), spec = G.composeRun(G.seedFor(r.playerId, r.runIndex), r.history);
       S = { on: true, easy: !!TF.easy, run: createRun(spec), runInfo: r, phase: 'mode', coached: false, state: null, sim: null, anim: null, cx: 50, cy: 50, prev: null, shake: { t: 0, d: 1, m: 0 }, ghost: null, waitTalk: null, brief: 0, lastSecs: -1, startedAt: Date.now(), cardOut: null, ghostCard: false, pendingNext: false, roundDone: false };
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed, seen: spec.seen.slice() });
-      hud.p.innerHTML = `<h3>CHOOSE YOUR MODE</h3><p><kbd>1</kbd> Normal: aim and shoot the striker yourself</p><p><kbd>2</kbd> Easy: pick a pocket, the game takes the shot</p><p>Same questions and scoring either way. <kbd>Enter</kbd> ${S.easy ? 'Easy' : 'Normal'} (last time)</p>`;
+      hud.p.innerHTML = modeCards({ easyIcon: 'tap', normalIcon: 'aim', easyLine: 'Tap a pocket, the coin goes in', normalLine: 'Aim and flick the striker', lastEasy: S.easy });
       if (!intro.skipped()) intro.open();   // the intro card first; the mode choice shows once it closes (drawHud hides it while the card is up)
     }
-    // Normal / Easy first (keys 1 / 2, Enter = the last choice), then Quick / Full
+    // Easy / Normal first (keys 1 / 2, Enter = the last choice), then Quick / Full
     function pickMode(easy) {
       S.easy = TF.easy = easy; S.phase = 'pick'; hud.qKey = '';
-      hud.p.innerHTML = '<h3>CHOOSE YOUR RUN</h3><p><kbd>1</kbd> Quick: 3 rounds, about 3 minutes</p><p><kbd>2</kbd> or <kbd>Enter</kbd> Full: 5 rounds</p>';
+      hud.p.innerHTML = runCards({});
     }
     // the Quick / Full choice (keys 1 / 2, E = Full), then the brief: the full one on the first play, one line after that. Quick = rounds 1, 2 and the finale.
     function pickLength(quick) {
@@ -497,7 +497,7 @@
       if (e.code === 'Escape' && !e.repeat) { ghud.confirmLeave(leave); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
-      if (S.phase === 'mode') { if (!e.repeat && ['Digit1', 'Numpad1'].includes(e.code)) pickMode(false); else if (!e.repeat && ['Digit2', 'Numpad2'].includes(e.code)) pickMode(true); else if (!e.repeat && ['KeyE', 'Enter'].includes(e.code)) pickMode(S.easy); return true; }
+      if (S.phase === 'mode') { if (!e.repeat && ['Digit1', 'Numpad1'].includes(e.code)) pickMode(true); else if (!e.repeat && ['Digit2', 'Numpad2'].includes(e.code)) pickMode(false); else if (!e.repeat && ['KeyE', 'Enter'].includes(e.code)) pickMode(S.easy); return true; }
       if (S.phase === 'pick') { if (!e.repeat && ['Digit1', 'Numpad1'].includes(e.code)) pickLength(true); else if (!e.repeat && ['Digit2', 'Numpad2', 'KeyE', 'Enter'].includes(e.code)) pickLength(false); return true; }
       if (e.code === 'KeyS' && !e.repeat) { skip(); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else closeCard(); return true; }

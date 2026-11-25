@@ -1,0 +1,46 @@
+/* the picture cards before a minigame run (js/mode-cards.js): two big cards side by side, green Easy and orange Normal (or Quick and Full) */
+:is(.panel, div):has(> .mc-wrap) { background: none !important; border: 0 !important; box-shadow: none !important; backdrop-filter: none !important; padding: 0 !important; outline: none !important; width: auto !important; max-width: none !important; }
+:is(.panel, div):has(> .mc-wrap)::before, :is(.panel, div):has(> .mc-wrap)::after { display: none !important; }
+html body .mc-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; pointer-events: auto; font-family: var(--font-secondary, sans-serif); }
+html body .mc-wrap .mc-title { margin: 0; padding: 4px 22px; border-radius: 999px; background: #fff6e6; color: #6e4020; font-size: 22px; font-weight: 700; letter-spacing: .02em; box-shadow: 0 4px 0 #c79a6a, 0 10px 20px rgba(40, 20, 10, .25); }
+html body .mc-wrap .mc-row { display: flex; gap: 22px; }
+html body .mc-wrap .mc-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 210px; padding: 18px 16px 16px; border-radius: 26px; border: 4px solid var(--mc-dk); background: linear-gradient(180deg, var(--mc-lt), var(--mc-bg)); color: var(--mc-ink); cursor: pointer; font: inherit;
+  box-shadow: 0 7px 0 var(--mc-dk), 0 16px 26px rgba(40, 20, 10, .3), inset 0 3px 0 rgba(255, 255, 255, .55); transition: transform .14s, box-shadow .14s; }
+html body .mc-wrap .mc-card.easy { --mc-lt: #e9f8d8; --mc-bg: #bfe59a; --mc-dk: #4f8a3a; --mc-ink: #2f5e24; }
+html body .mc-wrap .mc-card.hard { --mc-lt: #ffe7c4; --mc-bg: #ffbe78; --mc-dk: #b0582a; --mc-ink: #7a3412; }
+html body .mc-wrap .mc-card:hover, html body .mc-wrap .mc-card:focus-visible { transform: translateY(-5px) scale(1.03); box-shadow: 0 11px 0 var(--mc-dk), 0 22px 30px rgba(40, 20, 10, .32), inset 0 3px 0 rgba(255, 255, 255, .55); outline: none; }
+html body .mc-wrap .mc-card:active { transform: translateY(4px); box-shadow: 0 3px 0 var(--mc-dk), 0 8px 14px rgba(40, 20, 10, .3); }
+html body .mc-wrap .mc-card.def::after { content: ''; position: absolute; inset: -10px; border-radius: 32px; border: 3px dashed rgba(255, 246, 230, .9); animation: mcglow 1.6s ease-in-out infinite; pointer-events: none; }
+@keyframes mcglow { 50% { opacity: .35; } }
+html body .mc-wrap .mc-key { position: absolute; left: -12px; top: -12px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: #fff6e6; color: #6e4020; border: 3px solid var(--mc-dk); font-size: 22px; font-weight: 800; box-shadow: 0 4px 0 var(--mc-dk); }
+html body .mc-wrap .mc-enter { position: absolute; right: -14px; top: -13px; padding: 2px 12px; white-space: nowrap; line-height: 1.4; border-radius: 999px; background: #6e4020; color: #fff6e6; font-size: 13px; font-weight: 700; box-shadow: 0 3px 0 #3e220e; }
+html body .mc-wrap .mc-art { display: grid; place-items: center; width: 132px; height: 100px; border-radius: 20px; background: rgba(255, 255, 255, .55); }
+html body .mc-wrap .mc-art svg { width: 112px; height: 84px; }
+html body .mc-wrap .mc-name { font-size: 32px; font-weight: 800; line-height: 1; }
+html body .mc-wrap .mc-meter { display: flex; gap: 5px; }
+html body .mc-wrap .mc-meter i { width: 18px; height: 10px; border-radius: 999px; background: rgba(0, 0, 0, .12); }
+html body .mc-wrap .mc-meter i.on { background: var(--mc-dk); }
+html body .mc-wrap .mc-line { font-size: 15px; font-weight: 600; opacity: .85; text-align: center; line-height: 1.2; }
+html body .mc-wrap .mc-foot { margin: 0; padding: 2px 14px; border-radius: 999px; background: rgba(255, 246, 230, .85); color: #6e4020; font-size: 14px; font-weight: 600; }
+@media (max-width: 560px) { html body .mc-wrap .mc-row { gap: 12px; } html body .mc-wrap .mc-card { width: 150px; padding: 14px 10px 12px; } html body .mc-wrap .mc-art { width: 104px; height: 78px; } html body .mc-wrap .mc-art svg { width: 88px; height: 66px; } html body .mc-wrap .mc-name { font-size: 26px; } }
+/* while a game is open the time of day is not the player's business: the sun button steps aside (daylight.js) */
+html body #ui[data-play="1"] .dl-btn { opacity: 0; visibility: hidden; pointer-events: none; }
+/* the game's loading screen (index.html #loading): nothing else of the HUD shows while it is up, just the token chips, the line and the bar */
+html body #ui:has(#loading) > :not(#loading):not(#fade) { visibility: hidden !important; }
+html body #loading { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: radial-gradient(ellipse at center, #2a1f2c 0%, #120c14 75%); letter-spacing: 0; z-index: 3; }
+html body #loading .ld-toks { display: flex; gap: 8px; }
+html body #loading .ld-toks i { font: 800 46px var(--font-secondary, sans-serif); font-style: normal; padding: 2px 16px; border-radius: 14px; color: #2a1606; animation: ldpop 1.8s ease-in-out infinite; }
+html body #loading .ld-toks i:first-child { background: #ffd27a; box-shadow: 0 5px 0 #b07a2a; }
+html body #loading .ld-toks i + i { background: #9fd6c8; box-shadow: 0 5px 0 #4f8f80; animation-delay: .3s; }
+@keyframes ldpop { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+html body #loading .ld-line { margin: 0; min-height: 1.4em; font: 600 18px var(--font-secondary, sans-serif); color: #e8d6bc; }
+html body #loading .ld-line::after { content: '…'; }
+html body #loading .ld-line.in { animation: ldin .35s ease-out; }
+@keyframes ldin { from { opacity: 0; transform: translateY(6px); } }
+html body #loading .ld-bar { width: 220px; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+html body #loading .ld-bar b { display: block; width: 40%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ffd27a, #9fd6c8); animation: ldrun 1.3s ease-in-out infinite; }
+@keyframes ldrun { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+/* the cards: titles, keys and badges in the title face (the storybook theme would put every span inside a panel in the body face) */
+html body .mc-wrap :is(.mc-title, .mc-key, .mc-enter, .mc-name, .mc-foot) { font-family: var(--font-secondary) !important; }
+html body #loading .ld-stk { margin: 0 0 10px; font-size: 72px; animation: ldfloat 3s ease-in-out infinite; }
+@keyframes ldfloat { 50% { transform: translateY(-6px); } }

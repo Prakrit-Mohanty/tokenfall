@@ -1,0 +1,16 @@
+/* the TokenFall logo as a cartoon sticker (start screen sign, the cloud loader, the game's loading screen): two stacked words in a round heavy face,
+   a pale sky-white fill, a thick coloured rim (orange TOKEN, magenta FALL) pushed back into a deeper 3D side, and a white sticker cut-out round it all.
+   Size it with font-size on .stk; everything is in em. Markup: <div class="stk"><b data-t="TOKEN">TOKEN</b><b data-t="FALL" class="b2">FALL</b></div> */
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap");
+.stk { display: inline-flex; flex-direction: column; align-items: center; line-height: .92; font-family: 'Fredoka', 'Baloo 2', sans-serif !important; font-weight: 700; letter-spacing: .01em; user-select: none; }
+.stk b { --rim: #ff6a1e; --rim2: #ff9a3c; --deep: #c2321e; position: relative; display: block; isolation: isolate; font: inherit; font-weight: 700; color: var(--rim); -webkit-text-stroke: .15em var(--rim); paint-order: stroke fill;
+  text-shadow: 0 .015em 0 var(--deep), 0 .03em 0 var(--deep), 0 .045em 0 var(--deep), 0 .06em 0 var(--deep), 0 .075em 0 var(--deep), 0 .09em 0 var(--deep), 0 .105em 0 var(--deep); }
+.stk b.b2 { --rim: #e838c4; --rim2: #ff6ad8; --deep: #7a2cb0; margin-top: .02em; }
+/* the white sticker cut-out behind, with its own extrusion and a soft drop shadow */
+.stk b::before { content: attr(data-t); position: absolute; left: 0; top: 0; z-index: -1; color: #fff; -webkit-text-stroke: .34em #fff; paint-order: stroke fill;
+  text-shadow: 0 .04em 0 #fff, 0 .08em 0 #fff, 0 .12em 0 #fff, 0 .15em 0 #fff, 0 .2em .12em rgba(20, 30, 90, .35); }
+/* the face: sky-white, a hint of blue at the bottom, a bright rim highlight at the top */
+.stk b::after { content: attr(data-t); position: absolute; left: 0; top: 0; color: transparent; -webkit-text-stroke: 0; text-shadow: none;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fbff 45%, #c9e8ff 100%); -webkit-background-clip: text; background-clip: text; }
+/* the start screen speaks Fredoka throughout (the game theme would put its own title face on every button) */
+html body .tf-host, html body .tf-host * { font-family: "Fredoka", "Baloo 2", sans-serif !important; }

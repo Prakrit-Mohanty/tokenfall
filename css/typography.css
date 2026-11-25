@@ -3,11 +3,11 @@
    SECONDARY Baloo 2 600                            buttons, keycaps, HUD, minigame titles, scores
    Max font-weight is 700. Text is warm brown or cream on the panels, never pure black. */
 
-@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Nunito:wght@400;700&family=Poppins:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Alfa+Slab+One&family=Nunito:wght@400;700&family=Poppins:wght@400;700&display=swap");
 
 :root {
   --font-primary: "Poppins", "Nunito", "Varela Round", system-ui, sans-serif;
-  --font-secondary: "Baloo 2", "Nunito", system-ui, sans-serif;
+  --font-secondary: "Alfa Slab One", "Nunito", system-ui, sans-serif;
 
   --ink-brown: #6B5B45;      /* body text on light surfaces */
   --ink-dark: #3B2A14;       /* dark text on gold/orange chips (not pure black) */
@@ -68,3 +68,5 @@
 .quiz-text b {
   font-weight: 700;
 }
+/* Alfa Slab One has one weight (heavy already): never let the browser fake a bolder one */
+html body, html body * { font-synthesis: none; }

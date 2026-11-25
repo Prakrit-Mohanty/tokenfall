@@ -98,7 +98,7 @@
     const setReferee = (easy) => referee.splice(0, referee.length, ...(easy ? BRIEF_EASY : S.runIndex >= 2 ? [BRIEF_SHORT] : BRIEFING));
     // Normal or Easy, asked on arrival with the hero held; the course is rebuilt when the choice differs from the one it was built for
     function showChoice() {
-      hud.m.innerHTML = `<h3>CHOOSE YOUR MODE</h3><ul style="list-style:none;padding:0"><li><kbd>1</kbd> Normal: jump from row to row, with parkour in between</li><li><kbd>2</kbd> Easy: just walk onto the tile you think is right</li></ul><p>Same questions and scoring either way.</p><p class="go"><kbd>Enter</kbd> ${S.spec.easy ? 'Easy' : 'Normal'} (last time)</p>`;
+      hud.m.innerHTML = modeCards({ easyIcon: 'walk', normalIcon: 'jump', easyLine: 'Walk onto the right tile', normalLine: 'Jump row to row, with parkour', lastEasy: S.spec.easy });
       hud.m.style.display = 'block'; TF.lockPlayer(true);
     }
     function choose(easy) {
@@ -489,7 +489,7 @@
       if (S.choosing) {
         if (e.repeat) return true;
         if (e.code === 'Escape') { ghud.confirmLeave(() => world.exit()); return true; }
-        if (['Digit1', 'Numpad1'].includes(e.code)) choose(false); else if (['Digit2', 'Numpad2'].includes(e.code)) choose(true); else if (['Enter', 'KeyE'].includes(e.code)) choose(S.spec.easy);
+        if (['Digit1', 'Numpad1'].includes(e.code)) choose(true); else if (['Digit2', 'Numpad2'].includes(e.code)) choose(false); else if (['Enter', 'KeyE'].includes(e.code)) choose(S.spec.easy);
         else if (e.code === 'KeyM') audio.toggle();
         return true;
       }

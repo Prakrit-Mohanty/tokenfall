@@ -4,7 +4,7 @@
 // lights. roundedBox / mat / canvasTex / rr are shared with the launcher's PC.
 (function (root) {
 'use strict';
-var FONT_UI = '"Baloo 2", "Nunito", system-ui, sans-serif';
+var FONT_UI = '"Fredoka", "Nunito", system-ui, sans-serif';
 var PAL = {
   oak: '#E9CFA6', oakEdge: '#D9B988', steel: '#4A4D55', charcoal: '#3A3D44', granite: '#26272C',
   plaster: '#F0DCC2', blind: '#E9D6B2', floor: '#C9BBA8', haze: '#EDB09A', sky: '#F2A07A',

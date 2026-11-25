@@ -7,12 +7,16 @@
 <script src="js/fresh-start.js?v=1"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/typography.css?v=1">
+<link rel="stylesheet" href="css/typography.css?v=3">
 <link rel="stylesheet" href="css/game.css?v=4">
 <link rel="stylesheet" href="css/storybook.css?v=4">
 <link rel="stylesheet" href="css/token1.css?v=5">
 <link rel="stylesheet" href="css/encounter.css?v=2">
-<link rel="stylesheet" href="css/char-select.css?v=19">
+<link rel="stylesheet" href="css/char-select.css?v=21">
+<link rel="stylesheet" href="css/settings.css?v=6">
+<link rel="stylesheet" href="css/world-map.css?v=3">
+<link rel="stylesheet" href="css/sticker-logo.css?v=2">
+<link rel="stylesheet" href="css/mode-cards.css?v=9">
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -26,14 +30,26 @@
   <div id="dialog" class="panel"><div class="name"></div><div class="text"></div><div class="next">▼</div></div>
   <div id="banner"><div class="line"></div><div class="t"></div><div class="s"></div><div class="line"></div></div>
   <div id="fade"></div>
-  <div id="loading">LOADING</div>
+  <div id="loading" role="status" aria-live="polite"><h1 class="stk ld-stk" aria-label="TokenFall"><b data-t="TOKEN">TOKEN</b><b class="b2" data-t="FALL">FALL</b></h1><p class="ld-line">Tokenizing the office</p><div class="ld-bar"><b></b></div></div>
+  <script>
+  // the loading lines: what a model does, told as if it were building the game; one every 1.4 s until main.js removes #loading
+  (function () {
+    // an AI step joined to a piece of the game, drawn from every pairing in a shuffled bag, so a line never comes back until all of them have shown
+    var V = ['Tokenizing', 'Embedding', 'Training', 'Fine-tuning', 'Sampling', 'Prompting', 'Vectorizing', 'Benchmarking', 'Aligning', 'Distilling', 'Caching', 'Indexing', 'Retrieving', 'Debiasing', 'Fact-checking', 'Quantizing', 'Labelling', 'Evaluating', 'Grounding', 'Attending to'];
+    var O = ['the office', 'the lobby', 'the coworkers', 'the city', 'the coffee', 'the carrom board', 'the glass bridge', 'the airport', 'the auto-rickshaws', 'the elevator', 'the potted plants', 'the leaderboard', 'the clouds', 'the chai', 'the Wi-Fi', 'the meeting rooms', 'the vada pav', 'the token tower', 'the traffic', 'the pigeons'];
+    var bag = [], el = document.querySelector('#loading .ld-line');
+    var next = function () { if (!bag.length) { for (var a = 0; a < V.length; a++) for (var b = 0; b < O.length; b++) bag.push(V[a] + ' ' + O[b]); for (var k = bag.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), x = bag[k]; bag[k] = bag[j]; bag[j] = x; } } return bag.pop(); };
+    el.textContent = next();
+    var t = setInterval(function () { if (!document.getElementById('loading')) return clearInterval(t); el.classList.remove('in'); void el.offsetWidth; el.textContent = next(); el.classList.add('in'); }, 1400);
+  })();
+  </script>
 </div>
 
 <div id="launcher"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="launcher/office-city.js?v=6"></script>
-<script src="launcher/office-room.js?v=11"></script>
-<script src="launcher/tokenfall-launcher.js?v=16"></script>
+<script src="launcher/office-room.js?v=14"></script>
+<script src="launcher/tokenfall-launcher.js?v=25"></script>
 <script src="launcher/start.js?v=4"></script>
 <script src="launcher/char-select-screen.js?v=14"></script>
 
@@ -47,13 +63,14 @@
 <script src="js/bridge/bridge-world.js?v=2"></script>
 <script src="js/game/game-hud.js?v=4"></script>
 <script src="js/game/intro-screen.js?v=2"></script>
-<script src="js/bridge/bridge-play.js?v=5"></script>
+<script src="js/mode-cards.js?v=1"></script>
+<script src="js/bridge/bridge-play.js?v=6"></script>
 <script src="js/bridge/bridge-progress.js?v=3"></script>
 <script src="js/carrom-content.js?v=3"></script>
 <script src="js/carrom-physics.js?v=2"></script>
 <script src="js/carrom-generator.js?v=2"></script>
 <script src="js/carrom-world.js?v=2"></script>
-<script src="js/carrom-play.js?v=4"></script>
+<script src="js/carrom-play.js?v=5"></script>
 <script src="js/carrom-progress.js?v=3"></script>
 <script src="js/jenga-content.js?v=3"></script>
 <script src="js/jenga-engine.js?v=2"></script>
@@ -74,7 +91,7 @@
 <script src="js/storycorner.js?v=1"></script>
 <script src="js/ambience.js?v=2"></script>
 <script src="js/dreamworld.js?v=1"></script>
-<script src="js/daylight.js?v=4"></script>
+<script src="js/daylight.js?v=5"></script>
 <script src="js/game/game-events.js?v=3"></script>
 <script src="js/game/token1-meter.js?v=2"></script>
 <script src="js/game/token1-follow.js?v=2"></script>
@@ -85,7 +102,7 @@
 <script src="js/game/encounter-sprites.js?v=1"></script>
 <script src="js/game/encounter-ui.js?v=3"></script>
 <script src="js/game/encounter.js?v=4"></script>
-<script src="js/game/music.js?v=2"></script>
+<script src="js/game/music.js?v=3"></script>
 <script>
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => BridgePlay.install(TF));
 (window.TokenFallReady = window.TokenFallReady || []).push((TF) => { CarromWorld.install(TF); CarromPlay.install(TF); CarromProgress.install(TF); });
@@ -104,7 +121,8 @@
 </script>
 <script src="js/game/setup.js?v=4"></script>
 <script src="js/game/palette.js?v=1"></script>
-<script src="js/game/textures.js?v=2"></script>
+<script src="js/models/calfus-c.js?v=1"></script>
+<script src="js/game/textures.js?v=5"></script>
 <script src="js/game/geometry.js?v=4"></script>
 <script src="js/game/paving-layout.js?v=1"></script>
 <script src="js/game/paving.js?v=2"></script>
@@ -116,10 +134,10 @@
 <script src="js/models/bikes.js?v=1"></script>
 <script src="js/models/robodog.js?v=1"></script>
 <script src="js/game/props.js?v=3"></script>
-<script src="js/game/buildings.js?v=13"></script>
+<script src="js/game/buildings.js?v=14"></script>
 <script src="js/game/portals.js?v=2"></script>
 <script src="js/game/leaderboard.js?v=2"></script>
-<script src="js/game/lobby-village.js?v=4"></script>
+<script src="js/game/lobby-village.js?v=16"></script>
 <script src="js/game/village-ai.js?v=3"></script>
 <script src="js/game/village-robots.js?v=2"></script>
 <script src="js/game/areas.js?v=2"></script>
@@ -131,13 +149,15 @@
 <script src="js/game/office-us.js?v=2"></script>
 <script src="js/models/autorickshaw.js?v=1"></script>
 <script src="js/game/city.js?v=12"></script>
-<script src="js/game/pune.js?v=29"></script>
+<script src="js/game/pune.js?v=31"></script>
 <script src="js/game/build-areas.js?v=2"></script>
 <script src="js/game/effects.js?v=3"></script>
 <script src="js/game/chatter.js?v=1"></script>
 <script src="js/game/char-select.js?v=9"></script>
-<script src="js/game/characters.js?v=23"></script>
+<script src="js/game/characters.js?v=24"></script>
 <script src="js/game/ui.js?v=4"></script>
+<script src="js/game/settings.js?v=2"></script>
+<script src="js/game/world-map.js?v=8"></script>
 <script src="js/game/post.js?v=3"></script>
 <script src="js/game/loop.js?v=7"></script>
 <script src="js/game/ambient.js?v=1"></script>

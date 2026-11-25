@@ -35,6 +35,14 @@
       TF.sys(muted ? '♪ Music off (M to turn it back on)' : '♪ Music on');
     });
 
+    // the settings panel (settings.js) reads and sets these: on/off and the loudness, both remembered
+    try { const v = parseFloat(localStorage.getItem('tf.music.volume')); if (v >= 0 && v <= 1) MUSIC.volume = v; } catch (err) { /* keep the default */ }
+    TF.music = {
+      get muted() { return muted; },
+      setMuted(m) { muted = !!m; try { localStorage.setItem(MUSIC.store, muted ? '1' : '0'); } catch (err) { /* not saved */ } start(); },
+      get volume() { return MUSIC.volume; },
+      setVolume(v) { MUSIC.volume = Math.max(0, Math.min(1, v)); try { localStorage.setItem('tf.music.volume', String(MUSIC.volume)); } catch (err) { /* not saved */ } start(); }
+    };
     TF.on('game', (e) => { if (e.phase === 'start') inGame = true; else if (e.phase === 'end') inGame = false; });
     TF.on('enter', (prev, z) => pick(z));
     TF.on('boot', () => { pick(TF.zone || 'lobby'); (window.TokenFallStart || Promise.resolve()).then(start); });
