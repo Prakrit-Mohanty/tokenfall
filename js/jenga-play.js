@@ -87,7 +87,7 @@
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const REDUCED = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let S = null, hud = null; const held = {};
+    let S = null, hud = null, ghud = null, intro = null; const held = {};   // ghud: the shared side panel, intro: the shared intro card (js/game)
 
     // ---- sound: the bridge's synth and its M mute, plus the tower's voices (a drawer sliding, a clunk, a wood knock, a rumble) ----
     const audio = () => (bridge && bridge.audio) || null, muted = () => !!(audio() && audio().muted);
@@ -137,7 +137,7 @@
       return h;
     }
     const cardOpen = () => !!(bridge && bridge.card && bridge.card.open);
-    const helpOpen = () => !!hud && hud.h.style.display === 'block';
+    const helpOpen = () => !!intro && intro.isOpen();
     const sideName = (s) => CONTENT.SIDES[s].name;
     const flash = (good, text) => { if (bridge && bridge.flash) bridge.flash(good, text); };   // the shared gold / red flash (bridge-play.js)
     function say(html, secs = 2.8) { S.hint = secs; hud.m.innerHTML = html; hud.m.style.display = 'block'; }
@@ -151,14 +151,16 @@
         const kicker = q.kind === 'finale' ? `FINAL CASE · CHOICE ${run.i - 3} OF 3` : `QUESTION ${run.i + 1} OF ${run.total()} · ${sideName(q.side).toUpperCase()}`;
         hud.q.innerHTML = `<div class="k">${esc(kicker)}</div><div class="t">${esc(q.stem)}</div><div class="a">${q.options.map((o) => `<div class="${run.st().struck.has(o.n) ? 'out' : ''}"><i style="color:${STYLE[o.n - 1].css}">${STYLE[o.n - 1].mark}</i><b>${o.n}</b><span>${esc(o.text)}</span></div>`).join('')}</div>`;
       }
-      hud.s.style.display = on || (S.phase === 'card' && cardOpen()) ? 'block' : 'none';
-      const secs = Math.ceil(run.clock), sKey = [secs, run.wrong, run.i, run.placed, run.points(), muted()].join('|');
-      if (sKey !== hud.sKey) {
-        hud.sKey = sKey;
-        const pips = run.qs.map((st, i) => `<i class="${st.placed ? 'done' : ''}${i === run.i ? ' cur' : ''}" style="--c:${run.spec.questions[i].kind === 'finale' ? 'var(--gold)' : STYLE[SIDE_SLOT[run.spec.questions[i].side]].css}"></i>`).join('');
-        const gems = Array.from({ length: RULES.MAX_WRONG }, (_, i) => `<i class="tgem ${i < run.wrong ? 'hot' : ''}"></i>`).join('');   // gold while a try is still free, red once spent
-        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div><div class="clock ${secs <= 30 ? 'low' : ''}">${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</div>Wrong tries <span class="gems">${gems}</span><br>Placed <b>${run.placed}/${run.total()}</b> · Points <b>${run.points()}</b><br><kbd>H</kbd> help · <kbd>M</kbd> sound ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
-      }
+      hud.s.style.display = 'none';
+      ghud.show(on || (S.phase === 'card' && cardOpen()));
+      ghud.update({
+        round: { n: run.i + 1, total: run.total(), label: 'Question' },
+        time: { secs: run.clock, countdown: true },
+        mistakes: { n: run.wrong, max: RULES.MAX_WRONG },
+        score: run.points(),
+        extras: [{ label: 'Placed', value: `${run.placed} of ${run.total()}` }],
+        controls: [['H', 'Help'], ['M', muted() ? 'Unmute' : 'Mute'], ['Esc', 'Leave']],
+      });
       hud.g.style.display = on && S.phase === 'place' ? 'block' : 'none';
       if (S.hint > 0) { S.hint -= dt; hud.m.style.display = S.hint <= 0 || !on ? 'none' : 'block'; }
       else if (on && S.phase === 'select' && coachSeen < 3 && !cardOpen()) { hud.m.innerHTML = COACH[Math.min(run.i, COACH.length - 1)]; hud.m.style.display = 'block'; }
@@ -170,11 +172,7 @@
     const COACH_KEY = 'tokenfall.tower.coach'; let coachSeen = 0;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
-    function showHelp(on) {
-      if (!hud) return;
-      if (on) hud.h.innerHTML = '<h3>TOKEN TOWER</h3><ul><li>Four blocks carry four answers. Press <kbd>1</kbd>-<kbd>4</kbd> or click the block you think is right. Then hold <kbd>Space</kbd> to pull it.</li><li>Right block: it slides out and hovers. Set it on top where the gauge stays steady. Use <kbd>←</kbd><kbd>→</kbd> or the mouse, then <kbd>Space</kbd> or a click.</li><li>Wrong block: it jams and slides back. A Concept Card shows why, and the tower gets shakier. Three wrong tries in a run bring it down. A stack that tips does too.</li><li><kbd>A</kbd><kbd>D</kbd> or a drag turn the view. <kbd>Tab</kbd> hides the answer list. <kbd>M</kbd> sound. <kbd>Enter</kbd> continues. <kbd>Esc</kbd> skips talk and cards. <kbd>Esc</kbd> leaves (progress is kept, without mastery credit for an unfinished run).</li></ul><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>';
-      hud.h.style.display = on ? 'block' : 'none';
-    }
+    function showHelp(on) { if (intro) { if (on) intro.open({ help: true }); else intro.close(); } }   // H: the intro card, as help
 
     // ---- the gauge: green / amber / red, and a top-down look at the weakest interface (the centre of mass against what holds it up) ----
     const BAND_NOTE = { green: 'Steady.', amber: 'Getting thin.', red: 'About to tip.', tip: 'It will tip.' }, BAND_WORD = { green: 'steady', amber: 'thin', red: 'risky', tip: 'TIPS' };
@@ -198,11 +196,8 @@
         waitTalk: null, brief: 0, cardOut: null, afterCard: null, maxH: E.height(spec.start.tower), summary: null, lastSecs: -1 };
       world.setTower(S.T); emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed, seen: spec.seen.slice() });
       if (quiet) { TF.banner('A new tower', 'New questions'); showQuestion(); return; }
-      TF.banner('Token Tower', 'Pull the block that carries the answer');
-      TF.talk('Token Tower', coachSeen === 0
-        ? ['Welcome to the Token Tower. Seven blocks, seven answers.', 'Pick the block with the right answer and hold Space to pull it. A wrong block shows a Concept Card and the tower gets shakier. Three wrong tries and it falls.', 'Then set your block on top, steady. A and D turn the view. Tab hides the list. S skips talk. M mutes. Esc leaves.']
-        : ['Back for another tower? Same rules: pull right, stack steady.']);
-      afterTalk(showQuestion);
+      const hello = () => { TF.banner('Token Tower', 'Pull the block that carries the answer'); TF.talk('Token Tower', [coachSeen === 0 ? 'Welcome to the Token Tower! Press H any time to see how to play.' : 'Back for another tower? Good luck!']); afterTalk(showQuestion); };
+      if (intro.skipped()) hello(); else intro.open({ onStart: hello });
     }
     function showQuestion() {
       const run = S.run, q0 = run.q(), q = G.resolveQuestion(S.T, q0) || q0;
@@ -293,7 +288,7 @@
     function leave() {
       if (!S) return;
       if (S.run && S.phase !== 'done') { flush(false); emit('abandon', { seen: S.run.spec.seen.slice(), placed: S.run.placed, wrongTries: S.run.wrong, points: S.run.points(), timeMs: Math.round(S.run.elapsed * 1000) }); }
-      bridge && bridge.card && bridge.card.hide(); showHelp(false); S.on = false;
+      bridge && bridge.card && bridge.card.hide(); showHelp(false); if (ghud) ghud.show(false); S.on = false;
       if (play.modal && play.modal.open()) { play.modal.hide && play.modal.hide(); }
       const s = S; S = null; for (const k in held) held[k] = false;
       if (hud) for (const k of ['q', 's', 'm', 'g', 'h']) hud[k].style.display = 'none';
@@ -305,9 +300,11 @@
     function onKey(e) {
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
+      if (ghud && ghud.handleKey(e)) return true;
+      if (intro && intro.handleKey(e)) { if (e.code === 'KeyM' && !e.repeat) a && a.toggle(); return true; }
       if (play.modal && play.modal.open()) { if (['KeyE', 'Escape', 'Enter'].includes(e.code) && !e.repeat) play.modal.close(); else if (play.modal.key) play.modal.key(e); return true; }
       { const code = e.code === 'Enter' ? 'KeyE' : e.code === 'Escape' && cardOpen() && !helpOpen() ? 'KeyS' : e.code; if (code !== e.code) e = { code, key: e.key, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault() {}, stopPropagation() {} }; }   // Enter works as E; Esc skips like S while a concept card is up (otherwise it leaves)
-      if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
+      if (e.code === 'Escape' && !e.repeat) { ghud.confirmLeave(leave); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else closeCard(); return true; }
@@ -349,7 +346,7 @@
 
     // ---- entry ----
     play.open = () => {
-      hud = hud || makeHud();
+      hud = hud || makeHud(); ghud = ghud || window.GameHUD.create(); ghud.reset(); intro = intro || window.IntroScreen.create(CONTENT.INTRO);
       return world.enter(() => { document.getElementById('ui').classList.add('tower-on'); startRun(false); });
     };
     play.register = function () {

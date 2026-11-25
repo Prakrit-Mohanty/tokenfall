@@ -67,18 +67,9 @@
   const REDUCED_MOTION = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const FACING = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
   const STAGE_TEXT = [['Stage 1', 'Tokens, limits & data'], ['Stage 2', 'Models & prompts'], ['Stage 3', 'Verify, guard & approve'], ['The Boss', 'One scenario, three calls']];
-  const BRIEFING = [
-    'Welcome to the Glass Bridge! Each row asks a question. The tiles are the answers.',
-    'Jump onto the tile you think is right. A wrong tile shatters.',
-    'Space jumps (tap it alone to hop forward). Shift runs. Enter closes a card. F gives a hint, three times per run. M mutes. Esc skips talk.',
-    'The parkour bits are just for fun: fall there and you only lose time. Fun fact: this sentence is about 12 tokens long.',
-  ], BRIEF_SHORT = 'Back on the bridge. Jump onto the tile you think is right. Space jumps, F hints, M mutes.';
-  // easy (chosen on arrival, before the run): the rows touch and there is no parkour, so you just walk onto your answer. Same questions, same scoring.
-  const BRIEF_EASY = [
-    'Welcome to the Glass Bridge! Each row asks a question. The tiles are the answers.',
-    'Walk onto the tile you think is right. A wrong tile shatters. No jumping needed.',
-    'F gives a hint, three times per run. E closes a card. M mutes. Esc skips talk.',
-  ];
+  // the rules live on the intro card (C.INTRO, js/game/intro-screen.js); the referee only says hello
+  const BRIEFING = ['Welcome to the Glass Bridge! Press H any time to see how to play.'], BRIEF_SHORT = 'Back on the bridge. Good luck!';
+  const BRIEF_EASY = ['Welcome to the Glass Bridge! Easy mode: just walk onto your answer. Press H for help.'];
   const STAGE_RULE = ['Read the question on the board above the row, then hop onto the tile with the right answer.', 'A wrong tile means a fall and a card. Then the row is dealt again.', 'F gives a hint: it cracks one wrong tile, but caps you at 2 stars.', 'The boss is one case with three calls. Same rules.'];
 
   // ---------------------------------------------------------------- the game
@@ -89,7 +80,7 @@
     const listeners = {}, referee = BRIEFING.slice();   // the referee's lines: one line from the third run on
     const play = { autotick: true, on(evt, fn) { (listeners[evt] = listeners[evt] || []).push(fn); return fn; } };
     const emit = (type, data = {}) => { const e = Object.assign({ type, at: Date.now() }, data); (listeners[type] || []).forEach((f) => f(e)); (listeners['*'] || []).forEach((f) => f(e)); if (progress.onEvent) progress.onEvent(e); };
-    let S = null, hud = null, fx = null;
+    let S = null, hud = null, fx = null, ghud = null, intro = null;   // ghud: the shared side panel (js/game/game-hud.js)
     const camLook = new THREE.Vector3(), CAM_RAISE = 1.7;   // from higher up, the hero's head and TOKEN-1's antenna cover less of the tiles ahead, and the tile text is seen less edge-on
     const now = () => TF.timeU.value;
 
@@ -115,7 +106,6 @@
       if (S.spec.easy !== easy) { S.spec.easy = easy; world.build(S.spec); }
       setReferee(easy);
       TF.sys(`The Glass Bridge: 8 questions, 3 stages and a boss. ${easy ? 'Easy mode: just walk onto your answer' : 'Space jumps'}, F hints, M mutes.`);
-      if (coachSeen === 0) showHelp(true);   // the very first visit opens the how-to-play panel
     }
     const rowSt = (id) => S.rows[id] || (S.rows[id] = { seenAt: null, falls: 0, solved: false });
     const rowIndexOf = (id) => S.spec.rows.findIndex((r) => r.id === id);
@@ -240,6 +230,7 @@
       style.textContent = `
         .bq { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); padding: 6px 20px; text-align: center; display: none; background: rgba(32, 22, 19, .93); border-color: var(--gold); }
         .bq .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
+        .bq { width: min(860px, calc(100vw - 700px)); } .bq .t { font-size: clamp(20px, 2vw, 28px); line-height: 1.3; margin: 4px 0 2px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
         .bq, .bs, .bc, .bk, .bh { font-variant-ligatures: none; }   /* the pixel font draws some digit and letter pairs as other glyphs */
         .bs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.5; display: none; }
         .bs b { color: #ffe39a; font-weight: 400; } .bs kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
@@ -255,7 +246,7 @@
         .bh ul { margin: 0; padding-left: 20px; } .bh li { margin: 5px 0; } .bh kbd, .bk kbd { font: inherit; padding: 0 6px; color: #3B2A14; background: var(--gold); } .bh .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         .bf { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; opacity: 0; transition: opacity .3s; } .bf.g { background: radial-gradient(circle, rgba(255, 210, 122, .05) 30%, rgba(255, 210, 122, .38)); } .bf.r { background: radial-gradient(circle, rgba(255, 70, 60, .05) 30%, rgba(255, 70, 60, .4)); }
         .bf b { font-family: var(--font-secondary); font-size: clamp(30px, 5vw, 56px); letter-spacing: .08em; color: #fff3c4; text-shadow: 0 2px 0 #000, 0 0 18px #ffb347; }
-        @media (max-width: 1100px) { .bq { top: 70px; } .bs { top: auto; bottom: 120px; right: 18px; } }`;
+        @media (max-width: 1100px) { .bq { top: 70px; width: calc(100vw - 32px); } .bs { top: auto; bottom: 120px; right: 18px; } }`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
       return { style, q: mk('bq'), s: mk('bs'), c: mk('bc'), k: mk('bk'), h: mk('bh'), m: mk('bh'), qKey: '', sKey: '', kKey: '' };
@@ -269,28 +260,31 @@
       if (show) {
         const row = S.spec.rows[rl.index], st = rowSt(rl.id), nth = S.spec.rows.filter((r) => !r.bonus).indexOf(row) + 1, total = S.spec.rows.filter((r) => !r.bonus).length;
         if (st.seenAt == null) st.seenAt = now();
-        const key = row.bonus ? 'bonus' : nth + '/' + total;
-        if (key !== hud.qKey) { hud.qKey = key; hud.q.innerHTML = `<div class="k">${row.bonus ? 'BONUS QUESTION' : `QUESTION ${nth} OF ${total}`}</div>`; }
-        world.setQuestion(rl.id, { head: TOPIC_NAME[row.topic], stem: row.stem });   // the question lives in the world, above the row; the answers live only on the tiles
-      } else world.setQuestion(null);
+        const key = (row.bonus ? 'bonus' : nth + '/' + total) + row.stem;
+        // the question sits in the HUD, sharp and readable from anywhere on the course (a board in the world was cut off by the camera and blurred by tilt-shift); the answers live on the tiles
+        if (key !== hud.qKey) { hud.qKey = key; hud.q.innerHTML = `<div class="k">${row.bonus ? 'BONUS QUESTION' : `QUESTION ${nth} OF ${total}`} · ${esc(TOPIC_NAME[row.topic]).toUpperCase()}</div><div class="t">${esc(row.stem)}</div>`; }
+      }
+      world.setQuestion(null);
       const normal = S.spec.rows.filter((r) => !r.bonus), done = normal.filter((r) => rowSt(r.id).solved).length;
-      const curId = rl ? rl.id : '', key = [done, S.streak, S.tokens, S.scans, audio.muted, curId, S.spec.rows.length].join();
       const ct = coachText();
       if (ct !== hud.kKey) { hud.kKey = ct; hud.k.innerHTML = ct; hud.k.style.display = ct ? 'block' : 'none'; }
-      hud.s.style.display = S.finished ? 'none' : 'block';
-      if (key !== hud.sKey) {
-        hud.sKey = key;
-        const zc = { amber: '#ffb347', green: '#7dff8a', cyan: '#5cd6ff' };
-        const pips = S.spec.rows.map((r) => `<i class="${rowSt(r.id).solved ? 'done' : ''}${r.id === curId ? ' cur' : ''}" style="--c:${r.bonus || r.boss ? '#ffd27a' : zc[r.zone]}"></i>`).join('');
-        hud.s.innerHTML = `<div class="pl">Answered <b>${done}/${normal.length}</b></div><div class="pips" aria-hidden="true">${pips}</div>Streak <b>${S.streak}</b> · Score <b>${S.tokens}</b><br>Hints <kbd>F</kbd> <b>${HINTS - S.scans}</b> of ${HINTS} left · <kbd>H</kbd> help · <kbd>M</kbd> ${audio.muted ? 'sound off' : 'sound on'}`;   // mistakes are not shown until the run ends
-      }
+      hud.s.style.display = 'none';
+      ghud.show(!S.finished);
+      if (!S.finished) ghud.update({
+        round: { n: done + 1, total: normal.length, label: 'Question' },
+        time: null,   // the bridge is untimed
+        mistakes: { n: S.falls },
+        score: S.tokens,
+        extras: [{ label: 'Hints (F)', value: `${HINTS - S.scans} left` }],
+        controls: [['H', 'Help'], ['M', audio.muted ? 'Unmute' : 'Mute'], ['Esc', 'Leave']],
+      });
     }
     // ---- gentle coaching for new players: one short rule per stage, for the first three runs ----
     const COACH_KEY = 'tokenfall.bridge.coach', START_KEY = 'tokenfall.bridge.startPrompt';
     let coachSeen = 0, startSeen = false;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; startSeen = !!localStorage.getItem(START_KEY); } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
-    const helpOpen = () => !!hud && hud.h.style.display === 'block';
+    const helpOpen = () => !!intro && intro.isOpen();
     function coachText() {
       if (S && !S.started && !startSeen && !S.finished && !S.card && !S.choosing && !TF.talking && !helpOpen()) return 'Step onto the tile you think is right.' + (S.spec.easy ? '' : ' Walk to the edge, then tap <kbd>Space</kbd> to hop on.');   // once, at the start line, until you step on
       if (!S || S.finished || S.card || S.choosing || TF.talking || S.runIndex >= 3 || helpOpen()) return '';
@@ -302,11 +296,7 @@
       if (st && st.kind !== 'tile') return 'Parkour: you lose nothing if you fall here. Hop across.';
       return '';
     }
-    function showHelp(on) {
-      if (!hud) return;
-      if (on) hud.h.innerHTML = `<h3>HOW TO PLAY</h3><ul><li>Every row asks a question. Every tile is an answer.</li><li>Jump onto the tile you think is right. A wrong tile breaks. You fall, read why, and the row is dealt again.</li>${S && S.spec.easy ? '<li>Easy mode: walk onto a tile to choose it. No jumping.</li><li>An answered row links up. Walk to any lane, then walk on.</li>' : '<li><kbd>Space</kbd> jumps (tap it alone to hop forward). <kbd>Shift</kbd> runs.</li><li>An answered row links up. Walk to any lane, then jump on.</li>'}<li><kbd>F</kbd> hint (3 per run) cracks one wrong tile, but caps you at 2 stars.</li><li><kbd>M</kbd> sound. <kbd>R</kbd> report card. <kbd>Enter</kbd> closes cards. <kbd>Esc</kbd> skips talk and cards.</li></ul><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>`;
-      hud.h.style.display = on ? 'block' : 'none';
-    }
+    function showHelp(on) { if (intro) { if (on) intro.open({ help: true }); else intro.close(); } }   // H: the intro card, as help
     // The Concept Card panel, shared with the other games (play.card): show({ lead, text, breaks, idea, hint }) / hide() / open.
     // lead defaults to "You chose:"; idea is shown first, as the one-sentence takeaway; skippable adds an "S skip" hint (the caller must handle S); line (a whole sentence, no quoted answer) replaces lead + text; breaks and idea are left out when absent; breaksLabel renames the breaks line ("Why it breaks:"); ideaLabel is accepted but no longer shown. The HUD and its CSS are built on first use, so a game that
     // never visited the bridge still gets the same card.
@@ -494,8 +484,11 @@
     function onKey(e) {
       if (TF.zone !== 'bridge' || !S) return false;
       audio.init();
+      if (ghud && ghud.handleKey(e)) return true;
+      if (intro && intro.handleKey(e)) return true;
       if (S.choosing) {
         if (e.repeat) return true;
+        if (e.code === 'Escape') { ghud.confirmLeave(() => world.exit()); return true; }
         if (['Digit1', 'Numpad1'].includes(e.code)) choose(false); else if (['Digit2', 'Numpad2'].includes(e.code)) choose(true); else if (['Enter', 'KeyE'].includes(e.code)) choose(S.spec.easy);
         else if (e.code === 'KeyM') audio.toggle();
         return true;
@@ -507,6 +500,7 @@
       if (e.code === 'KeyF' && !e.repeat) { scan(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (helpOpen() && (e.code === 'KeyE' || e.code === 'Escape') && !e.repeat) { showHelp(false); return true; }
+      if (e.code === 'Escape' && !e.repeat) { ghud.confirmLeave(() => world.exit()); return true; }   // leave the bridge (an unfinished run is saved as abandoned)
       return false;
     }
 
@@ -518,9 +512,9 @@
     }
 
     function enterZone() {
-      hud = hud || makeHud(); fx = makeFx();   // the coins were built by the world's build event, which fires first
+      hud = hud || makeHud(); fx = makeFx(); ghud = ghud || window.GameHUD.create(); ghud.reset(); intro = intro || window.IntroScreen.create(C.INTRO);   // the coins were built by the world's build event, which fires first
       const h = TF.hero; h.noLift = true; h.alt = 0; hud.qKey = hud.sKey = hud.kKey = ''; hud.c.style.display = 'none'; hud.h.style.display = 'none';
-      if (S) showChoice();
+      if (S) { if (intro.skipped()) showChoice(); else { TF.lockPlayer(true); intro.open({ onStart: showChoice }); } }
     }
     function leaveZone() {
       const h = TF.hero; h.noLift = false; h.alt = 0; h.g.children[1].visible = true;
@@ -528,6 +522,8 @@
       if (fx) { fx.dispose(); fx = null; }
       clearCoins();
       if (S && S.choosing) TF.lockPlayer(false);
+      if (ghud) ghud.show(false);
+      if (intro) intro.close();
       if (hud) { hud.q.style.display = hud.s.style.display = hud.c.style.display = hud.k.style.display = hud.h.style.display = hud.m.style.display = 'none'; }
       S = null;
     }

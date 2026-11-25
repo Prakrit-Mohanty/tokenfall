@@ -642,6 +642,7 @@
 
     return {
       register, build, dispose, rerollRow, DIM, PHYS,
+      exit() { const p = state.reg && state.reg.ports[0]; if (p && !TF.traveling) TF.travel(p); },   // Esc: the same trip as walking into the way-home portal
       setSpec(s) { state.spec = s; },
       get layout() { return state.layout; }, get tiles() { return state.tiles; }, get spec() { return state.spec; },
       surfaceAt: (x, z, t, pad) => (state.layout ? surfaceAt(state.layout, x, z, t, pad, state.broken, state.linked) : null),

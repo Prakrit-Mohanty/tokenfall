@@ -98,7 +98,7 @@
     const emit = (type, data = {}) => { const e = Object.assign({ type, at: Date.now() }, data); (listeners[type] || []).forEach((f) => f(e)); (listeners['*'] || []).forEach((f) => f(e)); if (progress.onEvent) progress.onEvent(e); };
     const STYLE = CW.STYLE, SIDE_SLOT = { claims: 0, asking: 1, poison: 2, labels: 3 };
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    let S = null, hud = null;
+    let S = null, hud = null, ghud = null, intro = null;   // ghud: the shared side panel, intro: the shared intro card (js/game)
     const COACH_KEY = 'tokenfall.gallery.coach'; let coachSeen = 0;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
@@ -131,13 +131,7 @@
         .gp-top .pips { display: flex; gap: 4px; justify-content: center; } .gp-top .pips i { width: 26px; height: 7px; border: 1px solid rgba(243,234,214,.45); }
         .gp-top .pips i.done { border-color: transparent; background: var(--c); } .gp-top .pips i.cur { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
         .gp-top .ribbon { display: none; margin-top: 4px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .2em; color: var(--gold); } .gp-top .ribbon.on { display: block; }
-        .gp-stat { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.6; display: none; min-width: 170px; }   /* the same spot as the Glass Bridge's and Carrom's status panels */
-        .gp-stat .tl { font-size: 16px; line-height: 1.2; opacity: .8; } .gp-stat .clock { font-family: var(--font-secondary); font-size: 22px; letter-spacing: .08em; } .gp-stat .clock.low { color: var(--hot); } .gp-stat b { color: var(--gold); font-weight: 600; } .gp-stat .miss { font-size: 16px; color: var(--hot); }
-        .gp-stat .gems { display: inline-flex; gap: 6px; vertical-align: middle; flex-wrap: wrap; justify-content: flex-end; max-width: 130px; }
-        .gp-pel { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 6px var(--gold); } .gp-pel.off { background: transparent; box-shadow: none; border: 1px solid rgba(243,234,214,.35); }
-        .gp-mag { width: 14px; height: 14px; fill: none; stroke: var(--c); stroke-width: 1.6; stroke-linecap: round; } .gp-mag.off { stroke: rgba(243,234,214,.35); }
-        .gp-keys { position: absolute; bottom: 14px; left: 18px; text-align: left; padding: 6px 12px; font-size: 16px; line-height: 1.6; display: none; }   /* the key hints, apart from the stats so that panel stays small and off the shelves */
-        .gp-stat kbd, .gp-keys kbd, .gp-msg kbd, .gp-brief kbd, .gp-help kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
+        .gp-msg kbd, .gp-brief kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
         .gp-msg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); max-width: min(620px, max(300px, calc(100vw - 760px))); padding: 7px 16px; text-align: center; display: none; font-size: 17px; line-height: 1.3; background: rgba(10,12,20,.93); }
         .gp-brief { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; text-align: center; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
         .gp-brief .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .gp-brief .t { font-size: 24px; margin: 8px 0; line-height: 1.25; } .gp-brief .m { font-size: 16px; opacity: .85; } .gp-brief .go { margin: 10px 0 0; font-size: 16px; color: var(--gold); text-align: right; }
@@ -147,26 +141,19 @@
         .gp-read { position: absolute; left: 18px; top: 90px; width: min(380px, calc(100vw - 36px)); max-height: calc(100vh - 220px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 20px; line-height: 1.3; background: rgba(10,12,20,.96); pointer-events: auto; }
         .gp-read h5 { margin: 0 0 6px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); } .gp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); }
         .gp-read small { display: block; font-size: 16px; letter-spacing: .04em; color: var(--gold); } .gp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
-        .gp-help { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(640px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(10,12,20,.96); }
-        .gp-help h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .gp-help ul { margin: 0; padding-left: 20px; } .gp-help li { margin: 5px 0; } .gp-help .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
-        @media (max-width: 1100px) { .gp-top { left: 18px; transform: none; width: calc(100vw - 280px); top: 70px; } .gp-stat { top: auto; bottom: 80px; } }   /* the strip clears the party list; the status block drops to the bottom, as in the other games */
-        .gallery-on .gp-top, .gallery-on .gp-stat, .gallery-on .gp-keys, .gallery-on .gp-msg, .gallery-on .gp-brief, .gallery-on .gp-rs, .gallery-on .gp-read, .gallery-on .gs-read, .gallery-on .gs-tag { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
+        .gallery-on .gp-top, .gallery-on .gp-msg, .gallery-on .gp-brief, .gallery-on .gp-rs, .gallery-on .gp-read, .gallery-on .gs-read, .gallery-on .gs-tag { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .gallery-on #chat, .gallery-on #help { display: none; }   /* the chat log and key hints sit over the stall; the stall has its own hints */`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
-      const h = { style, top: mk('gp-top'), stat: mk('gp-stat'), keys: mk('gp-keys'), msg: mk('gp-msg'), brief: mk('gp-brief'), rs: mk('gp-rs'), read: mk('gp-read'), help: mk('gp-help'), topKey: '', statKey: '', readKey: '' };
-      h.stat.style.setProperty('--hot', STYLE[3].css); h.keys.innerHTML = 'Click to shoot · hold <kbd>F</kbd> to inspect<br><kbd>H</kbd> help · <kbd>Tab</kbd> read<br><kbd>M</kbd> sound on/off · <kbd>Esc</kbd> leave';
+      const h = { style, top: mk('gp-top'), msg: mk('gp-msg'), brief: mk('gp-brief'), rs: mk('gp-rs'), read: mk('gp-read'), topKey: '', readKey: '' };
       return h;
     }
     const cardOpen = () => !!(bridge && bridge.card && bridge.card.open);
-    const helpOpen = () => !!hud && hud.help.style.display === 'block';
+    const helpOpen = () => !!intro && intro.isOpen();
     const sideName = (s) => C.SIDES[s].name;
     const cardName = (e) => esc(e.card.subject ? `${e.card.from}: ${e.card.subject}` : e.card.from);   // how a card is named in a message
     const sideCss = (s) => (s === 'rush' ? 'var(--gold)' : STYLE[SIDE_SLOT[s]].css);
     const say = (html, secs = 2.6) => { S.hint = secs; hud.msg.innerHTML = html; hud.msg.style.display = 'block'; };
-    const pellets = (n, total) => Array.from({ length: Math.max(n, total) }, (_, i) => `<i class="gp-pel ${i < n ? '' : 'off'}"></i>`).join('');
-    const lenses = (n, total, color) => Array.from({ length: Math.max(n, total) }, (_, i) => `<svg class="gp-mag ${i < n ? '' : 'off'}" style="--c:${color}" viewBox="0 0 14 14"><circle cx="5.8" cy="5.8" r="4"/><path d="M8.8 8.8 12.6 12.6"/></svg>`).join('');
-    const clock = (secs) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
 
     function drawHud(dt) {
       if (!S || !hud) return;
@@ -180,16 +167,17 @@
         const pips = S.tutorial ? '' : run.spec.rounds.map((x, i) => `<i class="${i < run.logs.length ? 'done' : ''}${i === run.i ? ' cur' : ''}" style="--c:${sideCss(x.side)}"></i>`).join('');
         hud.top.innerHTML = `<div class="k">${S.tutorial ? 'PRACTICE DUCK' : `ROUND ${run.i + 1} OF ${run.spec.rounds.length} · ${esc(sideName(r.side).toUpperCase())}`}</div><div class="t">${S.tutorial ? 'Read it, inspect it, then decide: shoot it or spare it.' : esc(r.kind === 'finale' ? r.banner[1] : r.brief)}</div><div class="pips" aria-hidden="true">${pips}</div><div class="ribbon ${S.combo >= RULES.COMBO ? 'on' : ''}">COMBO × ${S.combo}</div>`;
       }
-      // the status block: the round clock and the gems (tokens left, leaks, friendly fire, magnifier charges)
-      hud.stat.style.display = hud.keys.style.display = shown && inRound ? 'block' : 'none';
+      // the shared side panel: round, clock, mistakes (missed threats + real cards shot), score, shots and checks left
+      ghud.show(shown && inRound);
       if (inRound) {
-        const left = Math.max(0, Math.ceil(r.playSec - S.world.t)), sc = S.phase === 'debrief' ? S.rsScore : null, entries = [...R.done.values()];
-        const pts = entries.reduce((n, e) => n + (e.points || 0), 0), bad = entries.filter((e) => e.event === 'leak' || e.event === 'friendly').length;   // missed threats + honest cards shot: the details wait for the recap
-        const key = [left, pts, R.ammo, bad, run.charges, S.phase, !!sc].join('|');
-        if (key !== hud.statKey) {
-          hud.statKey = key;
-          hud.stat.innerHTML = `${S.tutorial ? '<div class="tl">Practice · no timer</div>' : `${S.phase === 'play' ? '<div class="tl">Time left</div>' : ''}<div class="clock ${left <= 8 && S.phase === 'play' ? 'low' : ''}">${S.phase === 'play' ? clock(left) : 'DONE'}</div>`}Score <b>${pts}</b>${bad ? ` <span class="miss" title="Missed threats and honest cards shot">✗ ${bad}</span>` : ''}<br>Shots <span class="gems">${pellets(R.ammo, R.ammoStart)}</span><br>Inspections <span class="gems">${lenses(run.charges, RULES.MAGNIFIER, STYLE[2].css)}</span>`;
-        }
+        const entries = [...R.done.values()], pts = entries.reduce((n, e) => n + (e.points || 0), 0), bad = entries.filter((e) => e.event === 'leak' || e.event === 'friendly').length;
+        ghud.update({
+          round: S.tutorial ? { n: 1, total: 1, label: 'Practice' } : { n: run.i + 1, total: run.spec.rounds.length, label: 'Round' },
+          time: S.tutorial || S.phase !== 'play' ? null : { secs: Math.max(0, r.playSec - S.world.t), countdown: true },
+          mistakes: { n: bad }, score: pts,
+          extras: [{ label: 'Shots', value: `${R.ammo} left` }, { label: 'Inspections', value: `${run.charges} left` }],
+          controls: [['H', 'Help'], ['M', muted() ? 'Unmute' : 'Mute'], ['Esc', 'Leave']],
+        });
       }
       if (S.hint > 0) { S.hint -= dt; hud.msg.style.display = S.hint <= 0 || !shown ? 'none' : 'block'; }
       else if (shown && S.phase === 'play' && S.tutorial && !R.done.size && !cardOpen()) { const seen = S.inspectText[r.items[0].uid]; hud.msg.innerHTML = seen ? `Inspected: <b>${esc(seen)}</b> That is proof of fakery, so <b>shoot it</b> (click or <kbd>Space</kbd>). A card you can trace to a real source? Spare it.` : 'Practice duck. Read the card, then hold <kbd>F</kbd> on it to inspect it. It is free here.'; hud.msg.style.display = 'block'; }
@@ -206,11 +194,7 @@
       }
     }
     const COACH = ['Click or <kbd>Space</kbd> to shoot a threat. Aim for the bullseye: the middle scores most. Let real ones pass.', 'Not sure about a card? Hold <kbd>F</kbd> on it to check it. You get 5 checks a run.', 'Three right calls in a row make a combo.'];
-    function showHelp(on) {
-      if (!hud) return;
-      if (on) hud.help.innerHTML = '<h3>SPOT SHOT</h3><ul><li>Paper ducks, each wearing a card, slide along three shelves towards the ticket windows. <b>Aim for the bullseye</b>: dead centre scores 100, the rings 50 and 25, the edge only 10. <b>Shoot the threats</b> (fakes, scams, poisoned inputs) with a click, a tap or <kbd>Space</kbd>; <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move the reticle.</li><li><b>Spare the real ones:</b> let them pass and they are delivered. Shooting a real card is friendly fire. A threat that reaches the window is a leak.</li><li>Each round gives threats + 2 shots, and a shot that hits nothing still costs one. <b>Inspect</b> a card (hold <kbd>F</kbd>, the right button or a long press, about 0.6 s) to read its verification line: five inspections for the whole run.</li><li>Some cards are traps: they look the wrong way round. A right call on a trap you did not inspect is a lucky shot and never counts towards mastery.</li><li><kbd>Tab</kbd> lists the cards in big text. <kbd>M</kbd> sound. <kbd>Enter</kbd> continues. <kbd>Esc</kbd> leaves (finished rounds are kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>';
-      hud.help.style.display = on ? 'block' : 'none';
-    }
+    function showHelp(on) { if (intro) { if (on) intro.open({ help: true }); else intro.close(); } }   // H: the intro card, as help
 
     // ---- flow ----
     const afterTalk = (fn) => { S.waitTalk = fn; };
@@ -220,15 +204,12 @@
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed });
       if (!quiet && coachSeen === 0) { S.real = S.run; S.tutorial = true; S.run = createRun(Object.assign({}, spec, { rounds: [tutorialRound(spec.rounds[0])] })); }   // the very first visit: a practice duck before the real run (it is never scored or reported)
       if (quiet) { TF.banner('A new row', 'New cards'); beginRound(0); return; }
-      TF.banner('Spot Shot', 'Shoot the threats, spare the real');
-      TF.talk('Spot Shot', coachSeen === 0
-        ? ['Step right up! Three short rounds at the Spot Shot stall, one foam blaster. Hit the bullseye on a duck for the most points.', 'Shoot the fakes, scams and poisoned inputs. Spare the real ones: just let them pass. Not sure? Hold F on a card to inspect it. You get five checks for the whole run.', 'Click or press Space to shoot, arrow keys move the reticle. Tab lists the cards in big text. M mutes. Esc leaves.']
-        : ['Back at the stall? Same rules: shoot the threats, spare the real, inspect when it matters.']);
-      bumpCoach(); afterTalk(() => { hud.brief.style.display = 'none'; beginRound(0); });
+      const hello = () => { TF.banner('Spot Shot', 'Shoot the threats, spare the real'); TF.talk('Spot Shot', [coachSeen === 0 ? 'Step right up! Press H any time to see how to play.' : 'Back at the stall? Good luck!']); bumpCoach(); afterTalk(() => { hud.brief.style.display = 'none'; beginRound(0); }); };
+      if (intro.skipped()) hello(); else intro.open({ onStart: hello });
     }
     function beginRound(i) {
       const run = S.run, R = run.begin(i), r = R.r;
-      world.clearRound(); world.loadRound(r); world.run(false); S.combo = 0; S.phase = 'brief'; S.inspectText = {}; S.landing = {}; S.hint = 0; S.read = false; S.endT = 0; hud.topKey = hud.statKey = hud.readKey = '';
+      world.clearRound(); world.loadRound(r); world.run(false); S.combo = 0; S.phase = 'brief'; S.inspectText = {}; S.landing = {}; S.hint = 0; S.read = false; S.endT = 0; hud.topKey = hud.readKey = '';
       if (!S.tutorial) emit('round', { index: i, items: r.items.map((c) => c.itemId) });
       if (S.tutorial) { hud.brief.innerHTML = '<div class="k">PRACTICE DUCK</div><div class="t">One slow duck. Read it, inspect it, decide.</div><div class="m">No timer and nothing is scored.</div><p class="go"><kbd>Enter</kbd> Start ▼</p>'; hud.brief.style.display = 'block'; S.briefT = 8; return; }
       if (r.kind === 'finale') { TF.banner(r.banner[0], r.banner[1]); hud.brief.style.display = 'none'; S.briefT = 3; return; }
@@ -281,7 +262,7 @@
       if (S.tutorial) return endPractice();
       const run = S.run, log = run.finishRound(world.t), sc = E.scoreRound(log);
       for (const e of log.entries) emit('answer', { credit: true, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, shoot: e.shoot, action: e.action, correct: e.correct, lucky: e.lucky, inspected: e.inspected });
-      S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 2); S.queueN = S.queue.length; world.run(false); S.read = false; hud.statKey = '';
+      S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 2); S.queueN = S.queue.length; world.run(false); S.read = false;
       const name = sideName(log.side);
       hud.rs.innerHTML = `<h5>ROUND ${run.i + 1} · ${esc(name.toUpperCase())}</h5>${esc(roundLine(sc))}${recap(log.entries)}<div class="go"><kbd>Enter</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>Esc</kbd> skip ▼</div>`; hud.rs.style.display = 'block';
       sfx('chime'); TF.sys(`Round ${run.i + 1}: stopped ${sc.stopped} of ${sc.threats} threats, accuracy ${sc.accuracy == null ? '–' : Math.round(100 * sc.accuracy) + '%'}.`);
@@ -289,7 +270,7 @@
     // the practice duck is done: the worked example, then the real run
     function endPractice() {
       const R = S.run.round, it = R.r.items[0], e = R.done.get(it.uid), said = !e ? '' : e.event === 'stopped' ? 'You shot it: the right call.' : 'You let it through, but it was a fake.';
-      S.phase = 'lesson'; world.run(false); S.read = false; hud.statKey = '';
+      S.phase = 'lesson'; world.run(false); S.read = false;
       hud.rs.innerHTML = `<h5>WORKED EXAMPLE</h5>The card said: “${esc(it.card.body)}” (${esc(it.card.from)}).<br>Checking it showed: <b>${esc(it.inspect)}</b><br>${said} ${esc(it.tell)}<br>Had the check shown a real source you can open, you would spare it, even if a detector score looked scary.<div class="go"><kbd>Enter</kbd> Start round 1 ▼</div>`; hud.rs.style.display = 'block'; sfx('chime');
     }
     function endLesson() {
@@ -327,10 +308,10 @@
         for (const e of S.run.partial()) emit('answer', { credit: false, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, shoot: e.shoot, action: e.action, correct: e.correct, lucky: e.lucky, inspected: e.inspected });
         const part = S.run.score(false); emit('abandon', { rounds: S.run.logs.length, leaks: part.leaks, friendly: part.friendly, timeMs: Math.round(S.run.elapsed * 1000) });
       }
-      bridge && bridge.card && bridge.card.hide(); showHelp(false); S.on = false;
+      bridge && bridge.card && bridge.card.hide(); showHelp(false); if (ghud) ghud.show(false); S.on = false;
       if (play.modal && play.modal.open()) { play.modal.hide && play.modal.hide(); }
       const s = S; S = null;
-      if (hud) for (const k of ['top', 'stat', 'keys', 'msg', 'brief', 'rs', 'read', 'help']) hud[k].style.display = 'none';
+      if (hud) for (const k of ['top', 'msg', 'brief', 'rs', 'read']) hud[k].style.display = 'none';
       document.getElementById('ui').classList.remove('gallery-on'); world.run(false); world.leave();
       return s;
     }
@@ -339,15 +320,17 @@
     function onKey(e) {
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
+      if (ghud && ghud.handleKey(e)) return true;
+      if (intro && intro.handleKey(e)) { if (e.code === 'KeyM' && !e.repeat) a && a.toggle(); return true; }
       if (play.modal && play.modal.open()) { if (['KeyE', 'Escape', 'Enter'].includes(e.code) && !e.repeat) play.modal.close(); else if (play.modal.key) play.modal.key(e); return true; }
       { const code = e.code === 'Enter' ? 'KeyE' : e.code === 'Escape' && S.phase === 'debrief' && !helpOpen() ? 'KeyS' : e.code; if (code !== e.code) e = { code, key: e.key, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault() {}, stopPropagation() {} }; }   // Enter works as E; Esc skips like S while the round's cards are up (otherwise it leaves)
-      if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
+      if (e.code === 'Escape' && !e.repeat) { ghud.confirmLeave(leave); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (e.code === 'KeyE' && !e.repeat) { if (helpOpen()) showHelp(false); else if (!TF.talking) closeCard(); return true; }
       if (e.code === 'KeyS' && !e.repeat && S.phase === 'debrief' && !helpOpen()) { S.queue.length = 0; if (cardOpen()) bridge.card.hide(); nextCard(); return true; }
       if (e.code === 'Tab') { if (!e.repeat && S.phase === 'play') S.read = !S.read; return true; }
-      if (cardOpen() || helpOpen() || TF.talking || S.phase !== 'play') return true;   // the card has the keys
+      if (cardOpen() || helpOpen() || ghud.confirmOpen() || TF.talking || S.phase !== 'play') return true;   // the card has the keys
       return world.keys.onKey(e) || true;   // the world takes the arrows, Space and F; everything else is swallowed: no walking, no stray jumps, no camera switch
     }
 
@@ -355,9 +338,9 @@
     function frame(t, dt) {
       if (!S || !S.on) return;
       if (S.waitTalk && !TF.talking) { const f = S.waitTalk; S.waitTalk = null; f(); if (!S) return; }
-      const paused = S.phase !== 'play' || TF.talking || cardOpen() || helpOpen() || document.hidden;
+      const paused = S.phase !== 'play' || TF.talking || cardOpen() || helpOpen() || ghud.confirmOpen() || document.hidden;
       if (S.phase === 'play') { world.run(!paused); if (!paused) S.run.elapsed += dt; }
-      if (S.phase === 'brief' && !TF.talking && !helpOpen() && !document.hidden) { S.briefT -= dt; if (S.briefT <= 0) startPlay(); }
+      if (S.phase === 'brief' && !TF.talking && !helpOpen() && !ghud.confirmOpen() && !document.hidden) { S.briefT -= dt; if (S.briefT <= 0) startPlay(); }
       if (S.phase === 'play' && !paused) {
         S.murmurT -= dt; if (S.murmurT <= 0) { S.murmurT = 1.5 + Math.random() * 0.8; sfx('murmur'); }
         const R = S.run.round, r = R.r;
@@ -369,12 +352,12 @@
 
     // ---- entry ----
     play.open = () => {
-      hud = hud || makeHud();
+      hud = hud || makeHud(); ghud = ghud || window.GameHUD.create(); ghud.reset(); intro = intro || window.IntroScreen.create(C.INTRO);
       return world.enter(() => { document.getElementById('ui').classList.add('gallery-on'); startRun(false); });
     };
     play.register = function () {
       world.open = play.open;
-      world.canShoot = () => !!(S && S.on && S.phase === 'play' && !TF.talking && !cardOpen() && !helpOpen() && !document.hidden && S.run.canShoot());   // refused: the world emits 'dry'
+      world.canShoot = () => !!(S && S.on && S.phase === 'play' && !TF.talking && !cardOpen() && !helpOpen() && !ghud.confirmOpen() && !document.hidden && S.run.canShoot());   // refused: the world emits 'dry'
       world.canInspect = () => !!(S && S.on && S.phase === 'play' && S.run.canInspect());
       TF.life.push((t, dt) => frame(t, dt));
       const prev = TF.onKey; TF.onKey = (e) => (S && S.on ? onKey(e) : prev ? prev(e) : false);

@@ -108,11 +108,7 @@
       if (!joined) return;
 
       run = { game, before: meter.accuracy, right: 0, wrong: 0, stageUp: null };
-      const g = L.GAMES[game];
-      if (!g) return;
-      ui.toast(`TOKEN-1 explains: ${g.name}`, `<ol class="t1-howto">${g.howto.map((s) => `<li>${s}</li>`).join('')}</ol>
-        <p><i>My tip:</i> "${g.predict}" ${tag(stage())}</p>
-        <div class="t1-steps"><div class="t1-step">Right<br><b class="t1-good">+${M.METER.up}%</b></div><div class="t1-step">Wrong<br><b class="t1-bad">−${M.METER.down}%</b></div><div class="t1-step">TOKEN-1 now<br><b class="t1-gold">${meter.accuracy}%</b></div></div>`, 9500);
+      // no how-to card here: each minigame's own intro card (js/game/intro-screen.js) explains the rules
     };
 
     const onEnd = () => {

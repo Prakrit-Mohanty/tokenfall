@@ -138,7 +138,7 @@
     const play = { debrief: null, modal: null, useProgress(p) { progress = p; } }, listeners = {};
     play.on = (evt, fn) => { (listeners[evt] = listeners[evt] || []).push(fn); return fn; };
     const emit = (type, data = {}) => { const e = Object.assign({ type, at: Date.now() }, data); (listeners[type] || []).forEach((f) => f(e)); (listeners['*'] || []).forEach((f) => f(e)); if (progress.onEvent) progress.onEvent(e); };
-    let S = null, hud = null;
+    let S = null, hud = null, ghud = null, intro = null;   // ghud: the shared side panel, intro: the shared intro card (js/game)
     const reduced = () => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // ---- sound: the bridge's synth and its M mute ----
@@ -228,7 +228,8 @@
           .kq-gauge { height: 150px; } .kq-potname { font-size: 17px; } .kq-potname .kq-potsvg { height: 44px; } .kq-bi { font-size: 40px; } .kq-bn { font-size: 17px; } .kq-add { padding: 14px 12px 10px; } .kq-add .kq-serve { font-size: 24px; padding: 8px 36px; } .kq-side { min-width: 230px; }
           .kq-say { font-size: 24px; } .kq-ask { font-size: 28px; } .kq-icon { font-size: 48px; } .kq-potsvg { height: 100px; } .kq-react .kq-face { width: 76px; height: 92px; } .kq-react .kq-line { font-size: 24px; } .kq-big { font-size: 42px; } .kq-recap li { padding: 5px 0; } }
         .kq button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-        body.kitchen-on #chat, body.kitchen-on #help, body.kitchen-on #party, body.kitchen-on #loc, body.kitchen-on #banner, body.kitchen-on .t1-hud, body.kitchen-on .t1-toast, body.kitchen-on .t1-say { display: none !important; }   /* one thing at a time: the lobby's chat, key hints, party list, place name, arrival banner and TOKEN-1's badge stay out of the kitchen */`;
+        body.kitchen-on .kq-clock { display: none !important; }   /* the shared side panel shows the time */
+        body.kitchen-on .dl-btn, body.kitchen-on #chat, body.kitchen-on #help, body.kitchen-on #party, body.kitchen-on #loc, body.kitchen-on #banner, body.kitchen-on .t1-hud, body.kitchen-on .t1-toast, body.kitchen-on .t1-say { display: none !important; }   /* one thing at a time: the lobby's chat, key hints, party list, place name, arrival banner and TOKEN-1's badge stay out of the kitchen */`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls, html) => { const e = document.createElement('div'); e.className = 'panel kq ' + cls; if (html) e.innerHTML = html; e.style.display = 'none'; ui.appendChild(e); return e; };
       const h = { style, ui, keys: {} };
@@ -263,6 +264,7 @@
     function render() {
       if (!S || !hud) return;
       const run = S.run, step = run.step;
+      drawGhud();
       if (run.done) { renderEnd(); return; }
       const o = run.order(), tgt = run.target();
       hud.banner.style.display = 'grid'; hud.back.style.display = 'block';
@@ -338,6 +340,12 @@
       if (hud.clock.dataset.on !== '1') { hud.clock.dataset.on = '1'; layout(); }
       hud.clockBar.style.width = (100 * f).toFixed(1) + '%'; hud.clock.classList.toggle('low', f < 0.25); hud.clockText.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
     }
+    // the shared side panel: the order, the timer (order 5 only), the stars so far; hidden on the results
+    function drawGhud() {
+      const run = S.run; ghud.show(!run.done);
+      ghud.update({ round: { n: run.i + 1, total: run.total, label: 'Order' }, time: run.timer ? { secs: run.timer.left, countdown: true } : null, mistakes: null, score: run.stars(),
+        controls: [['H', 'Help'], ['M', audio() && audio().muted ? 'Unmute' : 'Mute'], ['Esc', 'Leave']] });
+    }
     function flashSay() { if (!hud || reduced()) return; hud.say.classList.remove('flash'); void hud.say.offsetWidth; hud.say.classList.add('flash'); }
     const nudge = (text) => { hud.say.textContent = text; flashSay(); };
 
@@ -385,17 +393,18 @@
     // ---- flow ----
     function startShift() {
       if (S) return;
-      hud = hud || makeHud();
+      hud = hud || makeHud(); ghud = ghud || window.GameHUD.create(); ghud.reset(); intro = intro || window.IntroScreen.create(O.INTRO);
       const r = progress.newRun(), spec = O.buildShift(r.playerId, r.runIndex), run = createRun(spec);
       S = { on: true, run, runInfo: r, t0: performance.now(), endMs: 0, round: Math.random(), finished: false, lastMs: 0 };
       document.body.classList.add('kitchen-on'); hud.keys = {};
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed }); emit('shift', { variants: spec.orders.map((o) => o.task) });
-      sfx('bell'); render();
+      const go = () => { sfx('bell'); render(); };
+      if (intro.skipped()) go(); else intro.open({ onStart: go });
     }
     function leave() {
       if (!S) return;
       if (!S.finished) emit('abandon', { served: S.run.log.length, spills: 0, timeMs: Math.round(performance.now() - S.t0) });   // left before the end: no mastery
-      S = null; document.body.classList.remove('kitchen-on');
+      S = null; document.body.classList.remove('kitchen-on'); if (ghud) ghud.show(false); if (intro) intro.close();
       if (hud) for (const k of all()) hud[k].style.display = 'none';
     }
     play.closeDebrief = () => exit();
@@ -404,9 +413,11 @@
     function onKey(e) {
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
-      if (e.code === 'Escape') { if (!e.repeat) exit(); return true; }
+      if (ghud.handleKey(e)) return true;
+      if (intro.handleKey(e)) { if (e.code === 'KeyM' && !e.repeat) a && a.toggle && a.toggle(); return true; }
+      if (e.code === 'Escape') { if (!e.repeat) ghud.confirmLeave(exit); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle && a.toggle(); return true; }
-      if (e.code === 'KeyH' && !e.repeat) { repeat(); return true; }
+      if (e.code === 'KeyH' && !e.repeat) { intro.open({ help: true }); return true; }   // the "?" button still repeats the step's instruction
       const step = S.run.step, focus = document.activeElement;
       if ((e.code === 'Space' || e.code === 'Enter') && focus && focus.tagName === 'BUTTON' && focus.closest('.kq')) return false;   // a button reached with Tab: Space or Enter presses that button
       if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat) {
@@ -423,9 +434,9 @@
     function frame() {
       if (!S || !S.on) return;
       const now = performance.now(), dt = S.lastMs ? Math.min(0.5, (now - S.lastMs) / 1000) : 0; S.lastMs = now;
-      const run = S.run; if (!run.timer) return;
+      const run = S.run; if (!run.timer || intro.isOpen() || ghud.confirmOpen()) return;   // the clock stops while help or the leave confirm is up
       const r = run.tick(dt);
-      if (r) served(run, r); else drawClock(run);
+      if (r) served(run, r); else { drawClock(run); drawGhud(); }
     }
     play.register = function () {
       TF.life.push(() => frame());

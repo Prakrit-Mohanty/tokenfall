@@ -148,7 +148,7 @@
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const PULL_MAX = 34, PULL_MIN = 2.5, GRAB = 5.5, LANE_GRAB = 5,   // grab: within this of the striker starts a pull-back (it is 3.2 wide); anywhere else on a baseline moves the striker there
        CHARGE_SECS = 1.3, TURN = 40, SLIDE = 38, REDUCED = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let S = null, hud = null, fx = null;
+    let S = null, hud = null, fx = null, ghud = null, intro = null;   // ghud: the shared side panel, intro: the shared intro card (js/game)
     const A = { side: 'S', t: 50, angle: 0, power: 0, charging: false, drag: false, hint: 0 };   // side: the baseline the striker is on; t: its place along it
     const held = {};
 
@@ -168,12 +168,12 @@
     function makeHud() {
       const style = document.createElement('style');
       style.textContent = `
-        .cq { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(780px, calc(100vw - 640px)); padding: 6px 14px 9px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
+        .cq { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(880px, calc(100vw - 700px)); padding: 8px 16px 10px; text-align: center; display: none; background: rgba(32, 22, 19,.95); border-color: var(--gold); }
         .cq .k { font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); }
-        .cq .t { font-size: clamp(17px, 1.7vw, 23px); line-height: 1.35; margin: 2px 0 6px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
+        .cq .t { font-size: clamp(20px, 2vw, 28px); line-height: 1.3; margin: 2px 0 6px; color: #fff8e6; text-shadow: 0 1px 0 #000; }
         .cq .it { display: inline-block; margin: 0 0 6px; padding: 2px 12px; font-size: clamp(16px, 1.5vw, 20px); color: #3B2A14; background: var(--gold); }
         .cq .a { display: grid; gap: 4px; grid-template-columns: repeat(2, 1fr); text-align: left; }
-        .cq .a > div { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: 16px; line-height: 1.3; }
+        .cq .a > div { display: flex; gap: 8px; align-items: center; padding: 3px 8px; background: rgba(255,255,255,.07); border: 1px solid rgba(217,180,106,.35); font-size: clamp(17px, 1.6vw, 21px); line-height: 1.3; }
         .cq .a i { font-style: normal; flex: none; font-size: 17px; } .cq .a kbd { font: inherit; padding: 0 6px; color: #3B2A14; background: var(--gold); }
         .cs { position: absolute; top: 214px; right: 18px; text-align: right; padding: 7px 12px; font-size: 16px; line-height: 1.6; display: none; min-width: 170px; }
         .cs b { color: #ffe39a; font-weight: 600; } .cs kbd, .cm kbd, .ch kbd { font: inherit; padding: 0 5px; border: 1px solid rgba(243,234,214,.5); margin: 0 2px; }
@@ -187,11 +187,16 @@
         .ch { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 24px 14px; display: none; font-size: 19px; line-height: 1.4; background: rgba(32, 22, 19,.96); }
         .ch h3 { margin: 0 0 8px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .16em; color: var(--gold); } .ch ul { margin: 0; padding-left: 20px; } .ch li { margin: 5px 0; } .ch .go { text-align: right; font-size: 16px; color: var(--gold); margin: 10px 0 0; }
         @media (max-width: 1100px) { .cq { width: calc(100vw - 32px); top: 70px; } .cs { top: auto; bottom: 80px; } }
+        .cl { position: absolute; display: none; max-width: 250px; padding: 6px 12px; font-size: 20px; line-height: 1.3; transform: translateY(-50%); background: rgba(32, 22, 19, .94); pointer-events: none; }
+        .cl i { font-style: normal; margin-right: 6px; } .cl kbd { font: inherit; padding: 0 6px; margin-right: 6px; color: #1a140c; background: var(--gold); }
+        .carrom-on .cs { top: 50%; transform: translateY(-50%); }   /* mid-right, clear of the answer labels by the corner pockets */
+        @media (min-width: 1101px) { .carrom-on .cq .a { display: none; } }   /* the answers sit by their pockets instead */
+        @media (max-width: 1100px) { .cl { display: none !important; } }   /* too narrow for labels beside the board: the card lists the answers */
         .carrom-on .bc, .carrom-on .cq, .carrom-on .cs, .carrom-on .cm, .carrom-on .ch, .carrom-on .cp { font-variant-ligatures: none; }   /* the pixel font draws "fi" as an A */
         .carrom-on #chat, .carrom-on #help { display: none; }   /* the chat log and key hints sit over the pockets; the table has its own hints */`;
       document.head.appendChild(style);
       const ui = document.getElementById('ui'), mk = (cls) => { const e = document.createElement('div'); e.className = 'panel ' + cls; ui.appendChild(e); return e; };
-      return { style, q: mk('cq'), s: mk('cs'), m: mk('cm'), h: mk('ch'), p: mk('cp'), qKey: '', sKey: '' };
+      return { style, q: mk('cq'), s: mk('cs'), m: mk('cm'), h: mk('ch'), p: mk('cp'), lab: [0, 1, 2, 3].map(() => mk('cl')), qKey: '', sKey: '', lKey: '' };
     }
     const sideName = (s) => CONTENT.SIDES[s].name;
     const MARK = ['▲', '●', '◆', '■'], SLOT_CSS = [CSS.amber, CSS.green, CSS.cyan, CSS.rose];
@@ -200,7 +205,7 @@
     function say(html, secs = 2.6) { A.hint = secs; hud.m.innerHTML = html; hud.m.style.display = 'block'; }
     function drawHud(dt) {
       if (!S || !hud) return;
-      const R = S.run.round(), q = R.q(), st = R.st(), talking = TF.talking, helping = hud.h.style.display === 'block', on = S.on && !talking && !helping && S.phase !== 'done' && S.phase !== 'pick' && S.phase !== 'mode';   // at the end the report has the screen; before the run, the Quick / Full choice has it
+      const R = S.run.round(), q = R.q(), st = R.st(), talking = TF.talking, helping = helpOpen(), on = S.on && !talking && !helping && S.phase !== 'done' && S.phase !== 'pick' && S.phase !== 'mode';   // at the end the report has the screen; before the run, the Quick / Full choice has it
       hud.p.style.display = S.on && (S.phase === 'pick' || S.phase === 'mode') && !talking && !helping ? 'block' : 'none';
       const key = [S.run.i, R.qi, st.idx, S.phase === 'card', helping, talking].join('|');
       hud.q.style.display = on && !cardOpen() ? 'block' : 'none';
@@ -210,17 +215,36 @@
         const item = q.kind === 'sort' ? `<div class="it">Item ${st.idx + 1} of ${st.targets.length}: ${esc(st.targets[st.idx].item.text)}</div>` : '';
         hud.q.innerHTML = `<div class="k">${esc(kicker)}</div><div class="t">${esc(q.stem)}</div>${item}<div class="a">${q.options.map((o, i) => `<div>${S.easy ? `<kbd>${i + 1}</kbd>` : ''}<i style="color:${SLOT_CSS[i]}" aria-hidden="true">${MARK[i]}</i><span>${esc(o.text)}</span></div>`).join('')}</div>`;
       }
-      hud.s.style.display = on || cardOpen() ? 'block' : 'none';
-      const secs = Math.ceil(R.clock), sKey = [secs, R.strikes, S.run.i, S.run.total().toFixed(1), muted()].join('|');
-      if (sKey !== hud.sKey) {
-        hud.sKey = sKey;
-        const pips = S.run.rounds.map((r, i) => `<i class="${r.done ? 'done' : ''}${i === S.run.i ? ' cur' : ''}" style="--c:${CSS[CONTENT.SIDES[r.round.side].zone]}"></i>`).join('');
-        const gems = Array.from({ length: RULES.MAX_STRIKES }, (_, i) => `<i class="cg ${i < R.strikes ? 'hot' : ''}"></i>`).join('');   // gold while a strike is still free, red once spent
-        hud.s.innerHTML = `<div class="pips" aria-hidden="true">${pips}</div><div class="clock ${secs <= 10 ? 'low' : ''}">${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}</div>Mistakes <span class="gems">${gems}</span><br>Points <b>${S.run.total().toFixed(1)}</b><br><kbd>H</kbd> help · <kbd>M</kbd> sound ${muted() ? 'off' : 'on'} · <kbd>Esc</kbd> leave`;
-      }
+      hud.s.style.display = 'none';
+      ghud.show(on || cardOpen());
+      ghud.update({
+        round: { n: S.run.i + 1, total: S.run.rounds.length },
+        time: { secs: R.clock, countdown: true },
+        mistakes: { n: R.strikes, max: RULES.MAX_STRIKES },
+        score: S.run.total(),
+        controls: [['H', 'Help'], ['M', muted() ? 'Unmute' : 'Mute'], ['Esc', 'Leave']],
+      });
+      drawLabels(R, q, on && !cardOpen());
       if (A.hint > 0) { A.hint -= dt; hud.m.style.display = A.hint <= 0 || !on ? 'none' : 'block'; }
       else if (on && S.phase === 'aim' && (coachSeen < 3 || S.easy) && !cardOpen()) { hud.m.innerHTML = coachRule(R); hud.m.style.display = 'block'; }
       else hud.m.style.display = 'none';
+    }
+    // each answer, sharp HTML beside its pocket, outward of the board (left of the west pockets, right of the east ones); placed every frame, so it follows the camera
+    function drawLabels(R, q, show) {
+      const key = [S.run.i, R.qi, S.easy].join('|');
+      if (!show) { hud.lab.forEach((el) => { el.style.display = 'none'; }); return; }
+      q.options.forEach((o, i) => {
+        const el = hud.lab[o.corner];
+        if (key !== hud.lKey) el.innerHTML = `${S.easy ? `<kbd>${i + 1}</kbd>` : ''}<i style="color:${SLOT_CSS[i]}" aria-hidden="true">${MARK[i]}</i>${esc(o.text)}`;
+      });
+      hud.lKey = key;
+      // placed once the frame is drawn: during the frame the table camera has not been applied yet (cameraTo runs later in the same frame)
+      if (!hud.lPending) { hud.lPending = true; setTimeout(() => { hud.lPending = false; if (S && S.on) q.options.forEach((o) => placeLabel(hud.lab[o.corner], o.corner)); }, 0); }
+    }
+    function placeLabel(el, corner) {
+      const p = world.toScreen(P.POCKETS[corner][0], P.POCKETS[corner][1]), west = corner === 0 || corner === 3;
+      el.style.display = p.visible ? 'block' : 'none'; el.style.top = p.y + 'px';
+      if (west) { el.style.left = ''; el.style.right = (innerWidth - p.x + 46) + 'px'; el.style.textAlign = 'right'; } else { el.style.right = ''; el.style.left = (p.x + 46) + 'px'; el.style.textAlign = 'left'; }
     }
     // coaching: one short rule per round for the first three runs (coachSeen counts the runs in which you took a shot)
     const COACH = ['Pull back from the striker and let go. The coin flies away from it.', 'Press <kbd>Tab</kbd> or click a baseline to shoot from another side.', 'A wrong pocket is a mistake. Two mistakes end the round.'];
@@ -228,12 +252,8 @@
     const COACH_KEY = 'tokenfall.carrom.coach'; let coachSeen = 0;
     try { coachSeen = +localStorage.getItem(COACH_KEY) || 0; } catch (e) {}
     const bumpCoach = () => { coachSeen++; try { localStorage.setItem(COACH_KEY, String(coachSeen)); } catch (e) {} };
-    function showHelp(on) {
-      if (!hud) return;
-      if (on) hud.h.innerHTML = `<h3>HOUSE RULES</h3><ul><li>The four pockets are the four answers. Flick the coin into the one you think is right.</li>${S && S.easy ? '<li>Easy mode: press <kbd>1</kbd>-<kbd>4</kbd> or click a pocket, and the coin is shot into it for you. </li>' : '<li>Pull back from the striker and let go: the farther you pull, the harder the shot. Or <kbd>←</kbd><kbd>→</kbd> turn, hold <kbd>Space</kbd> and release. <kbd>A</kbd><kbd>D</kbd> slide the striker.</li><li>A hit pushes the coin away from the striker. So shoot from a side facing away from your pocket. <kbd>Tab</kbd> or a click on a baseline moves the striker there. The dotted line shows where the coin will go.</li>'}<li>Wrong pocket: a mistake and a Concept Card (<kbd>Enter</kbd> continues). Two mistakes, or no time, and the ghost shows the answer. A coin that stops on the board only costs time.</li><li><kbd>Esc</kbd> skips talk, cards and waits. <kbd>M</kbd> sound. <kbd>Esc</kbd> leave (progress is kept).</li></ul><p class="go"><kbd>H</kbd> or <kbd>Enter</kbd> to close</p>`;
-      hud.h.style.display = on ? 'block' : 'none';
-    }
-    const helpOpen = () => !!hud && hud.h.style.display === 'block';
+    function showHelp(on) { if (intro) { if (on) intro.open({ help: true }); else intro.close(); } }   // H: the intro card, as help
+    const helpOpen = () => !!intro && intro.isOpen();
 
     // ---- effects: the dotted aim line and the golden token burst, instanced; created on entry and disposed on leaving ----
     function makeFx() {
@@ -301,6 +321,7 @@
       S = { on: true, easy: !!TF.easy, run: createRun(spec), runInfo: r, phase: 'mode', coached: false, state: null, sim: null, anim: null, cx: 50, cy: 50, prev: null, shake: { t: 0, d: 1, m: 0 }, ghost: null, waitTalk: null, brief: 0, lastSecs: -1, startedAt: Date.now(), cardOut: null, ghostCard: false, pendingNext: false, roundDone: false };
       emit('run', { playerId: r.playerId, runIndex: r.runIndex, seed: spec.seed, seen: spec.seen.slice() });
       hud.p.innerHTML = `<h3>CHOOSE YOUR MODE</h3><p><kbd>1</kbd> Normal: aim and shoot the striker yourself</p><p><kbd>2</kbd> Easy: pick a pocket, the game takes the shot</p><p>Same questions and scoring either way. <kbd>Enter</kbd> ${S.easy ? 'Easy' : 'Normal'} (last time)</p>`;
+      if (!intro.skipped()) intro.open();   // the intro card first; the mode choice shows once it closes (drawHud hides it while the card is up)
     }
     // Normal / Easy first (keys 1 / 2, Enter = the last choice), then Quick / Full
     function pickMode(easy) {
@@ -312,11 +333,7 @@
       const sp = S.run.spec;
       if (quick) { sp.rounds = [sp.rounds[0], sp.rounds[1], sp.rounds[sp.rounds.length - 1]]; sp.seen = sp.rounds.flatMap((r) => r.questions.map((q) => q.variantId)).concat(sp.rerolled || []); sp.clockSeconds = sp.rounds.reduce((n, r) => n + r.clock, 0); S.run = createRun(sp); }
       S.phase = 'intro'; hud.p.style.display = 'none';
-      TF.talk('devansh', S.easy
-        ? (coachSeen === 0 ? ['Welcome to the carrom table. The four pockets are the four answers.', 'Easy mode: press 1 to 4, or click a pocket, and I take the shot for you. A wrong pocket costs a mistake and shows a Concept Card. Two mistakes and I show you the answer.'] : ['Back for another? Press 1 to 4, or click a pocket, and I take the shot.'])
-        : coachSeen === 0
-        ? ['Welcome to the carrom table. The four pockets are the four answers.', 'Shoot the coin into the pocket you think is right. A wrong pocket costs a mistake and shows a Concept Card. Two mistakes and I show you the answer.', 'Pull back from the striker and let go. Tab or a click on a baseline changes your side. S skips talk. M mutes. Esc leaves.']
-        : ['Back for another? Same rules: the pockets are the answers.']);
+      TF.talk('devansh', [coachSeen === 0 ? 'Welcome to the carrom table! Press H any time to see how to play.' : 'Back for another? Good luck!']);
       afterTalk(() => startRound(0));
     }
     function showQuestion() {   // the four pockets get their marks; the coin appears, the striker on the south baseline
@@ -450,10 +467,10 @@
     function leave() {
       if (!S) return;
       if (S.run && !S.run.finished) { flush(false); emit('abandon', { seen: S.run.spec.seen.slice(), points: S.run.total() }); }
-      bridge && bridge.card && bridge.card.hide(); showHelp(false); clearGuide(); S.on = false;
+      bridge && bridge.card && bridge.card.hide(); showHelp(false); if (ghud) ghud.show(false); clearGuide(); S.on = false;
       const s = S; S = null; A.charging = A.drag = false; for (const k in held) held[k] = false;
       if (fx) { fx.dispose(); fx = null; }
-      if (hud) for (const k of ['q', 's', 'm', 'h', 'p']) hud[k].style.display = 'none';
+      if (hud) { for (const k of ['q', 's', 'm', 'h', 'p']) hud[k].style.display = 'none'; hud.lab.forEach((el) => { el.style.display = 'none'; }); }
       document.getElementById('ui').classList.remove('carrom-on'); world.leave();
       return s;
     }
@@ -473,9 +490,11 @@
     function onKey(e) {
       if (!S || !S.on) return false;
       const a = audio(); if (a && a.init) a.init();
+      if (ghud && ghud.handleKey(e)) return true;
+      if (intro && intro.handleKey(e)) { if (e.code === 'KeyM' && !e.repeat) a && a.toggle(); return true; }
       if (play.modal && play.modal.open()) { if (['KeyE', 'Escape', 'Enter'].includes(e.code) && !e.repeat) play.modal.close(); else if (play.modal.key) play.modal.key(e); return true; }
       { const code = e.code === 'Enter' ? 'KeyE' : e.code === 'Escape' && cardOpen() && !helpOpen() ? 'KeyS' : e.code; if (code !== e.code) e = { code, key: e.key, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault() {}, stopPropagation() {} }; }   // Enter works as E; Esc skips like S while a concept card is up (otherwise it leaves)
-      if (e.code === 'Escape' && !e.repeat) { if (helpOpen()) showHelp(false); else leave(); return true; }
+      if (e.code === 'Escape' && !e.repeat) { ghud.confirmLeave(leave); return true; }
       if (e.code === 'KeyM' && !e.repeat) { a && a.toggle(); return true; }
       if (e.code === 'KeyH' && !e.repeat) { showHelp(!helpOpen()); return true; }
       if (S.phase === 'mode') { if (!e.repeat && ['Digit1', 'Numpad1'].includes(e.code)) pickMode(false); else if (!e.repeat && ['Digit2', 'Numpad2'].includes(e.code)) pickMode(true); else if (!e.repeat && ['KeyE', 'Enter'].includes(e.code)) pickMode(S.easy); return true; }
@@ -552,7 +571,7 @@
 
     // ---- entry ----
     play.open = () => {
-      hud = hud || makeHud();
+      hud = hud || makeHud(); ghud = ghud || window.GameHUD.create(); ghud.reset(); intro = intro || window.IntroScreen.create(CONTENT.INTRO);
       return world.enter(() => { document.getElementById('ui').classList.add('carrom-on'); fx = makeFx(); startRun(); });
     };
     play.register = function () {

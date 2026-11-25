@@ -62,7 +62,6 @@ js/bridge/          The Glass Bridge minigame (plugs in through window.TokenFall
 js/carrom-*.js      House Rules Carrom (HQ carrom table)
 js/jenga-*.js       Token Tower (lobby, by Home)
 js/gallery-*.js     Spot Shot (lobby, by Home)
-js/mill-*.js        Token Mill (Data Archive: a conveyor of crates to route by a sample policy)
 js/kitchen-*.js     Token Brew Kitchen (Token Brew's staff door: 5 orders, 3 taps each: pick the pot, add only what is needed, serve.
                     Add or change questions in js/kitchen-orders.js; `node js/kitchen-orders.js` checks the bank)
                     every minigame's tests: npm test

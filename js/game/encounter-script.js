@@ -10,7 +10,7 @@
     carrom: { id: 'factcheck', name: 'Fact-check', icon: '✓', game: 'House Rules Carrom', where: 'Crescent Bay, Pune', gain: 'TOKEN-1 stops making things up. When he is not sure, he says so.', lesson: 'AI can say false things confidently. Check what it tells you.' },
     kitchen: { id: 'memory', name: 'Memory', icon: '◎', game: 'Token Brew Kitchen', where: 'off the lobby', gain: 'TOKEN-1 remembers you, where you have been and what you told him.', lesson: 'AI only knows what is in the conversation. Give it the context it needs.' },
     bridge: { id: 'understanding', name: 'Understanding', icon: '?', game: 'The Glass Bridge', where: 'the south gate of the lobby', gain: 'TOKEN-1 reads what you mean, not just your words, and asks when unsure.', lesson: 'Vague instructions get literal results. Be specific with AI.' },
-    mill: { id: 'askfirst', name: 'Ask-first', icon: '✋', game: 'Token Mill', where: 'Baggage Sorting, Pune Airport', gain: 'Before anything big, TOKEN-1 checks with you first.', lesson: 'Give AI limits. People make the final call on things that matter.' },
+    jenga: { id: 'askfirst', name: 'Ask-first', icon: '✋', game: 'Token Tower', where: 'the lobby lawn', gain: 'Before anything big, TOKEN-1 checks with you first.', lesson: 'Give AI limits. People make the final call on things that matter.' },
     gallery: { id: 'examples', name: 'Good examples', icon: '▦', game: 'Spot Shot', where: 'the lobby lawn', gain: 'TOKEN-1 recognises things correctly, and knows he is only as good as what he learned from.', lesson: 'AI learns from examples. Bad examples make bad answers.' },
   };
 
@@ -35,10 +35,10 @@
       lose: ['Forgot again! The Memory part is in the Token Brew Kitchen. Try me again any time.'],
     },
     {
-      id: 'airport-road', kind: 'door', glitch: 'pilot', points: 'mill', who: 'jess.m', at: { portal: { zone: 'lobby', to: 'airport' } },
-      hello: ['Off to the airport? Me too, for the Pleasanton flight.', 'My travel bot books things without asking. And TOKEN-1\'s Ask-first part? Stuck in the Token Mill, in the airport\'s baggage sorting.', 'Can TOKEN-1 talk my Autopilot down first?'],
-      win: ['It asked me first! Head through to the airport and find the Token Mill for the Ask-first part.'],
-      lose: ['It just booked you three more flights. The Ask-first part is in the Token Mill at the airport. Try me again!'],
+      id: 'airport-road', kind: 'door', glitch: 'pilot', points: 'jenga', who: 'jess.m', at: { portal: { zone: 'lobby', to: 'airport' } },
+      hello: ['Off to the airport? Me too, for the Pleasanton flight.', 'My travel bot books things without asking. And TOKEN-1\'s Ask-first part? It\'s in the Token Tower, back on the lobby lawn.', 'Can TOKEN-1 talk my Autopilot down first?'],
+      win: ['It asked me first! Build the Token Tower on the lobby lawn for the Ask-first part.'],
+      lose: ['It just booked you three more flights. The Ask-first part is in the Token Tower on the lobby lawn. Try me again!'],
     },
     {
       id: 'bangalore-road', kind: 'wander', glitch: 'loop', points: 'bridge', who: 'ishaan.b', at: { zone: 'lobby', x: 0, z: -26, r: 4.5 },

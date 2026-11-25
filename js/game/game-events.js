@@ -31,7 +31,7 @@
 
   const install = (TF) => {
     const w = window;
-    forward({ bridge: w.bridgePlay, carrom: w.carromPlay, jenga: w.jengaPlay, gallery: w.galleryPlay, mill: w.millPlay, kitchen: w.kitchenPlay }, (e) => TF.fire('game', e));
+    forward({ bridge: w.bridgePlay, carrom: w.carromPlay, jenga: w.jengaPlay, gallery: w.galleryPlay, kitchen: w.kitchenPlay }, (e) => TF.fire('game', e));
   };
 
   const api = { forward, install };

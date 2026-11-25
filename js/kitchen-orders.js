@@ -39,36 +39,39 @@
   const N = (label, w, icon) => ({ kind: 'need', label, w, icon });
   const J = (label, w, icon, why) => ({ kind: 'junk', label, w, icon, why });
   const TASKS = [
-    { id: 'sum-email', need: 'small', icon: '📧', ask: 'Summarize this email', detail: 'A short note from your manager: three lines.',
-      items: [N('the email', 2, '📧'), N('the subject line', 1, '🏷️'), N('who sent it', 1, '👤'), N('the date sent', 1, '📅'),
-        J("last week's chat", 3, '💬', "Last week's chat has nothing to do with this email."), J('company logo', 3, '🖼️', 'A logo is only a picture: it adds nothing to a summary.'), J('the cafe menu', 2, '🍽️', 'The menu has nothing to do with this email.')] },
-    { id: 'one-line', need: 'small', icon: '💬', ask: 'Write a one-line reply', detail: '"Can we meet at 3?" Just say yes.',
-      items: [N('the question asked', 1, '❓'), N('your answer: yes', 1, '✅'), N("the person's name", 1, '👤'), N('a friendly tone', 1, '🙂'),
-        J('the whole email thread', 3, '🧵', 'A one-line reply does not need the whole thread.'), J('a photo from the trip', 3, '📷', 'A trip photo cannot help with a yes or a no.'), J('the meeting notes', 2, '📝', 'Old meeting notes were not part of the question.')] },
-    { id: 'fix-typos', need: 'small', icon: '✏️', ask: 'Fix the typos in this note', detail: 'Two short sentences with three slips.',
-      items: [N('the note with typos', 2, '📄'), N('the right spellings', 1, '🔤'), N('who it is for', 1, '👥'), N('a polite tone', 1, '🙂'),
-        J('the old draft', 3, '🗂️', 'The old draft is a different text: it only added clutter.'), J('company logo', 3, '🖼️', 'A logo is only a picture: it does not fix spelling.'), J('your calendar', 2, '📆', 'Your calendar has nothing to do with spelling.')] },
-    { id: 'translate', need: 'small', icon: '🌐', ask: 'Translate "good morning" to Hindi', detail: 'Just the greeting, nothing else.',
-      items: [N('the phrase', 1, '💬'), N('the target language', 1, '🌐'), N('formal or casual', 1, '🎩'), N('who it is for', 1, '👥'),
-        J('a whole dictionary', 3, '📚', 'A whole dictionary is far more than one greeting needs.'), J('a map of India', 3, '🗺️', 'A map does not help translate a greeting.'), J("last month's report", 3, '📊', "Last month's report has nothing to do with a greeting.")] },
-    { id: 'describe', need: 'medium', icon: '🛍️', ask: 'Write a friendly product description', detail: 'A water bottle, in a short paragraph.',
-      items: [N('the product facts', 2, '📋'), N('who buys it', 1, '🛒'), N('our brand voice', 1, '🎤'), N('the key features', 2, '⭐'),
-        J('the shipping policy', 3, '🚚', 'The shipping policy is not part of a description.'), J("a rival's ad", 2, '📣', "A rival's ad would only pull the writing off course."), J('the warehouse stock list', 3, '📦', 'A stock list does not help describe a bottle.')] },
-    { id: 'compare', need: 'medium', icon: '⚖️', ask: 'Compare two phone plans', detail: 'Price, data and the small print.',
-      items: [N('plan A details', 2, '📱'), N('plan B details', 2, '📱'), N('how much you use', 1, '📈'), N('your budget', 1, '💰'),
-        J("the phone's photos", 3, '🖼️', 'Phone photos do not help compare plans.'), J("the store's history", 2, '🏬', "The store's history is not about the plans."), J('an old receipt', 2, '🧾', 'An old receipt is about a different purchase.')] },
-    { id: 'agenda', need: 'medium', icon: '📋', ask: 'Draft a one-hour meeting agenda', detail: 'Five topics with times.',
-      items: [N('the meeting goal', 1, '🎯'), N('who attends', 1, '👥'), N('the topics list', 2, '📝'), N('the time limit', 1, '⏱️'),
-        J('office parking rules', 2, '🅿️', 'Parking rules have nothing to do with the agenda.'), J("last year's agenda", 3, '🗓️', "Last year's agenda is about different topics."), J('the lunch menu', 2, '🍽️', 'The lunch menu is not part of an agenda.')] },
-    { id: 'report', need: 'large', icon: '📊', ask: 'Plan a full project report', detail: 'Goals, risks, budget, timeline and next steps.',
-      items: [N('the project goals', 2, '🎯'), N('the risks list', 2, '⚠️'), N('the budget', 2, '💰'), N('the timeline', 1, '🗓️'),
-        J('the office floor plan', 3, '🏢', 'A floor plan has nothing to do with the report.'), J('team photos', 3, '📷', 'Team photos add nothing to a plan.'), J('old logo files', 2, '🖼️', 'Old logo files are not part of the plan.')] },
-    { id: 'contract', need: 'large', icon: '📑', ask: 'Find risks in a long contract', detail: 'Forty pages of clauses to read closely.',
-      items: [N('the full contract', 2, '📑'), N('the law notes', 2, '⚖️'), N('the deal terms', 2, '🤝'), N('the deadline', 1, '⏰'),
-        J('holiday photos', 3, '🏖️', 'Holiday photos are no use for reading a contract.'), J('an unrelated memo', 2, '📝', 'An unrelated memo only adds noise.'), J('the cafe menu', 2, '🍽️', 'The menu has nothing to do with the contract.')] },
-    { id: 'papers', need: 'large', icon: '🔬', ask: 'Compare five research papers', detail: 'Methods, results and where they disagree.',
-      items: [N('the paper summaries', 2, '📄'), N('their results', 2, '📊'), N('their methods', 2, '🧪'), N('the research question', 1, '❓'),
-        J('the authors\' headshots', 3, '🖼️', 'Headshots do not help compare the science.'), J('the conference schedule', 2, '🗓️', 'The schedule is not about what the papers found.'), J('unrelated news', 3, '📰', 'Unrelated news only adds noise.')] },
+    { id: 'tag-tickets', need: 'small', icon: '🎫', ask: 'Tag 50 support tickets by topic', detail: 'Billing, login, bug or other: one tag each.',
+      items: [N('the 50 tickets', 2, '🎫'), N('the tag list', 1, '🏷️'), N('two tagged examples', 1, '📌'), N('the goal: one tag each', 1, '🎯'),
+        J("last year's tickets", 3, '🗄️', "Last year's tickets are not the 50 I asked you to tag."), J('the whole CRM', 3, '🗃️', 'The whole CRM is far more than fifty tickets need.'), J('every Slack channel', 3, '💬', 'Slack chatter does not help pick a ticket tag.')] },
+    { id: 'route-email', need: 'small', icon: '📧', ask: 'Route an inbound email', detail: 'One customer email: sales, support or billing?',
+      items: [N('the email', 2, '📧'), N('the team list', 1, '👥'), N('what each team owns', 1, '📋'), N('the goal: one team', 1, '🎯'),
+        J('the entire inbox', 3, '📥', 'I asked about one email, not the entire inbox.'), J('old dashboards', 2, '📊', 'Old dashboards say nothing about where this email goes.'), J('the org chart history', 3, '🏢', 'The org chart history does not route an email.')] },
+    { id: 'translate', need: 'small', icon: '🧾', ask: 'Pull the dates from an invoice', detail: 'Issue date and due date, as YYYY-MM-DD.',
+      items: [N('the invoice', 2, '🧾'), N('the fields: issue, due', 1, '📅'), N('the date format', 1, '🔢'), N('one worked example', 1, '📌'),
+        J('every past invoice', 3, '🗄️', 'Every past invoice is noise: I need the dates on this one.'), J('the whole ERP export', 3, '🗃️', 'The ERP export is huge and has nothing on this invoice.'), J("the vendor's website", 2, '🌐', "The vendor's website does not have this invoice's dates.")] },
+    { id: 'bug-class', need: 'small', icon: '🐞', ask: 'Classify a bug report', detail: 'One report: crash, UI glitch or slow page?',
+      items: [N('the bug report', 2, '🐞'), N('the category list', 1, '🏷️'), N('the severity scale', 1, '🌡️'), N('a sample label', 1, '📌'),
+        J('the entire code repo', 3, '💾', 'The entire repo is overkill for labelling one report.'), J('all closed issues', 3, '🗄️', 'Closed issues are old news: this report is new.'), J('the release calendar', 2, '📆', 'The release calendar does not say what kind of bug it is.')] },
+    { id: 'comp-scan', need: 'medium', icon: '🔭', ask: 'Plan a competitor scan', detail: 'Three rivals: pricing, features and recent launches.',
+      items: [N('the goal of the scan', 1, '🎯'), N('the three rivals', 1, '🏁'), N('the sources to check', 2, '🔗'), N('the compare grid', 2, '📋'),
+        J('the whole CRM', 3, '🗃️', 'Our CRM is about our customers, not the rivals.'), J('every Slack channel', 3, '💬', 'Every Slack channel just buries the plan in chatter.'), J('old dashboards', 2, '📊', 'Old dashboards are our numbers, not the rivals.')] },
+    { id: 'agent-brief', need: 'medium', icon: '🤖', ask: "Write an agent's brief", detail: 'Goal, tools, limits and when the job counts as done.',
+      items: [N('the goal', 1, '🎯'), N('the tools it may use', 2, '🧰'), N('the done criteria', 2, '✅'), N('the deadline', 1, '⏰'),
+        J('the entire code repo', 3, '💾', 'The agent needs a brief, not the entire repo.'), J("last year's tickets", 3, '🗄️', "Last year's tickets do not say what done looks like."), J('every Slack channel', 2, '💬', 'Slack threads only blur the brief.')] },
+    { id: 'pilot-sum', need: 'medium', icon: '🧪', ask: "Summarise a pilot's results", detail: 'Six weeks of an AI pilot: did it hit the target?',
+      items: [N('the pilot goal', 1, '🎯'), N('the success metric', 1, '📏'), N('the results data', 2, '📈'), N('user feedback notes', 2, '🗣️'),
+        J('old dashboards', 3, '📊', 'Old dashboards predate the pilot: they cannot judge it.'), J('the whole CRM', 3, '🗃️', 'The CRM is not the pilot results.'), J('the vendor sales deck', 2, '📣', 'A sales deck is a pitch, not a result.')] },
+    { id: 'vendor-cmp', need: 'medium', icon: '⚖️', ask: 'Compare two agent vendors', detail: 'Price, security, integrations and support.',
+      items: [N('vendor A specs', 2, '📄'), N('vendor B specs', 2, '📄'), N('our must-haves', 1, '✅'), N('our budget', 1, '💰'),
+        J('every vendor email', 3, '📥', 'Every vendor email is chatter: the specs say it all.'), J('the entire code repo', 3, '💾', 'Our repo does not compare two vendors.'), J('old dashboards', 2, '📊', 'Old dashboards say nothing about these vendors.')] },
+    { id: 'drug-papers', need: 'large', icon: '🔬', ask: 'Screen five drug-target papers', detail: 'Methods, evidence strength and where they disagree.',
+      items: [N('the five papers', 2, '📄'), N('the target question', 1, '❓'), N('the screening rubric', 2, '📋'), N('their results data', 2, '📊'),
+        J('every paper ever cited', 3, '📚', 'Every cited paper is a library: I asked for five.'), J("the lab's Slack", 3, '💬', "The lab's Slack is gossip, not evidence."), J('old grant dashboards', 2, '📊', 'Grant dashboards do not screen papers.')] },
+    { id: 'procure-agent', need: 'large', icon: '🛒', ask: 'Plan a multi-step procurement agent', detail: 'Request, quote, approve, order: with checks at each step.',
+      items: [N('the goal and steps', 2, '🎯'), N('the approval rules', 2, '✅'), N('the tools and APIs', 2, '🧰'), N('the success metric', 1, '📏'),
+        J('the whole ERP export', 3, '🗃️', 'The plan needs the steps, not every row of the ERP.'), J('every Slack channel', 3, '💬', 'Every Slack channel only drowns the plan.'), J("last year's orders", 2, '🗄️', "Last year's orders do not design the agent.")] },
+    { id: 'contract', need: 'large', icon: '📑', ask: 'Find risks in a vendor contract', detail: 'Forty pages of clauses to read closely.',
+      items: [N('the full contract', 2, '📑'), N('our risk checklist', 2, '⚠️'), N('the deal terms', 2, '🤝'), N('the signing deadline', 1, '⏰'),
+        J('every old contract', 3, '🗄️', 'Old contracts are other deals: this one matters.'), J('the whole CRM', 3, '🗃️', 'The CRM does not flag contract risks.'), J('the vendor sales deck', 2, '📣', 'A sales deck hides the risks I asked you to find.')] },
   ];
 
   // ---- seeded shuffling: a hash of the player and run, then mulberry32 ----
@@ -158,7 +161,14 @@
     return bad;
   }
 
-  const api = { LIMITS, NEEDS, GAUGE, SLACK, JUNK_SHOWN, TIMER, POTS, CONCEPTS, RAMP, SHAPE, TASKS, WHY, SAY, seedFor, rng, shuffle, buildShift, judgePot, judgeServe, validate };
+  // the shared intro card (js/game/intro-screen.js), also the H help
+  const INTRO = {
+    id: 'kitchen', title: 'Token Brew Kitchen', goal: 'Cook each order with the right pot and only the cards it needs.',
+    steps: ['Read the order, then tap Got it.', 'Pick the small, medium or large pot.', 'Add only needed cards. Stay under the line.'],
+    controls: [['Click / tap', 'everything'], ['1 2 3', 'pick a pot'], ['Space', 'go on'], ['Esc', 'leave']],
+    duration: '~4 min', roundCount: 5, roundWord: 'orders',
+  };
+  const api = { INTRO, LIMITS, NEEDS, GAUGE, SLACK, JUNK_SHOWN, TIMER, POTS, CONCEPTS, RAMP, SHAPE, TASKS, WHY, SAY, seedFor, rng, shuffle, buildShift, judgePot, judgeServe, validate };
   if (typeof module === 'object' && module.exports) {
     module.exports = api;
     if (require.main === module) {   // node js/kitchen-orders.js: check the bank after editing it

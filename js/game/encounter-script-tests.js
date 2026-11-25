@@ -10,13 +10,13 @@ const spot = (id) => E.SPOTS.find((s) => s.id === id);
 
 test('each of the five parts belongs to one minigame, in story order', () => {
   assert.deepStrictEqual(Object.values(E.PARTS).map((p) => p.id).sort(), [...E.MODULE_ORDER].sort());
-  assert.deepStrictEqual(Object.keys(E.PARTS).sort(), ['bridge', 'carrom', 'gallery', 'kitchen', 'mill']);
+  assert.deepStrictEqual(Object.keys(E.PARTS).sort(), ['bridge', 'carrom', 'gallery', 'jenga', 'kitchen']);
   for (const [game, p] of Object.entries(E.PARTS)) assert(p.name && p.icon && p.gain && p.lesson && p.game && p.where, game);
 });
 
-test('finishing a minigame gives its part; Jenga and unknown games give none', () => {
+test('finishing a minigame gives its part; unknown games give none', () => {
   assert.strictEqual(E.partFor('carrom').id, 'factcheck');
-  assert.strictEqual(E.partFor('jenga'), null);
+  assert.strictEqual(E.partFor('jenga').id, 'askfirst');
   assert.strictEqual(E.partFor('nope'), null);
 });
 
