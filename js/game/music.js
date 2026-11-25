@@ -50,7 +50,7 @@
     TF.life.push((t, dt) => {
       if (!started) return;
       const swapping = want && !el.src.endsWith(encodeURI(want));
-      const target = swapping ? 0 : volumeFor({ muted, inGame }), step = MUSIC.fadePerSec * Math.min(.1, dt);
+      const target = swapping ? 0 : volumeFor({ muted, inGame }) * (1 - Math.min(1, TF.bikeLevel || 0) * .85), step = MUSIC.fadePerSec * Math.min(.1, dt);
       el.volume = Math.max(0, Math.min(1, el.volume + Math.max(-step, Math.min(step, target - el.volume))));
       if (swapping && el.volume === 0) { el.src = want; el.play().catch(() => { started = false; }); }
     });

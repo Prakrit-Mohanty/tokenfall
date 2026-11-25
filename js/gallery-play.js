@@ -138,6 +138,28 @@
         .gp-rs { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); padding: 8px 16px 9px; text-align: center; display: none; font-size: 16px; line-height: 1.4; background: rgba(10,12,20,.96); border-color: var(--gold); }
         .gp-rs .rc { margin-top: 3px; font-size: 16px; line-height: 1.35; text-align: left; } .gp-rs .rc b { color: var(--gold); font-weight: 600; }
         .gp-rs h5 { margin: 0 0 3px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); } .gp-rs .go { color: var(--gold); font-size: 16px; margin-top: 3px; }
+        .gp-rs.sum { padding: 14px 18px 12px; border-radius: 20px; }
+        .gp-rs .hd { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 0 10px; }
+        .gp-rs .hd .pill { font-family: var(--font-secondary); font-size: 13px; letter-spacing: .12em; padding: 3px 10px; border-radius: 999px; background: var(--gold); color: #2a1d12; }
+        .gp-rs .hd .nm { font-family: var(--font-secondary); font-size: 22px; letter-spacing: .06em; color: #fff3d0; }
+        .gp-rs .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 0 0 10px; }
+        .gp-rs .tile { padding: 8px 4px 7px; border-radius: 12px; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+        .gp-rs .tile b { display: block; font-size: 24px; line-height: 1.1; color: #fff; font-weight: 700; } .gp-rs .tile span { display: block; font-size: 12px; letter-spacing: .04em; color: #cdbfa0; margin-top: 2px; }
+        .gp-rs .tile.good b { color: #8ee08e; } .gp-rs .tile.bad b { color: #ff8f80; } .gp-rs .tile.gold b { color: var(--gold); }
+        .gp-rs .ring { width: 44px; height: 44px; margin: 0 auto 2px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(#8ee08e calc(var(--p) * 1%), rgba(255,255,255,.12) 0); }
+        .gp-rs .ring i { width: 34px; height: 34px; border-radius: 50%; background: rgba(10,12,20,.96); display: grid; place-items: center; font-style: normal; font-size: 13px; font-weight: 700; color: #fff; }
+        .gp-rs .verdict { font-size: 15px; color: #fff3d0; margin: 0 0 8px; }
+        .gp-rs .mis { display: flex; flex-direction: column; gap: 6px; margin: 0 0 10px; text-align: left; }
+        .gp-rs .mi { display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 4px 10px; padding: 7px 10px; border-radius: 10px; background: rgba(255,120,100,.08); box-shadow: inset 3px 0 0 #ff8f80; font-size: 15px; line-height: 1.3; }
+        .gp-rs .mi.ok { background: rgba(140,224,140,.08); box-shadow: inset 3px 0 0 #8ee08e; grid-template-columns: auto 1fr; }
+        .gp-rs .mi .tag { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; border-radius: 6px; background: #ff8f80; color: #2a1010; font-weight: 700; align-self: center; }
+        .gp-rs .mi.ok .tag { background: #8ee08e; color: #10240f; }
+        .gp-rs .mi b { color: var(--gold); font-weight: 700; white-space: nowrap; } .gp-rs .mi .why { color: #e4d8bd; }
+        .gp-rs .acts { display: flex; justify-content: center; gap: 10px; }
+        .gp-rs .acts .b { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 15px; color: #2a1d12; background: var(--gold); box-shadow: 0 3px 0 #b8862e; }
+        .gp-rs .acts .b.ghost { background: rgba(255,255,255,.1); color: #f3ead6; box-shadow: none; }
+        .gp-rs .acts kbd { font: 700 12px var(--font-secondary); padding: 1px 6px; border-radius: 5px; background: rgba(0,0,0,.18); color: inherit; }
+        @media (max-width: 640px) { .gp-rs .tiles { grid-template-columns: repeat(3, 1fr); } }
         .gp-read { position: absolute; left: 18px; top: 90px; width: min(380px, calc(100vw - 36px)); max-height: calc(100vh - 220px); overflow-y: auto; padding: 8px 12px 10px; display: none; font-size: 20px; line-height: 1.3; background: rgba(10,12,20,.96); pointer-events: auto; }
         .gp-read h5 { margin: 0 0 6px; font-family: var(--font-secondary); font-size: 16px; letter-spacing: .14em; color: var(--gold); } .gp-read div.c { margin: 0 0 9px; padding-left: 8px; border-left: 3px solid var(--gold); }
         .gp-read small { display: block; font-size: 16px; letter-spacing: .04em; color: var(--gold); } .gp-read i { display: block; font-style: normal; font-size: 16px; opacity: .85; margin-top: 2px; }
@@ -258,20 +280,36 @@
       if (!bad.length) return '<div class="rc">Every threat stopped and every honest card spared.</div>';
       return bad.slice(0, 4).map((e) => `<div class="rc">${x} ${e.event === 'leak' ? 'Missed' : 'Shot an honest card'}: <b>${cardName(e)}</b>. ${esc(e.reason)}</div>`).join('') + (bad.length > 4 ? `<div class="rc">…and ${bad.length - 4} more.</div>` : '');
     }
+    // the round's summary card: a header pill, six stat tiles (a ring for threats stopped), a one-line verdict, the mistakes as rows, the two keys as buttons
+    function roundHTML(i, name, sc, entries, cards) {
+      const pct = Math.round(100 * sc.catchRate), acc = sc.accuracy == null ? '–' : Math.round(100 * sc.accuracy) + '%';
+      const tile = (v, label, cls = '') => `<div class="tile ${cls}"><b>${v}</b><span>${label}</span></div>`;
+      const tiles = `<div class="tile"><div class="ring" style="--p:${pct}"><i>${pct}%</i></div><span>${sc.stopped} of ${sc.threats} stopped</span></div>`
+        + tile(acc, 'accuracy', sc.accuracy == null ? '' : sc.accuracy >= .8 ? 'good' : sc.accuracy < .6 ? 'bad' : '')
+        + tile(sc.leaks, 'missed', sc.leaks ? 'bad' : 'good') + tile(sc.friendly, 'real cards hit', sc.friendly ? 'bad' : 'good')
+        + tile(sc.ammoLeft, 'shots left') + tile(sc.points || 0, 'points', 'gold');
+      const bad = entries.filter((e) => e.event === 'leak' || e.event === 'friendly');
+      const rows = bad.length ? bad.slice(0, 4).map((e) => `<div class="mi"><span class="tag">${e.event === 'leak' ? 'Missed' : 'Real card hit'}</span><b>${cardName(e)}</b><span class="why">${esc(e.reason)}</span></div>`).join('')
+        + (bad.length > 4 ? `<div class="mi ok" style="background:none;box-shadow:none"><span class="why">…and ${bad.length - 4} more.</span></div>` : '')
+        : '<div class="mi ok"><span class="tag">Clean</span><span class="why">Every threat stopped and every honest card spared.</span></div>';
+      const verdict = tradeoff(sc).split('. ')[0].replace(/\.?$/, '.');
+      return `<div class="hd"><span class="pill">ROUND ${i + 1}</span><span class="nm">${esc(name)}</span></div><div class="tiles">${tiles}</div><p class="verdict">${esc(verdict)}</p><div class="mis">${rows}</div>`
+        + `<div class="acts"><span class="b"><kbd>Enter</kbd>${cards ? 'Concept cards' : 'Next round'}</span><span class="b ghost"><kbd>Esc</kbd>Skip</span></div>`;
+    }
     function endRound() {
       if (S.tutorial) return endPractice();
       const run = S.run, log = run.finishRound(world.t), sc = E.scoreRound(log);
       for (const e of log.entries) emit('answer', { credit: true, conceptId: e.conceptId, variantId: e.variantId, itemId: e.itemId, side: e.side, kind: e.kind, shoot: e.shoot, action: e.action, correct: e.correct, lucky: e.lucky, inspected: e.inspected });
       S.phase = 'debrief'; S.rsScore = sc; S.queue = E.debriefPicks(log, 2); S.queueN = S.queue.length; world.run(false); S.read = false;
       const name = sideName(log.side);
-      hud.rs.innerHTML = `<h5>ROUND ${run.i + 1} · ${esc(name.toUpperCase())}</h5>${esc(roundLine(sc))}${recap(log.entries)}<div class="go"><kbd>Enter</kbd> ${S.queue.length ? 'Concept cards' : 'Next'} · <kbd>Esc</kbd> skip ▼</div>`; hud.rs.style.display = 'block';
+      hud.rs.innerHTML = roundHTML(run.i, name, sc, log.entries, S.queue.length); hud.rs.classList.add('sum'); hud.rs.style.display = 'block';
       sfx('chime'); TF.sys(`Round ${run.i + 1}: stopped ${sc.stopped} of ${sc.threats} threats, accuracy ${sc.accuracy == null ? '–' : Math.round(100 * sc.accuracy) + '%'}.`);
     }
     // the practice duck is done: the worked example, then the real run
     function endPractice() {
       const R = S.run.round, it = R.r.items[0], e = R.done.get(it.uid), said = !e ? '' : e.event === 'stopped' ? 'You shot it: the right call.' : 'You let it through, but it was a fake.';
       S.phase = 'lesson'; world.run(false); S.read = false;
-      hud.rs.innerHTML = `<h5>WORKED EXAMPLE</h5>The card said: “${esc(it.card.body)}” (${esc(it.card.from)}).<br>Checking it showed: <b>${esc(it.inspect)}</b><br>${said} ${esc(it.tell)}<br>Had the check shown a real source you can open, you would spare it, even if a detector score looked scary.<div class="go"><kbd>Enter</kbd> Start round 1 ▼</div>`; hud.rs.style.display = 'block'; sfx('chime');
+      hud.rs.classList.remove('sum'); hud.rs.innerHTML = `<h5>WORKED EXAMPLE</h5>The card said: “${esc(it.card.body)}” (${esc(it.card.from)}).<br>Checking it showed: <b>${esc(it.inspect)}</b><br>${said} ${esc(it.tell)}<br>Had the check shown a real source you can open, you would spare it, even if a detector score looked scary.<div class="go"><kbd>Enter</kbd> Start round 1 ▼</div>`; hud.rs.style.display = 'block'; sfx('chime');
     }
     function endLesson() {
       hud.rs.style.display = 'none'; S.run = S.real; S.tutorial = false; world.clearRound(); beginRound(0);

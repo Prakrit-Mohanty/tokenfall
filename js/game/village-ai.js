@@ -43,19 +43,7 @@ function vaiNeuralNet(x, z) {
 }
 
 // TOKEN-1's body, built by the spawn point; token1.js takes the parts and drives it (follows you, reacts to the minigames)
-function vaiGreeter(x, z) {
-  const g = new THREE.Group(); g.userData.dyn = true; g.position.set(x, 0, z); scene.add(g);
-  const body = new THREE.Group(); g.add(body);
-  box(.7, .75, .5, vaiShell(), 0, .45, 0, { p: body }); box(.42, .26, .03, MAT.screen, 0, .72, .26, { p: body, cast: false });
-  const head = new THREE.Group(); head.position.set(0, 1.45, 0); body.add(head);
-  box(.72, .5, .52, vaiShell(), 0, -.25, 0, { p: head }); box(.56, .28, .03, vaiFace('o   o'), 0, -.2, .27, { p: head, cast: false });
-  box(.04, .3, .04, MAT.metal, 0, .25, 0, { p: head }); const tip = box(.12, .12, .12, glowStrip(0xffb347), 0, .55, 0, { p: head, cast: false });
-  const arms = [-1, 1].map((s) => { const a = new THREE.Group(); a.position.set(s * .43, 1.05, 0); body.add(a); box(.14, .5, .14, vaiShell(), 0, -.5, 0, { p: a }); return a; });
-  // the base disc rides the body, flush under the torso (on the ground it floated half a metre below it, a separate object); a soft glow on the ground says it hovers
-  const disc = add(new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, .06, 20), vGlow(V_LED)), body, false); disc.position.y = .42;
-  const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.4), glowDisc(V_LED)); glow.rotation.x = -Math.PI / 2; glow.position.y = .03; g.add(glow);
-  VAI_TOKEN1.parts = { g, body, head, arms, tip };
-}
+function vaiGreeter(x, z) { VAI_TOKEN1.parts = token1Bot(x, z); }   // the body itself: js/models/token1-bot.js
 
 // word pieces drifting up from the coin, the way a model reads text: in tokens
 function vaiTokenStream(x, z) {

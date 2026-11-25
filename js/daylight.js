@@ -143,7 +143,7 @@
         eSun: inside ? b.sun * p.indoor : p.sunI, eHemi: inside ? b.hemi * p.indoor : p.hemiI,
         eHemiCol: inside ? hexOf(tint.copy(b.hemiColor).lerp(tint2.set(p.hemiSky), 0.3)) : p.hemiSky,
         eFog: z === 'kitchen' ? hexOf(tint.copy(b.fog).multiplyScalar(Math.min(1, p.indoor))) : p.fog,
-        eNear: inside ? b.near : p.fogNear, eFar: inside ? b.far : p.fogFar,
+        eNear: inside ? b.near : z === 'airport' ? Math.max(p.fogNear, 55) : p.fogNear, eFar: inside ? b.far : z === 'airport' ? Math.max(p.fogFar, 210) : p.fogFar,   // the airport looks out over a wide apron
         eExp,
         // bloomKnee is in on-screen brightness: divided by the exposure (without the player's brightness slider) it becomes the scene-value knee the bright pass uses
         eKnee: p.bloomKnee.map((v) => v * (1 + 0.3 * S.bright) / eExp),

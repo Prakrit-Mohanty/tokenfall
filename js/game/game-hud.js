@@ -28,13 +28,13 @@
 
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const CSS = `
-    .ghud { position: absolute; top: 50%; transform: translateY(-40%); right: 18px;   /* middle right: clear of the question banner and of answer labels by the board's corners */
+    .ghud { position: absolute; top: 76px; transform: none; right: 18px;   /* top right, under the Settings button */
             width: 220px; box-sizing: border-box; padding: 10px 14px 12px; display: none; font-size: 16px; line-height: 1.35; color: #f3ead6; background: rgba(32, 22, 19, .95); font-variant-ligatures: none; z-index: 5; }
     .ghud .r { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0 0 7px; }
     .ghud .l { font-size: 14px; letter-spacing: .06em; color: #d9c9a3; }
     .ghud .v { color: #fff3d0; }
     .ghud .bar { height: 5px; margin: -3px 0 9px; background: rgba(243, 234, 214, .18); } .ghud .bar i { display: block; height: 100%; background: #ffd27a; }
-    .ghud .time { margin: 0 0 8px; } .ghud .time .v { display: block; font-size: 34px; line-height: 1.05; }
+    .ghud .time { margin: 0 0 8px; } .ghud .time .v { display: block; font-size: 50px; line-height: 1; font-weight: 600; letter-spacing: .01em; }
     .ghud .time.warn .v { color: #ffb347; } .ghud .time.crit .v { color: #ff7a6b; animation: ghud-pulse 1s ease-in-out infinite; }
     @keyframes ghud-pulse { 50% { opacity: .55; } }
     @media (prefers-reduced-motion: reduce) { .ghud .time.crit .v { animation: none; } }

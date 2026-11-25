@@ -20,7 +20,7 @@ function setZone(z) {
   const here = [hero.name, ...npcs.filter(c => c.zone === z).map(c => c.name)];
   document.querySelector('#party h4 span').textContent = a ? a.name.toUpperCase() : 'LOBBY';
   document.getElementById('count').textContent = `${here.length} / 20`;
-  document.getElementById('plist').innerHTML = here.map((n, i) => `<div class="${i ? '' : 'me'}"><i></i>${esc(n)}${i ? '' : ' (you)'}</div>`).join('');
+  document.getElementById('plist').innerHTML = here.map((n, i) => `<div class="${i ? 'pl-go' : 'me'}"${i ? ` data-who="${esc(n)}" tabindex="0" role="button"` : ''}><i></i>${esc(n)}${i ? '' : ' (you)'}</div>`).join('');
 }
 function travel(p) {
   traveling = true; fadeEl.style.opacity = 1;
@@ -96,9 +96,10 @@ function frame(now) {
   } T += dt / 1000; timeU.value = T; final.u.time.value = T % 100;
   anime.engine.update();   // every tween (daylight, camera view, the leaderboard card) steps here, on the frame it is drawn
   // hero
-  hero.setInput(dialog || traveling || playerLocked ? { up: false, down: false, left: false, right: false, run: false } : {
+  const keyIn = {
     up: keys.KeyW || keys.ArrowUp, down: keys.KeyS || keys.ArrowDown, left: keys.KeyA || keys.ArrowLeft, right: keys.KeyD || keys.ArrowRight, run: keys.ShiftLeft || keys.ShiftRight,
-  });
+  };
+  hero.setInput(dialog || traveling || playerLocked ? { up: false, down: false, left: false, right: false, run: false } : walkToStep(keyIn, dt));   // walkToStep: a click on a name in the lobby list walks the hero there (walk-to.js)
   stepChar(hero, dt);
   if (TF.zoneTick[zone]) TF.zoneTick[zone](dt);
   // NPCs
@@ -126,7 +127,7 @@ function frame(now) {
   for (const c of npcs) {
     if (c.zone !== zone) continue;
     const d = Math.hypot(hero.x - c.x, hero.y - c.y);
-    if (d < 1.5 && d < best) { best = d; nearest = { x: c.x, y: charHead(c).y + .75, z: c.y, label: c.name, verb: 'Talk', act: () => { c.wait = 4000; c.setInput({}); c.dir = Math.abs(hero.x - c.x) > Math.abs(hero.y - c.y) ? (hero.x > c.x ? 'right' : 'left') : (hero.y > c.y ? 'down' : 'up'); talk(c.name, NPC_TALK[c.name]); } }; }
+    if (d < 1.5 && d < best) { best = d; nearest = { x: c.x, y: charHead(c).y + .75, z: c.y, label: c.name, verb: 'Talk', act: () => { c.wait = 4000; c.setInput({}); c.dir = Math.abs(hero.x - c.x) > Math.abs(hero.y - c.y) ? (hero.x > c.x ? 'right' : 'left') : (hero.y > c.y ? 'down' : 'up'); talk(c.name, NPC_TALK[c.name] || NPC_TALK[c.name.toLowerCase()] || [`Hi! I'm ${c.name}.`]); } }; }
   }
   if (playerLocked) { nearest = null; nearP = null; }
   // camera follows with a little lag

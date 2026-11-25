@@ -53,65 +53,143 @@ function hq(cx, cz) {
   for (const s of [-1, 1]) { pot(cx + s * 4.4, front + .7, 1.1); pot(cx + s * 5.4, front + .6, .9); }
   return front;
 }
-// the real Calfus building: a glass-fronted block with white cladding down its side, and a taller grey tower
-// with the Calfus logo, a column of windows with little awnings, and vertical louvres on the far edge
+// the real Calfus building at Crescent Bay, Balewadi (from photos and Street View): a blue glass block on stilts with silver cladding down its long side
+// and little pop-out windows, a taller charcoal tower with the Calfus wordmark on its crown, a column of top-hung windows and vertical louvres
+// down its edge; at street level the stilt car park behind horizontal louvres (stack parkers inside), the glass lobby under the tower, and a
+// compound wall of taupe stone pillars with sliding grey bar gates, a lamp on each pillar and the brass name plate by the walk-in gate
+const CB_DOOR_X = 3.8;   // the lobby door (and the portal up to the HQ floor), x from the building's centre
 function calfusHQ(cx, cz) {
-  const panel = (base, joints) => refineTexture(canvasTex(32, 32, (g, W, H) => {
-    noiseFill(g, W, H, base, .05);
-    g.fillStyle = rgb(base, .82); for (const [x, y, w, h] of joints) g.fillRect(x, y, w, h);
-  }), 70, 70, (g, W, H) => {
-    noiseFill(g, W, H, base, .05, 1, decorRandom);
-    const k = W / 32; g.fillStyle = rgb(base, .82);
-    for (const [x, y, w, h] of joints) g.fillRect(Math.round(x * k), Math.round(y * k), w > 1 ? Math.round(w * k) : 1, h > 1 ? Math.round(h * k) : 1);
-    g.fillStyle = rgb(base, 1.06); for (const [x, y, w, h] of joints) if (w > 1) g.fillRect(0, Math.round(y * k) + 1, W, 1);
+  const F = cz, D = 11, bz = F - D / 2, G0 = cx - 7.2, G1 = cx + 1.8, gx = (G0 + G1) / 2, GW = G1 - G0, T0 = G1, T1 = cx + 7.7, tx = (T0 + T1) / 2, TW = T1 - T0;
+  const STILT = 3.0, BAND = 5.6, TOPG = 14.6, TOPT = 17.6;   // the stilt floor, the louvre and logo band, three glass floors, the tower's crown
+  const M = (o) => new THREE.MeshStandardMaterial(Object.assign({ roughness: .8, metalness: 0 }, o));
+  const tex = (w, h, draw) => canvasTex(w, h, draw, { smooth: true });
+  const meshBox = (w, h, d, mats, x, y, z) => { const me = add(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mats)); me.position.set(x, y + h / 2, z); return me; };
+  const charcoal = M({ color: 0x55595f, roughness: .7 }), steel = M({ color: 0x6d7178, roughness: .5, metalness: .3 }), dark = M({ color: 0x1f2226, roughness: .9 });
+  // the curtain wall: blue glass in dark grey mullions, a transom in each floor, the sky caught in it; 40 px a metre
+  const glassFace = (wm, hm, bays, floors, glassFrom = 0) => tex(Math.round(wm * 40), Math.round(hm * 40), (g, W, H) => {
+    const fh = H / floors, x0 = glassFrom * W;
+    const sky = g.createLinearGradient(0, 0, W * .3, H); sky.addColorStop(0, '#a9cbe4'); sky.addColorStop(.55, '#6d9cc4'); sky.addColorStop(1, '#4c7aa6');
+    g.fillStyle = sky; g.fillRect(x0, 0, W - x0, H);
+    g.globalAlpha = .18; g.fillStyle = '#ffffff';   // a few broad reflections running across the panes
+    for (let i = 0; i < 5; i++) { const y = (i * .23 + .08) * H; g.beginPath(); g.moveTo(x0, y); g.lineTo(W, y - W * .25); g.lineTo(W, y - W * .25 + 18); g.lineTo(x0, y + 18); g.fill(); }
+    g.globalAlpha = 1; g.fillStyle = '#353a41';
+    for (let i = 0; i <= bays; i++) { const x = Math.min(W - 5, x0 + i * (W - x0) / bays); g.fillRect(x - 2, 0, 5, H); }
+    for (let f = 0; f <= floors; f++) { g.fillRect(x0, Math.min(H - 6, f * fh) - 3, W - x0, 7); g.fillRect(x0, f * fh + fh * .72, W - x0, 4); }
   });
-  const curtainDraw = (k) => (g, W, H) => {
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      const t = y / H, sheen = ((x + y) % Math.round(23 * k) < 3 * k) ? 26 : 0;
-      let c = [150 - t * 22 + sheen, 200 - t * 28 + sheen, 226 - t * 24 + sheen];   // soft sky-blue glass
-      if (x % Math.round(16 * k) === 0 || y === 0) c = palRGB(PAL.cream); else if (y >= Math.round(25 * k) && y <= Math.round(26.5 * k)) c = palRGB(PAL.periwinkle);
-      P(g, x, y, c);
-    }
-  };
-  const curtain = std(refineTexture(canvasTex(32, 32, curtainDraw(1), { nearest: true }), 70, 70, curtainDraw(70 / 32)), 2.2, { roughness: .4, metalness: 0 });
-  const white = std(panel(palRGB(PAL.cream), [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32], [16, 0, 1, 32]]), 2.2);
-  const grey = std(panel(palRGB(PAL.lilac, .88), [[0, 0, 32, 1], [0, 16, 32, 1], [0, 0, 1, 32]]), 2.2);
-  // squashed in height so the whole front, logo included, fits in the game camera's narrow view
-  const F = cz, D = 7, bz = F - D / 2, HM = 4.9, HT = 6.2;
-  box(15, .3, D + 1.4, MAT.concrete, cx + .5, 0, bz + .4);
-  // glass block on the left, white cladding on its side
-  faceBox(8, HM, D, [white, white, MAT.roofFlat, white, curtain, white], cx - 2.5, .3, bz);
-  box(8.3, .4, D + .3, MAT.concrete, cx - 2.5, HM + .3, bz);
-  for (const [y, z] of [[1.8, bz - 1.2], [3.3, bz + 1.6], [2.5, bz + 2.4]]) box(.06, .9, .7, MAT.charcoal, cx - 6.53, y, z);   // the little angled side windows
-  // grey tower on the right, a little proud of the glass
-  faceBox(4.6, HT, D + .6, [grey, grey, MAT.roofFlat, grey, grey, grey], cx + 3.8, .3, bz);
-  box(2, 1.2, 2.4, grey, cx + 3, HT + .3, bz - 1.4);
-  for (let i = 0; i < 2; i++) {
-    box(1.3, 1.25, .08, curtain, cx + 4.9, 1.1 + i * 1.95, F + .34, { cast: false });
-    const aw = add(new THREE.Mesh(boxGeo(1.5, .08, .45, 0), MAT.metal)); aw.position.set(cx + 4.9, 2.42 + i * 1.95, F + .5); aw.rotation.x = .35;
-  }
-  const logo = canvasTex(160, 40, (g, W, H) => {
-    g.fillStyle = rgb(palRGB(PAL.lilac, .88)); g.fillRect(0, 0, W, H);
-    g.font = '700 30px "Helvetica Neue", Arial, sans-serif'; g.textBaseline = 'middle';
+  // silver aluminium panels in a grid (the long side), with the front bay in glass where the curtain wall turns the corner
+  const cladFace = (wm, hm, glassM) => tex(Math.round(wm * 40), Math.round(hm * 40), (g, W, H) => {
+    g.fillStyle = '#c9ccd1'; g.fillRect(0, 0, W, H);
+    for (let x = 0; x < W; x += 60) { g.fillStyle = (x / 60) % 2 ? '#c3c6cb' : '#cdd0d5'; g.fillRect(x, 0, 60, H); }
+    g.fillStyle = '#9da2a9'; for (let x = 0; x < W; x += 60) g.fillRect(x, 0, 2, H); for (let y = 0; y < H; y += 40) g.fillRect(0, y, W, 2);
+    if (glassM) { const gw = glassM * 40, sky = g.createLinearGradient(W - gw, 0, W, H); sky.addColorStop(0, '#9fc4e0'); sky.addColorStop(1, '#4f7da8'); g.fillStyle = sky; g.fillRect(W - gw, 0, gw, H);
+      g.fillStyle = '#353a41'; g.fillRect(W - gw - 3, 0, 6, H); for (let y = 0; y <= H; y += 120) g.fillRect(W - gw, y - 3, gw, 7); }
+  });
+  const panels = std(tex(96, 96, (g, W, H) => { g.fillStyle = '#5a5e64'; g.fillRect(0, 0, W, H); g.fillStyle = '#62666c'; g.fillRect(3, 3, W - 6, H / 2 - 6); g.fillStyle = '#44484e'; g.fillRect(0, 0, W, 2); g.fillRect(0, H / 2, W, 2); g.fillRect(0, 0, 2, H); }), 1.6, { roughness: .7 });
+  // the wordmark: white "Calfus" with the teal dot at the top of the C, on the tower's grey
+  const wordmark = (w, h, bg) => { const t = tex(1024, Math.round(1024 * h / w), (g, W, H) => {
+    if (bg) { g.fillStyle = bg; g.fillRect(0, 0, W, H); }
+    const fs = Math.round(H * .62); g.font = `600 ${fs}px "Poppins", "Montserrat", "Helvetica Neue", Arial, sans-serif`; g.textBaseline = 'middle';
     const tw = g.measureText('Calfus').width, x0 = (W - tw) / 2, cw = g.measureText('C').width;
-    g.fillStyle = '#ffffff'; g.fillText('Calfus', x0, H / 2 + 2);
-    g.fillStyle = '#3fc6b8'; g.beginPath(); g.arc(x0 + cw * .78, H / 2 - 7, 3.6, 0, 6.3); g.fill();
+    g.fillStyle = '#ffffff'; g.fillText('Calfus', x0, H / 2 + fs * .04);
+    g.fillStyle = '#2fc1b0'; g.beginPath(); g.arc(x0 + cw * .74, H / 2 - fs * .2, fs * .1, 0, 6.3); g.fill(); });
+    return new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: .35, roughness: .6, transparent: !bg }); };
+
+  // ---- the stilt floor under the glass block: open at the front, pillars, two stack parkers with cars, a dim light ----
+  plane(GW, D, M({ color: 0x8d8f93 }), gx, .025, bz);
+  meshBox(GW, .35, D, charcoal, gx, STILT, bz);
+  meshBox(GW, STILT, .2, dark, gx, 0, F - D + .1);
+  meshBox(.2, STILT, D, M({ color: 0xc3c6cb }), G0 + .1, 0, bz);
+  for (const x of [G0 + .45, gx, G1 - .45]) for (const z of [F - .5, F - D + 1]) box(.45, STILT, .45, MAT.concrete, x, 0, z);
+  // a two-level stack parker: four posts, a raised deck with a yellow edge; a supercar up top, the everyday car below
+  const STACK = [[['ferrari', 0xf2c40f, 'a Ferrari 458 in Giallo yellow'], ['creta', null, 'a white Creta']], [['concept', 0x3b3e44, 'a graphite concept car nobody will name'], ['scorpio', null, 'a red Scorpio-N']]];
+  [G0 + 2.2, gx + 1.6].forEach((x, i) => {
+    for (const [dx, dz] of [[-1.3, -1.2], [1.3, -1.2], [-1.3, -6.2], [1.3, -6.2]]) box(.14, 2.85, .14, steel, x + dx, 0, F + dz, { cast: false });
+    box(2.5, .1, 5.2, steel, x, 1.55, F - 3.7, { cast: false });
+    box(2.5, .12, .12, M({ color: 0xf2c230 }), x, 1.55, F - 1.15, { cast: false });
+    const [up, down] = STACK[i];
+    sportsCar(up[0], x, F - 3.7, 0, { collide: false, paint: up[1] }).position.y = 1.62;
+    sportsCar(down[0], x, F - 3.7, 0, { collide: false });
+    INTER.push({ x, z: F + 1.2, r: 1.3, label: 'Stack parker', verb: 'Look', act: () => talk('Stack parker', [`Two cars on one parking space: ${up[2]} on the lift deck, ${down[2]} underneath.`, 'Whoever parks on top leaves last.']) });
   });
-  logo.magFilter = THREE.LinearFilter;
-  const logoM = new THREE.MeshStandardMaterial({ map: logo, emissive: 0xffffff, emissiveMap: logo, emissiveIntensity: .45, roughness: .6 });
-  const sign = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.1, .06), [grey, grey, grey, grey, logoM, grey]); sign.position.set(cx + 3.8, HT - .5, F + .34); add(sign);
-  // vertical louvres down the far edge
-  box(1.4, HT - 1, D - .4, MAT.charcoal, cx + 6.8, .3, bz - .3);
-  for (let x = cx + 6.15; x < cx + 7.5; x += .2) box(.05, HT - 1.2, .3, MAT.metal, x, .4, F - .45);
-  // entrance: lit glass doors under a canopy
-  box(3.6, .16, 1.2, MAT.concrete, cx - 2.5, 0, F + .6, { cast: false });   // the door step
-  for (const dx of [-5.3, .3]) flowerBox(cx + dx, .32, F + .3, 1.5);
-  box(2.8, 2.6, .1, MAT.glassLit, cx - 2.5, .3, F + .06, { cast: false });
-  box(4.6, .22, 2.2, MAT.concrete, cx - 2.5, 2.95, F + 1.1);
-  for (const s of [-1, 1]) { box(.14, 2.95, .14, MAT.metal, cx - 2.5 + s * 2.1, 0, F + 2.05); colCirc(cx - 2.5 + s * 2.1, F + 2.05, .15); }
-  ledSign(['Crescent Bay'], '#8ff0e4', cx - 2.5, 3.2, F + 2.22, 2.6, .4, 0, undefined, PLAIN);
-  pointLight('pune', 0xffd090, 1.3, 7, cx - 2.5, 2.6, F + 2);
-  colBox(cx - 6.8, F - D - .2, cx + 7.7, F + .45);
+  pointLight('pune', 0xfff0d8, .7, 9, gx, 2.6, F - 3);
+
+  // ---- the louvre band over the stilts (the first floor's slab edge), the grey band with the wordmark, then three floors of glass ----
+  meshBox(GW, BAND - STILT - .35, D, charcoal, gx, STILT + .35, bz);
+  for (let i = 0; i < 6; i++) box(GW + .3, .07, .26, steel, gx, STILT + .1 + i * .23, F + .35, { cast: false });   // louvres 3.0 to 4.4
+  for (let x = G0; x <= G1 + .01; x += GW / 6) box(.08, 1.35, .3, steel, x, STILT + .05, F + .3, { cast: false });
+  meshBox(GW + .1, BAND - 4.45, .14, panels, gx, 4.45, F + .07);   // the grey band above them, carrying the wordmark
+  const band = new THREE.Mesh(new THREE.PlaneGeometry(3.6, .95), wordmark(3.6, .95)); band.position.set(gx - 1.2, (4.45 + BAND) / 2, F + .15); add(band, null, false);
+  meshBox(GW + .1, .12, D + .1, charcoal, gx, BAND - .12, bz);
+  const front = M({ map: glassFace(GW, TOPG - BAND, 3, 3), roughness: .25, emissive: 0xffffff, emissiveIntensity: .12 }); front.emissiveMap = front.map;
+  const side = M({ map: cladFace(D, TOPG - BAND, 3), roughness: .55 });
+  meshBox(GW, TOPG - BAND, D, [MAT.roofFlat, side, MAT.roofFlat, MAT.roofFlat, front, MAT.roofFlat], gx, BAND, bz);
+  meshBox(GW + .2, .3, D + .2, M({ color: 0xb9bcc1 }), gx, TOPG, bz);   // the parapet coping
+  for (const [y, z] of [[7.2, bz - 2.6], [9.8, bz + 1.4], [12.3, bz - .6]]) {   // the little pop-out windows on the long side, opened outward
+    const w = add(new THREE.Mesh(new THREE.BoxGeometry(.08, 1, .8), [steel, steel, steel, steel, M({ color: 0x5f86ab, roughness: .2 }), M({ color: 0x5f86ab, roughness: .2 })])); w.position.set(G0 - .25, y, z); w.rotation.y = .55;
+  }
+  box(2.4, 2.2, 2.6, charcoal, gx - 1.5, TOPG + .3, bz - 2.5);   // the stair head on the roof, and two aerials
+  for (const x of [gx + 1.2, gx + 1.8]) box(.06, 1.6, .06, steel, x, TOPG + .3, bz - 3, { cast: false });
+
+  // ---- the tower: charcoal panels, the lobby under it, a window column with top-hung windows, louvres down the right edge, the wordmark on the crown ----
+  const TF = F + .3, LOU = 1.9;   // its front stands a little proud of the glass; the louvre strip is the last 1.9 m
+  faceBox(TW, TOPT - STILT, D + .3, [panels, panels, MAT.roofFlat, panels, panels, panels], tx, STILT, bz + .15);
+  meshBox(T1 - (T0 + 3.6), STILT, D, charcoal, (T0 + 3.6 + T1) / 2, 0, bz);   // the solid base right of the lobby
+  // the lobby, seen through its glass: a warm timber back wall, a pale stone floor, a reception desk, a plant, the lift doors
+  meshBox(3.6, STILT, D - 4.2, charcoal, T0 + 1.8, 0, bz - 2.1);
+  box(3.5, STILT, .1, M({ color: 0x9a7350, emissive: 0x6b4a2a, emissiveIntensity: .35 }), T0 + 1.8, 0, F - 4.15, { cast: false });
+  plane(3.5, 3.4, M({ color: 0xd9d2c4, emissive: 0x30281e, emissiveIntensity: .4 }), T0 + 1.8, .03, F - 2.45);
+  box(1.8, .95, .6, M({ color: 0xece6da, emissive: 0x2e2618, emissiveIntensity: .4 }), T0 + 1.5, 0, F - 3.2, { cast: false });
+  box(.9, 2.2, .06, M({ color: 0xb8bcc2, roughness: .3, metalness: .4 }), T0 + 2.9, 0, F - 4.08, { cast: false });
+  post(.22, .45, MAT.pot || charcoal, T0 + .45, 0, F - 3.6); add(new THREE.Mesh(new THREE.SphereGeometry(.45, 10, 8), MAT.leafA)).position.set(T0 + .45, 1, F - 3.6);
+  pointLight('pune', 0xffd9a8, 1.1, 6, T0 + 1.8, 2.5, F - 2.5);
+  { const gl = add(new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.7, .05), M({ color: 0x9ab4c4, roughness: .1, transparent: true, opacity: .32, depthWrite: false })), null, false); gl.position.set(T0 + 1.8, 1.35, F - .7); gl.userData.dyn = true; }   // the lobby glass
+  for (const x of [T0 + .1, T0 + 1.2, T0 + 2.4, T0 + 3.5]) box(.07, 2.7, .1, dark, x, 0, F - .66, { cast: false });
+  box(3.6, .3, .1, dark, T0 + 1.8, 2.7, F - .66, { cast: false });
+  meshBox(4.2, .55, 2.1, charcoal, T0 + 1.9, STILT - .55, F + .45);   // the cantilevered canopy over the door
+  box(3.6, .05, .3, MAT.warmGlow, T0 + 1.9, STILT - .58, F + 1.2, { cast: false });
+  ledSign(['Crescent Bay'], '#8ff0e4', T0 + 1.9, STILT - .3, F + 1.52, 2.4, .36, 0, undefined, PLAIN);
+  pointLight('pune', 0xffd8a8, 1.2, 7, T0 + 1.9, 2.4, F + .6);
+  const winX = T0 + 1.8;
+  for (let y = BAND + .4; y < TOPT - 3.4; y += 3) {
+    box(1.3, 2.1, .06, front, winX, y, TF + .01, { cast: false });
+    const aw = add(new THREE.Mesh(new THREE.BoxGeometry(1.3, .05, .75), M({ color: 0x9fb8cc, roughness: .2, transparent: true, opacity: .85 }))); aw.position.set(winX, y + 2.05, TF + .3); aw.rotation.x = .5;
+  }
+  meshBox(LOU, TOPT - STILT - 2.9, .2, dark, T1 - LOU / 2, STILT, TF + .05);
+  for (let x = T1 - LOU + .08; x < T1; x += .19) box(.05, TOPT - STILT - 2.9, .32, steel, x, STILT, TF + .25, { cast: false });
+  for (let z = TF - .1; z > TF - 2.4; z -= .19) box(.32, TOPT - STILT - 2.9, .05, steel, T1 + .2, STILT, z, { cast: false });   // and round the corner
+  const crown = new THREE.Mesh(new THREE.PlaneGeometry(TW - .3, 2.2), wordmark(TW - .3, 2.2)); crown.position.set(tx, TOPT - 1.45, TF + .02); add(crown, null, false);
+
+  // ---- the compound wall along the forecourt: stone pillars with lamps, sliding bar gates, the walk-in gate left open by the name plate ----
+  const WZ = F + 8.6, taupe = M({ color: 0xa89b8d, roughness: .9 }), lampM = M({ color: 0xf6f1e4, emissive: 0xfff2d6, emissiveIntensity: .9 }), rust = M({ color: 0x8a5a3c });
+  const pillar = (x, w) => { box(w, 1.9, .7, taupe, x, 0, WZ); box(w + .02, .03, .72, M({ color: 0x8e8275 }), x, 1.15, WZ, { cast: false });
+    box(.26, .26, .26, lampM, x, 1.9, WZ, { cast: false }); box(.32, .05, .32, steel, x, 2.16, WZ, { cast: false }); };
+  const gate = (x0, x1, z) => {   // a sliding gate: grey bars between two rails, on a rusty floor track
+    const m = (x0 + x1) / 2, w = x1 - x0;
+    box(w, .07, .07, steel, m, .12, z, { cast: false }); box(w, .07, .07, steel, m, 1.5, z, { cast: false });
+    for (let x = x0 + .07; x < x1; x += .14) box(.045, 1.38, .045, steel, x, .15, z, { cast: false });
+    box(w + .4, .02, .1, rust, m, 0, z, { cast: false });
+  };
+  for (const [x, w] of [[-8.1, .8], [-1.6, .8], [1.6, 1.8], [5.35, .7], [9.0, .8]]) pillar(cx + x, w);
+  for (const x of [cx - 8.1, cx + 8.9]) {   // and down both sides to the building, closing the compound off from the car park and the side street
+    const z0 = F + .5, z1 = WZ - .35, m = (z0 + z1) / 2, L = z1 - z0;
+    box(.07, .07, L, steel, x, .12, m, { cast: false }); box(.07, .07, L, steel, x, 1.5, m, { cast: false });
+    for (let z = z0 + .07; z < z1; z += .14) box(.045, 1.38, .045, steel, x, .15, z, { cast: false });
+    for (const z of [z0, (z0 + z1) / 2]) box(.5, 1.9, .5, taupe, x, 0, z);
+    colBox(x - .3, z0 - .3, x + .3, z1);
+  }
+  gate(cx - 7.7, cx - 2.0, WZ); gate(cx + 5.7, cx + 8.6, WZ);
+  gate(cx - 1.2, cx + 2.5, WZ - .5);   // the walk-in gate's leaf, slid open behind the wall
+  const plaque = tex(512, 340, (g, W, H) => {
+    const br = g.createLinearGradient(0, 0, W, H); br.addColorStop(0, '#c9b27c'); br.addColorStop(.5, '#e2cf9c'); br.addColorStop(1, '#b49a62'); g.fillStyle = br; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#3b3020'; g.textAlign = 'center'; g.font = '600 74px "Poppins", "Helvetica Neue", Arial, sans-serif'; g.fillText('Calfus', W / 2, 100);
+    g.font = '600 26px "Helvetica Neue", Arial, sans-serif'; g.fillText('Calfus Technologies India Private Limited', W / 2, 165);
+    g.font = '22px "Helvetica Neue", Arial, sans-serif'; g.fillText('35 Crescent Bay, Balewadi', W / 2, 210); g.fillText('Pune, Maharashtra 411045', W / 2, 245);
+  });
+  const pl = new THREE.Mesh(new THREE.BoxGeometry(.9, .6, .03), [steel, steel, steel, steel, M({ map: plaque, roughness: .35, metalness: .5 }), steel]); pl.position.set(cx + 1.6, 1.2, WZ + .37); add(pl, null, false);
+  INTER.push({ x: cx + 1.6, z: WZ + 1.2, r: 1.3, label: 'Name plate', verb: 'Read', act: () => talk('Crescent Bay', ['A brass plate on the gate wall: Calfus Technologies India Private Limited, 35 Crescent Bay, Balewadi, Pune.', 'The walk-in gate is open. The lobby is under the grey tower.']) });
+  colBox(cx - 8.5, WZ - .65, cx + 2.5, WZ + .4); colBox(cx + 5.0, WZ - .4, cx + 9.4, WZ + .4);   // the walk-in gap (x 2.5 to 5) lines up with the lobby door
+
+  colBox(G0 - .1, F - D - .2, T1 + .45, F + .4);
   return F;
 }
 // the office tower across the street from Calfus: lit shops on the ground floor, a white band above them,
@@ -191,6 +269,7 @@ function sportsCar(kind, x, z, ry, o = {}) {
   // the collider is the model's own footprint, measured once it has loaded (so a long truck or a wide body is solid right to its edges); o.onSize(len, wide) gets its size
   SPORTS[kind].then((model) => {
     const m = model.clone(true), b = new THREE.Box3().setFromObject(m), len = b.max.z - b.min.z, wide = b.max.x - b.min.x;   // measured in the model's own frame, before it is turned
+    if (o.paint != null) m.traverse((k) => { if (k.isMesh && k.material.name === 'paint') { k.material = k.material.clone(); k.material.color.setHex(o.paint); } });   // a respray: this copy's own body paint (the packed supercars name theirs 'paint')
     g.add(m);
     if (o.onSize) o.onSize(len, wide);
     if (o.collide !== false) { g.updateMatrixWorld(true); const w = new THREE.Box3().setFromObject(m); colBox(w.min.x + .05, w.min.z + .05, w.max.x - .05, w.max.z - .05); }

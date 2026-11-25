@@ -45,18 +45,25 @@
     let eng = null;
     const BIKE_FILE = 'sounds/prakrit-bike.mp3', bike = { state: 'new' };
     function engine(speed, level) {
-      if (!eng && level <= 0) return;
-      if (!S.on || !ensure() || S.ctx.state !== 'running') return;
+      if (window.TokenFall) TokenFall.bikeLevel = level * Math.min(1, .4 + speed / 12);   // set first, so the music comes back up when the bike stops
+      if (!eng && bike.state !== 'ready' && level <= 0) return;
+      // the bike is a game sound, not ambience: it plays even with the gentle ambience switched off, on its own bus straight to the speakers
+      // (the ambience master sits at 0.2, which left the engine a whisper), and it wakes the audio context itself
+      if (!ensure()) return;
+      if (S.ctx.state === 'suspended') { S.ctx.resume(); return; }
+      // pushed hard (x4) into a limiter, so it is as loud as the speakers go without crackling; the music ducks under it (music.js reads TF.bikeLevel)
+      if (!S.bikeBus) { const lim = S.ctx.createDynamicsCompressor(); lim.threshold.value = -6; lim.knee.value = 2; lim.ratio.value = 20; lim.attack.value = .002; lim.release.value = .12;
+        S.bikeBus = S.ctx.createGain(); S.bikeBus.gain.value = 4; S.bikeBus.connect(lim); lim.connect(S.ctx.destination); }
       const c = S.ctx, t = c.currentTime, f = 55 + speed * 14;
       // Prakrit's real bike: a recording at sounds/prakrit-bike.mp3, looped, pitched up with speed. Fetched on the first ride; the synth below
       // stands in until it decodes, and for good if the file is not there.
       if (bike.state === 'new') { bike.state = 'loading'; fetch(BIKE_FILE).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(r.status))).then((b) => c.decodeAudioData(b)).then((buf) => {
-        const src = c.createBufferSource(), out = c.createGain(); src.buffer = buf; src.loop = true; out.gain.value = 0; src.connect(out); out.connect(S.master); src.start();
+        const src = c.createBufferSource(), out = c.createGain(); src.buffer = buf; src.loop = true; out.gain.value = 0; src.connect(out); out.connect(S.bikeBus); src.start();
         bike.src = src; bike.out = out; bike.state = 'ready'; if (eng) eng.out.gain.setTargetAtTime(0, c.currentTime, .05);
       }).catch(() => { bike.state = 'none'; }); }
       if (bike.state === 'ready') {
         bike.src.playbackRate.setTargetAtTime(.75 + Math.min(speed, 26) / 26 * .75, t, .12);
-        bike.out.gain.setTargetAtTime(.6 * level, t, .15);
+        bike.out.gain.setTargetAtTime(level, t, .15);
         return;
       }
       // the synth: a supercharged inline-four screaming up the revs, like a Kawasaki H2R on the dyno. Two saws a hair apart for the howl (firing
@@ -70,7 +77,7 @@
         o1.connect(lp); o2.connect(lp); lp.connect(body); body.connect(pulse);
         rasp.connect(bp); bp.connect(raspG); raspG.connect(pulse);
         lfo.connect(lfoAmt); lfoAmt.connect(pulse.gain); pulse.connect(out);
-        whine.connect(whineG); whineG.connect(out); out.connect(S.master);
+        whine.connect(whineG); whineG.connect(out); out.connect(S.bikeBus);
         eng = { o1, o2, rasp, whine, lfo, lp, bp, whineG, lfoAmt, out };
       }
       const k = Math.min(speed, 26) / 26, fire = 60 + k * k * 420 + k * 60;   // firing frequency, climbing faster near the top like a screaming redline
@@ -78,7 +85,7 @@
       eng.whine.frequency.setTargetAtTime(900 + k * 5200, t, .1); eng.whineG.gain.setTargetAtTime(.015 + k * .07, t, .1);
       eng.lfo.frequency.setTargetAtTime(fire / 4, t, .06); eng.lfoAmt.gain.setTargetAtTime(.3 - k * .22, t, .1);
       eng.lp.frequency.setTargetAtTime(700 + k * 4200, t, .08); eng.bp.frequency.setTargetAtTime(fire * 3, t, .08);
-      eng.out.gain.setTargetAtTime(0.22 * level, t, 0.15);
+      eng.out.gain.setTargetAtTime(0.35 * level, t, 0.15);
     }
     const world = {
       state: S,

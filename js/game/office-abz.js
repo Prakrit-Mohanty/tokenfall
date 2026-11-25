@@ -229,23 +229,51 @@ function buildABZ(a) {
   for (let z = bz0 + .7; z < bz1 - .4; z += 1.3) { stool(X(20) - 1.05, z); colCirc(X(20) - 1.05, z, .25); }
 
   // ---- plants in black pots ----
+  // a rounded cream pot with a gold band, dark soil and a leafy bush of soft rounded leaves on arching stems, in three greens
+  const potM = new THREE.MeshStandardMaterial({ color: 0xf3ead8, roughness: .55 }), bandM = new THREE.MeshStandardMaterial({ color: 0xd9a84e, roughness: .5 }), soilM = new THREE.MeshStandardMaterial({ color: 0x6b4a2e, roughness: 1 });
+  const leafMs = [0x5f9e4f, 0x77b35c, 0x4c8a45].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: .6 })), stemM = new THREE.MeshStandardMaterial({ color: 0x4f7a3a, roughness: .8 });
+  const potGeo = new THREE.LatheGeometry([[0, 0], [.19, 0], [.22, .04], [.26, .4], [.28, .46], [.27, .5], [.24, .5], [.22, .44], [0, .44]].map(([r, y]) => new THREE.Vector2(r, y)), 32);
+  const leafGeo = new THREE.SphereGeometry(1, 16, 10), stemGeo = new THREE.CylinderGeometry(.012, .016, 1, 6);
+  let seed = 7; const pr = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const plant = (x, z) => {
-    const p = add(new THREE.Mesh(new THREE.CylinderGeometry(.26, .2, .5, 10), black)); p.position.set(x, .25, z);
-    for (let i = 0; i < 9; i++) { const g = new THREE.Group(); g.position.set(x, .45, z); g.rotation.y = i / 9 * 6.283; scene.add(g); const b = add(new THREE.Mesh(boxGeo(.07, .95, .02, 0), leaf), g, false); b.position.set(.12, .4, 0); b.rotation.z = -.45 - (i % 3) * .12; }
+    const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
+    add(new THREE.Mesh(potGeo, potM), g);
+    const band = add(new THREE.Mesh(new THREE.TorusGeometry(.245, .018, 8, 32), bandM), g, false); band.rotation.x = Math.PI / 2; band.position.y = .3;
+    const soil = add(new THREE.Mesh(new THREE.CircleGeometry(.235, 24), soilM), g, false); soil.rotation.x = -Math.PI / 2; soil.position.y = .45;
+    for (let i = 0; i < 20; i++) {
+      const a = i * 2.399 + pr() * .4, tall = i < 7, h = tall ? .55 + pr() * .3 : .3 + pr() * .25, out = tall ? .1 + pr() * .08 : .2 + pr() * .1, tilt = tall ? .35 : .9 + pr() * .3;
+      const arm = new THREE.Group(); arm.position.y = .45; arm.rotation.y = a; g.add(arm);
+      const st = add(new THREE.Mesh(stemGeo, stemM), arm, false); st.scale.y = h; st.position.set(out / 2, h / 2, 0); st.rotation.z = -Math.atan2(out, h);
+      const lf = add(new THREE.Mesh(leafGeo, leafMs[i % 3]), arm); lf.position.set(out + Math.sin(tilt) * .1, h + Math.cos(tilt) * .06, 0); lf.scale.set(.17, .024, .1); lf.rotation.z = -tilt * .8; lf.rotation.x = (pr() - .5) * .4;
+    }
     colCirc(x, z, .32);
   };
-  for (const [x, y] of [[9.95, -.4], [15.2, 10.3], [14.3, 12.5], [7.3, 13.35], [15.5, 14.8]]) plant(X(x), Z(y));
+  // plants out of the walkways: each is tucked into the nearest corner within ~2 m (a free spot with the most walls and furniture round it)
+  const hitCol = (x, z, pad) => COL.some((c) => (c.r !== undefined ? (x - c.x) ** 2 + (z - c.z) ** 2 < (c.r + pad) ** 2 : c.ex === undefined && x > c.x0 - pad && x < c.x1 + pad && z > c.z0 - pad && z < c.z1 + pad));
+  const tuck = (x, z) => {
+    let best = [x, z], bs = -1;
+    for (let dx = -2; dx <= 2; dx += .25) for (let dz = -2; dz <= 2; dz += .25) {
+      const px = x + dx, pz = z + dz; if (Math.hypot(dx, dz) > 2 || hitCol(px, pz, .36)) continue;
+      let sc = 0; for (let k = 0; k < 8; k++) if (hitCol(px + Math.cos(k * .785) * .62, pz + Math.sin(k * .785) * .62, 0)) sc++;
+      const v = sc * 10 - Math.hypot(dx, dz); if (v > bs) { bs = v; best = [px, pz]; }
+    }
+    return best;
+  };
+  for (const [x, y] of [[9.95, -.4], [15.2, 10.3], [14.3, 12.5], [7.3, 13.35], [15.5, 14.8]]) plant(...tuck(X(x), Z(y)));
 
   // ---- lobby: plants, the Calfus logo on the wall, the garlanded door into the office, a standee ----
   for (const y of [10.1, 10.75, 11.4]) plant(X(-.55), Z(y));
-  const logo = canvasTex(160, 48, (g, W, Hh) => {
-    g.clearRect(0, 0, W, Hh); g.font = '700 34px "Helvetica Neue", Arial, sans-serif'; g.textBaseline = 'middle';
-    const tw = g.measureText('Calfus').width, x0 = (W - tw) / 2, cw = g.measureText('C').width;
-    g.fillStyle = '#5a6f9c'; g.fillText('Calfus', x0, Hh / 2 + 2);
-    g.fillStyle = '#3fc6b8'; g.beginPath(); g.arc(x0 + cw * .78, Hh / 2 - 8, 4, 0, 6.3); g.fill();
-  });
-  logo.magFilter = THREE.LinearFilter;
-  const lg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, .78), new THREE.MeshStandardMaterial({ map: logo, alphaTest: .4, emissive: 0x5a6f9c, emissiveMap: logo, emissiveIntensity: .6 }));
+  // the Calfus wordmark, drawn big (the real C with its teal dot, from js/models/calfus-c.js, then "alfus") so it stays sharp up close
+  const logoCv = document.createElement('canvas'); logoCv.width = 1024; logoCv.height = 300;
+  const logo = new THREE.CanvasTexture(logoCv); logo.anisotropy = 8;
+  const drawLogo = (C) => {
+    const g = logoCv.getContext('2d'), Hh = 300; g.clearRect(0, 0, 1024, Hh); g.font = '700 236px "Poppins", "Montserrat", "Helvetica Neue", Arial, sans-serif'; g.textBaseline = 'alphabetic';
+    const ch = 196, cw = C ? ch * C.width / C.height : g.measureText('C').width, tw = g.measureText('alfus').width, x0 = (1024 - cw - tw - 8) / 2, base = 248;
+    if (C) g.drawImage(C, x0, base - ch, cw, ch); else { g.fillStyle = '#1d1d22'; g.fillText('C', x0, base); }
+    g.fillStyle = '#1d1d22'; g.fillText('alfus', x0 + cw + 8, base); logo.needsUpdate = true;
+  };
+  drawLogo(null); if (window.calfusLogo) calfusLogo(drawLogo); if (document.fonts) document.fonts.ready.then(() => (window.calfusLogo ? window.calfusLogo(drawLogo) : drawLogo(null)));
+  const lg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, .76), new THREE.MeshStandardMaterial({ map: logo, transparent: true, roughness: .6 }));
   lg.position.set(X(-.12) - .03, 2.1, Z(10.7)); lg.rotation.y = -Math.PI / 2; lobbyWall.add(lg);
   box(.06, 1.1, .7, black, X(-.5), 1.1, Z(14.4)); box(.04, 1.1, .04, black, X(-.5), 0, Z(14.4)); colCirc(X(-.5), Z(14.4), .3);
   const lbin = add(new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .6, 12), new THREE.MeshStandardMaterial({ color: 0x2a2116 }))); lbin.position.set(X(-.45), .3, Z(13.65));

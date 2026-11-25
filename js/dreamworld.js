@@ -1,12 +1,12 @@
 // TokenFall — the picture-book world around the game. Browser only: window.Dreamworld.
 //
 //   * the lobby is a floating island: its lawn ends in a quilted border, a draped plaid skirt tapers away underneath with a fringe of tassels, and a sea of soft pastel clouds drifts below
-//   * every outdoor place has little treasures drifting through the air: stars, keys, envelopes, ringed planets and crescent moons, drawn like coloured-pencil stickers
+//   * every outdoor place has little treasures drifting through the air: stars, envelopes, ringed planets and crescent moons (no keys: they were taken out), drawn like coloured-pencil stickers
 // Colours follow the time of day: daylight.js hands every mood's cloud colour to apply(). Nothing here collides with anything or touches the rules.
 //   Dreamworld.install(TF)    TF.dream = { apply(p, inside, zone) }
 (function (root) {
   const ISLAND = typeof V_ISLAND !== 'undefined' ? V_ISLAND : 53;   // the lobby's half-size, set by lobby-village.js (its lawn, its river and its tufts end here)
-  const OUTDOOR_HIDDEN = { lab: 1, abz: 1, kitchen: 1 };            // roofed places have no sky to float in
+  const OUTDOOR_HIDDEN = { lab: 1, abz: 1, kitchen: 1, airport: 1 };            // roofed places have no sky to float in
   const PI = Math.PI;
 
   function install(TF) {
@@ -39,7 +39,6 @@
     const KINDS = [
       { n: 14, size: 0.9, tex: sticker((g) => { star(g, 64, 66, 48, 22); g.fillStyle = '#ffe28a'; g.fill(); g.stroke(); g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.arc(52, 52, 7, 0, 7); g.fill(); }) },
       { n: 7, size: 1.0, tex: sticker((g) => { g.fillStyle = '#f7ecdc'; g.beginPath(); g.rect(16, 36, 96, 62); g.fill(); g.stroke(); g.beginPath(); g.moveTo(16, 38); g.lineTo(64, 74); g.lineTo(112, 38); g.stroke(); g.fillStyle = '#f08aa6'; g.beginPath(); g.arc(64, 74, 11, 0, 7); g.fill(); g.stroke(); }) },
-      { n: 6, size: 0.95, tex: sticker((g) => { g.fillStyle = '#f3c25a'; g.beginPath(); g.arc(40, 40, 22, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#e8ddf5'; g.beginPath(); g.arc(40, 40, 8, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#f3c25a'; g.beginPath(); g.rect(54, 54, 14, 56); g.fill(); g.stroke(); g.beginPath(); g.rect(68, 80, 18, 10); g.fill(); g.stroke(); g.beginPath(); g.rect(68, 98, 12, 10); g.fill(); g.stroke(); }) },
       { n: 4, size: 1.9, tex: sticker((g) => { const gr = g.createRadialGradient(54, 50, 6, 64, 64, 40); gr.addColorStop(0, '#f2e4ff'); gr.addColorStop(1, '#b6a0e0'); g.fillStyle = gr; g.beginPath(); g.arc(64, 64, 34, 0, 7); g.fill(); g.stroke(); g.strokeStyle = 'rgba(86,66,104,.75)'; g.lineWidth = 6; g.beginPath(); g.ellipse(64, 66, 58, 16, -0.35, 0, 2 * PI); g.stroke(); g.strokeStyle = '#f5d6e2'; g.lineWidth = 3; g.stroke(); }) },
       { n: 2, size: 2.5, tex: sticker((g) => { g.fillStyle = '#fff1c8'; g.beginPath(); g.arc(64, 64, 42, 0, 7); g.fill(); g.stroke(); g.globalCompositeOperation = 'destination-out'; g.beginPath(); g.arc(84, 54, 38, 0, 7); g.fill(); g.globalCompositeOperation = 'source-over'; g.beginPath(); g.arc(64, 64, 42, PI * .55, PI * 1.45); g.stroke(); }) },
     ];

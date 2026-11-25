@@ -304,9 +304,7 @@
     s += badge(5, -47, 18.5, 'hq') + badge(0, 0, 9, 'fountain') + badge(18, -13.5, 7, 'cup') + badge(-22, -8, 9.2, 'tower') + badge(-31, -10, 6.2, 'target') + badge(9, -13.8, 7.8, 'board') + badge(-18.5, 10, 7, 'home') + badge(-24, 34, 1, 'duck') + badge(18.5, 28, 5, 'cup');
     s += name(18, -13.5, -1.2, 'Token Brew') + name(-22, -6, -1.6, 'Token Tower') + name(-31, -8, -1.6, 'Spot Shot') + name(9, -12, -.6, 'Leaderboard') + name(-25, 16, -2.2, 'Homes') + name(-24, 42, -1, 'Pond') + name(0, 13.5, -1.2, 'Plaza', 12) + name(36, -36, 0, 'River', 12);
     s += pill(-44, 0, 15, 'Airport', '#f0a030') + pill(44, 0, 15, 'Pune', '#3fae55') + pill(0, 44, 15, 'Glass Bridge', '#8f6ad8') + pill(0, -47, 25.5, 'HQ', '#e04a5a');
-    // ---- you are here ----
-    { const [cx, cy] = iso(-3.9, 10.9, 3.2); s += `<g transform="translate(${f1(cx)},${f1(cy)})"><path d="M0 0c-3-6-14-14-14-25a14 14 0 0 1 28 0c0 11-11 19-14 25z" fill="#e8322a" stroke="#fff" stroke-width="3"/><circle cy="-25" r="5.5" fill="#fff"/>` +
-      `<g transform="translate(-114,-40)"><rect x="0" y="-12" width="96" height="24" rx="12" fill="#2b2b33"/><text x="48" y="5" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">You are here</text></g></g>`; }
+    // ---- you are here: drawn live on top when the map opens (see aim layer below) ----
     // ---- cards beyond the portals ----
     s += card(16, 16, 254, iso(-44, 0, 11), '#f0a030', 'Airport portal', pvPlane, ['Fly to Pleasanton (US office)', 'The Calfus office in California']);
     s += card(1010, 512, 256, iso(44, 0, 11), '#3fae55', 'Pune portal', pvCity, ['Crescent Bay → HQ floor', 'Carrom table on the HQ floor', 'ABZ office, 15th floor']);
@@ -326,11 +324,51 @@
   const flat = (x0, z0, x1, z1, fill, extra = '') => poly([iso(x0, z0), iso(x1, z0), iso(x1, z1), iso(x0, z1)], fill, extra);
 
   const el = document.createElement('div'); el.className = 'wm-back'; el.hidden = true;
-  el.innerHTML = `<div class="wm-card" role="dialog" aria-label="Lobby map"><div class="wm-head"><h2>TokenFall Lobby</h2><span>Walk into a glowing portal to travel</span><button type="button" class="wm-x">Close <kbd>E</kbd></button></div><div class="wm-map"></div></div>`;
+  el.innerHTML = `<div class="wm-card" role="dialog" aria-label="Lobby map"><div class="wm-head"><h2>TokenFall Lobby</h2><span>Click a place (or anywhere on the grass) to run there</span><button type="button" class="wm-x">Close <kbd>E</kbd></button></div><div class="wm-map"></div></div>`;
   document.getElementById('ui').appendChild(el);
   let drawn = false, cache = '';
   const markup = () => cache || (cache = svg());
-  const open = () => { if (!drawn) { el.querySelector('.wm-map').innerHTML = markup(); drawn = true; } el.hidden = false; window.TokenFall.lockPlayer(true); };
+  // ---- click to go: places on the map (their badge or pill, and where in the world you end up), else any open ground ----
+  const HOT = [
+    ['HQ Office', 5, -47, 18.5, -32, 0, -44.8], ['the fountain', 0, 0, 9, -32, 0, 5], ['Token Brew', 18, -13.5, 7, -32, 18.1, -7], ['the Leaderboard', 9, -13.8, 7.8, -32, 8.6, -9.2],
+    ['Token Tower', -22, -8, 9.2, -32, -26, -3.2], ['Spot Shot', -31, -10, 6.2, -32, -20.5, -2.2], ['the homes', -18.5, 10, 7, -32, -16.2, -7], ['the pond', -24, 34, 1, -32, 16.4, 23.8],
+    ['the Prompt Lab', 18.5, 28, 5, -32, 6.3, 24.8], ['the Airport portal', -44, 0, 15, 0, -40, 0], ['the Pune portal', 44, 0, 15, 0, 40, 0], ['the Glass Bridge', 0, 44, 15, 0, 0, 40], ['HQ', 0, -47, 25.5, 0, 0, -44.8],
+  ];
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  let svgEl = null, aim = null, me = null, target = null;
+  const toSvg = (e) => { const p = svgEl.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svgEl.getScreenCTM().inverse()); };
+  const ground = (px, py) => { const u = (px - OX) / (.866 * S), v = (py - OY) / (.5 * S); return [(u + v) / 2, (v - u) / 2]; };
+  const pick = (e) => {
+    const p = toSvg(e);
+    for (const [label, ax, az, ay, dy, wx, wz] of HOT) { const [cx, cy] = iso(ax, az, ay); if (Math.abs(p.x - cx) < (dy ? 22 : 60) && Math.abs(p.y - (cy + dy)) < (dy ? 26 : 18)) return { label, x: wx, z: wz, hot: true }; }
+    const [x, z] = ground(p.x, p.y);
+    if (Math.abs(x) > 47 || Math.abs(z) > 47) return null;
+    return { label: 'there', x, z, hot: false };
+  };
+  const drawAim = (t) => {
+    if (!t) { aim.style.display = 'none'; return; }
+    const [cx, cy] = iso(t.x, t.z), text = t.hot ? `Go to ${t.label}` : 'Run here', w = text.length * 7.4 + 26;
+    aim.style.display = '';
+    aim.innerHTML = `<ellipse cx="${f1(cx)}" cy="${f1(cy)}" rx="14" ry="7" fill="rgba(255,210,122,.35)" stroke="#ffb02e" stroke-width="3"/><circle cx="${f1(cx)}" cy="${f1(cy)}" r="2.5" fill="#ffb02e"/>` +
+      `<g transform="translate(${f1(cx)},${f1(cy - 30)})"><rect x="${f1(-w / 2)}" y="-13" width="${f1(w)}" height="26" rx="13" fill="#2b2b33"/><text y="5" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">${text}</text></g>`;
+  };
+  const drawMe = () => {
+    const h = typeof hero !== 'undefined' && hero ? [hero.x, hero.y] : [-3.9, 10.9], [cx, cy] = iso(h[0], h[1], 3.2);
+    me.innerHTML = `<g transform="translate(${f1(cx)},${f1(cy)})"><path d="M0 0c-3-6-14-14-14-25a14 14 0 0 1 28 0c0 11-11 19-14 25z" fill="#e8322a" stroke="#fff" stroke-width="3"/><circle cy="-25" r="5.5" fill="#fff"/>` +
+      `<g transform="translate(-114,-40)"><rect x="0" y="-12" width="96" height="24" rx="12" fill="#2b2b33"/><text x="48" y="5" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">You are here</text></g></g>`;
+  };
+  const wire = () => {
+    svgEl = el.querySelector('.wm-map svg'); svgEl.style.cursor = 'pointer';
+    me = document.createElementNS(SVGNS, 'g'); aim = document.createElementNS(SVGNS, 'g'); aim.style.pointerEvents = 'none'; me.style.pointerEvents = 'none'; svgEl.append(me, aim);
+    svgEl.addEventListener('mousemove', (e) => { target = pick(e); drawAim(target); svgEl.style.cursor = target ? 'pointer' : 'not-allowed'; });
+    svgEl.addEventListener('mouseleave', () => { target = null; drawAim(null); });
+    svgEl.addEventListener('click', (e) => {
+      const t = pick(e); if (!t) return;
+      e.stopPropagation(); close();
+      if (!walkStartAt(t.x, t.z, t.hot ? t.label : 'that spot')) log('', "Can't get there from here.", true);
+    });
+  };
+  const open = () => { if (!drawn) { el.querySelector('.wm-map').innerHTML = markup(); drawn = true; wire(); } drawMe(); drawAim(null); el.hidden = false; window.TokenFall.lockPlayer(true); };
   const close = () => { if (el.hidden) return; el.hidden = true; window.TokenFall.lockPlayer(false); };
   el.addEventListener('click', (e) => { if (e.target === el || e.target.closest('.wm-x')) close(); });
   addEventListener('keydown', (e) => { if (el.hidden) return; if (!e.repeat && ['KeyE', 'Escape', 'Enter', 'Space'].includes(e.code)) close(); e.stopImmediatePropagation(); e.preventDefault(); }, true);

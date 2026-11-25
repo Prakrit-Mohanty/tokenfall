@@ -53,7 +53,7 @@ function buildOffice(a) {
   garlandV(LX - .85, LZ - .16, .9, 2.5, true); garlandV(LX + .85, LZ - .16, .9, 2.5, true);
   ledSign(['LIFT · Ground'], '#f6e3b4', LX, 3.75, LZ - .05, 1.8, .34);
   const g = AREAS.pune;   // the lift takes you back down, out of the Calfus building's front doors
-  portal(LX, LZ - 1.3, a.color, 'lab', 'pune', 'Ground Floor', { at: [g.cx - 2.5, g.cz - 1.7] });
+  portal(LX, LZ - 1.3, a.color, 'lab', 'pune', 'Ground Floor', { at: [g.cx + CB_DOOR_X, g.cz - 1] });
   INTER.push({ x: EX, z: LZ - .7, r: 1, label: 'Electrical Duct', verb: 'Read', act: () => talk('Electrical Duct', ['AUTHORISED PERSONNEL ONLY.', 'Behind this door: the cables that keep every model in this office running.']) });
   // the fire-exit stairs, a closed block east of the lift with its door onto the waiting area
   const core = grp(), WX = X(1.44);

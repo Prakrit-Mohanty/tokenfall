@@ -262,7 +262,7 @@ function puneGalli(cx, cz) {
 function puneABZ(cx, cz) {
   const [ax, az] = PUNE_ABZ, tf = finTower(cx + ax, cz + az);
   plane(30, 11.5, cbStone(), cx + ax, .018, cz + az + 5.6, 2);   // the forecourt in Crescent Bay's sandy stone tiles, not the lobby's pastel pavers
-  for (const x of [-12, -6.6, 6.6, 12]) palm(cx + ax + x, tf + 3, rr(3.2, 3.8));
+  for (const x of [-12, -6.6, 6.6, 12]) { treeGrate(cx + ax + x, tf + 3, 1.3); palm(cx + ax + x, tf + 3, rr(3.2, 3.8)); }   // each palm in an iron grate, like the street trees
   ledSign(['ABZ'], '#9fd8ff', cx + ax, 2.15, tf + .45, 2.4, .5);
   portal(cx + ax, tf + 1.6, 0x9fd8ff, 'pune', 'abz', 'ABZ Office');
 }
@@ -286,7 +286,8 @@ function puneParking(cx, cz, asphalt) {
   for (let x = -2.3; x <= 2.3; x += .7) box(.4, .015, .14, W, ax + x, .032, cz + 9.6, { cast: false });
   // the parked cars, nose-in to the aisle
   const CARS = [['bmw', 'BMW M3 GTR', ['The BMW M3 GTR in its racing livery.', 'It looks like it would rather be on a highway than in a car park.']], ['jesko', 'Koenigsegg Jesko', ['A Koenigsegg Jesko in orange, all carbon wing and gold wheels.', 'Somebody at Crescent Bay is doing very well.']],
-    ['m4', 'BMW M4', ['A widebody BMW M4 in deep teal.']], ['creta', 'Hyundai Creta', ['A white Creta. Parked politely, for once.']], ['scorpio', 'Mahindra Scorpio-N', ['A red Scorpio-N, big enough to park two Omnis in.']]];
+    ['m4', 'BMW M4', ['A widebody BMW M4 in deep teal.']], ['ferrari', 'Ferrari 458 Italia', ['A Ferrari 458 Italia in Rosso Corsa, mid-engined, a V8 behind the seats.', 'Somebody shipped a big release this quarter.']],
+    ['concept', 'Concept car', ['A pearl-white concept car, all clearcoat and gull-wing curves.', 'There is no badge on it. The owner just says "it\'s in beta".']]];   // supercars down the row (the Creta and the Scorpio moved to the stack parkers under the office)
   CARS.forEach(([kind, name, lines], i) => { sportsCar(kind, cx - 18.3, cz + BAYS[i], Math.PI / 2); INTER.push({ x: ax - 1.4, z: cz + BAYS[i], r: 1.3, label: name, verb: 'Look', act: () => talk(name, lines) }); });
   // two-wheelers along the east strip (x 289.2-291.8), angled to the aisle
   const BIKES = [['r15', 'Yamaha R15M', 'A Yamaha R15M in metallic grey, with blue wheels and gold forks.'], ['vstrom', 'Suzuki V-Strom', 'A yellow Suzuki V-Strom SX, ready for a long ride.'],
@@ -326,8 +327,8 @@ function puneParking(cx, cz, asphalt) {
 function puneStreet(cx, cz) {
   const nz = cz + PUNE_MZ - 7.3, sz = cz + PUNE_MZ + 7.3, nearStreet = (x) => Math.abs(x - PUNE_RX) < 6 || Math.abs(x - PUNE_RX2) < 6;
   for (let x = -52; x < 146; x += 14) {
-    if (!nearStreet(x) && Object.values(PUNE_TAXI_STANDS).every(([sx]) => Math.abs(x - sx) > 3)) streetLight(cx + x, nz - .9, 0, 1);
-    if (!nearStreet(x + 7) && Math.abs(x + 7 - (PUNE_GALLI[0] + PUNE_GALLI[2]) / 2) > 6) streetLight(cx + x + 7, sz + .9, 0, -1);
+    if (!nearStreet(x) && Object.values(PUNE_TAXI_STANDS).every(([sx]) => Math.abs(x - sx) > 3)) streetLight(cx + x, cz + PUNE_MZ - 6.55, 0, 1);   // at the kerb, arm over the road: the footpath behind it stays clear
+    if (!nearStreet(x + 7) && Math.abs(x + 7 - (PUNE_GALLI[0] + PUNE_GALLI[2]) / 2) > 6) streetLight(cx + x + 7, cz + PUNE_MZ + 6.55, 0, -1);
   }
   busStop(cx + 112, nz - .6);
   const parked = (x, z, ry, c) => { const a = autoRickshaw(c); a.position.set(x, 0, z); a.rotation.y = ry; colBox(x - 1.5, z - .75, x + 1.5, z + .75); };
@@ -381,8 +382,58 @@ function puneParkedTwoWheelers(cx, cz) {
   const colours = [0x1c1c20, 0xe8e6e0, PAL.coral, PAL.periwinkle, 0x8a8a90];
   for (let k = 0; k < 8; k++) { const s = scooter(colours[(k * 3) % 5]); s.position.set(cx + 41.5 + k * 1.1, 0, cz + PUNE_MZ + 7.9); s.rotation.y = Math.PI * .9; }
   colBox(cx + 40.9, cz + PUNE_MZ + 7.2, cx + 49.8, cz + PUNE_MZ + 8.6);
-  for (let k = 0; k < 6; k++) { const s = scooter(colours[(k * 2 + 1) % 5]); s.position.set(cx + 88 + k * 1.1, 0, cz + PUNE_MZ - 7.9); s.rotation.y = Math.PI * .1; }
-  colBox(cx + 87.4, cz + PUNE_MZ - 8.6, cx + 94.6, cz + PUNE_MZ - 7.2);
+  puneKickDock(cx + 84, cz + 5.5);   // in front of ABZ on its forecourt, beside the entrance: off the footpath, so the walkway stays its full width
+}
+
+const PUNE_ONCE = {}, puneOnce = (k, f) => PUNE_ONCE[k] || (PUNE_ONCE[k] = f());
+// a yellow-and-black shared kick scooter, parked on its stand (length along z, front at +z); for looks only
+function kickScooter(x, z, ry) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+  const yel = puneOnce('ksY', () => new THREE.MeshStandardMaterial({ color: 0xf2c230, roughness: .45 })), blk = puneOnce('ksB', () => new THREE.MeshStandardMaterial({ color: 0x24252a, roughness: .55 }));
+  const grey = puneOnce('ksG', () => new THREE.MeshStandardMaterial({ color: 0x55575e, roughness: .8 })), tyre = puneOnce('ksT', () => new THREE.MeshStandardMaterial({ color: 0x1a1a1d, roughness: .9 }));
+  const lean = new THREE.Group(); lean.rotation.z = .07; g.add(lean);
+  box(.17, .07, .78, blk, 0, .1, 0, { p: lean }); box(.15, .012, .66, grey, 0, .17, -.02, { p: lean, cast: false });   // the deck and its grip tape
+  for (const zz of [-.4, .41]) { const w = add(new THREE.Mesh(new THREE.CylinderGeometry(.115, .115, .06, 18), tyre), lean); w.rotation.z = Math.PI / 2; w.position.set(0, .115, zz); const hub = add(new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .065, 12), grey), lean, false); hub.rotation.z = Math.PI / 2; hub.position.copy(w.position); }
+  const fender = add(new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, .1, 18, 1, true, -Math.PI / 2, Math.PI), yel), lean); fender.rotation.z = Math.PI / 2; fender.position.set(0, .13, -.42); fender.material.side = THREE.DoubleSide;
+  const badge = add(new THREE.Mesh(new THREE.CircleGeometry(.04, 16), blk), lean, false); badge.position.set(0, .2, -.53); badge.rotation.y = Math.PI;
+  box(.06, .03, .02, glowStrip(0xff3020), 0, .2, -.5, { p: lean, cast: false });
+  const stem = new THREE.Group(); stem.position.set(0, .14, .4); stem.rotation.x = -.16; lean.add(stem);
+  const pole = add(new THREE.Mesh(new THREE.CylinderGeometry(.03, .035, .95, 12), yel), stem); pole.position.y = .48;
+  for (const y of [.2, .5, .62, .82]) { const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.036, .036, .05, 12), blk), stem, false); b.position.y = y; }
+  const bar = add(new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, .52, 10), blk), stem); bar.rotation.z = Math.PI / 2; bar.position.y = .96;
+  for (const s of [-1, 1]) { const grip = add(new THREE.Mesh(new THREE.CylinderGeometry(.026, .026, .12, 10), tyre), stem, false); grip.rotation.z = Math.PI / 2; grip.position.set(s * .22, .96, 0); const cap = add(new THREE.Mesh(new THREE.SphereGeometry(.02, 8, 6), yel), stem, false); cap.position.set(s * .29, .96, 0); }
+  box(.12, .07, .1, blk, 0, .93, .02, { p: stem }); box(.06, .03, .02, glowStrip(0xfff0c0), 0, .88, .07, { p: stem, cast: false });
+  const tag = new THREE.Mesh(new THREE.PlaneGeometry(.1, .16), puneOnce('ksTag', () => new THREE.MeshStandardMaterial({ color: 0xfaf8f2, side: THREE.DoubleSide, roughness: .9 }))); tag.position.set(-.1, .82, .03); tag.rotation.y = Math.PI / 2; stem.add(tag);
+  const stand = box(.02, .02, .2, grey, -.1, .02, -.05, { p: lean, cast: false }); stand.rotation.y = .5;
+  return g;
+}
+// a scan-and-go e-scooter dock: a black rubber mat, four scooters on it and an A-frame sign with a QR code. Not rideable; E reads the sign
+function puneKickDock(x, z) {
+  const mat = puneOnce('ksMat', () => new THREE.MeshStandardMaterial({ color: 0x2a2b30, roughness: 1 }));
+  box(4.6, .025, 1.8, mat, x, 0, z, { cast: false });
+  for (let k = 0; k < 4; k++) kickScooter(x - 1.5 + k * 1, z + .05, Math.PI * .92 + (k % 2 ? .05 : -.03));
+  const signTex = canvasTex(256, 384, (c) => {
+    c.fillStyle = '#fffaf0'; c.fillRect(0, 0, 256, 384);
+    c.fillStyle = '#f2c230'; c.beginPath(); c.arc(40, 38, 20, 0, 6.3); c.fill(); c.fillStyle = '#24252a'; c.font = '700 26px Fredoka, Arial'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('T', 40, 39);
+    c.textAlign = 'left'; c.font = '600 26px Fredoka, Arial'; c.fillText('TOKENRIDE', 70, 40);
+    c.fillStyle = '#f2c230'; c.fillRect(38, 72, 180, 200); c.fillStyle = '#24252a'; c.font = '600 18px Fredoka, Arial'; c.textAlign = 'center'; c.fillText('Scan to ride', 128, 92);
+    const q = 8, ox = 58, oy = 108, n = 17; c.fillStyle = '#fff'; c.fillRect(ox - 6, oy - 6, n * q + 12, n * q + 12); c.fillStyle = '#24252a';
+    let sd = 11; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (r() < .48) c.fillRect(ox + i * q, oy + j * q, q, q);
+    for (const [fx, fy] of [[0, 0], [n - 7, 0], [0, n - 7]]) { c.fillStyle = '#24252a'; c.fillRect(ox + fx * q, oy + fy * q, 7 * q, 7 * q); c.fillStyle = '#fff'; c.fillRect(ox + (fx + 1) * q, oy + (fy + 1) * q, 5 * q, 5 * q); c.fillStyle = '#24252a'; c.fillRect(ox + (fx + 2) * q, oy + (fy + 2) * q, 3 * q, 3 * q); }
+    c.fillStyle = '#24252a'; c.font = '600 20px Fredoka, Arial'; c.fillText('HOW TO RIDE', 128, 300);
+    c.font = '500 15px Fredoka, Arial'; c.fillText('1 Find  ·  2 Scan  ·  3 Ride  ·  4 Park', 128, 328);
+    c.fillStyle = '#f2c230'; c.beginPath(); c.roundRect ? c.roundRect(40, 346, 176, 26, 13) : c.rect(40, 346, 176, 26); c.fill(); c.fillStyle = '#24252a'; c.font = '600 14px Fredoka, Arial'; c.fillText('Safety first: wear a helmet', 128, 360);
+  }, { smooth: true, keep: true });
+  const sg = new THREE.Group(); sg.position.set(x - 3, 0, z + .2); sg.rotation.y = .25; scene.add(sg);
+  const frame = puneOnce('ksFrame', () => new THREE.MeshStandardMaterial({ color: 0x1e1f24, roughness: .6 })), face = new THREE.MeshStandardMaterial({ map: signTex, roughness: .7 });
+  for (const s of [1, -1]) {
+    const p = new THREE.Group(); p.position.y = 1.0; p.rotation.x = s * .2; sg.add(p);
+    box(.66, .98, .04, frame, 0, -.98, s * -.0, { p }).position.z = s * .1;
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(.54, .8), s > 0 ? face : frame); f.position.set(0, -.47, s * .1 + s * .025); if (s < 0) f.rotation.y = Math.PI; p.add(f);
+  }
+  colBox(x - 3.4, z - .9, x + 2.3, z + .9);
+  INTER.push({ x, z: z + 1.6, r: 2, label: 'TokenRide scooters', verb: 'Scan', act: () => talk('TokenRide scooters', ['A row of shared e-scooters on their own parking mat.', 'Scan the code, ride to wherever, park it back on a mat. Helmet first!', 'They are all charging right now. Maybe next sprint.']) });
 }
 
 function punePolesAndWires(cx, cz) {
@@ -441,15 +492,24 @@ function bikeTaxi(cx, cz) {
   park('cb');
   traffic.blockers.push(() => (S.mode === 'idle' ? null : { x: g.position.x, z: g.position.z }));
 
-  // out into the lane for your direction (eastbound on the north side, westbound across on the south side), along, back in
+  // out into the lane for your direction. Eastbound is the near side: out, along, back in. Westbound is across the divider, so no cutting over
+  // diagonally: out into the near lane heading east, a U-turn into the far side, along it past the stand, a second U-turn back, and in
+  const uturn = (x, zFrom, zTo, bulge) => { const r = Math.abs(zTo - zFrom) / 2, zc = (zFrom + zTo) / 2, sg = Math.sign(zTo - zFrom); return Array.from({ length: 9 }, (_, i) => { const a = i / 8 * Math.PI; return [x + bulge * Math.sin(a) * r, zc - sg * Math.cos(a) * r]; }); };
   const route = (from, to) => {
-    const [fx] = stands[from], [tx] = stands[to], dir = Math.sign(tx - fx), laneZ = cz + (dir > 0 ? PUNE_LANES.eastOuter : PUNE_LANES.westOuter);
-    const bay = cz + PUNE_TAXI_BAY, pts = [[fx, bay], [fx + dir * 4, laneZ], [tx - dir * 4, laneZ], [tx, bay]];
+    const [fx] = stands[from], [tx] = stands[to], dir = Math.sign(tx - fx), near = cz + PUNE_LANES.eastOuter, far = cz + PUNE_LANES.westOuter, laneZ = dir > 0 ? near : far;
+    const bay = cz + PUNE_TAXI_BAY;
+    let pts, main;
+    if (dir > 0) { pts = [[fx, bay], [fx + 4, near], [tx - 4, near], [tx, bay]]; main = 1; }
+    else {
+      const u1 = uturn(fx + 10, near, far, 1), u2 = uturn(tx - 10, far, near, -1);
+      pts = [[fx, bay], [fx + 4, near], ...u1, ...u2, [tx - 4, near], [tx, bay]]; main = 1 + u1.length - 1;   // the long westbound run starts where the first U-turn ends
+    }
     const segs = []; let total = 0;
-    for (let i = 1; i < pts.length; i++) { const L = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); segs.push({ a: pts[i - 1], b: pts[i], L, s0: total }); total += L; }
+    for (let i = 1; i < pts.length; i++) { const L = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); if (L < 1e-4) continue; segs.push({ a: pts[i - 1], b: pts[i], L, s0: total }); total += L; }
+    if (dir < 0) main = segs.findIndex((q) => Math.abs(q.a[1] - far) < .01 && Math.abs(q.b[1] - far) < .01 && q.L > 5);
     const own = traffic.lanes.find((L) => L.axis === 'x' && Math.abs(L.fixed - laneZ) < .01);
-    const crossed = traffic.lanes.filter((L) => L.axis === 'x' && (dir > 0 ? L.fixed <= laneZ + .01 : L.fixed >= cz + PUNE_LANES.eastOuter - .01) && Math.abs(L.fixed - laneZ) < 8);
-    return { segs, total, dir, laneZ, own, crossed };
+    const crossed = traffic.lanes.filter((L) => L.axis === 'x' && L.fixed <= near + .01 && Math.abs(L.fixed - near) < 8);   // pulling out only ever crosses the near side
+    return { segs, total, dir, laneZ, own, crossed, main };
   };
   const at = (path, s) => {
     const i = path.segs.findIndex((q) => s <= q.s0 + q.L), seg = path.segs[i < 0 ? path.segs.length - 1 : i], k = Math.min(1, (s - seg.s0) / seg.L);
@@ -475,11 +535,11 @@ function bikeTaxi(cx, cz) {
     let cap = S.mode === 'ride' ? 22 : 26;
     cap = Math.min(cap, Math.max(1.2, Math.sqrt(2 * 10 * (P.total - S.s))));
     if (p.seg === 0 && S.s < .5 && laneTraffic(P.crossed, P.segs[0].b[0], 14, 6, null)) return 0;
-    if (p.seg === 1 && !RECKLESS) {
+    if (p.seg === P.main && !RECKLESS) {
       for (const c of P.own.cars) { const gap = (c.s - x) * d - c.len / 2 - .9; if (gap > -1 && gap < 30) cap = Math.min(cap, Math.max(0, gap - 2) * 1.2); }
       const st = lightState('ew', t), toStop = Math.min(...[].concat(P.own.stopAt).map((s) => (s - x) * d).filter((q) => q > 0), Infinity);
       if (st !== 'green' && toStop < 14) cap = Math.min(cap, Math.max(0, toStop - .3) * 1.1);
-      const exitX = P.segs[2].a[0];
+      const exitX = P.segs[P.main + 1].a[0];
       if ((exitX - x) * d < 3 && laneTraffic(P.crossed.filter((L) => L !== P.own), exitX, 12, 5, null)) cap = Math.min(cap, Math.max(0, (exitX - x) * d - .2) * 1.5);
     }
     return cap;
@@ -494,7 +554,7 @@ function bikeTaxi(cx, cz) {
     const p = at(S.path, S.s);
     // the swerve: on the straight, a car close ahead in his lane sends him into the next lane over (the inner one), and back out past it
     let wantLat = 0;
-    if (RECKLESS && p.seg === 1) {
+    if (RECKLESS && p.seg === S.path.main) {
       const P = S.path, d = P.dir, other = P.laneZ === cz + PUNE_LANES.eastOuter ? cz + PUNE_LANES.eastInner : cz + PUNE_LANES.westInner, off = other - P.laneZ;
       const close = (L) => L && L.cars.some((c) => { const gap = (c.s - p.x) * d; return gap > -3 && gap < 16; });
       const ownL = P.own, innerL = traffic.lanes.find((L) => L.axis === 'x' && Math.abs(L.fixed - other) < .01);
@@ -524,7 +584,7 @@ function bikeTaxi(cx, cz) {
 const cbStone = () => pOnce('cbStone', () => { const t = new THREE.TextureLoader().load(window.ROAD_TEX.stone); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 8 / 3); t.anisotropy = 8; return std(t, 0, { roughness: .9 }); });
 function buildPune(a) {
   const { cx, cz } = a;
-  areaShell(a, MAT.paver, cbStone(), false, false, [7, 3.5]);   // the ground round Crescent Bay: the forecourt's stone tiles, not grey concrete
+  areaShell(a, MAT.paver, cbStone(), false, false, [7, 5.1]);   // the way home sits outside Crescent Bay's compound wall, on the strip of stone before the footpath   // the ground round Crescent Bay: the forecourt's stone tiles, not grey concrete
   withSideRandom(() => {
     const M = puneMaterials(), asphalt = std(TX.concrete, 1.5, { roughness: .8 }); asphalt.color.setRGB(.36, .37, .41);
     puneGround(cx, cz, M);
@@ -539,7 +599,7 @@ function buildPune(a) {
     for (const sx of [PUNE_RX, PUNE_RX2]) WALK.push([cx + sx - 5, cz - 34, cx + sx + 5, cz - 14]);
     WALK.push([cx + PUNE_RX2 - 5, cz + PUNE_MZ + 9, cx + PUNE_RX2 + 5, cz + 50]);
     const cf = calfusHQ(cx, cz - 5.6);
-    portal(cx - 2.5, cf + 1.7, 0x5cd6ff, 'pune', 'lab', 'Crescent Bay');
+    portal(cx + CB_DOOR_X, cf + 2.4, 0x5cd6ff, 'pune', 'lab', 'Crescent Bay');   // in front of the lobby door under the tower, through the walk-in gate
     pointLight('pune', 0xffe0b0, 1.6, 12, cx + 4, 3, cz + 2);
     puneParking(cx, cz, asphalt);
     puneABZ(cx, cz);

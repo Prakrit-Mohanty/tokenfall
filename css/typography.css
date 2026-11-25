@@ -3,7 +3,7 @@
    SECONDARY Baloo 2 600                            buttons, keycaps, HUD, minigame titles, scores
    Max font-weight is 700. Text is warm brown or cream on the panels, never pure black. */
 
-@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Alfa+Slab+One&family=Nunito:wght@400;700&family=Poppins:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Alfa+Slab+One&family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700&family=Poppins:wght@400;700&display=swap");
 
 :root {
   --font-primary: "Poppins", "Nunito", "Varela Round", system-ui, sans-serif;

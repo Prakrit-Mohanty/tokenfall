@@ -45,7 +45,7 @@ const V_HOMES = [
 ];
 const V_EXTRA_PATHS = [[0, -42.2, 5, 9.4], [5.15, 26, 5.1, 1.8], [32.4, -6, 5.6, 3]];
 const V_FENCES = [[-14, -4, -14, -9.5], [14.5, 4, 14.5, 7.5], [-14.5, 4, -14.5, 9], [-34, -4.2, -38, -4.2], [29.5, 4.2, 31, 4.2]];
-const V_LAMPS = [[-11.4, -9.4, 1], [11.4, 9.4, 1], [-11.4, 9.4, 0], [11.4, -9.4, 0], [-3.6, -14, 0], [3.6, -17, 1], [-3.6, 16, 1], [3.6, 30, 0], [-16, -3.6, 1], [-30, 3.6, 0], [16, 3.6, 1], [30, -3.6, 0], [-3.6, -28.5, 0], [3.6, 35, 0]];
+const V_LAMPS = [[-11.4, -9.4, 1], [11.4, 9.4, 1], [-11.4, 9.4, 0], [11.4, -9.4, 0], [-3.6, -14, 0], [3.6, -17, 1], [-3.6, 16, 1], [3.6, 30, 0], [-13.4, -3.6, 1], [-30, 3.6, 0], [16, 3.6, 1], [30, -3.6, 0], [-3.6, -28.5, 0], [3.6, 35, 0]];
 const V_HOLOS = [[0, -10.8, 0, '▲ HQ'], [-12.8, 0, Math.PI / 2, '◀ AIRPORT'], [12.8, 0, -Math.PI / 2, 'PUNE ▶'], [0, 10.8, Math.PI, '▼ GLASS BRIDGE']];
 const V_AI_TIPS = ['AI tip: an AI can sound sure of itself and still be wrong. Check answers that matter.', 'AI tip: give it context. "Summarise this for a new joiner" beats "summarise this".', 'AI tip: never paste passwords or private customer data into a chatbot.'];
 
@@ -240,12 +240,30 @@ function lathe(pts, mat, seg = 96) {   // pts are [radius, height], walked so th
 function waterDisc(r, y) { const w = new THREE.Mesh(new THREE.CircleGeometry(r, 96), waterMat); w.rotation.x = -Math.PI / 2; w.position.y = y; scene.add(w); return w; }
 function goldRing(r, y, tube = .035) { const m = add(new THREE.Mesh(new THREE.TorusGeometry(r, tube, 8, 96), MAT.gold), null, false); m.rotation.x = Math.PI / 2; m.position.y = y; return m; }
 
+// white marble with soft grey veins and a few warm gold threads, polished; the lathe's UVs tile it 8 times round and ~1.2 per metre up
+function marbleMaterial() {
+  return vOnce('marble', () => {
+    const tex = canvasTex(512, 512, (g, W, H) => {
+      g.fillStyle = '#f7f4ee'; g.fillRect(0, 0, W, H);
+      let sd = 77; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(${225 + r() * 20 | 0},${222 + r() * 20 | 0},${218 + r() * 20 | 0},.25)`; g.beginPath(); g.arc(r() * W, r() * H, 10 + r() * 40, 0, 6.3); g.fill(); }   // cloudy depth
+      const vein = (w, col, n) => { for (let k = 0; k < n; k++) {   // wandering veins that wrap left-right and top-bottom, so the tile repeats seamlessly
+        let x = r() * W, y = r() * H, a = r() * 6.3; g.strokeStyle = col; g.lineWidth = w * (.5 + r()); g.lineCap = 'round';
+        for (let s = 0; s < 70; s++) { a += (r() - .5) * .7; const nx = x + Math.cos(a) * 7, ny = y + Math.sin(a) * 7;
+          for (const ox of [-W, 0, W]) for (const oy of [-H, 0, H]) { g.beginPath(); g.moveTo(x + ox, y + oy); g.lineTo(nx + ox, ny + oy); g.stroke(); }
+          x = nx; y = ny; if (r() < .04) g.lineWidth *= .7; } } };
+      vein(2.2, 'rgba(150,150,160,.35)', 7); vein(1, 'rgba(120,122,135,.45)', 10); vein(1.2, 'rgba(205,165,90,.45)', 3);
+    }, { keep: true });
+    return new THREE.MeshStandardMaterial({ map: tex, roughness: .22, metalness: 0, color: 0xffffff });
+  });
+}
+
 function tokenFountain(fx, fz) {
   const root = new THREE.Group(); root.position.set(fx, 0, fz); scene.add(root);
   const mount = (o) => { scene.remove(o); root.add(o); return o; };
   // basin: low step, wall, a rounded coping, then the inside wall down to the floor
   // stone like the paving: the basin is 24 stones round in courses .35 high (their joints line up with the paving's 24 wedges), the bowls and stem one carved block
-  const basinStone = stoneRoundMaterial({ c: [fx, fz], n: 24, h: .35, y0: .2, rows: [3.1, 3.5, 3.72] }), carvedStone = stoneRoundMaterial({ c: [fx, fz], n: 0 });
+  const basinStone = marbleMaterial(), carvedStone = basinStone;   // polished white marble, so the fountain reads as a grand centrepiece, not more paving
   mount(lathe([[3.72, 0], [3.72, .1], [3.56, .14], [3.5, .2], [3.5, .55], ...arc(3.3, .55, .2, 0, Math.PI), [3.1, .3], [2.95, .2], [0, .2]], basinStone));
   mount(waterDisc(3.13, .47));
   // pedestal, lower bowl, stem, upper bowl (one profile; the inner surfaces hold the bowl water)
@@ -259,25 +277,8 @@ function tokenFountain(fx, fz) {
   for (const [r, y] of [[3.1, .56]]) {   // one thin highlight at the water's edge; nothing glows outside the rim
     const led = new THREE.Mesh(new THREE.TorusGeometry(r, .035, 6, 128), vGlow(V_LED)); led.rotation.x = Math.PI / 2; led.position.y = y; mount(led); }
 
-  // water: soft round drops on arcs. Each stream is [jets, drops per jet, r0, y0, r1, y1, lift, speed]: a drop flies from (r0, y0) to (r1, y1) bulging up by `lift`
-  const STREAMS = [[6, 8, .05, 1.66, .35, 1.66, .4, .7], [16, 4, .9, 1.72, 1.14, 1.2, .04, .5], [10, 16, 1.45, 1.3, 2.75, .48, .55, .75], [10, 8, 1.45, 1.3, 2.15, .48, .3, .6]];
-  const N = STREAMS.reduce((n, [j, d]) => n + j * d, 0), pos = new Float32Array(N * 3), geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const drop = canvasTex(32, 32, (g) => { const r = g.createRadialGradient(16, 16, 0, 16, 16, 16); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.45, 'rgba(235,250,255,.85)'); r.addColorStop(1, 'rgba(235,250,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 32, 32); }, { smooth: true });
-  const jets = new THREE.Points(geo, new THREE.PointsMaterial({ map: drop, color: 0xffffff, size: .32, transparent: true, opacity: 1, depthWrite: false, fog: false, toneMapped: false }));
-  jets.userData.dyn = true; jets.frustumCulled = false; root.add(jets);
-  const RIP = 10, ripples = Array.from({ length: RIP }, (_, j) => {   // rings spreading from where the long arcs land
-    const m = new THREE.Mesh(new THREE.RingGeometry(.85, 1, 32), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, fog: false }));
-    const a = (j + .5) / RIP * Math.PI * 2; m.rotation.x = -Math.PI / 2; m.position.set(Math.cos(a) * 2.75, .485, Math.sin(a) * 2.75); m.userData.dyn = true; root.add(m); return m;
-  });
-  anim.push(t => {
-    let i = 0;
-    for (const [J, D, r0, y0, r1, y1, lift, sp] of STREAMS) for (let j = 0; j < J; j++) for (let k = 0; k < D; k++, i += 3) {
-      const a = j / J * Math.PI * 2 + r0 * 2, u = (t * sp + k / D + j * .13) % 1, r = r0 + (r1 - r0) * u;
-      pos[i] = Math.cos(a) * r; pos[i + 1] = y0 + (y1 - y0) * u + lift * 4 * u * (1 - u); pos[i + 2] = Math.sin(a) * r;
-    }
-    geo.attributes.position.needsUpdate = true;
-    ripples.forEach((m, j) => { const k = (t * .7 + j * .37) % 1; m.scale.setScalar(.12 + k * .6); m.material.opacity = (1 - k) * (1 - k) * .8; });
-  });
+  // the moving water: sheets over each lip, jets from the rim, and foam, rings, droplets and mist where it all lands (fountain-water.js)
+  fountainWater(root, { basin: [.47, 3.13], low: [1.19, 1.28], up: [1.63, .78] });
 
   const coinFace = std(TX.coin, 0, { emissive: 0xffffff, emissiveMap: TX.coin, emissiveIntensity: .35, roughness: .5, metalness: .3 });
   const coin = add(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .18, 96), [MAT.gold, coinFace, coinFace])); coin.rotation.x = Math.PI / 2;
