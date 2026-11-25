@@ -23,8 +23,9 @@ function setZone(z) {
   document.getElementById('count').textContent = `${here.length} / 20`;
   document.getElementById('plist').innerHTML = here.map((n, i) => `<div class="${i ? 'pl-go' : 'me'}"${i ? ` data-who="${esc(n)}" tabindex="0" role="button"` : ''}><i></i>${esc(n)}${i ? '' : ' (you)'}</div>`).join('');
 }
+let travelTo = null;   // the zone a travel is heading to, while it fades out (the NPC loop shows its people early)
 function travel(p) {
-  traveling = true; fadeEl.style.opacity = 1;
+  traveling = true; fadeEl.style.opacity = 1; travelTo = p.to;
   ModelFiles.enter(p.to);   // start fetching the destination's models during the fade, not after it
   setTimeout(() => {
     const to = p.to;
@@ -36,7 +37,7 @@ function travel(p) {
     const a = AREAS[to];
     showBanner(a ? a.name : 'TokenFall Lobby', a ? a.sub : 'Main Plaza');
     log('', `You travelled to ${a ? a.name : 'the Lobby'}.`, true);
-    fadeEl.style.opacity = 0; traveling = false;
+    fadeEl.style.opacity = 0; traveling = false; travelTo = null;
   }, 480);
 }
 
@@ -107,8 +108,9 @@ function frame(now) {
   // NPCs
   for (const c of npcs) {
     // characters are never frustum-culled (their shader places the card), so one in another zone, 300 m off and past the far plane, still cost a
-    // draw, a shadow-map draw and, the first time, the upload of its 4096-wide sprite sheet: draw only the ones in this zone
-    const here = c.zone === zone; if (c.g.visible !== here) c.g.visible = here;
+    // draw, a shadow-map draw and, the first time, the upload of its 4096-wide sprite sheet: draw only the ones in this zone, and from the moment
+    // a travel starts the ones where it is going, so their sheets upload while the screen fades out rather than on the first frame there
+    const here = c.zone === zone || c.zone === travelTo; if (c.g.visible !== here) c.g.visible = here;
     npcThink(c, dt);
     const ox = c.x, oz = c.y; stepChar(c, dt);
     if (c.moving && Math.hypot(c.x - ox, c.y - oz) < c.speed * dt / 1000 * .4) c.stuck += dt; else c.stuck = 0;
