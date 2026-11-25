@@ -84,6 +84,35 @@ function abzCity() {
   // the sky behind it all: a soft vertical gradient, hazy at the horizon
   const sky = new THREE.Mesh(new THREE.PlaneGeometry(1000, 260), new THREE.MeshBasicMaterial({ map: canvasTex(2, 64, (g) => { const gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, '#9fb4c8'); gr.addColorStop(.7, '#cdd6de'); gr.addColorStop(1, '#d9dcdc'); g.fillStyle = gr; g.fillRect(0, 0, 2, 64); }, { smooth: true }), fog: false }));
   sky.position.set(420, FLOOR + 100, 0); sky.rotation.y = -Math.PI / 2; city.add(sky);
+  abzCityMerge(city);
   city.traverse((o) => { o.frustumCulled = false; o.matrixAutoUpdate = true; });
   return city;
+}
+// the ~700 blocks, tanks and cranes are static and each box drew once per face material (6 draws a block, ~1500 a frame from ABZ): fold every
+// opaque plain mesh into one mesh per material, in the city's own frame (office-abz.js still places and turns the group). Same triangles, same materials.
+function abzCityMerge(city) {
+  const buckets = new Map(), dead = [];
+  for (const o of city.children) {
+    if (!o.isMesh || o.isInstancedMesh) continue;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    if (mats.some((m) => m.transparent || !m.isMeshBasicMaterial)) continue;
+    o.updateMatrix();
+    const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(o.matrix);
+    const parts = Array.isArray(o.material) && g.groups.length ? g.groups.map((gr) => [o.material[gr.materialIndex], gr.start, gr.count]) : [[mats[0], 0, g.attributes.position.count]];
+    for (const [m, start, count] of parts) { if (!buckets.has(m)) buckets.set(m, []); buckets.get(m).push([g, start, count]); }
+    dead.push(o);
+  }
+  for (const o of dead) city.remove(o);
+  for (const [m, list] of buckets) {
+    let n = 0; for (const [, , c] of list) n += c;
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), uv = new Float32Array(n * 2); let k = 0;
+    for (const [g, start, count] of list) {
+      const P = g.attributes.position.array, N = g.attributes.normal.array, U = g.attributes.uv && g.attributes.uv.array;
+      pos.set(P.subarray(start * 3, (start + count) * 3), k * 3); nor.set(N.subarray(start * 3, (start + count) * 3), k * 3);
+      if (U) uv.set(U.subarray(start * 2, (start + count) * 2), k * 2);
+      k += count;
+    }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    city.add(new THREE.Mesh(geo, m));
+  }
 }
