@@ -4,3 +4,4 @@ __pycache__/
 # over GitHub's 100 MB file limit; tools/cars-pack.py reads it locally
 2024-maruti-suzuki-eeco/source/eeco.rar
 evel-knievel-triumph-rocket-1028s.zip
+node_modules/
