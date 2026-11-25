@@ -55,6 +55,16 @@ for (const zone of ZONES) {
     out.sort((p, q) => p.d - q.d || p.c[0] - q.c[0] || p.c[2] - q.c[2]);
     return out.slice(0, 8);
   }, zone);
+  // fixed extra views: ABZ's city out of the window (abz-city.js)
+  if (zone === 'abz') {
+    await page.evaluate(() => {
+      const c = scene.getObjectByName('abzCity'); if (!c) return; const p = c.position;
+      window.__shotCam = () => { camera.position.set(p.x - 7, 2.2, p.z); camera.lookAt(p.x + 120, -35, p.z + 10); final.u.focus.value = 60; };
+      if (!window.__shotHooked) { window.__shotHooked = true; life.push(() => window.__shotCam && window.__shotCam()); }
+    });
+    await new Promise((r) => setTimeout(r, 500));
+    await page.screenshot({ path: path.join(OUT, `abz-city.png`) });
+  }
   for (let i = 0; i < views.length; i++) {
     const v = views[i];
     await page.evaluate((v) => {

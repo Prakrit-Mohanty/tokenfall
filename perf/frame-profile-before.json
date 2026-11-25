@@ -1,0 +1,2634 @@
+{
+ "lobby": {
+  "frames": 239,
+  "frameMs": 4.68,
+  "callbacks": [
+   {
+    "kind": "life",
+    "i": 14,
+    "src": "(t, dt) => stepTraffic(t, dt)",
+    "ms": 21.2,
+    "n": 240,
+    "perFrame": 0.089
+   },
+   {
+    "kind": "life",
+    "i": 12,
+    "src": "(t, dt) => { const dtMs = Math.min(100, dt * 1000); for (const p of posts) if (!busy || busy.p !== p) { p.ch.s",
+    "ms": 10.3,
+    "n": 240,
+    "perFrame": 0.043
+   },
+   {
+    "kind": "anim",
+    "i": 3,
+    "src": "(t) => { const dt = last === null ? 0 : Math.min(.05, Math.max(0, t - last)); last = t; if (!dt) return; acc +",
+    "ms": 5.6,
+    "n": 240,
+    "perFrame": 0.023
+   },
+   {
+    "kind": "anim",
+    "i": 6,
+    "src": "(t) => { seeds.forEach(([a, b], i) => { const u = (t * .5 + a) % 2, layer = u < 1 ? 0 : 1, f = u % 1; const po",
+    "ms": 3.8,
+    "n": 240,
+    "perFrame": 0.016
+   },
+   {
+    "kind": "anim",
+    "i": 15,
+    "src": "(t) => { const u = t % 10, dt = Math.min(.05, Math.abs(t - last)); last = t; let k = 0; while (k < KEYS.length",
+    "ms": 2.9,
+    "n": 240,
+    "perFrame": 0.012
+   },
+   {
+    "kind": "life",
+    "i": 13,
+    "src": "(t, dt) => { if (!started) return; const swapping = want && !el.src.endsWith(encodeURI(want)); const target = ",
+    "ms": 2.4,
+    "n": 240,
+    "perFrame": 0.01
+   },
+   {
+    "kind": "life",
+    "i": 1,
+    "src": "() => { const d = window.TokenFall && TokenFall.daylight, L = d && d.state.p; if (!L) return; const night = Ma",
+    "ms": 2.2,
+    "n": 240,
+    "perFrame": 0.009
+   },
+   {
+    "kind": "anim",
+    "i": 11,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; let moving = false; if (dog.wait > 0) dog.wai",
+    "ms": 2,
+    "n": 240,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "life",
+    "i": 24,
+    "src": "(t, dt) => { FLOAT.forEach((f, i) => { f.a += f.sp * dt; ps.set(f.cx + Math.cos(f.a) * f.r, f.y + Math.sin(t *",
+    "ms": 1.5,
+    "n": 240,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 16,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; const n = Math.floor(t / TURN), f = (t % TURN",
+    "ms": 1.3,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 7,
+    "src": "(t) => { if (!g.visible) return; // blink (sometimes twice), squint while glitching if (t > nextBlink + .5) ne",
+    "ms": 1.1,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 7,
+    "src": "(t) => { if (!S.group) return; S.group.visible = TF.zone === 'lobby'; if (!S.group.visible) return; S.pup.scal",
+    "ms": 1,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 26,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 1,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 49,
+    "src": "(t) => { const k = Math.floor(t * 2); if (k !== last) { last = k; draw(t); } }",
+    "ms": 1,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 13,
+    "src": "(t) => { beltTex.offset.x = -(t * .6) % 1; cubes.forEach((c, k) => { const f = (t * .06 + k / cubes.length) % ",
+    "ms": 1,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 14,
+    "src": "(t) => { acc += Math.min(.1, Math.abs(t - last)); last = t; if (acc < .06) return; acc = 0; if (i < strokes.le",
+    "ms": 1,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 36,
+    "src": "(t) => { vSmokeSpots.forEach(([x, y, z, ph], s) => { for (let i = 0; i < per; i++) { const k = (t * .2 + ph + ",
+    "ms": 0.9,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "life",
+    "i": 9,
+    "src": "(t, dt) => { if (!S.built) return; if (S.group.visible) { S.haze.material.map.offset.x += dt * 0.0012; S.haze.",
+    "ms": 0.9,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 1,
+    "src": "(t) => { const dt = Math.min(0.05, Math.max(0, t - lastT)); lastT = t; if (!here()) return; for (const id in s",
+    "ms": 0.9,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "life",
+    "i": 10,
+    "src": "(t, dt) => { S.live = true; if (AIR.flies && S.p) driftAir(t, dt, S.p, S.inside); }",
+    "ms": 0.9,
+    "n": 240,
+    "perFrame": 0.004
+   }
+  ],
+  "alloc": [
+   {
+    "fn": "slice :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "replace :0",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "window.frame :7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "Be anime.umd.min.js:7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "(anon) :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "artScene village-ai.js:157",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "setMaterial three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "M three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "$r three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Xn three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ne anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "setMode three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Er.setValue three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(BYTECODE_COMPILER) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "multiplyMatrices three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "At three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "list.<computed> :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "c village-ai.js:158",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Vt anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "push :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) :1",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Pt three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "abs :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ki three.min.js:6",
+    "kbPerFrame": 0
+   }
+  ],
+  "draws": [
+   [
+    "(post-processing, shadow or unhooked)",
+    317
+   ],
+   [
+    "MeshStandardMaterial (unnamed)",
+    315
+   ],
+   [
+    " (unnamed)",
+    42
+   ],
+   [
+    "MeshBasicMaterial (unnamed)",
+    39
+   ],
+   [
+    "MeshBasicMaterial(t) (unnamed)",
+    31
+   ],
+   [
+    "ShaderMaterial(t) (unnamed)",
+    27
+   ],
+   [
+    "PointsMaterial(t) (unnamed)",
+    23
+   ],
+   [
+    "MeshStandardMaterial(t) (unnamed)",
+    13
+   ],
+   [
+    "MeshStandardMaterial robotBarista",
+    10
+   ],
+   [
+    "SpriteMaterial(t) (unnamed)",
+    10
+   ],
+   [
+    " robotBarista",
+    6
+   ],
+   [
+    "ShaderMaterial (unnamed)",
+    1
+   ],
+   [
+    "PointsMaterial (unnamed)",
+    1
+   ],
+   [
+    "MeshStandardMaterial posed<Scene",
+    1
+   ],
+   [
+    "PointsMaterial(t) robotBarista",
+    1
+   ],
+   [
+    "LineBasicMaterial(t) (unnamed)",
+    1
+   ],
+   [
+    "MeshLambertMaterial(t) (unnamed)",
+    1
+   ]
+  ]
+ },
+ "pune": {
+  "frames": 239,
+  "frameMs": 4.46,
+  "callbacks": [
+   {
+    "kind": "life",
+    "i": 14,
+    "src": "(t, dt) => stepTraffic(t, dt)",
+    "ms": 18.7,
+    "n": 240,
+    "perFrame": 0.078
+   },
+   {
+    "kind": "life",
+    "i": 12,
+    "src": "(t, dt) => { const dtMs = Math.min(100, dt * 1000); for (const p of posts) if (!busy || busy.p !== p) { p.ch.s",
+    "ms": 12.3,
+    "n": 240,
+    "perFrame": 0.051
+   },
+   {
+    "kind": "anim",
+    "i": 3,
+    "src": "(t) => { const dt = last === null ? 0 : Math.min(.05, Math.max(0, t - last)); last = t; if (!dt) return; acc +",
+    "ms": 4.3,
+    "n": 240,
+    "perFrame": 0.018
+   },
+   {
+    "kind": "anim",
+    "i": 6,
+    "src": "(t) => { seeds.forEach(([a, b], i) => { const u = (t * .5 + a) % 2, layer = u < 1 ? 0 : 1, f = u % 1; const po",
+    "ms": 4.1,
+    "n": 240,
+    "perFrame": 0.017
+   },
+   {
+    "kind": "anim",
+    "i": 15,
+    "src": "(t) => { const u = t % 10, dt = Math.min(.05, Math.abs(t - last)); last = t; let k = 0; while (k < KEYS.length",
+    "ms": 2.1,
+    "n": 240,
+    "perFrame": 0.009
+   },
+   {
+    "kind": "life",
+    "i": 1,
+    "src": "() => { const d = window.TokenFall && TokenFall.daylight, L = d && d.state.p; if (!L) return; const night = Ma",
+    "ms": 2,
+    "n": 240,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "anim",
+    "i": 16,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; const n = Math.floor(t / TURN), f = (t % TURN",
+    "ms": 1.6,
+    "n": 240,
+    "perFrame": 0.007
+   },
+   {
+    "kind": "life",
+    "i": 24,
+    "src": "(t, dt) => { FLOAT.forEach((f, i) => { f.a += f.sp * dt; ps.set(f.cx + Math.cos(f.a) * f.r, f.y + Math.sin(t *",
+    "ms": 1.5,
+    "n": 240,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 11,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; let moving = false; if (dog.wait > 0) dog.wai",
+    "ms": 1.5,
+    "n": 240,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "life",
+    "i": 8,
+    "src": "(t, dt) => { const c = S.ctx; if (!c || !S.p) return; const level = S.on && c.state === 'running' ? 0.2 * (TF.",
+    "ms": 1.5,
+    "n": 240,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 49,
+    "src": "(t) => { const k = Math.floor(t * 2); if (k !== last) { last = k; draw(t); } }",
+    "ms": 1.3,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 13,
+    "src": "(t) => { beltTex.offset.x = -(t * .6) % 1; cubes.forEach((c, k) => { const f = (t * .06 + k / cubes.length) % ",
+    "ms": 1.3,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 36,
+    "src": "(t) => { vSmokeSpots.forEach(([x, y, z, ph], s) => { for (let i = 0; i < per; i++) { const k = (t * .2 + ph + ",
+    "ms": 1.2,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 7,
+    "src": "(t) => { if (!g.visible) return; // blink (sometimes twice), squint while glitching if (t > nextBlink + .5) ne",
+    "ms": 1.2,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 9,
+    "src": "(t, dt) => { if (!S.built) return; if (S.group.visible) { S.haze.material.map.offset.x += dt * 0.0012; S.haze.",
+    "ms": 1.1,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 10,
+    "src": "(t, dt) => { S.live = true; if (AIR.flies && S.p) driftAir(t, dt, S.p, S.inside); }",
+    "ms": 1.1,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 13,
+    "src": "(t, dt) => { if (!started) return; const swapping = want && !el.src.endsWith(encodeURI(want)); const target = ",
+    "ms": 1.1,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 65,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 1,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 68,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.9,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 66,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.8,
+    "n": 240,
+    "perFrame": 0.003
+   }
+  ],
+  "alloc": [
+   {
+    "fn": "Xn three.min.js:6",
+    "kbPerFrame": 0.3
+   },
+   {
+    "fn": "slice :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "replace :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "Be anime.umd.min.js:7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "setup three.min.js:6",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "(anon) :4",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "At three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ne anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "It three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "refreshMaterialUniforms three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "stepTraffic city.js:149",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "update three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "updateMatrixWorld three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Vt anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(V8 API) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(BYTECODE_COMPILER) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "window.frame :7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Cr.seqWithValue three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "frame loop.js:89",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "list.<computed> :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ae anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Yi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "e three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "set :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "where :2",
+    "kbPerFrame": 0
+   }
+  ],
+  "draws": [
+   [
+    "(post-processing, shadow or unhooked)",
+    585
+   ],
+   [
+    "MeshStandardMaterial (unnamed)",
+    124
+   ],
+   [
+    "PointsMaterial(t) (unnamed)",
+    19
+   ],
+   [
+    " (unnamed)",
+    18
+   ],
+   [
+    "MeshBasicMaterial (unnamed)",
+    15
+   ],
+   [
+    "MeshBasicMaterial(t) (unnamed)",
+    8
+   ],
+   [
+    "MeshStandardMaterial(t) (unnamed)",
+    5
+   ],
+   [
+    "ShaderMaterial(t) (unnamed)",
+    4
+   ],
+   [
+    "ShaderMaterial (unnamed)",
+    1
+   ],
+   [
+    "LineBasicMaterial (unnamed)",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_1<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_2<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_3<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_4<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_5<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_6<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_7<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_8<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_9<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_10<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_11<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_12<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_13<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_14<rtm_koenigsegg_jesko<Scene",
+    1
+   ],
+   [
+    "MeshStandardMaterial rtm_koenigsegg_jesko_15<rtm_koenigsegg_jesko<Scene",
+    1
+   ]
+  ]
+ },
+ "abz": {
+  "frames": 240,
+  "frameMs": 5.13,
+  "callbacks": [
+   {
+    "kind": "life",
+    "i": 14,
+    "src": "(t, dt) => stepTraffic(t, dt)",
+    "ms": 19.1,
+    "n": 241,
+    "perFrame": 0.08
+   },
+   {
+    "kind": "life",
+    "i": 12,
+    "src": "(t, dt) => { const dtMs = Math.min(100, dt * 1000); for (const p of posts) if (!busy || busy.p !== p) { p.ch.s",
+    "ms": 10,
+    "n": 241,
+    "perFrame": 0.042
+   },
+   {
+    "kind": "anim",
+    "i": 3,
+    "src": "(t) => { const dt = last === null ? 0 : Math.min(.05, Math.max(0, t - last)); last = t; if (!dt) return; acc +",
+    "ms": 4.6,
+    "n": 241,
+    "perFrame": 0.019
+   },
+   {
+    "kind": "anim",
+    "i": 6,
+    "src": "(t) => { seeds.forEach(([a, b], i) => { const u = (t * .5 + a) % 2, layer = u < 1 ? 0 : 1, f = u % 1; const po",
+    "ms": 3.8,
+    "n": 241,
+    "perFrame": 0.016
+   },
+   {
+    "kind": "anim",
+    "i": 15,
+    "src": "(t) => { const u = t % 10, dt = Math.min(.05, Math.abs(t - last)); last = t; let k = 0; while (k < KEYS.length",
+    "ms": 2.3,
+    "n": 241,
+    "perFrame": 0.01
+   },
+   {
+    "kind": "life",
+    "i": 24,
+    "src": "(t, dt) => { FLOAT.forEach((f, i) => { f.a += f.sp * dt; ps.set(f.cx + Math.cos(f.a) * f.r, f.y + Math.sin(t *",
+    "ms": 1.9,
+    "n": 241,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "anim",
+    "i": 7,
+    "src": "(t) => { if (!g.visible) return; // blink (sometimes twice), squint while glitching if (t > nextBlink + .5) ne",
+    "ms": 1.9,
+    "n": 241,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "life",
+    "i": 13,
+    "src": "(t, dt) => { if (!started) return; const swapping = want && !el.src.endsWith(encodeURI(want)); const target = ",
+    "ms": 1.7,
+    "n": 241,
+    "perFrame": 0.007
+   },
+   {
+    "kind": "life",
+    "i": 8,
+    "src": "(t, dt) => { const c = S.ctx; if (!c || !S.p) return; const level = S.on && c.state === 'running' ? 0.2 * (TF.",
+    "ms": 1.6,
+    "n": 241,
+    "perFrame": 0.007
+   },
+   {
+    "kind": "life",
+    "i": 1,
+    "src": "() => { const d = window.TokenFall && TokenFall.daylight, L = d && d.state.p; if (!L) return; const night = Ma",
+    "ms": 1.5,
+    "n": 241,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 49,
+    "src": "(t) => { const k = Math.floor(t * 2); if (k !== last) { last = k; draw(t); } }",
+    "ms": 1.4,
+    "n": 241,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 11,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; let moving = false; if (dog.wait > 0) dog.wai",
+    "ms": 1.3,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 16,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; const n = Math.floor(t / TURN), f = (t % TURN",
+    "ms": 1.2,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 13,
+    "src": "(t) => { beltTex.offset.x = -(t * .6) % 1; cubes.forEach((c, k) => { const f = (t * .06 + k / cubes.length) % ",
+    "ms": 1,
+    "n": 241,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 36,
+    "src": "(t) => { vSmokeSpots.forEach(([x, y, z, ph], s) => { for (let i = 0; i < per; i++) { const k = (t * .2 + ph + ",
+    "ms": 0.8,
+    "n": 241,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "life",
+    "i": 10,
+    "src": "(t, dt) => { S.live = true; if (AIR.flies && S.p) driftAir(t, dt, S.p, S.inside); }",
+    "ms": 0.8,
+    "n": 241,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 70,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.8,
+    "n": 241,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 66,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.7,
+    "n": 241,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "life",
+    "i": 23,
+    "src": "(t, dt) => { for (let i = 0; i < n; i++) { pos[i * 3] += (Math.sin(t * 1.3 + seedA[i]) * .25 + .35) * dt; pos[",
+    "ms": 0.7,
+    "n": 241,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 14,
+    "src": "(t) => { acc += Math.min(.1, Math.abs(t - last)); last = t; if (acc < .06) return; acc = 0; if (i < strokes.le",
+    "ms": 0.7,
+    "n": 241,
+    "perFrame": 0.003
+   }
+  ],
+  "alloc": [
+   {
+    "fn": "slice :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "window.frame :7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "replace :0",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "ki three.min.js:6",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "Yi three.min.js:6",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "update three.min.js:6",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "(anon) three.min.js:6",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "Be anime.umd.min.js:7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "push :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "get three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "e three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "artScene village-ai.js:157",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ae anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "set :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "setMode three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Xi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "updateMatrixWorld three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ne anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "frame loop.js:89",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "c village-ai.js:158",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Ct anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Vt anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "refreshMaterialUniforms three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) :1",
+    "kbPerFrame": 0
+   }
+  ],
+  "draws": [
+   [
+    " abzCity",
+    1542
+   ],
+   [
+    "MeshStandardMaterial (unnamed)",
+    140
+   ],
+   [
+    "(post-processing, shadow or unhooked)",
+    119
+   ],
+   [
+    "MeshBasicMaterial abzCity",
+    85
+   ],
+   [
+    " (unnamed)",
+    54
+   ],
+   [
+    "PointsMaterial(t) (unnamed)",
+    34
+   ],
+   [
+    "MeshStandardMaterial(t) (unnamed)",
+    26
+   ],
+   [
+    "MeshBasicMaterial (unnamed)",
+    23
+   ],
+   [
+    "MeshBasicMaterial(t) (unnamed)",
+    7
+   ],
+   [
+    "ShaderMaterial(t) (unnamed)",
+    2
+   ],
+   [
+    "ShaderMaterial (unnamed)",
+    1
+   ],
+   [
+    "MeshLambertMaterial(t) (unnamed)",
+    1
+   ]
+  ]
+ },
+ "lab": {
+  "frames": 239,
+  "frameMs": 3.15,
+  "callbacks": [
+   {
+    "kind": "life",
+    "i": 14,
+    "src": "(t, dt) => stepTraffic(t, dt)",
+    "ms": 18.5,
+    "n": 240,
+    "perFrame": 0.077
+   },
+   {
+    "kind": "life",
+    "i": 12,
+    "src": "(t, dt) => { const dtMs = Math.min(100, dt * 1000); for (const p of posts) if (!busy || busy.p !== p) { p.ch.s",
+    "ms": 9.4,
+    "n": 240,
+    "perFrame": 0.039
+   },
+   {
+    "kind": "anim",
+    "i": 3,
+    "src": "(t) => { const dt = last === null ? 0 : Math.min(.05, Math.max(0, t - last)); last = t; if (!dt) return; acc +",
+    "ms": 4.9,
+    "n": 240,
+    "perFrame": 0.021
+   },
+   {
+    "kind": "anim",
+    "i": 6,
+    "src": "(t) => { seeds.forEach(([a, b], i) => { const u = (t * .5 + a) % 2, layer = u < 1 ? 0 : 1, f = u % 1; const po",
+    "ms": 3.8,
+    "n": 240,
+    "perFrame": 0.016
+   },
+   {
+    "kind": "anim",
+    "i": 15,
+    "src": "(t) => { const u = t % 10, dt = Math.min(.05, Math.abs(t - last)); last = t; let k = 0; while (k < KEYS.length",
+    "ms": 3,
+    "n": 240,
+    "perFrame": 0.013
+   },
+   {
+    "kind": "life",
+    "i": 8,
+    "src": "(t, dt) => { const c = S.ctx; if (!c || !S.p) return; const level = S.on && c.state === 'running' ? 0.2 * (TF.",
+    "ms": 2,
+    "n": 240,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "life",
+    "i": 13,
+    "src": "(t, dt) => { if (!started) return; const swapping = want && !el.src.endsWith(encodeURI(want)); const target = ",
+    "ms": 2,
+    "n": 240,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "life",
+    "i": 1,
+    "src": "() => { const d = window.TokenFall && TokenFall.daylight, L = d && d.state.p; if (!L) return; const night = Ma",
+    "ms": 1.7,
+    "n": 240,
+    "perFrame": 0.007
+   },
+   {
+    "kind": "life",
+    "i": 24,
+    "src": "(t, dt) => { FLOAT.forEach((f, i) => { f.a += f.sp * dt; ps.set(f.cx + Math.cos(f.a) * f.r, f.y + Math.sin(t *",
+    "ms": 1.6,
+    "n": 240,
+    "perFrame": 0.007
+   },
+   {
+    "kind": "anim",
+    "i": 16,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; const n = Math.floor(t / TURN), f = (t % TURN",
+    "ms": 1.5,
+    "n": 240,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 13,
+    "src": "(t) => { beltTex.offset.x = -(t * .6) % 1; cubes.forEach((c, k) => { const f = (t * .06 + k / cubes.length) % ",
+    "ms": 1.4,
+    "n": 240,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 7,
+    "src": "(t) => { if (!g.visible) return; // blink (sometimes twice), squint while glitching if (t > nextBlink + .5) ne",
+    "ms": 1.3,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 49,
+    "src": "(t) => { const k = Math.floor(t * 2); if (k !== last) { last = k; draw(t); } }",
+    "ms": 1.2,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 11,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; let moving = false; if (dog.wait > 0) dog.wai",
+    "ms": 1,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 36,
+    "src": "(t) => { vSmokeSpots.forEach(([x, y, z, ph], s) => { for (let i = 0; i < per; i++) { const k = (t * .2 + ph + ",
+    "ms": 0.9,
+    "n": 240,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 70,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.7,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 69,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.6,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "life",
+    "i": 6,
+    "src": "(t) => world.tick(t)",
+    "ms": 0.6,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 8,
+    "src": "(t) => sprites.forEach((s, i) => { const k = (t * .11 + i / sprites.length) % 1, a = i * 2.4 + t * .3, r = 1 +",
+    "ms": 0.6,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 26,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.6,
+    "n": 240,
+    "perFrame": 0.003
+   }
+  ],
+  "alloc": [
+   {
+    "fn": "slice :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "replace :0",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "window.frame :7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "Be anime.umd.min.js:7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "artScene village-ai.js:157",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ne anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ki three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Wi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "M three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "updateMatrixWorld three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "At three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "renderBufferDirect three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) village-ai.js:178",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(BYTECODE_COMPILER) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "valueOf :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Yi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "c village-ai.js:158",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "push :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "set :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(V8 API) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "where :2",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "charHead characters.js:17",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "forEach :0",
+    "kbPerFrame": 0
+   }
+  ],
+  "draws": [
+   [
+    "(post-processing, shadow or unhooked)",
+    186
+   ],
+   [
+    "MeshStandardMaterial (unnamed)",
+    112
+   ],
+   [
+    " (unnamed)",
+    81
+   ],
+   [
+    "MeshBasicMaterial (unnamed)",
+    26
+   ],
+   [
+    "PointsMaterial(t) (unnamed)",
+    26
+   ],
+   [
+    "MeshStandardMaterial(t) (unnamed)",
+    20
+   ],
+   [
+    "MeshBasicMaterial(t) (unnamed)",
+    12
+   ],
+   [
+    "ShaderMaterial(t) (unnamed)",
+    4
+   ],
+   [
+    "ShaderMaterial (unnamed)",
+    1
+   ],
+   [
+    "MeshLambertMaterial(t) (unnamed)",
+    1
+   ]
+  ]
+ },
+ "airport": {
+  "frames": 240,
+  "frameMs": 3.38,
+  "callbacks": [
+   {
+    "kind": "life",
+    "i": 14,
+    "src": "(t, dt) => stepTraffic(t, dt)",
+    "ms": 17.8,
+    "n": 241,
+    "perFrame": 0.074
+   },
+   {
+    "kind": "life",
+    "i": 12,
+    "src": "(t, dt) => { const dtMs = Math.min(100, dt * 1000); for (const p of posts) if (!busy || busy.p !== p) { p.ch.s",
+    "ms": 10.2,
+    "n": 241,
+    "perFrame": 0.043
+   },
+   {
+    "kind": "anim",
+    "i": 3,
+    "src": "(t) => { const dt = last === null ? 0 : Math.min(.05, Math.max(0, t - last)); last = t; if (!dt) return; acc +",
+    "ms": 5.3,
+    "n": 241,
+    "perFrame": 0.022
+   },
+   {
+    "kind": "anim",
+    "i": 44,
+    "src": "(t) => { if (typeof zone !== 'undefined' && zone !== 'airport') return; for (const m of movers) { const s = ap",
+    "ms": 3.7,
+    "n": 241,
+    "perFrame": 0.015
+   },
+   {
+    "kind": "anim",
+    "i": 6,
+    "src": "(t) => { seeds.forEach(([a, b], i) => { const u = (t * .5 + a) % 2, layer = u < 1 ? 0 : 1, f = u % 1; const po",
+    "ms": 3.4,
+    "n": 241,
+    "perFrame": 0.014
+   },
+   {
+    "kind": "life",
+    "i": 24,
+    "src": "(t, dt) => { FLOAT.forEach((f, i) => { f.a += f.sp * dt; ps.set(f.cx + Math.cos(f.a) * f.r, f.y + Math.sin(t *",
+    "ms": 2.7,
+    "n": 241,
+    "perFrame": 0.011
+   },
+   {
+    "kind": "anim",
+    "i": 11,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; let moving = false; if (dog.wait > 0) dog.wai",
+    "ms": 2.6,
+    "n": 241,
+    "perFrame": 0.011
+   },
+   {
+    "kind": "life",
+    "i": 8,
+    "src": "(t, dt) => { const c = S.ctx; if (!c || !S.p) return; const level = S.on && c.state === 'running' ? 0.2 * (TF.",
+    "ms": 2.3,
+    "n": 241,
+    "perFrame": 0.01
+   },
+   {
+    "kind": "anim",
+    "i": 15,
+    "src": "(t) => { const u = t % 10, dt = Math.min(.05, Math.abs(t - last)); last = t; let k = 0; while (k < KEYS.length",
+    "ms": 2.3,
+    "n": 241,
+    "perFrame": 0.01
+   },
+   {
+    "kind": "life",
+    "i": 13,
+    "src": "(t, dt) => { if (!started) return; const swapping = want && !el.src.endsWith(encodeURI(want)); const target = ",
+    "ms": 2.3,
+    "n": 241,
+    "perFrame": 0.01
+   },
+   {
+    "kind": "life",
+    "i": 1,
+    "src": "() => { const d = window.TokenFall && TokenFall.daylight, L = d && d.state.p; if (!L) return; const night = Ma",
+    "ms": 1.5,
+    "n": 241,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 49,
+    "src": "(t) => { const k = Math.floor(t * 2); if (k !== last) { last = k; draw(t); } }",
+    "ms": 1.5,
+    "n": 241,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 7,
+    "src": "(t) => { if (!g.visible) return; // blink (sometimes twice), squint while glitching if (t > nextBlink + .5) ne",
+    "ms": 1.3,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 45,
+    "src": "(t) => { if (typeof zone !== 'undefined' && zone !== 'airport') return; train.forEach((c, i) => { const [x, z,",
+    "ms": 1.3,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 70,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 1.3,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 69,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 1.3,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 16,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; const n = Math.floor(t / TURN), f = (t % TURN",
+    "ms": 1.3,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 13,
+    "src": "(t) => { beltTex.offset.x = -(t * .6) % 1; cubes.forEach((c, k) => { const f = (t * .06 + k / cubes.length) % ",
+    "ms": 1.2,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 10,
+    "src": "(t, dt) => { S.live = true; if (AIR.flies && S.p) driftAir(t, dt, S.p, S.inside); }",
+    "ms": 1.2,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 2,
+    "src": "(t) => { boat.position.set(px - r + 4.4, .02 + Math.sin(t * 1.3) * .04, pz + 1.7); boat.rotation.set(0, .25, M",
+    "ms": 1,
+    "n": 241,
+    "perFrame": 0.004
+   }
+  ],
+  "alloc": [
+   {
+    "fn": "slice :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "replace :0",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "Be anime.umd.min.js:7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "ne anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "window.frame :7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "artScene village-ai.js:157",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "At three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "c village-ai.js:158",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "list.<computed> :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Vt anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Yi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(V8 API) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "where :2",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "updateMatrixWorld three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "getViewportCount three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "set :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) :1",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) ambience.js:98",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "setMode three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "capLamps loop.js:56",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "setup three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "setXYZ three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "frame loop.js:89",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) village-robots.js:99",
+    "kbPerFrame": 0
+   }
+  ],
+  "draws": [
+   [
+    "MeshStandardMaterial (unnamed)",
+    190
+   ],
+   [
+    "(post-processing, shadow or unhooked)",
+    109
+   ],
+   [
+    " (unnamed)",
+    24
+   ],
+   [
+    "PointsMaterial(t) (unnamed)",
+    14
+   ],
+   [
+    "MeshStandardMaterial(t) (unnamed)",
+    11
+   ],
+   [
+    "MeshBasicMaterial (unnamed)",
+    8
+   ],
+   [
+    "ShaderMaterial(t) (unnamed)",
+    4
+   ],
+   [
+    "MeshBasicMaterial(t) (unnamed)",
+    3
+   ],
+   [
+    "ShaderMaterial (unnamed)",
+    1
+   ],
+   [
+    "MeshStandardMaterial 211BaggageTruck_AIRPORT_0<211BaggageTruck",
+    1
+   ],
+   [
+    "MeshStandardMaterial 03AirplaneStairs_AIRPORT_0<03AirplaneStairs",
+    1
+   ],
+   [
+    "MeshStandardMaterial 184Airplane_AIRPORT_0<184Airplane",
+    1
+   ],
+   [
+    "MeshStandardMaterial 20PassengerBus_AIRPORT_0<20PassengerBus",
+    1
+   ],
+   [
+    "MeshStandardMaterial 213BaggageTruck_AIRPORT_0<213BaggageTruck",
+    1
+   ],
+   [
+    "MeshStandardMaterial 212BaggageTruck_AIRPORT_0<212BaggageTruck",
+    1
+   ],
+   [
+    "MeshStandardMaterial 182Airplane_AIRPORT_0<182Airplane",
+    1
+   ],
+   [
+    "MeshStandardMaterial 183Airplane_AIRPORT_0<183Airplane",
+    1
+   ],
+   [
+    "MeshStandardMaterial 181Airplane_AIRPORT_0<181Airplane",
+    1
+   ],
+   [
+    "MeshStandardMaterial 05Container_AIRPORT_0<05Container",
+    1
+   ],
+   [
+    "MeshStandardMaterial 05Container2_AIRPORT_0<05Container2",
+    1
+   ],
+   [
+    "MeshStandardMaterial 05Container3_AIRPORT_0<05Container3",
+    1
+   ],
+   [
+    "MeshStandardMaterial 05Container4_AIRPORT_0<05Container4",
+    1
+   ],
+   [
+    "MeshStandardMaterial 05Container5_AIRPORT_0<05Container5",
+    1
+   ],
+   [
+    "MeshStandardMaterial 19Firetruck_AIRPORT_0<19Firetruck",
+    1
+   ],
+   [
+    "MeshStandardMaterial 04Hangar_AIRPORT_0<04Hangar",
+    1
+   ]
+  ]
+ },
+ "us": {
+  "frames": 240,
+  "frameMs": 2.77,
+  "callbacks": [
+   {
+    "kind": "life",
+    "i": 14,
+    "src": "(t, dt) => stepTraffic(t, dt)",
+    "ms": 20,
+    "n": 241,
+    "perFrame": 0.083
+   },
+   {
+    "kind": "life",
+    "i": 12,
+    "src": "(t, dt) => { const dtMs = Math.min(100, dt * 1000); for (const p of posts) if (!busy || busy.p !== p) { p.ch.s",
+    "ms": 10,
+    "n": 241,
+    "perFrame": 0.042
+   },
+   {
+    "kind": "anim",
+    "i": 11,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; let moving = false; if (dog.wait > 0) dog.wai",
+    "ms": 4.2,
+    "n": 241,
+    "perFrame": 0.017
+   },
+   {
+    "kind": "anim",
+    "i": 3,
+    "src": "(t) => { const dt = last === null ? 0 : Math.min(.05, Math.max(0, t - last)); last = t; if (!dt) return; acc +",
+    "ms": 4.1,
+    "n": 241,
+    "perFrame": 0.017
+   },
+   {
+    "kind": "anim",
+    "i": 6,
+    "src": "(t) => { seeds.forEach(([a, b], i) => { const u = (t * .5 + a) % 2, layer = u < 1 ? 0 : 1, f = u % 1; const po",
+    "ms": 2.8,
+    "n": 241,
+    "perFrame": 0.012
+   },
+   {
+    "kind": "life",
+    "i": 1,
+    "src": "() => { const d = window.TokenFall && TokenFall.daylight, L = d && d.state.p; if (!L) return; const night = Ma",
+    "ms": 2.2,
+    "n": 241,
+    "perFrame": 0.009
+   },
+   {
+    "kind": "anim",
+    "i": 16,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; const n = Math.floor(t / TURN), f = (t % TURN",
+    "ms": 2.1,
+    "n": 241,
+    "perFrame": 0.009
+   },
+   {
+    "kind": "anim",
+    "i": 15,
+    "src": "(t) => { const u = t % 10, dt = Math.min(.05, Math.abs(t - last)); last = t; let k = 0; while (k < KEYS.length",
+    "ms": 1.8,
+    "n": 241,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "life",
+    "i": 13,
+    "src": "(t, dt) => { if (!started) return; const swapping = want && !el.src.endsWith(encodeURI(want)); const target = ",
+    "ms": 1.6,
+    "n": 241,
+    "perFrame": 0.007
+   },
+   {
+    "kind": "anim",
+    "i": 49,
+    "src": "(t) => { const k = Math.floor(t * 2); if (k !== last) { last = k; draw(t); } }",
+    "ms": 1.4,
+    "n": 241,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "life",
+    "i": 9,
+    "src": "(t, dt) => { if (!S.built) return; if (S.group.visible) { S.haze.material.map.offset.x += dt * 0.0012; S.haze.",
+    "ms": 1.3,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 8,
+    "src": "(t, dt) => { const c = S.ctx; if (!c || !S.p) return; const level = S.on && c.state === 'running' ? 0.2 * (TF.",
+    "ms": 1.2,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 10,
+    "src": "(t, dt) => { S.live = true; if (AIR.flies && S.p) driftAir(t, dt, S.p, S.inside); }",
+    "ms": 1.1,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 13,
+    "src": "(t) => { beltTex.offset.x = -(t * .6) % 1; cubes.forEach((c, k) => { const f = (t * .06 + k / cubes.length) % ",
+    "ms": 1,
+    "n": 241,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 36,
+    "src": "(t) => { vSmokeSpots.forEach(([x, y, z, ph], s) => { for (let i = 0; i < per; i++) { const k = (t * .2 + ph + ",
+    "ms": 1,
+    "n": 241,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 69,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 1,
+    "n": 241,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "life",
+    "i": 24,
+    "src": "(t, dt) => { FLOAT.forEach((f, i) => { f.a += f.sp * dt; ps.set(f.cx + Math.cos(f.a) * f.r, f.y + Math.sin(t *",
+    "ms": 1,
+    "n": 241,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 7,
+    "src": "(t) => { if (!g.visible) return; // blink (sometimes twice), squint while glitching if (t > nextBlink + .5) ne",
+    "ms": 0.9,
+    "n": 241,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 67,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.8,
+    "n": 241,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "life",
+    "i": 23,
+    "src": "(t, dt) => { for (let i = 0; i < n; i++) { pos[i * 3] += (Math.sin(t * 1.3 + seedA[i]) * .25 + .35) * dt; pos[",
+    "ms": 0.7,
+    "n": 241,
+    "perFrame": 0.003
+   }
+  ],
+  "alloc": [
+   {
+    "fn": "slice :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "replace :0",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "window.frame :7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "Be anime.umd.min.js:7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "artScene village-ai.js:157",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ne anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Yi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "setMaterial three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "It three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Er.setValue three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(BYTECODE_COMPILER) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "where :2",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "M three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "push three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "multiplyMatrices three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "list.<computed> :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Vt anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Wi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "c village-ai.js:158",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "set :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(V8 API) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "next :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(PARSER) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "chirp ambience.js:31",
+    "kbPerFrame": 0
+   }
+  ],
+  "draws": [
+   [
+    "(post-processing, shadow or unhooked)",
+    95
+   ],
+   [
+    "MeshStandardMaterial (unnamed)",
+    53
+   ],
+   [
+    "PointsMaterial(t) (unnamed)",
+    34
+   ],
+   [
+    "MeshBasicMaterial (unnamed)",
+    23
+   ],
+   [
+    "MeshStandardMaterial(t) (unnamed)",
+    7
+   ],
+   [
+    "MeshBasicMaterial(t) (unnamed)",
+    7
+   ],
+   [
+    " (unnamed)",
+    6
+   ],
+   [
+    "ShaderMaterial(t) (unnamed)",
+    3
+   ],
+   [
+    "ShaderMaterial (unnamed)",
+    1
+   ],
+   [
+    "MeshLambertMaterial(t) (unnamed)",
+    1
+   ]
+  ]
+ },
+ "bridge": {
+  "frames": 240,
+  "frameMs": 2.86,
+  "callbacks": [
+   {
+    "kind": "life",
+    "i": 14,
+    "src": "(t, dt) => stepTraffic(t, dt)",
+    "ms": 17.7,
+    "n": 241,
+    "perFrame": 0.074
+   },
+   {
+    "kind": "life",
+    "i": 12,
+    "src": "(t, dt) => { const dtMs = Math.min(100, dt * 1000); for (const p of posts) if (!busy || busy.p !== p) { p.ch.s",
+    "ms": 10.5,
+    "n": 241,
+    "perFrame": 0.044
+   },
+   {
+    "kind": "life",
+    "i": 25,
+    "src": "(t, dt) => frame(t, dt)",
+    "ms": 6,
+    "n": 241,
+    "perFrame": 0.025
+   },
+   {
+    "kind": "anim",
+    "i": 1,
+    "src": "(t) => { const dt = Math.min(0.05, Math.max(0, t - lastT)); lastT = t; if (!here()) return; for (const id in s",
+    "ms": 5,
+    "n": 241,
+    "perFrame": 0.021
+   },
+   {
+    "kind": "anim",
+    "i": 3,
+    "src": "(t) => { const dt = last === null ? 0 : Math.min(.05, Math.max(0, t - last)); last = t; if (!dt) return; acc +",
+    "ms": 3.6,
+    "n": 241,
+    "perFrame": 0.015
+   },
+   {
+    "kind": "anim",
+    "i": 11,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; let moving = false; if (dog.wait > 0) dog.wai",
+    "ms": 3.3,
+    "n": 241,
+    "perFrame": 0.014
+   },
+   {
+    "kind": "anim",
+    "i": 6,
+    "src": "(t) => { seeds.forEach(([a, b], i) => { const u = (t * .5 + a) % 2, layer = u < 1 ? 0 : 1, f = u % 1; const po",
+    "ms": 2.8,
+    "n": 241,
+    "perFrame": 0.012
+   },
+   {
+    "kind": "zoneTick",
+    "i": "bridge",
+    "src": "(dt) => { if (play.autotick) tick(dt); }",
+    "ms": 2.2,
+    "n": 241,
+    "perFrame": 0.009
+   },
+   {
+    "kind": "life",
+    "i": 24,
+    "src": "(t, dt) => { FLOAT.forEach((f, i) => { f.a += f.sp * dt; ps.set(f.cx + Math.cos(f.a) * f.r, f.y + Math.sin(t *",
+    "ms": 1.9,
+    "n": 241,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "anim",
+    "i": 15,
+    "src": "(t) => { const u = t % 10, dt = Math.min(.05, Math.abs(t - last)); last = t; let k = 0; while (k < KEYS.length",
+    "ms": 1.8,
+    "n": 241,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "life",
+    "i": 13,
+    "src": "(t, dt) => { if (!started) return; const swapping = want && !el.src.endsWith(encodeURI(want)); const target = ",
+    "ms": 1.6,
+    "n": 241,
+    "perFrame": 0.007
+   },
+   {
+    "kind": "life",
+    "i": 8,
+    "src": "(t, dt) => { const c = S.ctx; if (!c || !S.p) return; const level = S.on && c.state === 'running' ? 0.2 * (TF.",
+    "ms": 1.5,
+    "n": 241,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "anim",
+    "i": 49,
+    "src": "(t) => { const k = Math.floor(t * 2); if (k !== last) { last = k; draw(t); } }",
+    "ms": 1.3,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 10,
+    "src": "(t, dt) => { S.live = true; if (AIR.flies && S.p) driftAir(t, dt, S.p, S.inside); }",
+    "ms": 1.2,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 1,
+    "src": "() => { const d = window.TokenFall && TokenFall.daylight, L = d && d.state.p; if (!L) return; const night = Ma",
+    "ms": 1.2,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "life",
+    "i": 9,
+    "src": "(t, dt) => { if (!S.built) return; if (S.group.visible) { S.haze.material.map.offset.x += dt * 0.0012; S.haze.",
+    "ms": 1.1,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 16,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; const n = Math.floor(t / TURN), f = (t % TURN",
+    "ms": 1.1,
+    "n": 241,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 36,
+    "src": "(t) => { vSmokeSpots.forEach(([x, y, z, ph], s) => { for (let i = 0; i < per; i++) { const k = (t * .2 + ph + ",
+    "ms": 1,
+    "n": 241,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 65,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.9,
+    "n": 241,
+    "perFrame": 0.004
+   },
+   {
+    "kind": "anim",
+    "i": 13,
+    "src": "(t) => { beltTex.offset.x = -(t * .6) % 1; cubes.forEach((c, k) => { const f = (t * .06 + k / cubes.length) % ",
+    "ms": 0.8,
+    "n": 241,
+    "perFrame": 0.003
+   }
+  ],
+  "alloc": [
+   {
+    "fn": "slice :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "replace :0",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "Be anime.umd.min.js:7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "artScene village-ai.js:157",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "window.frame :7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "ne anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Yi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "updateMatrixWorld three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ki three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "M three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(V8 API) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "next :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "frame loop.js:89",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "At three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "multiplyMatrices three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(BYTECODE_COMPILER) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "forEach :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "draw airport.js:24",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) village-robots.js:99",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "It three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "refreshMaterialUniforms three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "c village-ai.js:158",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "where :2",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "charHead characters.js:17",
+    "kbPerFrame": 0
+   }
+  ],
+  "draws": [
+   [
+    "MeshStandardMaterial glassBridge",
+    84
+   ],
+   [
+    " glassBridge",
+    66
+   ],
+   [
+    "MeshStandardMaterial (unnamed)",
+    40
+   ],
+   [
+    "PointsMaterial(t) (unnamed)",
+    18
+   ],
+   [
+    "(post-processing, shadow or unhooked)",
+    17
+   ],
+   [
+    "MeshBasicMaterial (unnamed)",
+    11
+   ],
+   [
+    "MeshBasicMaterial(t) (unnamed)",
+    4
+   ],
+   [
+    "ShaderMaterial(t) glassBridge",
+    4
+   ],
+   [
+    "MeshBasicMaterial glassBridge",
+    2
+   ],
+   [
+    "ShaderMaterial (unnamed)",
+    1
+   ],
+   [
+    "MeshBasicMaterial(t) glassBridge",
+    1
+   ],
+   [
+    "MeshLambertMaterial(t) (unnamed)",
+    1
+   ]
+  ]
+ },
+ "kitchen": {
+  "frames": 239,
+  "frameMs": 2.75,
+  "callbacks": [
+   {
+    "kind": "life",
+    "i": 14,
+    "src": "(t, dt) => stepTraffic(t, dt)",
+    "ms": 18.1,
+    "n": 240,
+    "perFrame": 0.076
+   },
+   {
+    "kind": "life",
+    "i": 12,
+    "src": "(t, dt) => { const dtMs = Math.min(100, dt * 1000); for (const p of posts) if (!busy || busy.p !== p) { p.ch.s",
+    "ms": 10.3,
+    "n": 240,
+    "perFrame": 0.043
+   },
+   {
+    "kind": "anim",
+    "i": 3,
+    "src": "(t) => { const dt = last === null ? 0 : Math.min(.05, Math.max(0, t - last)); last = t; if (!dt) return; acc +",
+    "ms": 4.4,
+    "n": 240,
+    "perFrame": 0.018
+   },
+   {
+    "kind": "life",
+    "i": 24,
+    "src": "(t, dt) => { FLOAT.forEach((f, i) => { f.a += f.sp * dt; ps.set(f.cx + Math.cos(f.a) * f.r, f.y + Math.sin(t *",
+    "ms": 3,
+    "n": 240,
+    "perFrame": 0.013
+   },
+   {
+    "kind": "anim",
+    "i": 15,
+    "src": "(t) => { const u = t % 10, dt = Math.min(.05, Math.abs(t - last)); last = t; let k = 0; while (k < KEYS.length",
+    "ms": 3,
+    "n": 240,
+    "perFrame": 0.013
+   },
+   {
+    "kind": "anim",
+    "i": 11,
+    "src": "(t) => { const dt = Math.min(.05, Math.abs(t - last)); last = t; let moving = false; if (dog.wait > 0) dog.wai",
+    "ms": 2.8,
+    "n": 240,
+    "perFrame": 0.012
+   },
+   {
+    "kind": "anim",
+    "i": 6,
+    "src": "(t) => { seeds.forEach(([a, b], i) => { const u = (t * .5 + a) % 2, layer = u < 1 ? 0 : 1, f = u % 1; const po",
+    "ms": 2.2,
+    "n": 240,
+    "perFrame": 0.009
+   },
+   {
+    "kind": "anim",
+    "i": 7,
+    "src": "(t) => { if (!g.visible) return; // blink (sometimes twice), squint while glitching if (t > nextBlink + .5) ne",
+    "ms": 2,
+    "n": 240,
+    "perFrame": 0.008
+   },
+   {
+    "kind": "life",
+    "i": 6,
+    "src": "(t) => world.tick(t)",
+    "ms": 1.6,
+    "n": 240,
+    "perFrame": 0.007
+   },
+   {
+    "kind": "life",
+    "i": 1,
+    "src": "() => { const d = window.TokenFall && TokenFall.daylight, L = d && d.state.p; if (!L) return; const night = Ma",
+    "ms": 1.5,
+    "n": 240,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "life",
+    "i": 8,
+    "src": "(t, dt) => { const c = S.ctx; if (!c || !S.p) return; const level = S.on && c.state === 'running' ? 0.2 * (TF.",
+    "ms": 1.5,
+    "n": 240,
+    "perFrame": 0.006
+   },
+   {
+    "kind": "life",
+    "i": 13,
+    "src": "(t, dt) => { if (!started) return; const swapping = want && !el.src.endsWith(encodeURI(want)); const target = ",
+    "ms": 1.2,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 49,
+    "src": "(t) => { const k = Math.floor(t * 2); if (k !== last) { last = k; draw(t); } }",
+    "ms": 1.1,
+    "n": 240,
+    "perFrame": 0.005
+   },
+   {
+    "kind": "anim",
+    "i": 8,
+    "src": "(t) => sprites.forEach((s, i) => { const k = (t * .11 + i / sprites.length) % 1, a = i * 2.4 + t * .3, r = 1 +",
+    "ms": 0.8,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "life",
+    "i": 10,
+    "src": "(t, dt) => { S.live = true; if (AIR.flies && S.p) driftAir(t, dt, S.p, S.inside); }",
+    "ms": 0.8,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "life",
+    "i": 2,
+    "src": "(T, dt) => { if (!camFx.on) return; camFx.t = Math.min(1, camFx.t + dt / camFx.dur); const k = camEase(camFx.t",
+    "ms": 0.7,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 68,
+    "src": "t => { seed.forEach((s, i) => { const f = (t * s.sp + s.ph) % 1, a = s.a + t * .5, k = Math.sin(f * Math.PI) *",
+    "ms": 0.7,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 13,
+    "src": "(t) => { beltTex.offset.x = -(t * .6) % 1; cubes.forEach((c, k) => { const f = (t * .06 + k / cubes.length) % ",
+    "ms": 0.6,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 14,
+    "src": "(t) => { acc += Math.min(.1, Math.abs(t - last)); last = t; if (acc < .06) return; acc = 0; if (i < strokes.le",
+    "ms": 0.6,
+    "n": 240,
+    "perFrame": 0.003
+   },
+   {
+    "kind": "anim",
+    "i": 17,
+    "src": "(t) => { const k = (t * .025) % 2, f = k < 1 ? k : 2 - k, e = f * f * (3 - 2 * f); g.position.set(x, 0, z0 + e",
+    "ms": 0.6,
+    "n": 240,
+    "perFrame": 0.003
+   }
+  ],
+  "alloc": [
+   {
+    "fn": "slice :0",
+    "kbPerFrame": 0.2
+   },
+   {
+    "fn": "replace :0",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "Be anime.umd.min.js:7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "window.frame :7",
+    "kbPerFrame": 0.1
+   },
+   {
+    "fn": "(anon) :4",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "refreshMaterialUniforms three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "ne anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "frame loop.js:89",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "updateMatrixWorld three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "multiplyMatrices three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "charHead characters.js:17",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "push three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "forEach :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "M three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Wi three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "npcThink characters.js:243",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "min :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "pickTarget characters.js:234",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "Vt anime.umd.min.js:7",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "applyMatrix4 three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(V8 API) :0",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "where :2",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "setFromMatrixPosition three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "compose three.min.js:6",
+    "kbPerFrame": 0
+   },
+   {
+    "fn": "(anon) walk-to.js:122",
+    "kbPerFrame": 0
+   }
+  ],
+  "draws": [
+   [
+    "MeshStandardMaterial (unnamed)",
+    153
+   ],
+   [
+    "(post-processing, shadow or unhooked)",
+    52
+   ],
+   [
+    "PointsMaterial(t) (unnamed)",
+    13
+   ],
+   [
+    "MeshBasicMaterial (unnamed)",
+    5
+   ],
+   [
+    "ShaderMaterial (unnamed)",
+    1
+   ],
+   [
+    "MeshLambertMaterial(t) (unnamed)",
+    1
+   ],
+   [
+    "MeshBasicMaterial(t) (unnamed)",
+    1
+   ]
+  ]
+ }
+}
