@@ -32,8 +32,15 @@ const TF = window.TokenFall = {
   },
   sys(text) { log('', text, true); },
   banner(title, sub) { showBanner(title, sub); },
-  // fade to black, run cb while black, fade back; input and portals are locked meanwhile
-  fade(cb, ms = 480) { traveling = true; fadeEl.style.opacity = 1; setTimeout(() => { cb(); fadeEl.style.opacity = 0; traveling = false; }, ms); },
+  // fade to black, run cb while black, fade back; input and portals are locked meanwhile. After cb the real loop draws three frames before the fade
+  // lifts (as travel() does): whatever cb switched on compiles or uploads on those, not on a frame the player sees. try/finally: the fade always lifts.
+  fade(cb, ms = 480) {
+    traveling = true; fadeEl.style.opacity = 1;
+    setTimeout(async () => {
+      try { cb(); for (let n = frames, i = 0; frames < n + 3 && i < 40; i++) await yieldFrame(); }
+      finally { fadeEl.style.opacity = 0; traveling = false; }
+    }, ms);
+  },
   registerZone(key, o) {
     AREAS[key] = Object.assign({ key, cx: 0, cz: 0, name: key, sub: '', color: 0xffffff, ret: [0, 0], spawn: [0, 0] }, o);
     ZONE_LIGHTS[key] = ZONE_LIGHTS[key] || [];
