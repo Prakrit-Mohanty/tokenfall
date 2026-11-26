@@ -100,14 +100,18 @@ _ready.forEach(f => f(TF));
 // (the loading screen keeps moving between them), then one hidden render links its shader programs and fills the shadow map. Only the people in the
 // start zone are shown, the rule frame() applies, so the other zones' sheets stay un-uploaded (they go up under the travel fade, see loop.js).
 const yieldFrame = () => new Promise((r) => { requestAnimationFrame(r); setTimeout(r, 100); });   // the timeout keeps a hidden tab from stalling the load
-async function warmUp() {
-  for (const c of npcs) c.g.visible = c.zone === zone;
-  const here = [hero, ...npcs.filter((c) => c.zone === zone)];
+// puts the sprite sheets of the people in zone z that are not on the GPU yet there, one per frame (travel() uses it under its fade too)
+async function uploadSheets(z) {
+  const here = [hero, ...npcs.filter((c) => c.zone === z)];
   for (const id in sheetTex) {
-    if (!here.some((c) => c.mesh.material.map === sheetTex[id])) continue;
+    if (!here.some((c) => c.mesh.material.map === sheetTex[id]) || renderer.properties.get(sheetTex[id]).__webglTexture) continue;
     renderer.initTexture(sheetTex[id]); renderer.initTexture(auxTex[id]);
     await yieldFrame();
   }
+}
+async function warmUp() {
+  for (const c of npcs) c.g.visible = c.zone === zone;
+  await uploadSheets(zone);
   render(); gl.finish();
   await yieldFrame();
 }

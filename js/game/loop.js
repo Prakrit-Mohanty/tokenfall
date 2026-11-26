@@ -23,22 +23,27 @@ function setZone(z) {
   document.getElementById('count').textContent = `${here.length} / 20`;
   document.getElementById('plist').innerHTML = here.map((n, i) => `<div class="${i ? 'pl-go' : 'me'}"${i ? ` data-who="${esc(n)}" tabindex="0" role="button"` : ''}><i></i>${esc(n)}${i ? '' : ' (you)'}</div>`).join('');
 }
-let travelTo = null;   // the zone a travel is heading to, while it fades out (the NPC loop shows its people early)
+// The screen fades to black while the destination is made ready behind it: its people's sprite sheets go up one per frame (and the fade waits for them),
+// then, with the screen black, the zone is switched and the loop runs a few frames before the fade lifts: each zone lights a different number of lamps,
+// so a zone not seen yet compiles its shader programs on its first frames, and the player should not be looking at them.
 function travel(p) {
-  traveling = true; fadeEl.style.opacity = 1; travelTo = p.to;
+  traveling = true; fadeEl.style.opacity = 1;
   ModelFiles.enter(p.to);   // start fetching the destination's models during the fade, not after it
-  setTimeout(() => {
+  Promise.all([new Promise((r) => setTimeout(r, 480)), uploadSheets(p.to).catch(() => {})]).then(async () => {
     const to = p.to;
     if (p.at) { hero.x = p.at[0]; hero.y = p.at[1]; hero.dir = 'down'; }
     else if (to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = AREAS[p.zone].retDir || (p.zone === 'lab' ? 'down' : p.zone === 'airport' ? 'right' : 'left'); }
     else { const a = AREAS[to], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.dir = 'up'; }
     setZone(to); hero.zone = to; armed = false;
     snapCamera();
+    // let the real loop draw a few frames of the new zone while the screen is still black: anything that compiles or uploads on the first frame
+    // (including what the zone's own animation callbacks switch on) stalls one the player does not see. The cap keeps a dead loop from holding the fade.
+    for (let n = frames, i = 0; frames < n + 3 && i < 40; i++) await yieldFrame();
     const a = AREAS[to];
     showBanner(a ? a.name : 'TokenFall Lobby', a ? a.sub : 'Main Plaza');
     log('', `You travelled to ${a ? a.name : 'the Lobby'}.`, true);
-    fadeEl.style.opacity = 0; traveling = false; travelTo = null;
-  }, 480);
+    fadeEl.style.opacity = 0; traveling = false;
+  });
 }
 
 // ================= camera =================
@@ -87,7 +92,9 @@ let hero, nearest = null, nearP = null, last = performance.now(), T = 0, chatter
 const chatter = window.Chatter.create();   // each bot's own lines, never repeated within the last 10 messages (chatter.js)
 const camDir = new THREE.Vector3();
 let lampT = 0;
+let frames = 0;   // frames drawn so far: travel() waits on it
 function frame(now) {
+  frames++;
   const raw = now - last, dt = Math.min(50, raw); last = now;
   renderer.info.reset(); perfFrame(raw);
   if ((lampT -= dt) < 0) { lampT = 500; capLamps(); }
@@ -108,9 +115,9 @@ function frame(now) {
   // NPCs
   for (const c of npcs) {
     // characters are never frustum-culled (their shader places the card), so one in another zone, 300 m off and past the far plane, still cost a
-    // draw, a shadow-map draw and, the first time, the upload of its 4096-wide sprite sheet: draw only the ones in this zone, and from the moment
-    // a travel starts the ones where it is going, so their sheets upload while the screen fades out rather than on the first frame there
-    const here = c.zone === zone || c.zone === travelTo; if (c.g.visible !== here) c.g.visible = here;
+    // draw, a shadow-map draw and, the first time, the upload of its 4096-wide sprite sheet: draw only the ones in this zone (travel() uploads
+    // the destination's sheets under its fade before switching zones)
+    const here = c.zone === zone; if (c.g.visible !== here) c.g.visible = here;
     npcThink(c, dt);
     const ox = c.x, oz = c.y; stepChar(c, dt);
     if (c.moving && Math.hypot(c.x - ox, c.y - oz) < c.speed * dt / 1000 * .4) c.stuck += dt; else c.stuck = 0;
