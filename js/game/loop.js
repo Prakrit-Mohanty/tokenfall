@@ -9,7 +9,7 @@ function setZone(z) {
   ModelFiles.enter(z);   // the cars, bikes and robot dog standing in this zone start loading (js/model-files.js)
   for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) { l.intensity = k === z ? l.userData.base : 0; l.visible = k === z; }
   capLamps();   // low tier: trims to the nearest lamps straight away
-  const indoor = z === 'lab' || z === 'abz' || z === 'us' || z === 'airport';
+  const indoor = z === 'lab' || z === 'abz' || z === 'us' || z === 'airport' || z === 'blr';
   scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
   sun.intensity = indoor ? .42 : 1.1; hemi.intensity = indoor ? .6 : .6;
   hemi.color.set(indoor ? 0xf0dcc4 : 0xf2dfc6);

@@ -1,8 +1,8 @@
 // TokenFall: the full-screen map of the lobby, opened with E at the map board (lobby-village.js vLobbyMap). A hand-illustrated isometric park map:
 // a grassy island with layered cliffs floating in a soft sea, winding sandy paths, a tiled plaza with a tiered fountain, the river and its bridge,
-// HQ, Token Brew, the homes, the pond, the games lawn, and the three gates: stone archways holding swirling portals. Beyond each portal a card
+// the station and its train, Token Brew, the homes, the pond, the games lawn, and the three gates: stone archways holding swirling portals. Beyond each portal a card
 // with a little preview says where it leads. White badges with drawn pictograms mark what is where, the legend explains them, a pin shows you.
-// Drawn once as one inline SVG; E, Esc or a click closes it. Classic script: shares one global scope with the other js/game files.
+// Drawn once as one inline SVG; M opens it from anywhere (ui.js), and M, E, Esc or a click closes it. Classic script: shares one global scope with the other js/game files.
 (() => {
   const S = 6, OX = 660, OY = 335;                               // map units (world metres) to SVG px, and where the plaza's centre lands
   const iso = (x, z, y = 0) => [OX + (x - z) * .866 * S, OY + (x + z) * .5 * S - y * S];
@@ -99,6 +99,7 @@
   };
   // glyphs: black pictograms on the white badges (and the legend)
   const G = {
+    train: '<path d="M3 17V9h3V6h5v3h6l4 3v5z"/><circle cx="7" cy="19" r="2.2"/><circle cx="13" cy="19" r="2.2"/><circle cx="18.5" cy="19" r="1.6"/><path fill="#fff" d="M7 10.5h3v2.5H7z"/>',
     hq: '<path d="M4 21V5l8-3v19zM13 21V8h7v13z"/><path fill="#fff" d="M6 6.5h1.7v1.7H6zM9 6.5h1.7v1.7H9zM6 10.5h1.7v1.7H6zM9 10.5h1.7v1.7H9zM6 14.5h1.7v1.7H6zM9 14.5h1.7v1.7H9zM15 10.5h1.7v1.7H15zM15 14.5h1.7v1.7H15zM17.6 10.5h1v1.7h-1zM17.6 14.5h1v1.7h-1z"/>',
     fountain: '<path d="M2.5 15h19l-2 5.5h-15z"/><path d="M11 15V9.5h2V15z"/><path d="M6.5 9h11l-1.8 2.2H8.3z"/><path d="M12 2.5C9 4 8 5.5 7.6 7.5M12 2.5c3 1.5 4 3 4.4 5" fill="none" stroke="#222" stroke-width="1.7" stroke-linecap="round"/>',
     cup: '<path d="M4 9h13v4.5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6z"/><path d="M17 10.5h1.2a2.6 2.6 0 0 1 0 5.2H16.4" fill="none" stroke="#222" stroke-width="2"/><path d="M8.5 2.5c-1.2 1.5 1.2 2.2 0 4M12.5 2.5c-1.2 1.5 1.2 2.2 0 4" fill="none" stroke="#222" stroke-width="1.6" stroke-linecap="round"/><rect x="3" y="20.3" width="15" height="1.8" rx=".9"/>',
@@ -208,22 +209,20 @@
     s += ell(-3.9, 10.9, 2.4, 2.4, '#e8322a', 'class="wm-ring" opacity=".6"');
 
     // ---- buildings and things that stand up ----
-    // HQ: an office tower with a lower wing, a glass entrance, rooftop kit, and a tiny garden
-    { let h = shadowAt(0, -45, 9) + box(-9, -49, 9, -42, 5, '#d9d6cf', '#bdb8ae');
-      for (let x = -8; x < 8.5; x += 2.2) for (const y of [1, 3]) h += poly(fS(-42, x, x + 1.4, y, y + 1.3), '#7ec3e6');
-      h += box(-5, -52, 5, -44, 16, '#ecebe6', '#cfccc4');
-      for (let x = -4.4; x < 4.5; x += 1.6) for (let y = 6; y < 15.5; y += 1.8) h += poly(fS(-44, x, x + 1, y, y + 1.1), (x * 7 + y) % 5 < 1 ? '#ffe9a0' : '#5aa8d8');
-      for (let z = -51.4; z < -44.5; z += 1.6) for (let y = 6; y < 15.5; y += 1.8) h += poly(fE(5, z, z + 1, y, y + 1.1), '#4b94c4');
-      h += box(-2, -43, 2, -41.5, 3, '#4b94c4', '#e04a5a') + poly(fS(-41.5, -1.2, 1.2, 0, 2.2), '#bfe8fa', 'stroke="#fff" stroke-width="1.5"');
-      h += box(-3, -50, 0, -47, 18, '#9a978f') + box(1.5, -50, 3.5, -48, 17.2, '#b5b1a8');
-      h += poly(fS(-44, -4.6, 4.6, 16, 17.4), '#e04a5a');
-      { const a = iso(-4, -44, 16.2), b = iso(4, -44, 16.2); h += `<text transform="translate(${f1((a[0] + b[0]) / 2)},${f1((a[1] + b[1]) / 2 - 1)}) skewY(30)" text-anchor="middle" font-size="7" font-weight="700" fill="#fff">TOKENFALL</text>`; }
+    // the station: the track along the island's north edge, the stone platform, the station house and the red footbridge, and the Bengaluru Express waiting at it
+    { let h = flat(-46, -51.9, 46, -48.9, '#a39b8e') + `<path d="M${pt(iso(-46, -50.4))}L${pt(iso(46, -50.4))}" stroke="#7a6a5a" stroke-width="2" stroke-dasharray="1.5 2.5"/>`;
+      h += box(-31, -48.85, 19, -45.4, .5, '#e9dfca', '#cdbd9f');
+      for (const x of [-30.2, -21.8, -15, -9.5, -4.6, 4.2, 7.6, 18.3]) h += `<path d="M${pt(iso(x, -45.65, .5))}L${pt(iso(x, -45.65, 3.6))}" stroke="#b8473f" stroke-width="1.6"/>`;   // the red lamps
+      h += box(-29.7, -51.6, 4.1, -49.2, 3.5, '#8f2f2c', '#6e2422') + box(4.5, -51.4, 20, -49.4, 3.4, '#8f2f2c', '#6e2422') + box(16.5, -51, 17.5, -50, 4.4, '#4a3a40', '#c45a3a');   // four coaches and the locomotive
+      for (let x = -29.2; x < 4; x += 1.4) h += poly(fS(-49.2, x, x + .8, 2.1, 3), '#ffd9a0');
+      h += box(-20.6, -45.4, -13.6, -41, 3.7, '#5f5a6c', '#c9b79a');   // the stone station house
+      h += poly([iso(8.9, -52.9, 5.3), iso(10.3, -52.9, 5.3), iso(10.3, -45.6, 5.3), iso(8.9, -45.6, 5.3)], '#b8473f', 'stroke="#8a3530" stroke-width="1"') + `<path d="M${pt(iso(10.3, -46, 5.3))}L${pt(iso(16.7, -46, .5))}" stroke="#b8473f" stroke-width="3"/>`;   // the red footbridge and its stair
+      { const a = iso(-20, -41, 4.2), b = iso(-14, -41, 4.2); h += `<text transform="translate(${f1((a[0] + b[0]) / 2)},${f1((a[1] + b[1]) / 2 - 1)}) skewY(30)" text-anchor="middle" font-size="7" font-weight="700" fill="#5a4256">STATION</text>`; }
       add(-46, h); }
-    for (const x of [-7, 7]) add(-42 + x * 0 - 1, conifer(x, -40.5, .8));
-    // the bridge over the river: planks and rails
-    { const B = (x0, z0, x1, z1, y) => poly([iso(x0, z0, y), iso(x1, z0, y), iso(x1, z1, y), iso(x0, z1, y)], '#b98250', 'stroke="#8a5a32" stroke-width="1"');
-      let b = B(-3.4, -38, 3.4, -28, .6) + poly(fS(-28, -3.4, 3.4, 0, .6), '#8a5a32');
-      for (let z = -37; z < -28; z += 1.2) b += `<path d="M${pt(iso(-3.4, z, .6))}L${pt(iso(3.4, z, .6))}" stroke="#946339" stroke-width="1.2"/>`;
+    // the bridge over the river: a stone arch paved like the road, rails following its curve
+    { const B = (x0, z0, x1, z1, y) => poly([iso(x0, z0, y), iso(x1, z0, y), iso(x1, z1, y), iso(x0, z1, y)], '#e9dfca', 'stroke="#cdbd9f" stroke-width="1"');
+      let b = B(-3.4, -38, 3.4, -28, .6) + poly(fS(-28, -3.4, 3.4, 0, .6), '#cdbd9f');
+      for (let z = -37; z < -28; z += 1.2) b += `<path d="M${pt(iso(-3.4, z, .6))}L${pt(iso(3.4, z, .6))}" stroke="#cdbd9f" stroke-width="1.2"/>`;
       for (const x of [-3.2, 3.2]) { b += `<path d="M${pt(iso(x, -38, 2))}Q${pt(iso(x, -33, 3.4))} ${pt(iso(x, -28, 2))}" fill="none" stroke="#7a4a28" stroke-width="2.5"/>`; for (let z = -38; z <= -28; z += 2.5) b += `<path d="M${pt(iso(x, z, .6))}L${pt(iso(x, z, 2.2 + (1 - ((z + 33) / 5) ** 2) * .6))}" stroke="#7a4a28" stroke-width="2"/>`; }
       add(-33, b); }
     // Token Brew: a cafe with a striped awning, sign and umbrella tables
@@ -301,16 +300,16 @@
     s += `<g class="wm-cloud" fill="#fff" opacity=".85">` + [[120, 300, 1], [1150, 420, .8], [560, 760, .9], [880, 60, .7]].map(([x, y, k]) => `<g transform="translate(${x},${y}) scale(${k})"><ellipse cx="0" cy="0" rx="40" ry="14"/><ellipse cx="-14" cy="-10" rx="18" ry="14"/><ellipse cx="12" cy="-14" rx="22" ry="16"/></g>`).join('') + `</g>`;
     s += `<g class="wm-birds" fill="none" stroke="#3b4a5a" stroke-width="1.8" stroke-linecap="round">` + [[760, 60], [782, 70], [770, 84], [300, 640]].map(([x, y]) => `<path d="M${x - 6} ${y}q3 -4 6 0q3 -4 6 0"/>`).join('') + `</g>`;
     // ---- badges, names, gate pills ----
-    s += badge(5, -47, 18.5, 'hq') + badge(0, 0, 9, 'fountain') + badge(18, -13.5, 7, 'cup') + badge(-22, -8, 9.2, 'tower') + badge(-31, -10, 6.2, 'target') + badge(9, -13.8, 7.8, 'board') + badge(-18.5, 10, 7, 'home') + badge(-24, 34, 1, 'duck') + badge(18.5, 28, 5, 'cup');
+    s += badge(5, -47, 6.5, 'train') + badge(0, 0, 9, 'fountain') + badge(18, -13.5, 7, 'cup') + badge(-22, -8, 9.2, 'tower') + badge(-31, -10, 6.2, 'target') + badge(9, -13.8, 7.8, 'board') + badge(-18.5, 10, 7, 'home') + badge(-24, 34, 1, 'duck') + badge(18.5, 28, 5, 'cup');
     s += name(18, -13.5, -1.2, 'Token Brew') + name(-22, -6, -1.6, 'Token Tower') + name(-31, -8, -1.6, 'Spot Shot') + name(9, -12, -.6, 'Leaderboard') + name(-25, 16, -2.2, 'Homes') + name(-24, 42, -1, 'Pond') + name(0, 13.5, -1.2, 'Plaza', 12) + name(36, -36, 0, 'River', 12);
-    s += pill(-44, 0, 15, 'Airport', '#f0a030') + pill(44, 0, 15, 'Pune', '#3fae55') + pill(0, 44, 15, 'Glass Bridge', '#8f6ad8') + pill(0, -47, 25.5, 'HQ', '#e04a5a');
+    s += pill(-44, 0, 15, 'Airport', '#f0a030') + pill(44, 0, 15, 'Pune', '#3fae55') + pill(0, 44, 15, 'Glass Bridge', '#8f6ad8') + pill(0, -47, 9, 'Station', '#e04a5a');
     // ---- you are here: drawn live on top when the map opens (see aim layer below) ----
     // ---- cards beyond the portals ----
     s += card(16, 16, 254, iso(-44, 0, 11), '#f0a030', 'Airport portal', pvPlane, ['Fly to Pleasanton (US office)', 'The Calfus office in California']);
     s += card(1010, 512, 256, iso(44, 0, 11), '#3fae55', 'Pune portal', pvCity, ['Crescent Bay → HQ floor', 'Carrom table on the HQ floor', 'ABZ office, 15th floor']);
     s += card(16, 560, 254, iso(0, 44, 2), '#8f6ad8', 'Glass Bridge', pvGlass, ['Step on the right tile', 'Questions on understanding']);
     // ---- legend ----
-    { const L = [['hq', 'HQ'], ['fountain', 'Plaza &amp; fountain'], ['cup', 'Token Brew'], ['board', 'Leaderboard'], ['tower', 'Token Tower'], ['target', 'Spot Shot'], ['home', 'Homes'], ['duck', 'Pond'], ['portal', 'Portal: travel'], ['pin', 'You are here']];
+    { const L = [['train', 'Station'], ['fountain', 'Plaza &amp; fountain'], ['cup', 'Token Brew'], ['board', 'Leaderboard'], ['tower', 'Token Tower'], ['target', 'Spot Shot'], ['home', 'Homes'], ['duck', 'Pond'], ['portal', 'Portal: travel'], ['pin', 'You are here']];
       const x = 1016, y = 14, w = 250, h = 30 + Math.ceil(L.length / 2) * 28 + 8;
       s += `<g><rect x="${x}" y="${y + 5}" width="${w}" height="${h}" rx="16" fill="rgba(20,50,70,.22)"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="#fff"/><text x="${x + 16}" y="${y + 24}" font-size="14" font-weight="700" fill="#3f6a1a" letter-spacing="1">MAP KEY</text>` +
         L.map((l, i) => { const lx = x + 12 + (i % 2) * 120, ly = y + 34 + Math.floor(i / 2) * 28; return `<use xlink:href="#g-${l[0]}" x="${lx}" y="${ly}" width="20" height="20"/><text x="${lx + 27}" y="${ly + 15}" font-size="13" font-weight="600" fill="#333">${l[1]}</text>`; }).join('') + '</g>'; }
@@ -324,21 +323,22 @@
   const flat = (x0, z0, x1, z1, fill, extra = '') => poly([iso(x0, z0), iso(x1, z0), iso(x1, z1), iso(x0, z1)], fill, extra);
 
   const el = document.createElement('div'); el.className = 'wm-back'; el.hidden = true;
-  el.innerHTML = `<div class="wm-card" role="dialog" aria-label="Lobby map"><div class="wm-head"><h2>TokenFall Lobby</h2><span>Click a place (or anywhere on the grass) to run there</span><button type="button" class="wm-x">Close <kbd>E</kbd></button></div><div class="wm-map"></div></div>`;
+  el.innerHTML = `<div class="wm-card" role="dialog" aria-label="Lobby map"><div class="wm-head"><h2>TokenFall Lobby</h2><span class="wm-sub">Click a place (or anywhere on the grass) to run there</span><button type="button" class="wm-x">Close <kbd>M</kbd></button></div><div class="wm-map"></div></div>`;
   document.getElementById('ui').appendChild(el);
   let drawn = false, cache = '';
   const markup = () => cache || (cache = svg());
   // ---- click to go: places on the map (their badge or pill, and where in the world you end up), else any open ground ----
   const HOT = [
-    ['HQ Office', 5, -47, 18.5, -32, 0, -44.8], ['the fountain', 0, 0, 9, -32, 0, 5], ['Token Brew', 18, -13.5, 7, -32, 18.1, -7], ['the Leaderboard', 9, -13.8, 7.8, -32, 8.6, -9.2],
+    ['the station', 5, -47, 6.5, -32, .3, -46.6], ['the fountain', 0, 0, 9, -32, 0, 5], ['Token Brew', 18, -13.5, 7, -32, 18.1, -7], ['the Leaderboard', 9, -13.8, 7.8, -32, 8.6, -9.2],
     ['Token Tower', -22, -8, 9.2, -32, -26, -3.2], ['Spot Shot', -31, -10, 6.2, -32, -20.5, -2.2], ['the homes', -18.5, 10, 7, -32, -16.2, -7], ['the pond', -24, 34, 1, -32, 16.4, 23.8],
-    ['the Prompt Lab', 18.5, 28, 5, -32, 6.3, 24.8], ['the Airport portal', -44, 0, 15, 0, -40, 0], ['the Pune portal', 44, 0, 15, 0, 40, 0], ['the Glass Bridge', 0, 44, 15, 0, 0, 40], ['HQ', 0, -47, 25.5, 0, 0, -44.8],
+    ['the Prompt Lab', 18.5, 28, 5, -32, 6.3, 24.8], ['the Airport portal', -44, 0, 15, 0, -40, 0], ['the Pune portal', 44, 0, 15, 0, 40, 0], ['the Glass Bridge', 0, 44, 15, 0, 0, 40], ['the station', 0, -47, 9, 0, .3, -46.6],
   ];
   const SVGNS = 'http://www.w3.org/2000/svg';
   let svgEl = null, aim = null, me = null, target = null;
   const toSvg = (e) => { const p = svgEl.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svgEl.getScreenCTM().inverse()); };
   const ground = (px, py) => { const u = (px - OX) / (.866 * S), v = (py - OY) / (.5 * S); return [(u + v) / 2, (v - u) / 2]; };
   const pick = (e) => {
+    if (!here()) return null;
     const p = toSvg(e);
     for (const [label, ax, az, ay, dy, wx, wz] of HOT) { const [cx, cy] = iso(ax, az, ay); if (Math.abs(p.x - cx) < (dy ? 22 : 60) && Math.abs(p.y - (cy + dy)) < (dy ? 26 : 18)) return { label, x: wx, z: wz, hot: true }; }
     const [x, z] = ground(p.x, p.y);
@@ -368,9 +368,16 @@
       if (!walkStartAt(t.x, t.z, t.hot ? t.label : 'that spot')) log('', "Can't get there from here.", true);
     });
   };
-  const open = () => { if (!drawn) { el.querySelector('.wm-map').innerHTML = markup(); drawn = true; wire(); } drawMe(); drawAim(null); el.hidden = false; window.TokenFall.lockPlayer(true); };
+  // away from the lobby (M works everywhere) it is a map to look at: no pin, nothing to click
+  const here = () => typeof zone === 'undefined' || zone === 'lobby';
+  const open = () => {
+    if (!drawn) { el.querySelector('.wm-map').innerHTML = markup(); drawn = true; wire(); }
+    me.style.display = here() ? '' : 'none'; drawMe(); drawAim(null);
+    el.querySelector('.wm-sub').textContent = here() ? 'Click a place (or anywhere on the grass) to run there' : 'The lobby: you are away. Come back through a portal (or the train) to run about it';
+    el.hidden = false; window.TokenFall.lockPlayer(true);
+  };
   const close = () => { if (el.hidden) return; el.hidden = true; window.TokenFall.lockPlayer(false); };
   el.addEventListener('click', (e) => { if (e.target === el || e.target.closest('.wm-x')) close(); });
-  addEventListener('keydown', (e) => { if (el.hidden) return; if (!e.repeat && ['KeyE', 'Escape', 'Enter', 'Space'].includes(e.code)) close(); e.stopImmediatePropagation(); e.preventDefault(); }, true);
+  addEventListener('keydown', (e) => { if (el.hidden) return; if (!e.repeat && ['KeyM', 'KeyE', 'Escape', 'Enter', 'Space'].includes(e.code)) close(); e.stopImmediatePropagation(); e.preventDefault(); }, true);
   window.WorldMap = { open, close, svg: markup };   // main.js makes TF later than this file loads
 })();

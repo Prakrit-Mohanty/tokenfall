@@ -36,6 +36,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Space' && !e.repeat) { hero.trigger('jump'); e.preventDefault(); }
   if (e.code === 'KeyE' && !e.repeat && nearest) nearest.act();
   if (e.code === 'KeyV' && !e.repeat) setCamView(camView ^ 1);
+  if (e.code === 'KeyM' && !e.repeat && !traveling && !playerLocked && window.WorldMap) WorldMap.open();   // M: the lobby map (the map board's own); M again, E or Esc closes it
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
 // a left click anywhere also moves a dialogue on (like E, Space, Enter or Escape), and the click goes no further

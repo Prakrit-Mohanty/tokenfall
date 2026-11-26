@@ -3,7 +3,7 @@ const assert = require('assert');
 const { test, done } = require('../test-kit.js');
 const M = require('./music.js');
 
-const key = (o = {}) => Object.assign({ code: 'KeyM', repeat: false, typing: false, inGame: false, locked: false, zone: 'lobby' }, o);
+const key = (o = {}) => Object.assign({ code: 'KeyN', repeat: false, typing: false, inGame: false, locked: false, zone: 'lobby' }, o);
 
 test('every zone plays the default track until it is given its own', () => {
   for (const z of ['lobby', 'lab', 'pune', 'abz', 'airport', 'us', 'bridge', 'somewhere-new', undefined]) assert.strictEqual(M.trackFor(z), M.TRACKS.default);
@@ -24,12 +24,12 @@ test('volume: full in the world, ducked during a minigame, silent when muted', (
   assert(M.MUSIC.duck > 0 && M.MUSIC.duck < M.MUSIC.volume && M.MUSIC.volume <= 1);
 });
 
-test('M toggles the music in the open world', () => {
+test('N toggles the music in the open world (M is the map)', () => {
   assert.strictEqual(M.isMuteKey(key()), true);
 });
 
-test('M is left alone where something else owns it: chat, minigames, a locked player, the Glass Bridge', () => {
-  for (const o of [{ typing: true }, { inGame: true }, { locked: true }, { zone: 'bridge' }, { repeat: true }, { code: 'KeyN' }]) assert.strictEqual(M.isMuteKey(key(o)), false, JSON.stringify(o));
+test('N is left alone where something else owns it: chat, minigames, a locked player, the Glass Bridge; and M never mutes', () => {
+  for (const o of [{ typing: true }, { inGame: true }, { locked: true }, { zone: 'bridge' }, { repeat: true }, { code: 'KeyM' }]) assert.strictEqual(M.isMuteKey(key(o)), false, JSON.stringify(o));
 });
 
 test('a saved mute flag reads back; anything else means not muted', () => {

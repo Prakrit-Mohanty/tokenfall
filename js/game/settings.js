@@ -24,7 +24,7 @@
       `<input type="range" min="0" max="100" value="${Math.round((m ? m.volume : .32) * 100)}" data-a="vol" aria-label="Music volume"${m && m.muted ? ' disabled' : ''}></div></section>` +
       `<section><h3>Display</h3><div class="st-row"><span>Large text</span><button type="button" class="st-tog${bigOn() ? ' on' : ''}" data-a="big" aria-pressed="${bigOn()}"><i></i>${bigOn() ? 'On' : 'Off'}</button></div>` +
       `<div class="st-row"><span>Camera</span><div class="st-seg"><button type="button" class="${camView === 0 ? 'on' : ''}" data-a="cam" data-v="0">Close</button><button type="button" class="${camView === 1 ? 'on' : ''}" data-a="cam" data-v="1">Wide</button></div></div></section>` +
-      `<section><h3>Controls</h3><div class="st-keys">${[['WASD', 'Move'], ['Shift', 'Run'], ['Space', 'Jump'], ['E', 'Interact'], ['V', 'View'], ['M', 'Music'], ['G', 'Glitch log'], ['L', 'Large text']].map((k) => `<kbd>${k[0]}</kbd><span>${k[1]}</span>`).join('')}</div></section>`;
+      `<section><h3>Controls</h3><div class="st-keys">${[['WASD', 'Move'], ['Shift', 'Run'], ['Space', 'Jump'], ['E', 'Interact'], ['V', 'View'], ['M', 'Map'], ['N', 'Music'], ['G', 'Glitch log'], ['L', 'Large text']].map((k) => `<kbd>${k[0]}</kbd><span>${k[1]}</span>`).join('')}</div></section>`;
   }
   // the time console opened from here gets a Back button at its top left, which returns to this panel
   let back = null;

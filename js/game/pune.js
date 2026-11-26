@@ -12,7 +12,7 @@ const PUNE_CAMPUS = [22, 28, 53, 46];
 const PUNE_GALLI = [104, 25, 112, 50];
 const PUNE_SQUARE = [96, 50, 120, 62];
 const PUNE_ROAD_X = [-160, 260];
-const PUNE_PARK_AISLE = -13.3;   // the Crescent Bay car park's aisle and driveway, x from cx: the north kerb is cut for it
+const PUNE_PARK_AISLE = -6.95;   // Crescent Bay's drive (crescent-bay.js), x from cx: the north kerb is dropped for it
 const PUNE_LANE_X = [-70, 160];
 const PUNE_LANES = { eastOuter: 12.6, eastInner: 14.6, westInner: 17.4, westOuter: 19.4 };
 const PUNE_TAXI_STANDS = { cb: [5, 8.6], abz: [80, 8.6] };
@@ -81,8 +81,13 @@ function puneGround(cx, cz, M) {
   for (const x of [36, 118]) box(.6, .08, 11.6, yb, cx + x, .02, cz + PUNE_MZ, { cast: false });
   // zebra crossings: over the main road either side of each junction and at the khau galli, over each side street at both footpaths
   const Mz = cz + PUNE_MZ, gx = cx + (PUNE_GALLI[0] + PUNE_GALLI[2]) / 2;
-  for (let t = -5.5; t <= 5.5; t += 1) for (const x of [cx + PUNE_RX - 5.4, cx + PUNE_RX + 5.4, cx + PUNE_RX2 - 5.4, cx + PUNE_RX2 + 5.4, gx]) box(x === gx ? 4 : 2.4, .015, .5, MAT.white, x, .022, Mz + t, { cast: false });
-  for (const sx of [PUNE_RX, PUNE_RX2]) for (let t = -2.5; t <= 2.5; t += 1) for (const z of [Mz - 7.5, Mz + 7.5]) box(.5, .015, 2.4, MAT.white, cx + sx + t, .023, z, { cast: false });
+  // each crossing is one flat decal (white bars, see-through gaps), not a row of 15 mm slabs: the slabs' little steps tripped the post pass's
+  // depth-edge ink (post.js), which drew broken dark lines along the bars and shimmered as you walked
+  // (it lies at .034, just over the painted lane lines, whose 10 mm boxes top out at .031)
+  const zm = pOnce('zebra', () => new THREE.MeshStandardMaterial({ color: MAT.white.color, roughness: MAT.white.roughness, alphaTest: .5,
+    map: canvasTex(32, 4, (g) => { g.fillStyle = '#fff'; g.fillRect(0, 0, 16, 4); }, { keep: true }) }));   // one 1 m period per repeat: a 0.5 m bar, a 0.5 m gap
+  for (const x of [cx + PUNE_RX - 5.4, cx + PUNE_RX + 5.4, cx + PUNE_RX2 - 5.4, cx + PUNE_RX2 + 5.4, gx]) plane(11.5, x === gx ? 4 : 2.4, zm, x, .034, Mz, 1).rotation.y = Math.PI / 2;
+  for (const sx of [PUNE_RX, PUNE_RX2]) for (const z of [Mz - 7.5, Mz + 7.5]) plane(5.5, 2.4, zm, cx + sx, .034, z, 1);
   manholes([[cx + 20, cz + PUNE_MZ - 2], [cx + 70, cz + PUNE_MZ + 2], [cx - 30, cz + PUNE_MZ - 1.5], [cx + 44, cz + PUNE_MZ + 3]]);
 }
 
@@ -269,59 +274,6 @@ function puneABZ(cx, cz) {
 
 // Crescent Bay car park, laid out like a real one: a 5 m two-way aisle down the middle that runs on south as a driveway over the footpath, through a dropped
 // kerb (PUNE_PARK_GAP, cut in puneGround) onto the main road; five 2.8 m car bays along the west side, cars nose-in to the aisle; a two-wheeler row on the east
-function puneParking(cx, cz, asphalt) {
-  const lot = cx - 14.6, ax = cx + PUNE_PARK_AISLE, W = MAT.white;
-  plane(12.8, 15, asphalt, lot, .02, cz - 1.5, 1.5);
-  plane(5, 4.2, asphalt, ax, .03, cz + 8, 1.5);   // the driveway over the footpath to the road
-  // car bays: lines across the west strip (x 279.2-284.2), a stop line at the head of each
-  const BAYS = [-7.2, -4.4, -1.6, 1.2, 4];
-  for (let k = 0; k <= BAYS.length; k++) box(5, .015, .1, W, cx - 18.3, .022, cz - 8.6 + k * 2.8, { cast: false });
-  box(.1, .015, 14, W, ax - 2.5, .022, cz - 1.6, { cast: false });
-  // the aisle: a dashed centre line, then IN / OUT arrows and a give-way line at the road
-  for (let z = -8; z < 9; z += 2) box(.1, .015, 1, W, ax, .022, cz + z, { cast: false });
-  // a painted arrow along z, pointing dir (+1 south to the road, -1 north into the lot): a flat decal, drawn once
-  const ARROW = pOnce('parkArrow', () => new THREE.MeshBasicMaterial({ map: canvasTex(64, 128, (g) => { g.fillStyle = '#eeeae2'; g.beginPath(); g.moveTo(32, 4); g.lineTo(60, 44); g.lineTo(42, 44); g.lineTo(42, 124); g.lineTo(22, 124); g.lineTo(22, 44); g.lineTo(4, 44); g.closePath(); g.fill(); }, { smooth: true }), transparent: true, depthWrite: false }));
-  const arrow = (x, z, dir) => { const m = plane(.7, 1.6, ARROW, x, .024, z); m.rotation.z = dir > 0 ? Math.PI : 0; };
-  arrow(ax - 1.25, cz + 4.5, -1); arrow(ax + 1.25, cz + 4.5, 1);   // in on the left lane, out on the right (Indian roads drive on the left)
-  for (let x = -2.3; x <= 2.3; x += .7) box(.4, .015, .14, W, ax + x, .032, cz + 9.6, { cast: false });
-  // the parked cars, nose-in to the aisle
-  const CARS = [['bmw', 'BMW M3 GTR', ['The BMW M3 GTR in its racing livery.', 'It looks like it would rather be on a highway than in a car park.']], ['jesko', 'Koenigsegg Jesko', ['A Koenigsegg Jesko in orange, all carbon wing and gold wheels.', 'Somebody at Crescent Bay is doing very well.']],
-    ['m4', 'BMW M4', ['A widebody BMW M4 in deep teal.']], ['ferrari', 'Ferrari 458 Italia', ['A Ferrari 458 Italia in Rosso Corsa, mid-engined, a V8 behind the seats.', 'Somebody shipped a big release this quarter.']],
-    ['concept', 'Concept car', ['A pearl-white concept car, all clearcoat and gull-wing curves.', 'There is no badge on it. The owner just says "it\'s in beta".']]];   // supercars down the row (the Creta and the Scorpio moved to the stack parkers under the office)
-  CARS.forEach(([kind, name, lines], i) => { sportsCar(kind, cx - 18.3, cz + BAYS[i], Math.PI / 2); INTER.push({ x: ax - 1.4, z: cz + BAYS[i], r: 1.3, label: name, verb: 'Look', act: () => talk(name, lines) }); });
-  // two-wheelers along the east strip (x 289.2-291.8), angled to the aisle
-  const BIKES = [['r15', 'Yamaha R15M', 'A Yamaha R15M in metallic grey, with blue wheels and gold forks.'], ['vstrom', 'Suzuki V-Strom', 'A yellow Suzuki V-Strom SX, ready for a long ride.'],
-    ['avenger', 'Bajaj Avenger', 'A Bajaj Avenger 180 cruiser, all chrome and low seat.'], ['thruxton', 'Royal Enfield Thruxton', 'A red and black café racer with wire wheels and clip-on bars.'],
-    ['gsxr', 'Suzuki GSX-R 750', 'A 2010 Suzuki GSX-R 750. Somebody here likes their mornings fast.']];
-  box(.1, .015, 11, W, ax + 2.5, .022, cz - 2.5, { cast: false });
-  for (let k = 0; k <= BIKES.length; k++) box(2.4, .015, .08, W, cx - 9.6, .022, cz - 8 + k * 2, { cast: false });   // inside the lot's east edge
-  BIKES.forEach(([kind, name, line], i) => { const z = cz - 7 + i * 2; if (kind === 'avenger' || kind === 'gsxr') bikeModel(kind, cx - 9.6, z, -Math.PI / 2, { lean: .08 }); else bike(cx - 9.6, z, -Math.PI / 2, kind);   // rear wheel to the kerb, front to the aisle   // the modelled ones where we have them
-    INTER.push({ x: ax + 1.6, z, r: 1, label: name, verb: 'Look', act: () => talk(name, [line]) }); });
-  // floodlights: two tall poles over the bays, lit day and night (the building's shadow falls across the lot all afternoon), outside the daylight's lamp dimming
-  for (const [x, z] of [[cx - 21.4, cz - 5.5], [cx - 21.4, cz + 1.8]]) {   // behind the cars, outside the lot, the lamp arms reaching over them
-    streetProp('lamp', x, 0, z, Math.PI / 2).scale.setScalar(1.25); colCirc(x, z, .25);
-    const l = new THREE.PointLight(0xfff1dc, 2.4, 14, 1.4); l.position.set(x + 1.1, 4.4, z); scene.add(l);
-    const fill = new THREE.SpotLight(0xfff6ea, 1.6, 18, .9, .6, 1); fill.position.set(x + 6, 7, z); fill.target.position.set(x + 3, 0, z); scene.add(fill, fill.target);
-  }
-  // the name board is a gantry over the entrance, where the driveway meets the footpath, high enough to drive under; at the back of the lot a small P sign
-  ledSign(['Crescent Bay Parking'], '#9fd0ff', ax, 3.4, cz + 8.6, 5.4, .55, 0, [480, 52], PLAIN);
-  for (const s2 of [-2.9, 2.9]) { box(.14, 3.7, .14, MAT.metal, ax + s2, 0, cz + 8.6); colCirc(ax + s2, cz + 8.6, .15); }
-  { // a proper parking sign (the old LED "P" read as a floating key): a blue plate with a white P and a white border, on a grey pole
-    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
-    g.fillStyle = '#ffffff'; g.fillRect(0, 0, 128, 128); g.fillStyle = '#1f5fbf'; g.fillRect(8, 8, 112, 112);
-    g.fillStyle = '#ffffff'; g.font = '700 96px Arial, Helvetica, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('P', 64, 70);
-    const t = new THREE.CanvasTexture(c); t.anisotropy = 8;
-    box(.1, 2.3, .1, MAT.metal, lot, 0, cz - 8.95);
-    const plate = new THREE.Mesh(new THREE.BoxGeometry(.7, .7, .04), [MAT.metal, MAT.metal, MAT.metal, MAT.metal, new THREE.MeshStandardMaterial({ map: t, roughness: .6 }), MAT.metal]);
-    plate.position.set(lot, 2.0, cz - 8.88); plate.castShadow = true; scene.add(plate);
-  }
-  // a low kerb round the lot (cut only for the driveway) and bollards along the footpath side: where the parking ends and the walkway begins
-  const KERB = pOnce('parkKerb', () => new THREE.MeshStandardMaterial({ color: 0xd9d2c4, roughness: .8 })), x0 = lot - 6.4, x1 = lot + 6.4, z0 = cz - 9, z1 = cz + 6;
-  box(.18, .14, z1 - z0, KERB, x0, 0, (z0 + z1) / 2); box(.18, .14, z1 - z0, KERB, x1, 0, (z0 + z1) / 2); box(x1 - x0, .14, .18, KERB, lot, 0, z0);
-  for (const [a, b] of [[x0, ax - 2.5], [ax + 2.5, x1]]) { box(b - a, .14, .18, KERB, (a + b) / 2, 0, z1); for (let x = a + .6; x < b - .3; x += 1.6) post(.09, .7, MAT.metal, x, 0, z1 + .3, .08); }
-  for (const z of [cz + 6, cz + 10]) for (const s2 of [-1, 1]) box(.18, .14, .01, KERB, ax + s2 * 2.5, 0, z);
-  for (const s2 of [-1, 1]) box(.18, .14, 4, KERB, ax + s2 * 2.5, 0, cz + 8);   // the driveway's own kerbs out to the road
-}
 
 // ---------------------------------------------------------------- street furniture, parked autos, traffic
 function puneStreet(cx, cz) {
@@ -360,7 +312,7 @@ const PUNE_BILLBOARDS = [[-27, 8.2, ['LEARN AI', 'one token at a time']], [124, 
 function puneTreeRows(cx, cz, M) {   // the street trees stand mid-footpath (3 m wide, kerb at 6.1 m from the road's centre line), so their 1.3 m surrounds stay off the kerb
   const keep = (x, avoid) => avoid.every(([a, r]) => Math.abs(x - a) > r);
   const lights = (base) => Array.from({ length: 16 }, (_, k) => [base + k * 14, 1.6]);
-  const north = [[PUNE_RX, 7], [PUNE_RX2, 7], [5, 3.5], [80, 3.5], [112, 3], ...PUNE_CARTS.map(([x]) => [x, 2.5]), ...lights(-52), ...PUNE_BILLBOARDS.map(([x]) => [x, 4])];   // no tree in front of a billboard
+  const north = [[PUNE_RX, 7], [PUNE_RX2, 7], [-6.5, 17], [80, 3.5], [112, 3], ...PUNE_CARTS.map(([x]) => [x, 2.5]), ...lights(-52), ...PUNE_BILLBOARDS.map(([x]) => [x, 4])];   // no tree in front of a billboard
   const south = [[PUNE_RX, 7], [PUNE_RX2, 7], [108, 6], [45.5, 6], ...PUNE_CARTS.map(([x]) => [x, 2.5]), ...lights(-45)];
   for (let x = -20; x < 136; x += 9) if (keep(x, north)) { treeGrate(cx + x, cz + PUNE_MZ - 7.5, 1.3); tree(cx + x, cz + PUNE_MZ - 7.5, rr(.85, 1.1), [MAT.leafA, MAT.leafC, M.tabebuia][rnd() * 3 | 0], false); colCirc(cx + x, cz + PUNE_MZ - 7.5, .35); }
   for (let x = -54; x < 140; x += 9) if (keep(x, south)) { treeGrate(cx + x, cz + PUNE_MZ + 7.5, 1.3); tree(cx + x, cz + PUNE_MZ + 7.5, rr(.85, 1.1), [MAT.leafA, MAT.leafB, M.tabebuia][rnd() * 3 | 0], false); colCirc(cx + x, cz + PUNE_MZ + 7.5, .35); }
@@ -584,24 +536,18 @@ function bikeTaxi(cx, cz) {
 const cbStone = () => pOnce('cbStone', () => { const t = new THREE.TextureLoader().load(window.ROAD_TEX.stone); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 8 / 3); t.anisotropy = 8; return std(t, 0, { roughness: .9 }); });
 function buildPune(a) {
   const { cx, cz } = a;
-  areaShell(a, MAT.paver, cbStone(), false, false, [7, 5.1]);   // the way home sits outside Crescent Bay's compound wall, on the strip of stone before the footpath   // the ground round Crescent Bay: the forecourt's stone tiles, not grey concrete
+  areaShell(a, MAT.paver, cbStone(), false, false, [8, 5.84]);   // the way home sits outside Crescent Bay's compound wall, on the strip of stone before the footpath   // the ground round Crescent Bay: the forecourt's stone tiles, not grey concrete
   withSideRandom(() => {
-    const M = puneMaterials(), asphalt = std(TX.concrete, 1.5, { roughness: .8 }); asphalt.color.setRGB(.36, .37, .41);
+    const M = puneMaterials();
     puneGround(cx, cz, M);
-    // the Crescent Bay forecourt (and only this): the sandy stone tiles, ~25 cm each (the texture holds 8 x 3 of them, laid every 2 m)
-    // it stops where the footpath starts (z +7: the pavers run 7 to 10 m south), with a pale stone edging band between the two, so the office front reads apart from the street
-    // and it stops at the side street's footpath (x +9.7): it used to run on over the footpath and the street itself
-    plane(30.7, 16, cbStone(), cx - 5.65, .016, cz - 1, 2);
-    box(.32, .045, 16, MAT.concrete, cx + 9.54, 0, cz - 1, { cast: false });   // its edge against the side street's footpath
+    // Crescent Bay paves its own plot and the strip outside its gates (crescent-bay.js); a pale edging band where that strip meets the side street's footpath
+    box(.32, .045, 7.9, MAT.concrete, cx + 9.54, 0, cz + .65, { cast: false });
     WALK.push([cx - 24, cz - 14, cx + 130, cz + PUNE_MZ - 6], [cx - 55, cz + PUNE_MZ - 6, cx + 145, cz + PUNE_MZ + 9]);
     WALK.push([cx + PUNE_GALLI[0], cz + PUNE_GALLI[1] - 1, cx + PUNE_GALLI[2], cz + PUNE_GALLI[3] + 1], [cx + PUNE_SQUARE[0], cz + PUNE_SQUARE[1], cx + PUNE_SQUARE[2], cz + PUNE_SQUARE[3]]);
     WALK.push([cx + PUNE_CAMPUS[0] - 2, cz + PUNE_MZ + 9, cx + PUNE_CAMPUS[2] + 2, cz + PUNE_CAMPUS[3] + .5]);
     for (const sx of [PUNE_RX, PUNE_RX2]) WALK.push([cx + sx - 5, cz - 34, cx + sx + 5, cz - 14]);
     WALK.push([cx + PUNE_RX2 - 5, cz + PUNE_MZ + 9, cx + PUNE_RX2 + 5, cz + 50]);
-    const cf = calfusHQ(cx, cz - 5.6);
-    portal(cx + CB_DOOR_X, cf + 2.4, 0x5cd6ff, 'pune', 'lab', 'Crescent Bay');   // in front of the lobby door under the tower, through the walk-in gate
-    pointLight('pune', 0xffe0b0, 1.6, 12, cx + 4, 3, cz + 2);
-    puneParking(cx, cz, asphalt);
+    crescentBay(cx, cz);   // Calfus at 35 Crescent Bay, rebuilt from the team's photos: its lift goes up to the HQ floor (crescent-bay.js)
     puneABZ(cx, cz);
     puneTowers(cx, cz, M);
     puneFuel(cx, cz);
@@ -617,7 +563,7 @@ function buildPune(a) {
     puneTreeRows(cx, cz, M);
     PUNE_TAXI = bikeTaxi(cx, cz);
     puneCityFill(cx, cz, M);
-    for (const [x, z] of [[9.6, -3.5], [-6, 5.5], [20, -8], [108, 2], [79, -12], [-22, 7], [54, -8]]) { treeGrate(cx + x, cz + z, 2); tree(cx + x, cz + z, rr(1, 1.3), [MAT.leafA, MAT.leafC, M.tabebuia][rnd() * 3 | 0]); }
+    for (const [x, z] of [[20, -8], [108, 2], [79, -12], [-27.5, 4.2], [54, -8]]) { treeGrate(cx + x, cz + z, 2); tree(cx + x, cz + z, rr(1, 1.3), [MAT.leafA, MAT.leafC, M.tabebuia][rnd() * 3 | 0]); }
   });
   NPC_BOUNDS.pune = [cx - 20, cz - 10, cx + 120, cz + 8];
   TF.zoneEnv.pune = { near: 60, far: 190 };

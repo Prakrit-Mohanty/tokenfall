@@ -76,12 +76,14 @@ function autoRickshaw(color) {
 }
 
 // a scooter, ridden or parked: o.rider adds a rider with a jacket and helmet in the given colours
+// one material per colour, shared by every scooter of it (a parked row merges into a few draws instead of three per scooter)
+const SCOOTER_MATS = {}, scooterMat = (k, make) => SCOOTER_MATS[k] || (SCOOTER_MATS[k] = make());
 function scooter(color, o = {}) {
   const g = new THREE.Group(); scene.add(g);
-  const body = new THREE.MeshStandardMaterial({ color, roughness: .45 }), dark = MAT.charcoal || MAT.metal;
+  const body = scooterMat('body' + color, () => new THREE.MeshStandardMaterial({ color, roughness: .45 })), dark = MAT.charcoal || MAT.metal;
   box(.32, .3, 1.25, body, 0, .28, 0, { p: g }); box(.34, .52, .3, body, 0, .28, .53, { p: g }); box(.28, .12, .66, dark, 0, .58, -.15, { p: g });
   box(.56, .05, .05, MAT.metal, 0, 1.02, .6, { p: g }); box(.05, .44, .05, MAT.metal, 0, .6, .63, { p: g });
-  box(.16, .08, .04, glowStrip(0xfff0c0), 0, .74, .69, { p: g, cast: false }); box(.16, .05, .04, glowStrip(0xff3020), 0, .52, -.64, { p: g, cast: false });
+  box(.16, .08, .04, scooterMat('head', () => glowStrip(0xfff0c0)), 0, .74, .69, { p: g, cast: false }); box(.16, .05, .04, scooterMat('tail', () => glowStrip(0xff3020)), 0, .52, -.64, { p: g, cast: false });
   for (const z of [-.48, .52]) { const w = add(new THREE.Mesh(new THREE.CylinderGeometry(.23, .23, .12, 12), dark), g); w.rotation.z = Math.PI / 2; w.position.set(0, .23, z); }
   if (!o.rider) return g;
   const jacket = new THREE.MeshStandardMaterial({ color: o.jacket, roughness: .7 }), helmet = new THREE.MeshStandardMaterial({ color: o.helmet, roughness: .4 }), skin = new THREE.MeshStandardMaterial({ color: 0xc98a5a, roughness: .7 });

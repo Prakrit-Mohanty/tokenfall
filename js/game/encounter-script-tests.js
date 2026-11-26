@@ -48,9 +48,9 @@ test('the lobby colleague is a first, gentle battle that explains the Glitch Log
   assert.strictEqual(s.kind, 'wander');
 });
 
-test('the Bangalore colleague says the road is not built yet', () => {
+test('the Bangalore colleague sends you to the train at the station across the bridge', () => {
   assert(/bangalore/i.test(spot('bangalore-road').hello.join(' ')));
-  assert(/not (built|ready)|still being built|coming soon/i.test(spot('bangalore-road').hello.join(' ')));
+  assert(/train/i.test(spot('bangalore-road').hello.join(' ')) && /station/i.test(spot('bangalore-road').hello.join(' ')));
 });
 
 test('each colleague with a part to point at names that minigame', () => {

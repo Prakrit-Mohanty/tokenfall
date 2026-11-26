@@ -1,4 +1,4 @@
-// TokenFall: builds every area: the HQ and ABZ offices, the airport, the US office, and Pune.
+// TokenFall: builds every area: the HQ and ABZ offices, the airport, the US office, Pune and the Bengaluru office.
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
 function buildAreas() {
@@ -10,4 +10,5 @@ function buildAreas() {
   buildAirport(AREAS.airport);
   buildUS(AREAS.us);
   buildPune(AREAS.pune);
+  buildBLR(AREAS.blr);   // the Bengaluru office, by train from the lobby (office-blr.js)
 }

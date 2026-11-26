@@ -1,5 +1,5 @@
 // Background music: one looping track per zone (every zone uses the default until it gets its own), faded on zone change,
-// ducked while a minigame plays, M toggles it in the open world (saved). Starts on the first click or key press, since
+// ducked while a minigame plays, N toggles it in the open world (saved; M is the map). Starts on the first click or key press, since
 // browsers block sound before that. Browser: window.Music. Node: require('./music.js') (the rules only).
 (function () {
   const MUSIC = { volume: .32, duck: .1, fadePerSec: 1.6, store: 'tf.music.muted' };
@@ -7,7 +7,7 @@
 
   const trackFor = (zone, tracks = TRACKS) => tracks[zone] || tracks.default;
   const volumeFor = ({ muted, inGame }) => (muted ? 0 : inGame ? MUSIC.duck : MUSIC.volume);
-  const isMuteKey = ({ code, repeat, typing, inGame, locked, zone }) => code === 'KeyM' && !repeat && !typing && !inGame && !locked && zone !== 'bridge';
+  const isMuteKey = ({ code, repeat, typing, inGame, locked, zone }) => code === 'KeyN' && !repeat && !typing && !inGame && !locked && zone !== 'bridge';   // N: M opens the map (world-map.js)
   const readMuted = (raw) => raw === '1';
 
   const install = (TF) => {

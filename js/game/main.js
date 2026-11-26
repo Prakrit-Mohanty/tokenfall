@@ -143,7 +143,9 @@ Promise.all([fontsReady, sheetReady]).then(() => {
     t.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy()); t.needsUpdate = true;
     const a = auxTex[id] = new THREE.Texture(auxImgs[id]); a.magFilter = a.minFilter = THREE.LinearFilter; a.generateMipmaps = false; a.needsUpdate = true;   // data, not colour: never premultiplied, never mipmapped
   }
-  LOBBY.build(); buildAreas(); trimCasters(); mergeStatic(); buildDust(); buildLife();
+  LOBBY.build(); buildAreas();
+  groundContacts(scene, (x, z) => Math.abs(x) < 70 && Math.abs(z) < 70);   // contact shadows under everything that stands on a floor (grounding.js); the lobby has its own
+  trimCasters(); mergeStatic(); buildDust(); buildLife();
   applyTextureRefines(); softenTextures();
   // the world is built behind the launcher; the hero and the NPCs wait for the player's pick (the picker saves it, see launcher/char-select-screen.js)
   return window.TokenFallStart || Promise.resolve();
@@ -161,6 +163,7 @@ Promise.all([fontsReady, sheetReady]).then(() => {
     const name = CHARS[id].name, c = makeChar(name, x, z, { speed: 1.8, zone, look: id }); c.wait = Math.random() * 3000; npcs.push(c);
   }
   for (const [n, x, z] of [['sana.k', 7.4, 298.6], ['arjun_p', -.3, 291.6]]) { const c = makeChar(n, x, z, { speed: 2.1, zone: 'abz' }); c.wait = Math.random() * 3000; npcs.push(c); }
+  for (const [n, x, z] of BLR_TEAM) { const c = makeChar(n, AREAS.blr.cx + x, AREAS.blr.cz + z, { speed: 2, zone: 'blr' }); c.wait = Math.random() * 3000; npcs.push(c); }   // the Bengaluru team (office-blr.js)
   TF.boot(); trimCasters();   // again for what the minigames add at boot
   for (const [k, r] of Object.entries(LOBBY.returns)) AREAS[k].ret = r;
   const q = new URLSearchParams(location.search);

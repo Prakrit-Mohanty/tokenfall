@@ -6,7 +6,7 @@
 //   ModelFiles.enter(zone)            -> called by setZone and travel: releases every model waiting in that zone
 (function () {
   const EMBEDDED = location.protocol === 'file:';
-  if (EMBEDDED) for (const f of ['js/models/cars.js?v=13', 'js/models/supercars.js?v=4', 'js/models/bikes.js?v=1', 'js/models/robodog.js?v=1']) document.write(`<script src="${f}"><\/script>`);
+  if (EMBEDDED) for (const f of ['js/models/cars.js?v=13', 'js/models/supercars.js?v=4', 'js/models/bikes.js?v=1', 'js/models/robodog.js?v=1', 'js/models/train.js?v=1']) document.write(`<script src="${f}"><\/script>`);
 
   let loader = null;
   const gltf = () => {

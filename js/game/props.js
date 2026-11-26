@@ -5,21 +5,22 @@
 // the chunky, rounded way to build a stick: a round post (radius at the foot, height, top radius), instead of a thin box
 function post(r, h, m, x, y, z, rTop = r, cast = true) { const me = add(new THREE.Mesh(new THREE.CylinderGeometry(rTop, r, h, 20), m), undefined, cast); me.position.set(x, y + h / 2, z); return me; }
 // ---- grounding: contact shading and lamp pools ----
-// contact(x, z, rx, rz, ry): a soft, low-opacity warm plum blob on the ground where something stands (rx / rz: half sizes along the prop's own axes, a little bigger than its footprint, ry its turn).
-// lampPool(x, z, r, k): a soft warm pool of light on the ground under a lamp; daylight.js fades them in with the lamps at evening and night. Both are only recorded while the lobby builds (contactOn:
+// contact(x, z, rx, rz, ry, y): a soft, low-opacity warm plum blob on the ground where something stands (rx / rz: half sizes along the prop's own axes, a little bigger than its footprint, ry its turn,
+// y the height of what it stands on: a platform, a step).
+// lampPool(x, z, r, k, y, rz): a soft warm pool of light on the ground (or on a floor y up) under a lamp (rz: its depth, if not round); daylight.js fades them in with the lamps at evening and night. Both are only recorded while the lobby builds (contactOn:
 // the other zones stand at their own ground heights), and flushContacts() turns each list into ONE mesh, so a hundred props cost two draw calls.
 let contactOn = false; const CONTACTS = [], POOLS = [];
 const POOL_MAT = new THREE.MeshBasicMaterial({ color: 0xffc27a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, vertexColors: true });
-function contact(x, z, rx, rz = rx, ry = 0) { if (contactOn) CONTACTS.push([x, z, rx, rz, ry]); }
-function lampPool(x, z, r = 3.4, k = 1) { if (contactOn) POOLS.push([x, z, r, r, 0, k]); }
+function contact(x, z, rx, rz = rx, ry = 0, y = 0) { if (contactOn) CONTACTS.push([x, z, rx, rz, ry, 1, y]); }
+function lampPool(x, z, r = 3.4, k = 1, y = 0, rz = r) { if (contactOn) POOLS.push([x, z, r, rz, 0, k, y]); }
 function flushContacts() {
   const quads = (list, y, rgb) => {
     const pos = new Float32Array(list.length * 12), nor = new Float32Array(list.length * 12), uv = new Float32Array(list.length * 8), col = new Float32Array(list.length * 12), idx = [];
-    list.forEach(([x, z, rx, rz, ry, k = 1], q) => {
+    list.forEach(([x, z, rx, rz, ry, k = 1, dy = 0], q) => {
       const c = Math.cos(ry), sn = Math.sin(ry);
       [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([u, v], j) => {
         const a = u * rx, b = v * rz, i = q * 4 + j;
-        pos.set([x + a * c + b * sn, y, z - a * sn + b * c], i * 3); nor.set([0, 1, 0], i * 3); uv.set([(u + 1) / 2, (v + 1) / 2], i * 2); col.set([k, k, k], i * 3);
+        pos.set([x + a * c + b * sn, y + dy, z - a * sn + b * c], i * 3); nor.set([0, 1, 0], i * 3); uv.set([(u + 1) / 2, (v + 1) / 2], i * 2); col.set([k, k, k], i * 3);
       });
       idx.push(q * 4, q * 4 + 2, q * 4 + 1, q * 4, q * 4 + 3, q * 4 + 2);
     });

@@ -541,7 +541,7 @@ function apLoungeRow(X, Z) {
     box(.14, 1.03, .14, walnut, X(hx), 0, Z(hz)); box(.6, .04, .6, walnut, X(hx), 0, Z(hz));
     for (let i = 0; i < 3; i++) { const a = i * 2.1 + .5, x = X(hx) + Math.cos(a) * .85, z = Z(hz) + Math.sin(a) * .85;
       const seat = new THREE.Mesh(apOnce('stool', () => new THREE.CylinderGeometry(.2, .18, .08, 18)), olive); seat.position.set(x, .74, z); seat.castShadow = true; scene.add(seat);
-      for (const [dx, dz] of [[.12, .12], [-.12, .12], [.12, -.12], [-.12, -.12]]) box(.03, .72, .03, steel, x + dx, 0, z + dz, { cast: false }); }
+      for (const [dx, dz] of [[.12, .12], [-.12, .12], [.12, -.12], [-.12, -.12]]) box(.03, .72, .03, steel, x + dx, 0, z + dz, { cast: false }).castShadow = true; }   // thin legs that still cast (box() would fatten a casting stick)
     colCirc(X(hx), Z(hz), 1.1); }
   // sitting: E near any seat; E, Esc or a move key stands you up behind it
   let sitting = null, since = 0;

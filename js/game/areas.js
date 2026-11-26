@@ -6,8 +6,9 @@ const AREAS = {
   lab: { cx: 0, cz: -300, name: 'Calfus HQ', sub: 'Calfus · Floor 2', color: 0x5cd6ff, spawn: [-1.54, 10.7] },
   airport: { cx: -300, cz: 0, name: 'Pune Airport', sub: 'Departures', color: 0xffb347, ret: [-15, 0], spawn: [0, 6] },
   us: { cx: -300, cz: -300, name: 'Calfus US', sub: 'Pleasanton, California', color: 0x2ab3a6, spawn: [0, 2.2] },
-  pune: { cx: 300, cz: 0, name: 'Pune', sub: 'Crescent Bay · ABZ', color: 0x7dff8a, ret: [15, 0], spawn: [4.2, 5.4] },
+  pune: { cx: 300, cz: 0, name: 'Pune', sub: 'Crescent Bay · ABZ', color: 0x7dff8a, ret: [15, 0], spawn: [4.2, 6.2] },   // on the strip outside Crescent Bay's tall wall, clear of its planter (crescent-bay.js)
   abz: { cx: 0, cz: 300, name: 'ABZ', sub: 'Calfus · ABZ Office', color: 0x9fd8ff, spawn: [7.4, 16.8] },
+  blr: { cx: 300, cz: -300, name: 'Calfus Bengaluru', sub: 'Bengaluru office', color: 0xb48ce6, spawn: [6.8, 4.4], retDir: 'down' },   // by train from the lobby's station (station.js, office-blr.js)
 };
 function areaShell(a, floorMat, groundMat, walls = true, wip = true, home = [0, 7.2], exit = { to: 'lobby', label: 'TokenFall Lobby' }) {
   const { cx, cz } = a;

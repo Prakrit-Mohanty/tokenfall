@@ -42,7 +42,7 @@
     },
     {
       id: 'bangalore-road', kind: 'wander', glitch: 'loop', points: 'bridge', who: 'ishaan.b', at: { zone: 'lobby', x: 0, z: -26, r: 4.5 },
-      hello: ['Heading to Bangalore? The road straight ahead is still being built, sorry!', 'While you wait: our helper takes every word literally. TOKEN-1\'s Understanding part is out on The Glass Bridge, behind you.', 'Think he can untangle my Literal Loop?'],
+      hello: ['Heading to Bangalore? The train leaves from the station over the bridge, straight ahead!', 'Before you go: our helper takes every word literally. TOKEN-1\'s Understanding part is out on The Glass Bridge, behind you.', 'Think he can untangle my Literal Loop?'],
       win: ['Ha! Now cross The Glass Bridge (the gate behind you) and bring back his Understanding.'],
       lose: ['Still looping! The Understanding part waits on The Glass Bridge. Try me again.'],
     },

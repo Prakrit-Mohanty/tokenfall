@@ -21,6 +21,8 @@
     const resume = () => { if (S.ctx && S.ctx.state === 'suspended') S.ctx.resume(); else if (!S.ctx && S.on) ensure(); };
     for (const e of ['keydown', 'pointerdown']) addEventListener(e, resume, { passive: true });
 
+    // half a second of white noise, made once: the spray of a splash, a whistle's breath, a chuff
+    const noise = () => { if (!S.noise) { const c = S.ctx, n = c.sampleRate * 0.5 | 0, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; S.noise = b; } return S.noise; };
     function tone(freq, vol, dur, type = 'triangle', echo = true) {
       const c = S.ctx, t = c.currentTime, o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain();
       o.type = type; o.frequency.value = freq; o2.type = 'sine'; o2.frequency.value = freq * 2;
@@ -92,6 +94,36 @@
       horn() { if (!S.on || !ensure() || S.ctx.state !== 'running') return; [0, 0.2].forEach((d) => setTimeout(() => S.on && tone(698, 0.07, 0.13, 'square', false), d * 1000)); },
       engine,
       chime() { if (!S.on || !ensure() || S.ctx.state !== 'running') return; [1046.5, 1318.5, 1568, 2093].forEach((f, i) => setTimeout(() => S.on && tone(f, 0.05, 1.2, 'sine'), i * 75)); },
+      // the train pulling out of the lobby's station (station.js): a steam whistle (two notes a third apart over a breath of noise), then chuffs that quicken
+      train() {
+        if (!S.on || !ensure() || S.ctx.state !== 'running') return;
+        const c = S.ctx, t = c.currentTime;
+        for (const [f, v] of [[587, 0.05], [740, 0.04]]) {
+          const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(f * 0.97, t); o.frequency.linearRampToValueAtTime(f, t + 0.12);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.08); g.gain.setValueAtTime(v, t + 0.85); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.15);
+          o.connect(g); g.connect(S.master); o.start(t); o.stop(t + 1.2);
+        }
+        const air = c.createBufferSource(), bp = c.createBiquadFilter(), ag = c.createGain(); air.buffer = noise(); air.loop = true; bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 1.5;
+        ag.gain.setValueAtTime(0.0001, t); ag.gain.exponentialRampToValueAtTime(0.05, t + 0.1); ag.gain.exponentialRampToValueAtTime(0.0001, t + 1.15); air.connect(bp); bp.connect(ag); ag.connect(S.master); air.start(t); air.stop(t + 1.2);
+        let at = t + 1, gap = 0.42;
+        for (let i = 0; i < 9; i++) {
+          const src = c.createBufferSource(), lp = c.createBiquadFilter(), g = c.createGain(); src.buffer = noise(); lp.type = 'lowpass'; lp.frequency.value = 900;
+          g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.16 * (1 - i * 0.06), at + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.22);
+          src.connect(lp); lp.connect(g); g.connect(S.master); src.start(at); src.stop(at + 0.25); at += gap; gap *= 0.85;
+        }
+      },
+      // a fish in the river (river.js): a quick rising bloop, the bubble ringing, over a puff of filtered noise for the spray. vol 0-1, already faded with distance
+      splash(vol = 1) {
+        if (!S.on || !S.ctx || S.ctx.state !== 'running' || vol < 0.02) return;
+        const c = S.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain(), f = rnd(420, 640);
+        o.type = 'sine'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 2.6, t + 0.07);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22 * vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+        o.connect(g); g.connect(S.master); o.start(t); o.stop(t + 0.15);
+        const src = c.createBufferSource(), bp = c.createBiquadFilter(), ng = c.createGain();
+        src.buffer = noise(); bp.type = 'bandpass'; bp.frequency.value = rnd(1500, 2400); bp.Q.value = 0.8;
+        ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.3 * vol, t + 0.01); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+        src.connect(bp); bp.connect(ng); ng.connect(S.master); src.start(t); src.stop(t + 0.4);
+      },
       set(on) { S.on = !!on; try { localStorage.setItem('tokenfall.sound', on ? '1' : '0'); } catch (e) { /* not saved */ } if (on) { ensure(); resume(); } },
       apply(p, inside, zone) { S.p = p; S.inside = inside; S.zone = zone; },
     };

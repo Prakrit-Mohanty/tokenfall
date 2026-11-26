@@ -54,6 +54,7 @@ function fwParticles(root, n, tex, size, opacity) {
   const P = Array.from({ length: n }, () => ({ life: 0, age: 0, x: 0, y: -50, z: 0, vx: 0, vy: 0, vz: 0, floor: 0, s: 1, g: 0, fade: 0 }));
   let next = 0;
   return {
+    pts, material: m,
     emit(x, y, z, vx, vy, vz, life, s = 1, g = 5.5, floor = y - .01) { const p = P[next]; next = (next + 1) % n; Object.assign(p, { life, age: 0, x, y, z, vx, vy, vz, s, g, floor }); },
     step(dt) {
       for (let i = 0; i < n; i++) {

@@ -1,6 +1,6 @@
 // TokenFall: the village lobby. A paved plaza with the coin fountain in a reflecting pool and four roads out: west past the
-// food stalls to the airport, east past Token Brew to Pune, south past the pond to the Glass Bridge, north over the river
-// to HQ. Modern homes ring the plaza; holo signs, info screens, an EV bay, the Prompt Lab pavilion and a few robots add the AI era.
+// food stalls to the airport, east past Token Brew to Pune, south past the pond to the Glass Bridge, north over the arched bridge
+// to the railway station (trains to Bengaluru). Modern homes ring the plaza; holo signs, info screens, an EV bay, the Prompt Lab pavilion and a few robots add the AI era.
 // Classic script: shares one global scope with the other js/game files, loaded in order by index.html.
 
 const V_PLAZA = [-12, -10, 12, 10];
@@ -46,7 +46,7 @@ const V_HOMES = [
 const V_EXTRA_PATHS = [[0, -42.2, 5, 9.4], [5.15, 26, 5.1, 1.8], [32.4, -6, 5.6, 3]];
 const V_FENCES = [[-14, -4, -14, -9.5], [14.5, 4, 14.5, 7.5], [-14.5, 4, -14.5, 9], [-34, -4.2, -38, -4.2], [29.5, 4.2, 31, 4.2]];
 const V_LAMPS = [[-11.4, -9.4, 1], [11.4, 9.4, 1], [-11.4, 9.4, 0], [11.4, -9.4, 0], [-3.6, -14, 0], [3.6, -17, 1], [-3.6, 16, 1], [3.6, 30, 0], [-13.4, -3.6, 1], [-30, 3.6, 0], [16, 3.6, 1], [30, -3.6, 0], [-3.6, -28.5, 0], [3.6, 35, 0]];
-const V_HOLOS = [[0, -10.8, 0, '▲ HQ'], [-12.8, 0, Math.PI / 2, '◀ AIRPORT'], [12.8, 0, -Math.PI / 2, 'PUNE ▶'], [0, 10.8, Math.PI, '▼ GLASS BRIDGE']];
+const V_HOLOS = [[0, -10.8, 0, '▲ STATION'], [-12.8, 0, Math.PI / 2, '◀ AIRPORT'], [12.8, 0, -Math.PI / 2, 'PUNE ▶'], [0, 10.8, Math.PI, '▼ GLASS BRIDGE']];
 const V_AI_TIPS = ['AI tip: an AI can sound sure of itself and still be wrong. Check answers that matter.', 'AI tip: give it context. "Summarise this for a new joiner" beats "summarise this".', 'AI tip: never paste passwords or private customer data into a chatbot.'];
 
 const vInRect = (r, x, z, m = 0) => x > r[0] - m && x < r[2] + m && z > r[1] - m && z < r[3] + m;
@@ -71,7 +71,8 @@ const V_PATHS = [...V_HOMES.map(vDoorPath).filter(Boolean), ...V_EXTRA_PATHS];
 V_GAME_SPOTS.kitchen = (() => { const d = vDoor(V_HOMES.find((h) => h.cafe)); return { door: [d.x, d.z], dir: [d.dirX, d.dirZ], stand: [d.x + d.dirX * 1.4, d.z + d.dirZ * 1.4], ret: [d.x + d.dirX * 2.1, d.z + d.dirZ * 2.1] }; })();
 const vPaved = (x, z, m = 0) => vInRect(V_PLAZA, x, z, m) || V_ROADS.some((r) => vInRect(r, x, z, m)) || V_PATHS.some(([px, pz, w, d]) => vInRect([px - w / 2, pz - d / 2, px + w / 2, pz + d / 2], x, z, m));
 const vWater = (x, z, m = 0) => vInRect(V_RIVER, x, z, m) || Math.hypot(x - V_POND[0], z - V_POND[1]) < V_POND[2] + m;
-const vClear = (x, z, m) => !vPaved(x, z, m) && !vWater(x, z, m) && !vInRect(V_MOW, x, z, m) && !vInRect(V_GAMES_LAWN, x, z, m) && !(walkable(x, z) && blocked(x, z, m));
+const V_STATION = [-32, -53, 19.8, -40.4];   // the station: the platform, its steps, the station house and the footbridge's stairs (station.js)
+const vClear = (x, z, m) => !vPaved(x, z, m) && !vWater(x, z, m) && !vInRect(V_MOW, x, z, m) && !vInRect(V_GAMES_LAWN, x, z, m) && !vInRect(V_STATION, x, z, m) && !(walkable(x, z) && blocked(x, z, m));
 
 const vCache = {};
 const vOnce = (key, make) => vCache[key] || (vCache[key] = make());
@@ -211,8 +212,10 @@ function vGround() {
   plane(2 * V_ISLAND, 2 * V_ISLAND, MAT.grass, 0, 0, 0, 2);
   // the paving: every area lays its own whole stones from its own edges (paving-layout.js), the fountain keeps its rings (paving.js), and the field is cut round the fountain's accent line and the planter
   const FO = 6.95;   // where the fountain's rings end (paving.js FO)
+  // the north road and the path beyond the river stop where the bridge's deck (arch-bridge.js) takes over: its stones run on from theirs
+  const toBridge = [V_ROADS[0][0], ARCH.zS, V_ROADS[0][2], V_ROADS[0][3]], [px, pz, pw, pd] = V_EXTRA_PATHS[0], pN = pz - pd / 2, fromBridge = [px, (pN + ARCH.zN) / 2, pw, ARCH.zN - pN];
   const plan = {
-    plaza: V_PLAZA, roads: V_ROADS, paths: V_PATHS, bothEnds: [V_EXTRA_PATHS[0]],   // bothEnds: the path between the bridge and HQ's door is open at both ends
+    plaza: V_PLAZA, roads: [toBridge, ...V_ROADS.slice(1)], paths: V_PATHS.map((p) => (p === V_EXTRA_PATHS[0] ? fromBridge : p)), bothEnds: [fromBridge],   // bothEnds: the path from the bridge to the station is open at both ends
     discs: [{ x: 0, z: 0, Rs: [FO], r0: 3.6, outerW: .6, ringless: true }, { x: V_PLANTER[0], z: V_PLANTER[1], Rs: [2.55, 2.6, 2.65, 2.7, 2.75, 2.8, 2.85, 2.9, 2.95, 3, 3.05, 3.1], r0: V_PLANTER[2] - .05, outerW: .6 }],
   };
   const layout = pavingLayout(plan);
@@ -292,19 +295,13 @@ function vFountain() { tokenFountain(0, 0); }
 
 function vRiverAndBridge() {
   const [x0, z0, x1, z1] = V_RIVER, zc = (z0 + z1) / 2, w = z1 - z0;
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, w), waterMat); water.rotation.x = -Math.PI / 2; water.position.set(0, .05, zc); scene.add(water);
-  for (const [a, b] of [[x0, -2.6], [2.6, x1]]) {
+  riverWater(V_RIVER);   // the moving water, the leaves riding it and the fish (river.js)
+  const bw = ARCH.x1 + ARCH.curb;   // the river's kerbs run up to the bridge's stone walls
+  for (const [a, b] of [[x0, -bw], [bw, x1]]) {
     for (const z of [z0, z1]) box(b - a, .35, .4, MAT.concrete, (a + b) / 2, 0, z);
     colBox(Math.max(a, -V_HALF), z0 - .2, Math.min(b, V_HALF), z1 + .2);
   }
-  box(5, .14, w + 1.4, MAT.wood, 0, .05, zc);
-  for (const s of [-1, 1]) {
-    for (let z = z0 - .6; z <= z1 + .7; z += 1.5) box(.08, 1.1, .08, MAT.metal, s * 2.45, .19, z);
-    box(.06, .85, w + 1.4, vGlass(), s * 2.45, .3, zc, { cast: false });
-    box(.12, .08, w + 1.5, MAT.metal, s * 2.45, 1.26, zc);
-    box(.05, .04, w + 1.4, vGlow(V_LED_COOL), s * 2.38, .22, zc, { cast: false });
-    colBox(s * 2.45 - .12, z0 - .7, s * 2.45 + .12, z1 + .7);
-  }
+  archBridge();   // the stone arch, paved like the road it carries on from (arch-bridge.js)
   for (let i = 0; i < 70; i++) { const x = rr(-V_ISLAND + 1, V_ISLAND - 1), z = (rnd() < .5 ? z0 : z1) + rr(-.5, .5); if (Math.abs(x) > 3.4) box(.06, rr(.7, 1.5), .06, MAT.leafB, x, 0, z, { cast: false }); }
 }
 
@@ -362,11 +359,6 @@ function vLeaderboard() {
   ledSign(['LEADERBOARD'], '#ffd27a', cx, .62, z + .02, 3.2, .5);
   colBox(cx - 4.3, z - .35, cx + 4.3, z + .3);
   INTER.push({ x: cx, z: z + 2.2, r: 2.6, label: 'Leaderboard', verb: 'View', act: openBoard });
-}
-
-function vHQ() {
-  const front = hq(0, -52);
-  INTER.push({ x: 0, z: front + 1.4, r: 1.8, label: 'HQ Office', verb: 'Read', act: () => talk('HQ Office', ['The doors are locked. A sign says: “Coming soon.”', 'Looking for the office? It\'s in the Calfus building, through the Pune gate.']) });
 }
 
 function vFence(x0, z0, x1, z1) {
@@ -432,7 +424,7 @@ function vTotem(x, z, title, body, name, talkLines) {
 
 // the lobby's directory: a painted wooden signboard on two posts under a little roof, one coloured arrow plank per destination (pointing the way
 // it lies as you face the board), each with its picture, so it reads at a glance. Drawn at 512 x 640 and redrawn once the round sign face has loaded.
-const DIR_ROWS = [['HQ', '🏢', 'up', '#3fa89c', '#23705f'], ['Airport', '✈️', 'left', '#4f9fe0', '#2a63a0'], ['Pune', '🛺', 'right', '#f08a3c', '#b0521a'], ['Glass Bridge', '🌉', 'down', '#e2a93a', '#9a6a14']];
+const DIR_ROWS = [['Station', '🚆', 'up', '#3fa89c', '#23705f'], ['Airport', '✈️', 'left', '#4f9fe0', '#2a63a0'], ['Pune', '🛺', 'right', '#f08a3c', '#b0521a'], ['Glass Bridge', '🌉', 'down', '#e2a93a', '#9a6a14']];
 function drawDirectory(g, W, H) {
   const F = (px) => `700 ${px}px "Fredoka", ${SIGN_FONT}`;
   const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
@@ -490,7 +482,7 @@ function vDirectory(x, z, name, talkLines) {
 }
 
 // the lobby map: a park-style interpretive board on two legs, tilted back for reading, beside the directory. A drawn plan of the village (north up):
-// the plaza and fountain in the middle, HQ over the river, the airport west, Pune east, the pond and the Glass Bridge south, with a legend and a
+// the plaza and fountain in the middle, the station over the river, the airport west, Pune east, the pond and the Glass Bridge south, with a legend and a
 // "you are here" pin. 768 x 480, redrawn once the sign face has loaded.
 function drawLobbyMap(g, W, H) {
   const F = (w, px) => `${w} ${px}px "Fredoka", ${SIGN_FONT}`;
@@ -503,7 +495,7 @@ function drawLobbyMap(g, W, H) {
   g.save(); rr(mx, my, mw, mh, 10); g.clip();
   const zone = (x, y, w, h, c, r = 18) => { rr(mx + x, my + y, w, h, r); g.fillStyle = c; g.fill(); };
   g.fillStyle = '#7cc0e8'; g.beginPath(); g.moveTo(mx, my + 64); g.bezierCurveTo(mx + 150, my + 40, mx + 300, my + 92, mx + mw, my + 58); g.lineTo(mx + mw, my + 92); g.bezierCurveTo(mx + 300, my + 124, mx + 150, my + 72, mx, my + 98); g.closePath(); g.fill();   // the river
-  zone(170, 8, 130, 46, '#e04a5a');                // HQ, over the river
+  zone(170, 8, 130, 46, '#e04a5a');                // the station, over the river
   zone(8, 120, 120, 170, '#f2b23a');               // the airport, west
   zone(342, 120, 120, 170, '#3fa89c');             // Pune, east
   zone(150, 128, 170, 150, '#ecdcc0', 75);         // the plaza
@@ -513,7 +505,7 @@ function drawLobbyMap(g, W, H) {
   g.strokeStyle = '#fff'; g.lineWidth = 12; g.lineCap = 'round';                                    // the paths out of the plaza
   for (const [x0, y0, x1, y1] of [[235, 128, 235, 54], [150, 203, 128, 203], [320, 203, 342, 203], [270, 278, 300, 300]]) { g.beginPath(); g.moveTo(mx + x0, my + y0); g.lineTo(mx + x1, my + y1); g.stroke(); }
   g.textAlign = 'center'; g.fillStyle = '#ffffff'; g.font = F(700, 20);
-  for (const [t, x, y] of [['HQ', 235, 31], ['Airport', 68, 205], ['Pune', 402, 205], ['Glass', 305, 324], ['Bridge', 305, 346]]) g.fillText(t, mx + x, my + y);
+  for (const [t, x, y] of [['Station', 235, 31], ['Airport', 68, 205], ['Pune', 402, 205], ['Glass', 305, 324], ['Bridge', 305, 346]]) g.fillText(t, mx + x, my + y);
   g.fillStyle = '#7a5a3a'; g.font = F(600, 15); g.fillText('Plaza', mx + 235, my + 250); g.fillText('Pond', mx + 175, my + 330);
   // you are here: a red pin at the south-west of the plaza
   const px = mx + 196, py = my + 262; g.beginPath(); g.arc(px, py - 16, 11, 0, Math.PI * 2); g.moveTo(px - 10, py - 12); g.lineTo(px, py + 2); g.lineTo(px + 10, py - 12); g.fillStyle = '#e8322a'; g.fill(); g.beginPath(); g.arc(px, py - 16, 4, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill();
@@ -522,7 +514,7 @@ function drawLobbyMap(g, W, H) {
   g.fillStyle = '#4a2e36'; g.font = F(700, 16); g.fillText('N', mx + mw - 24, my + mh - 46); g.beginPath(); g.moveTo(mx + mw - 24, my + mh - 38); g.lineTo(mx + mw - 31, my + mh - 18); g.lineTo(mx + mw - 17, my + mh - 18); g.closePath(); g.fill();
   // the legend
   const lx = 512; g.textAlign = 'left';
-  [['#e04a5a', 'HQ', 'Calfus HQ · carrom table'], ['#f2b23a', 'Airport', 'Flights to Pleasanton'], ['#3fa89c', 'Pune', 'Crescent Bay · ABZ'], ['#8f6ad8', 'Glass Bridge', 'Guess the right tile'], ['#ecdcc0', 'Plaza', 'Fountain · leaderboard']].forEach(([c, t, sub], i) => {
+  [['#e04a5a', 'Station', 'Trains to Bengaluru'], ['#f2b23a', 'Airport', 'Flights to Pleasanton'], ['#3fa89c', 'Pune', 'Crescent Bay · ABZ'], ['#8f6ad8', 'Glass Bridge', 'Guess the right tile'], ['#ecdcc0', 'Plaza', 'Fountain · leaderboard']].forEach(([c, t, sub], i) => {
     const y = 92 + i * 66; g.fillStyle = c; g.fillRect(lx, y, W - lx - 26, 6);
     rr(lx, y + 16, 22, 22, 5); g.fill(); g.fillStyle = '#ffffff'; g.font = F(700, 21); g.fillText(t, lx + 32, y + 28);
     g.fillStyle = '#d9c3cb'; g.font = F(500, 15); g.fillText(sub, lx + 32, y + 50);
@@ -547,10 +539,10 @@ function simpleMap(g, x, y, w, h) {
   g.strokeStyle = '#3e9fd8'; g.lineWidth = 18; g.lineCap = 'round'; g.beginPath(); for (let t = 0; t <= 1.001; t += .05) { const [px, py] = rv(t); t ? g.lineTo(px, py) : g.moveTo(px, py); } g.stroke();
   g.strokeStyle = '#7cc8f0'; g.lineWidth = 6; g.stroke();
   // paths from the plaza, with a darker edge
-  const ends = { HQ: [cx, cy - RY * .82], Airport: [cx - RX * .8, cy], Pune: [cx + RX * .8, cy], 'Glass Bridge': [cx, cy + RY * .8] };
+  const ends = { Station: [cx, cy - RY * .82], Airport: [cx - RX * .8, cy], Pune: [cx + RX * .8, cy], 'Glass Bridge': [cx, cy + RY * .8] };
   for (const [wd, col] of [[18, '#e2b06a'], [12, '#f8d8a0']]) { g.strokeStyle = col; g.lineWidth = wd; for (const k in ends) { g.beginPath(); g.moveTo(cx, cy); g.lineTo(ends[k][0], ends[k][1]); g.stroke(); } }
   const [bx, by] = [cx, rv(.5)[1]]; g.fillStyle = '#a0683a'; g.fillRect(bx - 14, by - 13, 28, 26); g.fillStyle = '#c8915a'; for (let k = -10; k <= 10; k += 5) g.fillRect(bx - 14, by + k - 1, 28, 2.5);
-  // little buildings: HQ tower, cafe, homes; the pond; the tower block
+  // little buildings: the station, cafe, homes; the pond; the tower block
   const house = (hx, hy, bw, bh, wall, roof) => { g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(hx - bw / 2 + 3, hy - bh + 4, bw, bh); g.fillStyle = wall; g.fillRect(hx - bw / 2, hy - bh, bw, bh); g.fillStyle = roof; g.beginPath(); g.moveTo(hx - bw / 2 - 4, hy - bh); g.lineTo(hx, hy - bh - bw * .45); g.lineTo(hx + bw / 2 + 4, hy - bh); g.fill(); g.fillStyle = '#5a3a2a'; g.fillRect(hx - 3, hy - 9, 6, 9); };
   { const hx = cx + 46, hy = cy - RY * .8; g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(hx - 13, hy - 40, 30, 44); g.fillStyle = '#d8d4cc'; g.fillRect(hx - 16, hy - 44, 30, 44); g.fillStyle = '#e04a5a'; g.fillRect(hx - 16, hy - 48, 30, 6); g.fillStyle = '#7ab8e0'; for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) g.fillRect(hx - 12 + c * 9, hy - 40 + r * 9, 6, 6); }
   house(cx + RX * .4, cy - RY * .12, 26, 16, '#f6e2c0', '#c0503a'); g.fillStyle = '#e04a5a'; for (let k = 0; k < 4; k++) g.fillRect(cx + RX * .4 - 13 + k * 7, cy - RY * .12 - 18, 4, 4);   // Token Brew
@@ -566,9 +558,9 @@ function simpleMap(g, x, y, w, h) {
   g.fillStyle = '#4fb0e6'; g.beginPath(); g.arc(cx, cy, 12, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 3; g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy, 3, 0, Math.PI * 2); g.fill();
   // the portals at the ends of the paths, then their name tags
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  for (const [t, col] of [['HQ', '#e04a5a'], ['Airport', '#f0a030'], ['Pune', '#3fae55'], ['Glass Bridge', '#8f6ad8']]) {
+  for (const [t, col] of [['Station', '#e04a5a'], ['Airport', '#f0a030'], ['Pune', '#3fae55'], ['Glass Bridge', '#8f6ad8']]) {
     const [px, py] = ends[t];
-    if (t !== 'HQ') { g.fillStyle = col; g.globalAlpha = .35; g.beginPath(); g.ellipse(px, py, 18, 9, 0, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; g.strokeStyle = col; g.lineWidth = 4; g.beginPath(); g.ellipse(px, py, 14, 7, 0, 0, Math.PI * 2); g.stroke(); }
+    if (t !== 'Station') { g.fillStyle = col; g.globalAlpha = .35; g.beginPath(); g.ellipse(px, py, 18, 9, 0, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; g.strokeStyle = col; g.lineWidth = 4; g.beginPath(); g.ellipse(px, py, 14, 7, 0, 0, Math.PI * 2); g.stroke(); }
     g.font = F(19); const tw = g.measureText(t).width + 26, ty = t === 'Glass Bridge' ? py + 22 : py - 26;
     g.fillStyle = 'rgba(0,0,0,.2)'; rr(px - tw / 2, ty - 14, tw, 32, 16); g.fill();
     g.fillStyle = col; rr(px - tw / 2, ty - 17, tw, 32, 16); g.fill(); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke(); g.fillStyle = '#fff'; g.fillText(t, px, ty - 1);
@@ -612,7 +604,7 @@ function vLobbyMap(x, z, ry) {
 }
 
 // the lobby's fingerpost: a weathered wooden post with a capped top and a brass knob, and four arrow arms pointing the real way to each place
-// (HQ north, Airport west, Pune east, the Glass Bridge south), each with a cream name plate carved in dark letters on both faces. The whole
+// (the station north, Airport west, Pune east, the Glass Bridge south), each with a cream name plate carved in dark letters on both faces. The whole
 // post is turned a little so every arm shows a face to the camera, the way a photo of one catches it.
 function fingerLabel(text) {
   const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
@@ -641,7 +633,7 @@ function vFingerpost(x, z, name, talkLines) {
   shape.moveTo(-.12, -T / 2); shape.lineTo(L - .26, -T / 2); shape.lineTo(L, 0); shape.lineTo(L - .26, T / 2); shape.lineTo(-.12, T / 2); shape.closePath();
   const armGeo = new THREE.ExtrudeGeometry(shape, { depth: D, bevelEnabled: true, bevelThickness: .012, bevelSize: .012, bevelSegments: 1 }); armGeo.translate(0, 0, -D / 2);
   // [text, the world direction it points (rad: 0 east, PI/2 north, PI west, -PI/2 south), height]
-  for (const [text, dir, y] of [['HQ', Math.PI / 2, 2.78], ['Pune', 0, 2.5], ['Airport', Math.PI, 2.16], ['Glass Bridge', -Math.PI / 2, 1.88]]) {
+  for (const [text, dir, y] of [['Station', Math.PI / 2, 2.78], ['Pune', 0, 2.5], ['Airport', Math.PI, 2.16], ['Glass Bridge', -Math.PI / 2, 1.88]]) {
     const arm = new THREE.Group(); arm.rotation.y = dir - .55; arm.position.y = y; grp.add(arm);
     const board = new THREE.Mesh(armGeo, wood); board.castShadow = true; arm.add(board);
     const lab = new THREE.MeshStandardMaterial({ map: fingerLabel(text), roughness: .85, transparent: true });
@@ -721,7 +713,7 @@ function vFoliage() {
   for (let i = 0, n = 0; i < 900 && n < 150; i++) {
     const x = rr(-75, 75), z = rr(-75, 75);
     if (Math.abs(x) < V_HALF + 2 && Math.abs(z) < V_HALF + 2 && z > -40) continue;
-    if (vWater(x, z, 1.5) || (Math.abs(x) < 12 && z < -40 && z > -60)) continue;
+    if (vWater(x, z, 1.5) || (Math.abs(x) < 12 && z < -40 && z > -60) || (z < -48 && z > -53) || vInRect(V_STATION, x, z, 1.5)) continue;   // nor on the railway or the station (station.js)
     tree(x, z, rr(1, 1.6), leaves[rnd() * 3 | 0], false); n++;
   }
   for (let i = 0, n = 0; i < 1200 && n < 120; i++) {
@@ -739,7 +731,7 @@ function vFoliage() {
 function vGrass(edgeAt) {
   // Clumps sit where something meets the lawn: just off a path, a wall, a fence, a trunk or a prop (the shade map says where), in small deliberate groups at least 2.4 m apart, with open grass between.
   // Each group is two blade clumps; every third one also has clover, a flower colour (cream, blush, butter, lilac in turn) or a fern. About half the count the lawn had before.
-  const open = (x, z) => !(vPaved(x, z, .3) || vWater(x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)));
+  const open = (x, z) => !(vPaved(x, z, .3) || vWater(x, z, .3) || vInRect(V_STATION, x, z, .3) || (walkable(x, z) && blocked(x, z, -.1)));
   const spots = [];
   for (let i = 0; i < 9000 && spots.length < 110; i++) {
     const x = rr(-V_ISLAND + 2, V_ISLAND - 2), z = rr(-V_ISLAND + 2, V_ISLAND - 2), e = edgeAt(x, z);
@@ -789,7 +781,7 @@ function buildVillageLobby() {
   WALK.push([-V_HALF, -47.5, V_HALF, V_HALF]);
   vRiverAndBridge();
   vPond();
-  vHQ();
+  vStation();   // the railway station, where HQ's locked doors were (station.js)
   for (const c of V_HOMES) vHome(c);
   umbrellaTable(14.4, -6.6, MAT.umbrellaA); umbrellaTable(14.2, -4.2, MAT.umbrellaB);
   vFountain();
@@ -805,7 +797,7 @@ function buildVillageLobby() {
   for (const [x, z] of [[-12.6, 3.6], [12.6, -3.6], [4.6, -10.8]]) pot(x, z);
   for (const [x, z, ry, text] of V_HOLOS) vHolo(x, z, ry, text);
   vLobbyMap(-3.9, 10.9, 0);   // on the grass corner where the south road leaves the plaza (road edge x -2.6, plaza edge z 10)
-  vFingerpost(-6.4, 11.6, 'Signpost', ['Welcome to TokenFall!', 'West, past the food stalls: the airport, with flights to the Calfus US office in Pleasanton. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: HQ.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'Token Brew is short-staffed! Take a shift in the kitchen, through the staff door at the cafe: pack the pot light, leave room for the reply, never reuse a pot between customers.', 'The leaderboard by the plaza shows who has the most correct answers.']);
+  vFingerpost(-6.4, 11.6, 'Signpost', ['Welcome to TokenFall!', 'West, past the food stalls: the airport, with flights to the Calfus US office in Pleasanton. East, past Token Brew: Pune, home of the Calfus office. South, past the pond: the Glass Bridge. North, over the river: the station, with trains to the Calfus Bengaluru office.', 'The lawn in front of Home has two games: Token Tower and Spot Shot. The carrom table is in the HQ office, through Pune.', 'Token Brew is short-staffed! Take a shift in the kitchen, through the staff door at the cafe: pack the pot light, leave room for the reply, never reuse a pot between customers.', 'The leaderboard by the plaza shows who has the most correct answers.']);
   vTotem(5.6, 11.4, 'AI TIP', ['Sounding sure is not the same as being right.'], 'AI Tips', V_AI_TIPS);
 
   gate(-40, 0, Math.PI / 2, 'Airport', 0xffb347, 'lobby', 'airport');
@@ -826,7 +818,7 @@ function buildVillageLobby() {
 
 const VILLAGE = {
   build: buildVillageLobby, spawn: V_SPAWN, spawnDir: 'up', npcBounds: [-11, -9, 11, 9],
-  returns: { airport: [-37, 0], pune: [37, 0], bridge: [0, 37] },
+  returns: { airport: [-37, 0], pune: [37, 0], bridge: [0, 37], blr: [.29, -47.7] },   // blr: off the train, on the station platform (station.js)
   petals: [[-10.6, -8.6], [-17, 12]], lightPoles: [],
   dof: { farStart: 14, farRange: 50, edgeBlur: .25 },
   minigameSpots: V_GAME_SPOTS,
