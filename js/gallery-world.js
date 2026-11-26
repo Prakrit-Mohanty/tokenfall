@@ -77,6 +77,7 @@
     world.canInspect = () => true;   // the rules say whether a magnifier charge is left
     world.canShoot = () => true;     // ... and whether a token is
     Object.defineProperty(world, 't', { get: () => S.rt });
+    const AIM_UP = Math.tan(0.52), AIM_DOWN = Math.tan(0.44);   // the cork rifle's pitch limits (30 and 25 degrees): further and the butt or muzzle would reach the counter
     const W = (p) => toWorld(S.at, p), V = (p) => { const w = W(p); return new THREE.Vector3(w[0], w[1], w[2]); };
 
     // ---- the colours and the font come from the lobby's own tokens, never from hex written here ----
@@ -128,19 +129,36 @@
       const dome = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), MAT.gold); dome.position.y = 0.04; dome.castShadow = true; bell.add(dome);
       const base = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.04, 14), MAT.darkWood); bell.add(base);
       const knob = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), MAT.gold); knob.position.y = 0.2; bell.add(knob); S.bell = { g: bell, dome, t: 0 };
-      // a toy foam blaster in the lobby's amber and cyan: a chunky body, a fat barrel with a bright tip, a pump, a grip and a dart magazine; it turns to follow the reticle
-      const pop = new THREE.Group(); pop.position.set(ox + 1.1, 1.26, oz + 0.3); pop.scale.setScalar(1.25); scene.add(pop);
-      const toy = (hex) => new THREE.MeshStandardMaterial({ color: hex, roughness: 0.55 }), amber = toy(STYLE[0].hex), cyan = toy(STYLE[2].hex);
-      const part = (g, m, x, y, z, rx = 0) => { const me = new THREE.Mesh(g, m); me.position.set(x, y, z); me.rotation.x = rx; me.castShadow = true; pop.add(me); return me; };
-      part(new THREE.BoxGeometry(0.15, 0.17, 0.5), amber, 0, 0, -0.1);                                   // the body
-      part(new THREE.CylinderGeometry(0.065, 0.065, 0.34, 12), cyan, 0, 0.02, -0.5, Math.PI / 2);         // the fat barrel (pointing north, -z)
-      part(new THREE.CylinderGeometry(0.08, 0.08, 0.06, 12), MAT.redLantern, 0, 0.02, -0.69, Math.PI / 2);   // its bright red tip
-      part(new THREE.CylinderGeometry(0.04, 0.04, 0.02, 12), MAT.lanternCap, 0, 0.02, -0.725, Math.PI / 2);   // the dark hole
-      part(new THREE.BoxGeometry(0.19, 0.1, 0.22), cyan, 0, -0.12, -0.34);                               // the pump
-      part(new THREE.BoxGeometry(0.1, 0.24, 0.12), cyan, 0, -0.18, 0.08, 0.25);                           // the grip
-      part(new THREE.BoxGeometry(0.09, 0.07, 0.24), MAT.lanternCap, 0, 0.12, -0.08);                     // the dart magazine on top
-      part(new THREE.BoxGeometry(0.03, 0.05, 0.03), amber, 0, 0.12, -0.6);                               // the front sight
-      const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.02, -0.74); pop.add(muzzle);
+      // a fairground cork rifle: a deep-plum receiver, barrel and magazine tube, a wooden stock and pump, a cork in the muzzle; it sits on a swivel post and turns to follow the reticle.
+      // The pivot is up at the trigger and the aim is limited (see AIM_UP / AIM_DOWN in the tick), so neither the butt nor the muzzle ever dips into the counter (top at 1.07).
+      const pop = new THREE.Group(); pop.position.set(ox + 1.1, 1.4, oz + 0.3); scene.add(pop);
+      const metal = new THREE.MeshStandardMaterial({ color: PAL.plum, roughness: 0.45, metalness: 0.3 }), wood = new THREE.MeshStandardMaterial({ color: PAL.woodDeep, roughness: 0.55 });
+      const woodDeep = new THREE.MeshStandardMaterial({ color: PAL.brown, roughness: 0.6 }), cork = new THREE.MeshStandardMaterial({ color: PAL.sand, roughness: 0.95 });
+      const part = (g, m, x, y, z, rx = 0) => { const me = new THREE.Mesh(g, m); me.position.set(x, y, z); me.rotation.x = rx; me.castShadow = true; pop.add(me); return me; }, along = Math.PI / 2;
+      part(new THREE.BoxGeometry(0.055, 0.085, 0.24), metal, 0, 0, -0.06);                                  // the receiver
+      const sp = new THREE.Shape();                                                                          // the stock's side profile, x = -z (it runs back, +z), y up
+      sp.moveTo(-0.05, 0.025); sp.lineTo(-0.1, 0.01); sp.quadraticCurveTo(-0.2, 0.012, -0.31, 0.0); sp.lineTo(-0.315, -0.125); sp.quadraticCurveTo(-0.17, -0.07, -0.1, -0.035); sp.lineTo(-0.05, -0.035); sp.closePath();   // slim wrist, flaring to the butt
+      const sg = new THREE.ExtrudeGeometry(sp, { depth: 0.035, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 2 }); sg.translate(0, 0, -0.0175); sg.rotateY(Math.PI / 2);
+      part(sg, wood, 0, 0, 0);                                                                               // the stock
+      part(new THREE.CylinderGeometry(0.016, 0.016, 0.44, 14), metal, 0, 0.015, -0.4, along);                // the barrel (pointing north, -z)
+      part(new THREE.CylinderGeometry(0.011, 0.011, 0.36, 10), metal, 0, -0.02, -0.36, along);               // the magazine tube under it
+      part(new THREE.CylinderGeometry(0.026, 0.026, 0.13, 14), wood, 0, -0.005, -0.46, along);               // the wooden pump
+      for (const z of [-0.43, -0.49]) part(new THREE.CylinderGeometry(0.0275, 0.0275, 0.008, 14), woodDeep, 0, -0.005, z, along);   // its grooves
+      part(new THREE.CylinderGeometry(0.017, 0.014, 0.03, 12), cork, 0, 0.015, -0.632, along);              // the cork in the muzzle
+      part(new THREE.BoxGeometry(0.008, 0.02, 0.012), metal, 0, 0.035, -0.6);                               // the front sight
+      part(new THREE.BoxGeometry(0.02, 0.015, 0.01), metal, 0, 0.05, -0.15);                                 // the rear sight
+      const tg = new THREE.TorusGeometry(0.022, 0.005, 6, 12, Math.PI); tg.rotateZ(Math.PI); tg.rotateY(Math.PI / 2);
+      part(tg, metal, 0, -0.043, 0.02);                                                                      // the trigger guard
+      part(new THREE.BoxGeometry(0.006, 0.025, 0.008), metal, 0, -0.05, 0.02);                              // the trigger
+      const muzzle = new THREE.Object3D(); muzzle.position.set(0, 0.015, -0.65); pop.add(muzzle);
+      mesh(new THREE.CylinderGeometry(0.022, 0.03, 0.28, 12), MAT.metal, 1.1, 1.21, -0.3);                 // the swivel post, counter to trigger
+      mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.02, 16), MAT.metal, 1.1, 1.08, -0.3, { cast: false });  // its foot
+      // a dish of spare corks beside it
+      mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.025, 18), woodDeep, 1.75, 1.083, -0.2, { cast: false });
+      const cg1 = new THREE.CylinderGeometry(0.017, 0.014, 0.03, 10);
+      [[0, 0, 0], [0.04, 0.01, 1.2], [-0.04, 0.02, 2.1], [0.02, -0.045, 0.4], [-0.03, -0.035, 2.8], [0.05, -0.03, 1.7], [0.01, 0.045, 0.9], [0, 0.005, 0.3, 1]].forEach(([x, z, ry, up]) => {
+        const c = mesh(cg1, cork, 1.75 + x, 1.11 + (up ? 0.025 : 0), -0.2 + z, { cast: false }); c.rotation.set(up ? 0 : Math.PI / 2, ry, 0, 'YXZ');   // lying on their sides, one standing
+      });
       S.popper = { g: pop, base: pop.position.clone(), muzzle };
       // string lanterns along the header and across the middle, swaying a little
       const lg = new THREE.SphereGeometry(0.1, 8, 6), cg = new THREE.CylinderGeometry(0.05, 0.05, 0.04, 8);
@@ -430,6 +448,7 @@
       }
       for (const s of S.sparks) if (s.life > 0) { s.life -= dt / 0.7; s.v.y -= 6 * dt; s.m.position.addScaledVector(s.v, dt); s.m.material.opacity = Math.max(0, s.life); if (s.life <= 0) s.m.visible = false; }
       const rr = rayAt(S.ret.nx, S.ret.ny), kk = (2.2 - rr.o[2]) / rr.d[2], aim = V([rr.o[0] + rr.d[0] * kk, rr.o[1] + rr.d[1] * kk, 2.2]), pg = S.popper.g;
+      { const b = S.popper.base, h = Math.hypot(aim.x - b.x, aim.z - b.z); aim.y = Math.min(b.y + h * AIM_UP, Math.max(b.y - h * AIM_DOWN, aim.y)); }   // keep the rifle clear of the counter
       pg.lookAt(aim.x, aim.y, aim.z); pg.rotateY(Math.PI);   // the barrel points along local -z once turned; lookAt turns +z to the target
       S.recoil = Math.max(0, S.recoil - dt * 7); pg.position.copy(S.popper.base); pg.translateZ(0.06 * S.recoil);
       if (S.bell && S.bell.t > 0) { S.bell.t = Math.max(0, S.bell.t - dt * 1.6); S.bell.dome.rotation.z = 0.35 * Math.sin(S.bell.t * 26) * S.bell.t; }
