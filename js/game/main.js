@@ -96,6 +96,21 @@ window.TokenFallReady = { push(f) { f(TF); } };
 _ready.forEach(f => f(TF));
 
 // ================= boot =================
+// Everything the first visible frame used to do, done behind the loading screen: the start zone's sprite sheets go up to the GPU one per frame
+// (the loading screen keeps moving between them), then one hidden render links its shader programs and fills the shadow map. Only the people in the
+// start zone are shown, the rule frame() applies, so the other zones' sheets stay un-uploaded (they go up under the travel fade, see loop.js).
+const yieldFrame = () => new Promise((r) => { requestAnimationFrame(r); setTimeout(r, 100); });   // the timeout keeps a hidden tab from stalling the load
+async function warmUp() {
+  for (const c of npcs) c.g.visible = c.zone === zone;
+  const here = [hero, ...npcs.filter((c) => c.zone === zone)];
+  for (const id in sheetTex) {
+    if (!here.some((c) => c.mesh.material.map === sheetTex[id])) continue;
+    renderer.initTexture(sheetTex[id]); renderer.initTexture(auxTex[id]);
+    await yieldFrame();
+  }
+  render(); gl.finish();
+  await yieldFrame();
+}
 const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Baloo 2"'), document.fonts.load('400 18px Poppins'), document.fonts.load('700 18px Poppins')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImgs = {}, auxImgs = {}, sheetReady = Promise.all([[window.CHAR_SHEETS, sheetImgs], [window.CHAR_AUX, auxImgs]].flatMap(([srcs, into]) => Object.entries(srcs).map(([id, src]) => new Promise(r => { const im = into[id] = new Image(); im.onload = r; im.src = src; }))));
 Promise.all([fontsReady, sheetReady]).then(() => {
@@ -130,6 +145,8 @@ Promise.all([fontsReady, sheetReady]).then(() => {
   if (q.get('zone') && AREAS[q.get('zone')]) { const a = AREAS[q.get('zone')], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.zone = q.get('zone'); }
   if (q.get('at')) { const [ax, az] = q.get('at').split(',').map(Number); hero.x = ax; hero.y = az; }
   setZone(hero.zone); resize(); snapCamera();
+  return warmUp();
+}).then(() => {
   document.getElementById('loading').remove();
 }).then(() => {
   // start rendering and greeting once the player has picked a character and pressed Enter
