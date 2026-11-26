@@ -100,7 +100,17 @@
         });
         if (animate && !still && info.animate) info.animate([{ opacity: 0, transform: 'translateX(18px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' });
       };
-      const confirm = () => { CS.setChoice(roster[sel].id); el.remove(); done(roster[sel].id); };
+      // the picker fades out over the loading screen (260 ms, opacity only, on the compositor) instead of cutting to it; the game's own work starts after
+      let leaving = false;
+      const confirm = () => {
+        if (leaving) return; leaving = true;
+        CS.setChoice(roster[sel].id);
+        const id = roster[sel].id, go = () => { if (!el.isConnected) return; el.remove(); done(id); };
+        if (still || !window.anime || !anime.waapi) return go();
+        el.style.pointerEvents = 'none';
+        setTimeout(go, 600);   // never leave the picker up if the animation does not report back
+        anime.waapi.animate(el, { opacity: 0, duration: 260, ease: 'out(3)', onComplete: go });
+      };
 
       thumbs.forEach((t, i) => { t.addEventListener('click', () => show(i, true)); t.addEventListener('dblclick', confirm); });
       el.querySelectorAll('.cp-arrow').forEach((a) => a.addEventListener('click', () => show(sel + Number(a.dataset.step), true)));

@@ -26,7 +26,8 @@ html body .mc-wrap .mc-foot { margin: 0; padding: 2px 14px; border-radius: 999px
 /* while a game is open the time of day is not the player's business: the sun button steps aside (daylight.js) */
 html body #ui[data-play="1"] .dl-btn { opacity: 0; visibility: hidden; pointer-events: none; }
 /* the game's loading screen (index.html #loading): nothing else of the HUD shows while it is up, just the token chips, the line and the bar */
-html body #ui:has(#loading) > :not(#loading):not(#fade) { visibility: hidden !important; }
+html body #ui:has(#loading:not(.out)) > :not(#loading):not(#fade) { visibility: hidden !important; }   /* .out: the loading screen is leaving, the HUD shows through it */
+html body #loading.out { pointer-events: none; }
 html body #loading { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: radial-gradient(ellipse at center, #2a1f2c 0%, #120c14 75%); letter-spacing: 0; z-index: 3; }
 html body #loading .ld-toks { display: flex; gap: 8px; }
 html body #loading .ld-toks i { font: 800 46px var(--font-secondary, sans-serif); font-style: normal; padding: 2px 16px; border-radius: 14px; color: #2a1606; animation: ldpop 1.8s ease-in-out infinite; }

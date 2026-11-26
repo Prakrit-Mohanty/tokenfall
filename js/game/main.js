@@ -115,6 +115,17 @@ async function warmUp() {
   render(); gl.finish();
   await yieldFrame();
 }
+// The loading screen leaves as a 320 ms fade and slight zoom: opacity and transform only, run by the browser's compositor (anime.js's WAAPI animator),
+// so a busy main thread cannot stall it. The `out` class lets the HUD show through it and ignores clicks (mode-cards.css). Removed when done, or after
+// 700 ms whatever happens, so it can never be left covering the game.
+function hideLoading() {
+  const el = document.getElementById('loading');
+  return new Promise((done) => {
+    el.classList.add('out');
+    setTimeout(done, 700);
+    anime.waapi.animate(el, { opacity: 0, scale: 1.04, duration: REDUCED_MOTION ? 1 : 320, ease: 'out(3)', onComplete: done });
+  }).then(() => el.remove());
+}
 const fontsReady = document.fonts ? Promise.race([Promise.all([document.fonts.load('600 24px "Baloo 2"'), document.fonts.load('400 18px Poppins'), document.fonts.load('700 18px Poppins')]), new Promise(r => setTimeout(r, 2000))]) : Promise.resolve();
 const sheetImgs = {}, auxImgs = {}, sheetReady = Promise.all([[window.CHAR_SHEETS, sheetImgs], [window.CHAR_AUX, auxImgs]].flatMap(([srcs, into]) => Object.entries(srcs).map(([id, src]) => new Promise(r => { const im = into[id] = new Image(); im.onload = r; im.src = src; }))));
 Promise.all([fontsReady, sheetReady]).then(() => {
@@ -151,12 +162,12 @@ Promise.all([fontsReady, sheetReady]).then(() => {
   setZone(hero.zone); resize(); snapCamera();
   return warmUp();
 }).then(() => {
-  document.getElementById('loading').remove();
+  // the world is ready: lift the black fade UNDER the loading screen (no transition, so no flash of black), start the loop, then let the loading screen go
+  fadeEl.style.transition = 'none'; fadeEl.style.opacity = 0; void fadeEl.offsetWidth; fadeEl.style.transition = '';
+  requestAnimationFrame(t => { last = t; frame(t); });
+  return hideLoading();
 }).then(() => {
-  // start rendering and greeting once the player has picked a character and pressed Enter
-  fadeEl.style.opacity = 0;
   showBanner('TokenFall', 'Main Plaza');
   log('', 'Welcome to TokenFall! Walk through a glowing gate to visit an area.', true);
   setTimeout(() => say(npcs[0], `hi ${CHARS[hero.name].name}! 👋`), 1800);
-  requestAnimationFrame(t => { last = t; frame(t); });
 });
