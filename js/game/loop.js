@@ -76,15 +76,15 @@ const perfEl = Object.assign(document.createElement('pre'), { id: 'perf' });
 perfEl.style.cssText = 'position:fixed;top:8px;left:8px;z-index:9999;margin:0;padding:6px 9px;background:rgba(0,0,0,.65);color:#9f9;font:12px/1.35 monospace;pointer-events:none;display:none';
 document.body.appendChild(perfEl);
 addEventListener('keydown', e => { if (e.code === 'F3') { e.preventDefault(); perfEl.style.display = perfEl.style.display === 'none' ? 'block' : 'none'; } });
-let perfT = 0, perfN = 0, perfMs = 0;
+let perfT = 0, perfN = 0, perfMax = 0;
 function perfFrame(raw) {
-  perfT += raw; perfN++;
+  perfT += raw; perfN++; if (raw > perfMax) perfMax = raw;
   if (perfT < 500) return;
   if (perfEl.style.display !== 'none') {
-    const i = renderer.info.render;
-    perfEl.textContent = `${(perfN * 1000 / perfT).toFixed(0)} fps  ${(perfT / perfN).toFixed(1)} ms\ncalls ${i.calls}  tris ${(i.triangles / 1000).toFixed(0)}k\ntier ${Q.name}  res ${(PR * resScale).toFixed(2)}${MOBILE ? '  mobile' : ''}`;
+    const i = renderer.info.render, m = renderer.info.memory;
+    perfEl.textContent = `${(perfN * 1000 / perfT).toFixed(0)} fps  ${(perfT / perfN).toFixed(1)} ms  worst ${perfMax.toFixed(0)} ms\ncalls ${i.calls}  tris ${(i.triangles / 1000).toFixed(0)}k\ntextures ${m.textures}  geometries ${m.geometries}  programs ${renderer.info.programs.length}\ntier ${Q.name}  res ${(PR * resScale).toFixed(2)}${MOBILE ? '  mobile' : ''}`;
   }
-  perfT = perfN = 0;
+  perfT = perfN = perfMax = 0;
 }
 
 // ================= main loop =================
@@ -96,7 +96,7 @@ let frames = 0;   // frames drawn so far: travel() waits on it
 function frame(now) {
   frames++;
   const raw = now - last, dt = Math.min(50, raw); last = now;
-  renderer.info.reset(); perfFrame(raw);
+  perfFrame(raw); renderer.info.reset();   // the overlay reads the last frame's counts before they are cleared for this one
   if ((lampT -= dt) < 0) { lampT = 500; capLamps(); }
   if (!document.hidden) { ftAcc += raw; ftN++; }
   if (ftAcc > 2500) {
@@ -171,29 +171,43 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-const proj = new THREE.Vector3();
-function toScreen(x, y, z) { proj.set(x, y, z).project(camera); return [(proj.x + 1) / 2 * innerWidth, (1 - proj.y) / 2 * innerHeight, proj.z < 1]; }
+const proj = new THREE.Vector3(), scr = [0, 0, false];   // scr: toScreen's reused result (x, y, in front of the camera), so no array is made per label per frame
+let VW = innerWidth, VH = innerHeight;   // read once and on resize: reading them per label, between style writes, can force a layout
+addEventListener('resize', () => { VW = innerWidth; VH = innerHeight; });
+function toScreen(x, y, z) { proj.set(x, y, z).project(camera); scr[0] = (proj.x + 1) / 2 * VW; scr[1] = (1 - proj.y) / 2 * VH; scr[2] = proj.z < 1; return scr; }
+// The name tags, bubbles and prompt are anchored at left/top 0 and moved with the `translate` property: a compositor move, no layout. Every write is
+// skipped when the element already holds that value (read back from its own inline style, so another writer such as characters.js can never leave it stale).
+const HAS_TRANSLATE = 'translate' in document.documentElement.style;
+function put(el, sx, sy, on) {
+  const d = on ? 'block' : 'none';
+  if (el.style.display !== d) el.style.display = d;
+  if (!on) return;
+  const x = Math.round(sx), y = Math.round(sy);
+  if (HAS_TRANSLATE) {
+    if (el.style.left !== '0px') { el.style.left = '0'; el.style.top = '0'; }
+    const t = x + 'px ' + y + 'px'; if (el.style.translate !== t) el.style.translate = t;
+  } else { el.style.left = x + 'px'; el.style.top = y + 'px'; }   // browsers without the individual property
+}
+let promptHtml = '';
 function drawUI(dt) {
   for (const c of chars) {
     const show = c.zone === zone;
     const hd = charHead(c), [sx, sy, vis] = toScreen(c.x, hd.y + .17, hd.z);
-    c.tag.style.display = show && vis && !dialog ? 'block' : 'none';
-    c.tag.style.left = sx + 'px'; c.tag.style.top = sy + 'px';
+    put(c.tag, sx, sy, show && vis && !dialog);
     if (c.bubble) {
       c.bubbleT -= dt;
-      c.bubble.style.display = show && vis && c.bubbleT > 0 && !dialog ? 'block' : 'none';
-      c.bubble.style.left = sx + 'px'; c.bubble.style.top = (sy - 22) + 'px';
+      put(c.bubble, sx, sy - 22, show && vis && c.bubbleT > 0 && !dialog);
     }
   }
   if (nearest && !dialog && !traveling) {
     const [sx, sy] = toScreen(nearest.x, nearest.y ?? PROMPT_Y, nearest.z);
-    promptEl.innerHTML = `<kbd>E</kbd>${esc(nearest.verb)} · ${esc(nearest.label)}`;
-    promptEl.style.display = 'block'; promptEl.style.left = sx + 'px'; promptEl.style.top = sy + 'px';
+    const h = `<kbd>E</kbd>${esc(nearest.verb)} · ${esc(nearest.label)}`; if (h !== promptHtml) promptEl.innerHTML = promptHtml = h;
+    put(promptEl, sx, sy, true);
   } else if (nearP && !dialog && !traveling) {   // portals say where they go when you walk up to them
     const [sx, sy] = toScreen(nearP.x, PORTAL_Y, nearP.z);
-    promptEl.innerHTML = `Step in · ${esc(nearP.label)}`;
-    promptEl.style.display = 'block'; promptEl.style.left = sx + 'px'; promptEl.style.top = sy + 'px';
-  } else promptEl.style.display = 'none';
+    const h = `Step in · ${esc(nearP.label)}`; if (h !== promptHtml) promptEl.innerHTML = promptHtml = h;
+    put(promptEl, sx, sy, true);
+  } else put(promptEl, 0, 0, false);
   if (dialog) {
     const l = dialog.lines[dialog.i];
     if (dialog.ch < l.length) dialog.ch = Math.min(l.length, dialog.ch + dt * .05);
