@@ -51,10 +51,8 @@ function buildOffice(a) {
   colBox(X(-2.5), LZ - .1, X(1.3), SE);
   box(1.6, .02, .9, MAT.charcoal, LX, 0, LZ - .6, { cast: false });
   garlandV(LX - .85, LZ - .16, .9, 2.5, true); garlandV(LX + .85, LZ - .16, .9, 2.5, true);
-  ledSign(['LIFT · Ground · 4'], '#f6e3b4', LX, 3.75, LZ - .05, 1.8, .34);
-  const g = AREAS.pune;   // the lift takes you back down, out of the Calfus building's front doors
-  portal(LX, LZ - 1.3, a.color, 'lab', 'pune', 'Ground Floor', { at: [g.cx + CB_ARRIVE[0], g.cz + CB_ARRIVE[1]] });
-  INTER.push({ x: LX + 1.3, z: LZ - .45, r: 1, label: 'Lift · Floor 4', verb: 'Ride up', act: () => { if (!traveling) travel({ to: 'lab4', zone: 'lab' }); } });   // office-hq4.js
+  ledSign(['LIFT · Floor 2'], '#f6e3b4', LX, 3.75, LZ - .05, 1.8, .34);
+  INTER.push({ x: LX, z: LZ - .9, r: 1.2, label: 'Lift', verb: 'Step in', act: () => LiftCar.enter('2', 'lab') });   // lift-car.js: pick a floor inside
   INTER.push({ x: EX, z: LZ - .7, r: 1, label: 'Electrical Duct', verb: 'Read', act: () => talk('Electrical Duct', ['AUTHORISED PERSONNEL ONLY.', 'Behind this door: the cables that keep every model in this office running.']) });
   // the fire-exit stairs, a closed block east of the lift with its door onto the waiting area
   const core = grp(), WX = X(1.44);
@@ -84,11 +82,13 @@ function buildOffice(a) {
   pointLight('lab', 0xffb060, 1.1, 6, PC, .5, Z(6.6));
   chandelier(X(-.6), Z(7.6));
   INTER.push({ x: PC, z: PZ + .8, r: 1.6, label: 'Front Desk', verb: 'Read', act: () => talk('Front Desk', ['Welcome to the TokenFall office!', 'Desks are down the left, meeting rooms in the middle, and the collab area is at the far end.', 'The marigolds went up for Diwali.']) });
-  INTER.push({ x: WX - .6, z: Z(7.05), r: 1.1, label: 'Emergency Exit', verb: 'Read', act: () => talk('Emergency Exit', ['FIRE EXIT · STAIRCASE.', 'Please don\'t. It sets off the alarm, and the stairwell has no Wi-Fi.']) });
+  INTER.push({ x: WX - .6, z: Z(7.05), r: 1.1, label: 'Emergency Exit', verb: 'Take the stairs', act: () => STAIRS.enter('2', 'lab') });
 
   // ---- west side, from the lift going north ----
-  room(X(-7), Z(8.7), X(-2.8), SE - .2, 'e', 'Board Room', ['The Board Room.', 'Big decisions happen here. Soon: big lessons about how AI models make decisions.'], { table: 'long', seats: 3, along: true, doorAt: .75 });
-  room(X(-7), Z(6.1), X(-3.5), Z(8.55), 'e', 'Huddle Room', ['The Huddle Room.', 'Small room, quick chats. Perfect for a five-minute lesson on what a model can and can\'t know.'], { table: 'round' });
+  // laid out like the fourth floor's Cabin 1 and Sinhagad (office-hq4.js): the Huddle Room's glass front is set back, the Board Room's door sits
+  // in the notch beside it, on the Board Room's north side
+  room(X(-7), Z(8.7), X(-2.8), SE - .2, 'n', 'Board Room', ['The Board Room.', 'Big decisions happen here. Soon: big lessons about how AI models make decisions.'], { table: 'long', seats: 3, along: true, doorAt: (X(-4) + .12 + X(-2.8) - .12) / 2 - X(-7), doorW: 1.4 });
+  room(X(-7), Z(6.1), X(-4), Z(8.55), 'e', 'Huddle Room', ['The Huddle Room.', 'Small room, quick chats. Perfect for a five-minute lesson on what a model can and can\'t know.'], { table: 'round' });
   box(.8, .9, .7, MAT.white, X(-5.2), 0, Z(5.7)); colBox(X(-5.2) - .4, Z(5.7) - .35, X(-5.2) + .4, Z(5.7) + .35);   // storage
   // four desk pods along the west windows, two computers on each side
   for (const z of [-5.6, -2.6, .4, 3.5]) deskCluster(X(-5.75), Z(z), 2, false);

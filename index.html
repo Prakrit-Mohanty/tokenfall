@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="css/typography.css?v=104">
 <link rel="stylesheet" href="css/game.css?v=4">
-<link rel="stylesheet" href="css/storybook.css?v=4">
+<link rel="stylesheet" href="css/storybook.css?v=6">
 <link rel="stylesheet" href="css/token1.css?v=5">
 <link rel="stylesheet" href="css/encounter.css?v=2">
 <link rel="stylesheet" href="css/char-select.css?v=21">
@@ -26,7 +26,11 @@
   <div id="loc" class="panel"><div class="gem"></div><div><span id="locName">TokenFall Lobby</span><small id="locSub">Main Plaza</small></div></div>
   <div id="party" class="panel"><h4><span>LOBBY</span><span id="count">5 / 20</span></h4><div id="plist"></div></div>
   <div id="chat"><div id="log" class="panel"></div></div>
-  <div id="help"><kbd>WASD</kbd> move &nbsp;<kbd>Shift</kbd> run &nbsp;<kbd>Space</kbd> jump<br><kbd>E</kbd> interact &nbsp;<kbd>V</kbd> view &nbsp;<kbd>M</kbd> map &nbsp;<kbd>N</kbd> music &nbsp;<kbd>G</kbd> glitch log &nbsp;<kbd>L</kbd> large text</div>
+  <div id="help" class="keys">
+    <section><h5>Move</h5><p><kbd>WASD</kbd><span>walk</span></p><p><kbd>Shift</kbd><span>run</span></p><p><kbd>Space</kbd><span>jump</span></p></section>
+    <section><h5>Do</h5><p><kbd>E</kbd><span>interact</span></p><p><kbd>V</kbd><span>camera view</span></p><p><kbd>M</kbd><span>map</span></p></section>
+    <section><h5>Settings</h5><p><kbd>N</kbd><span>music</span></p><p><kbd>G</kbd><span>glitch log</span></p><p><kbd>L</kbd><span>large text</span></p></section>
+  </div>
   <div id="dialog" class="panel"><div class="name"></div><div class="text"></div><div class="next">▼</div></div>
   <div id="banner"><div class="line"></div><div class="t"></div><div class="s"></div><div class="line"></div></div>
   <div id="fade"></div>
@@ -90,7 +94,7 @@
 <script src="js/kitchen-progress.js?v=2"></script>
 <script src="js/storycorner.js?v=1"></script>
 <script src="js/ambience.js?v=108"></script>
-<script src="js/dreamworld.js?v=5"></script>
+<script src="js/dreamworld.js?v=7"></script>
 <script src="js/daylight.js?v=7"></script>
 <script src="js/game/game-events.js?v=3"></script>
 <script src="js/game/token1-meter.js?v=2"></script>
@@ -125,7 +129,7 @@ const TOKEN1_ON = false;
 <script src="js/game/palette.js?v=1"></script>
 <script src="js/models/calfus-c.js?v=1"></script>
 <script src="js/game/textures.js?v=6"></script>
-<script src="js/game/geometry.js?v=6"></script>
+<script src="js/game/geometry.js?v=9"></script>
 <script src="js/game/paving-layout.js?v=1"></script>
 <script src="js/game/paving.js?v=2"></script>
 <script src="js/game/kerb.js?v=1"></script>
@@ -137,20 +141,20 @@ const TOKEN1_ON = false;
 <script src="js/models/token1-bot.js?v=101"></script>
 <script src="js/game/props.js?v=5"></script>
 <script src="js/game/buildings.js?v=22"></script>
-<script src="js/game/crescent-bay.js?v=15"></script>
+<script src="js/game/crescent-bay.js?v=24"></script>
 <script src="js/game/portals.js?v=2"></script>
 <script src="js/game/leaderboard.js?v=3"></script>
 <script src="js/game/fountain-water.js?v=102"></script>
 <script src="js/game/river.js?v=2"></script>
 <script src="js/game/arch-bridge.js?v=1"></script>
-<script src="js/game/lobby-village.js?v=125"></script>
-<script src="js/game/station.js?v=10"></script>
+<script src="js/game/lobby-village.js?v=126"></script>
+<script src="js/game/station.js?v=14"></script>
 <script src="js/game/village-ai.js?v=104"></script>
 <script src="js/game/village-robots.js?v=2"></script>
-<script src="js/game/areas.js?v=6"></script>
-<script src="js/game/office-kit.js?v=7"></script>
-<script src="js/game/office-hq.js?v=7"></script>
-<script src="js/game/office-hq4.js?v=21"></script>
+<script src="js/game/areas.js?v=10"></script>
+<script src="js/game/office-kit.js?v=8"></script>
+<script src="js/game/office-hq.js?v=11"></script>
+<script src="js/game/office-hq4.js?v=24"></script>
 <script src="js/game/abz-city.js?v=5"></script>
 <script src="js/game/office-abz.js?v=111"></script>
 <script src="js/game/airport.js?v=21"></script>
@@ -158,23 +162,26 @@ const TOKEN1_ON = false;
 <script src="js/game/airport-assets.js?v=4"></script>
 <script src="js/game/office-us.js?v=4"></script>
 <script src="js/game/office-blr.js?v=1"></script>
+<script src="js/game/office-cb3.js?v=36"></script>
+<script src="js/game/stairwell.js?v=6"></script>
+<script src="js/game/lift-car.js?v=12"></script>
 <script src="js/models/autorickshaw.js?v=1"></script>
 <script src="js/game/city.js?v=13"></script>
 <script src="js/game/pune.js?v=155"></script>
-<script src="js/game/build-areas.js?v=5"></script>
+<script src="js/game/build-areas.js?v=7"></script>
 <script src="js/game/effects.js?v=3"></script>
 <script src="js/game/grounding.js?v=1"></script>
 <script src="js/game/chatter.js?v=1"></script>
 <script src="js/game/char-select.js?v=9"></script>
-<script src="js/game/characters.js?v=25"></script>
+<script src="js/game/characters.js?v=26"></script>
 <script src="js/game/ui.js?v=5"></script>
 <script src="js/game/settings.js?v=3"></script>
 <script src="js/game/world-map.js?v=14"></script>
 <script src="js/game/post.js?v=3"></script>
 <script src="js/game/walk-to.js?v=106"></script>
-<script src="js/game/loop.js?v=120"></script>
+<script src="js/game/loop.js?v=124"></script>
 <script src="js/game/ambient.js?v=1"></script>
 <script src="js/game/groundlife.js?v=1"></script>
-<script src="js/game/main.js?v=19"></script>
+<script src="js/game/main.js?v=21"></script>
 </body>
 </html>

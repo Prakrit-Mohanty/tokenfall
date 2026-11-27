@@ -15,7 +15,7 @@ const TF = window.TokenFall = {
   // the last Normal / Easy choice on the Glass Bridge or the carrom table: the default (Enter) the next time either asks
   get easy() { try { return localStorage.getItem('tokenfall.easy') === '1'; } catch (e) { return false; } },
   set easy(on) { try { localStorage.setItem('tokenfall.easy', on ? '1' : '0'); } catch (e) {} },
-  zoneTick: {}, zoneEnv: {}, ground: {}, onKey: null, _on: { boot: [], enter: [], game: [] },
+  zoneTick: {}, heroFloor: {}, zoneEnv: {}, ground: {}, onKey: null, _on: { boot: [], enter: [], game: [] },
   on(evt, fn) { this._on[evt].push(fn); return fn; },
   fire(evt, e) { this._on[evt].forEach(f => f(e)); },
   boot() { this._on.boot.forEach(f => f()); },
@@ -165,6 +165,7 @@ Promise.all([fontsReady, sheetReady]).then(() => {
   }
   for (const [n, x, z] of [['sana.k', 7.4, 298.6], ['arjun_p', -.3, 291.6]]) { const c = makeChar(n, x, z, { speed: 2.1, zone: 'abz' }); c.wait = Math.random() * 3000; npcs.push(c); }
   for (const [n, x, z] of BLR_TEAM) { const c = makeChar(n, AREAS.blr.cx + x, AREAS.blr.cz + z, { speed: 2, zone: 'blr' }); c.wait = Math.random() * 3000; npcs.push(c); }   // the Bengaluru team (office-blr.js)
+  for (const [n, x, z] of CB3_TEAM) { const c = makeChar(n, AREAS.cb3.cx + x, AREAS.cb3.cz + z, { speed: 2, zone: 'cb3' }); c.wait = Math.random() * 3000; npcs.push(c); }   // the third-floor team (office-cb3.js)
   TF.boot(); trimCasters();   // again for what the minigames add at boot
   for (const [k, r] of Object.entries(LOBBY.returns)) AREAS[k].ret = r;
   const q = new URLSearchParams(location.search);

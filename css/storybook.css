@@ -30,6 +30,8 @@ html body .panel button:hover, html body button.pill:hover { background: var(--r
 html body kbd, html body #help kbd, html body #prompt kbd, html body #board kbd, html body .panel kbd {
   background: var(--paper); color: var(--paper-ink); border: 1.5px solid #e0c09a; border-radius: 7px; box-shadow: 0 2px 0 rgba(60, 30, 50, .3); padding: 0 7px; margin: 0 3px;
 }
+/* keycap letters are dark on paper: the #help line's dark text-shadow only smudged them */
+html body kbd { text-shadow: none; }
 /* the name tags over heads become little chips; speech bubbles are rounded paper */
 html body .tag { background: rgba(58, 40, 56, .62); border-radius: 999px; padding: 0 9px; text-shadow: none; }
 html body .tag.me { background: rgba(120, 76, 82, .72); color: #ffeab8; }
@@ -63,3 +65,12 @@ html body #ui[data-walk="1"] :is(#chat, .k-chat) { display: none; }
    A card counts as up when its game has put an inline display: block / flex on it. */
 html body #ui:has(:is(.kp-brief, .kp-help, .kp-rs, .mp-brief, .mp-help, .mp-rs, .gp-brief, .gp-help, .gp-rs, .th, .ch, .cp, .bh, .bc):is([style*="display: block"], [style*="display: flex"]))
   :is(.kp-top, .kp-rail, .kp-carry, .kp-msg, .mp-top, .mp-stat, .mp-legend, .mp-msg, .gp-top, .gp-stat, .gp-keys, .gp-msg, .tq, .ts, .tm, .tg, .cq, .cs, .cm, .bq, .bs, .bk, #prompt) { visibility: hidden; }
+
+/* the key hints: three labelled columns (Move · Do · Settings) on a paper card, each key and its action on one aligned row */
+html body #help.keys { display: flex; gap: 18px; align-items: flex-start; text-align: left; line-height: 1; opacity: .92; text-shadow: none;
+  background: rgba(251, 240, 220, .9); color: var(--paper-ink); border: 2px solid #e6c8a2; border-radius: 14px; padding: 10px 14px 8px; box-shadow: 0 3px 0 rgba(60, 30, 50, .25); font-size: 13px; }
+html body #help.keys section { display: grid; gap: 5px; }
+html body #help.keys h5 { margin: 0 0 3px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #9a6f5a; font-weight: 700; }
+html body #help.keys p { margin: 0; display: grid; grid-template-columns: 52px auto; align-items: center; gap: 6px; }
+html body #help.keys kbd { margin: 0; text-align: center; font-size: 12px; padding: 2px 4px; box-shadow: 0 2px 0 rgba(60, 30, 50, .22); }
+html body #help.keys span { white-space: nowrap; }

@@ -6,7 +6,7 @@
 //   Dreamworld.install(TF)    TF.dream = { apply(p, inside, zone) }
 (function (root) {
   const ISLAND = typeof V_ISLAND !== 'undefined' ? V_ISLAND : 53;   // the lobby's half-size, set by lobby-village.js (its lawn, its river and its tufts end here)
-  const OUTDOOR_HIDDEN = { lab: 1, lab4: 1, abz: 1, kitchen: 1, airport: 1, blr: 1 };            // roofed places have no sky to float in
+  const OUTDOOR_HIDDEN = { lab: 1, lab4: 1, abz: 1, kitchen: 1, airport: 1, blr: 1, cb3: 1, stairs: 1 };            // roofed places have no sky to float in
   const PI = Math.PI;
 
   function install(TF) {

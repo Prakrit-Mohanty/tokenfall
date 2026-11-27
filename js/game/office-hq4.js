@@ -191,10 +191,8 @@ function buildOffice4(a) {
   makeFader(compact(lift), () => hero.zone === ZN && hero.x > X(-3.4) && hero.x < X(2.2) && hero.y < LZ + .1 && hero.y > Z(1));
   colBox(X(-2.4), LZ - .1, X(1.6), SE);
   plane(1.6, .14, hazard, LX, .02, LZ - .3);
-  ledSign(['LIFT · Ground · 2 · 4'], '#f6e3b4', LX, 3.75, LZ - .05, 1.9, .34);
-  const g = AREAS.pune;   // the lift takes you down to the Calfus building's front doors, or to the second floor
-  portal(LX, LZ - 1.3, a.color, ZN, 'pune', 'Ground Floor', { at: [g.cx + CB_ARRIVE[0], g.cz + CB_ARRIVE[1]] });
-  INTER.push({ x: LX + 1.3, z: LZ - .45, r: 1, label: 'Lift · Floor 2', verb: 'Ride down', act: () => { if (!traveling) travel({ to: 'lab', zone: ZN }); } });
+  ledSign(['LIFT · Floor 4'], '#f6e3b4', LX, 3.75, LZ - .05, 1.9, .34);
+  INTER.push({ x: LX, z: LZ - .9, r: 1.2, label: 'Lift', verb: 'Step in', act: () => LiftCar.enter('4', ZN) });   // lift-car.js: pick a floor inside
   INTER.push({ x: EX, z: LZ - .7, r: 1, label: 'Electrical Duct', verb: 'Read', act: () => talk('Electrical Duct', ['AUTHORISED PERSONNEL ONLY.', 'Same duct as downstairs, two floors further up. Still no Wi-Fi password taped inside.']) });
   // the fire-exit stairs, a closed block east of the lift with its door onto the waiting area; the toilets north of it, the service shaft by the pantry
   const core = grp(), WX = X(1.6);
@@ -212,7 +210,7 @@ function buildOffice4(a) {
   colBox(X(1.4), Z(-1), X(5.2), Z(6.4)); colBox(X(5.2), Z(3.5), X(7.2), Z(6.4));
   signBoard('TOILETS', X(1.4) - .12, 2.55, Z(2.95), 1.1, .3, Math.PI / 2, { size: 18, bg: PAL.plum, w: 150, h: 40 });
   INTER.push({ x: X(1.4) - .5, z: Z(2.95), r: 1.2, label: 'Toilets', verb: 'Read', act: () => talk('Toilets', ['Women\'s first, men\'s just past it, down the little passage.', 'A note by the basin: "Turn the tap off. The planet is not a test environment."']) });
-  INTER.push({ x: WX - .6, z: Z(7.3), r: 1.1, label: 'Emergency Exit', verb: 'Read', act: () => talk('Emergency Exit', ['FIRE EXIT · STAIRCASE. A 4 on the landing, black granite steps, the red hose reel on the wall.', 'Two floors down is the Prompt Lab. The lift is quicker, and it does not set off the alarm.']) });
+  INTER.push({ x: WX - .6, z: Z(7.3), r: 1.1, label: 'Emergency Exit', verb: 'Take the stairs', act: () => STAIRS.enter('4', ZN) });
   // the waiting area: the check sofa under the wave painting, a teal chair by the fire door, the Sprint banner by the lift, a plant
   sofa(X(.2), Z(6.6) + .6, 0, .85, plaid);   // against Rajgad's back wall, facing the lift
   { const w = hang(wave, 1.5, 1.1, X(.2), 1.75, Z(6.6) + .12, 0), sc = box(.9, .16, .14, crystal, X(.2), 2.5, Z(6.6) + .18, { cast: false }); w.userData.dyn = sc.userData.dyn = true; makeFader([w, sc], () => hero.zone === ZN && hero.x > X(-1.9) - .6 && hero.x < X(1.4) + .6 && hero.y < Z(6.6) && hero.y > Z(3.8) - 8); }   // fades with the room

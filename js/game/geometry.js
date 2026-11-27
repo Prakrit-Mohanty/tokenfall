@@ -158,14 +158,14 @@ const WALK = [];       // walkable rects [x0,z0,x1,z1]
 const FLOORS = [];     // raised floors [x0,z0,x1,z1,top], registered by box() (low slabs); where one is walkable, characters stand on it
 const INTER = [];      // interactables {x,z,r,label,verb,act}
 const PORTALS = [];
-const ZONE_LIGHTS = { lobby: [], lab: [], lab4: [], airport: [], us: [], pune: [], abz: [], bridge: [], blr: [] };
+const ZONE_LIGHTS = { lobby: [], lab: [], lab4: [], airport: [], us: [], pune: [], abz: [], bridge: [], blr: [], cb3: [], stairs: [] };
 const anim = [];       // per-frame callbacks
 anim.push(() => { const d = window.TokenFall && TokenFall.daylight, w = d ? d.state.warm : 0; PAVE_U.uWarm.value.set(Math.pow(1 + .07 * w, -.7), 1, Math.pow(1 - .12 * w, -.7)); });
 const FADERS = [];     // things that turn see-through when they would hide the player
 const colBox = (x0, z0, x1, z1) => COL.push({ x0, z0, x1, z1 });
 const colCirc = (x, z, r) => COL.push({ x, z, r });
 function walkable(x, z) { for (const r of WALK) if (x > r[0] && x < r[2] && z > r[1] && z < r[3]) return true; return false; }
-function floorAt(x, z) { let y = 0; for (const f of FLOORS) if (f[4] > y && x > f[0] && x < f[2] && z > f[1] && z < f[3]) y = f[4]; return y; }
+function floorAt(x, z) { let y = 0, sunk = null; for (const f of FLOORS) if (x > f[0] && x < f[2] && z > f[1] && z < f[3]) { if (f[4] > y) y = f[4]; else if (f[4] < 0 && (sunk === null || f[4] < sunk)) sunk = f[4]; } return y > 0 || sunk === null ? y : sunk; }   // a floor below 0 (a stair going down) counts where nothing stands higher
 const VEH = [];        // moving vehicles' footprints this frame ({ x0, z0, x1, z1 }), kept by stepTraffic: nobody walks through traffic
 function blocked(x, z, pad = .32, veh = true) {
   if (!walkable(x, z)) return true;

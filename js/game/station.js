@@ -321,6 +321,31 @@ function stationBuild() {
     colBox(x - .9, z - .45, x + .9, z + .45); contact(x, z, 1, .55, 0, TOP);
     INTER.push({ x, z: z - 1.2, r: 1.4, label: 'Chai stall', verb: 'Order', act: () => talk('Chai stall', ['"Chai! Garam chai!" One cutting, in a little glass, ₹10.', 'For the journey: the chaiwala says Bengaluru will try to sell you filter coffee. Stay strong.']) });
   }
+  // ---- across the line: a low stone up-platform with a row of Yorkshire-stone station buildings along its back, as at the reference station: a
+  // two-storey house with a bay and chimneys, a long single-storey booking hall and waiting room, a small goods shed; slate roofs with red
+  // barge boards, a red water crane, benches, lamps and planters, so the far side is a station too, not empty lawn ----
+  { const wall = stMat.houseStone, slate = stMat.slate, white = stMat.frame, red = stMat.red, zF = STATION.z - 1.6, zB = zF - 5.2;
+    box(52, TOP, zF - zB + .2, stone, -6, 0, (zF + zB) / 2, { s: 0 }); box(52, .08, .35, white, -6, TOP, zF - .2, { cast: false });   // the far platform and its white edge
+    const house = (x0, x1, d, H, storeys) => {
+      const cx = (x0 + x1) / 2, z1 = zB + .2, z0 = z1 + d, cz = (z0 + z1) / 2, ridge = H + 1.3;
+      box(x1 - x0, H, d, wall, cx, TOP, cz);
+      for (const sd of [-1, 1]) { const run = d / 2 + .3, sl = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0 + .5, .12, Math.hypot(run, ridge - H) + .05), slate); sl.position.set(cx, TOP + (H + ridge) / 2 + .04, cz + sd * run / 2); sl.rotation.x = sd * Math.atan2(ridge - H, run); add(sl); }
+      box(x1 - x0 + .55, .12, .12, red, cx, TOP + H - .05, z0 + .3, { cast: false });   // the red barge board along the eaves
+      for (const x of [x0 + .5, x1 - .5]) { box(.6, 1.4, .7, wall, x, TOP + ridge - .8, cz); box(.7, .1, .8, stone, x, TOP + ridge + .6, cz); }
+      for (let k = 0; k < storeys; k++) for (let x = x0 + 1; x < x1 - .6; x += 1.7) { box(.9, 1.15, .08, white, x, TOP + .7 + k * 1.9, z0 + .03); box(.72, .95, .06, MAT.glassLit, x, TOP + .8 + k * 1.9, z0 + .06, { cast: false }); }
+      box(1, 2.1, .1, red, (x0 + x1) / 2 + .3, TOP, z0 + .05);   // a red door
+      colBox(x0, z1, x1, z0);
+    };
+    house(-28, -21, 3.6, 4.6, 2);   // the station master's house
+    house(-20.5, -8, 3, 3.2, 1);   // the booking hall and waiting room
+    house(-7, -2, 2.8, 3, 1);      // the parcels office
+    house(3, 9, 3.4, 3.4, 1);      // the goods shed
+    for (const x of [-18, -12, 4.5]) { box(1.6, .08, .45, red, x, TOP + .45, zF - 1.1); for (const dx of [-.7, .7]) box(.08, .45, .4, red, x + dx, TOP, zF - 1.1); }   // red benches
+    for (const x of [-24, -15, -5, 6]) { box(.12, 2.8, .12, red, x, TOP, zF - .6); box(.35, .4, .35, MAT.glassLit, x, TOP + 2.8, zF - .6, { cast: false }); }   // lamps
+    for (const x of [-23, -10, 1]) { box(.6, .45, .6, red, x, TOP, zF - 1.6); bush(x, zF - 1.6, .5, MAT.leafA); }   // planters
+    // the red water crane at the platform's end
+    box(.3, 2.6, .3, red, 12, TOP, zF - .5); box(1.6, .22, .22, red, 12.7, TOP + 2.5, zF - .5); box(.2, .9, .2, red, 13.4, TOP + 1.6, zF - .5);
+  }
   // the lawn round the platform: a few trees and bushes, as green as the reference's hills
   for (const [tx, tz, ts, leaf] of [[21.5, -46.5, 1.2, MAT.leafC]]) tree(tx, tz, ts, leaf);   // (none just behind the platform: from there a tree stands between the camera and you)
   for (const [bx, bz] of [[-11, -44.4], [-7.2, -44.2], [5.2, -44.2], [9.5, -44.4], [16.2, -44.3]]) bush(bx, bz, .85, MAT.leafB);

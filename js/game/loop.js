@@ -9,7 +9,7 @@ function setZone(z) {
   ModelFiles.enter(z);   // the cars, bikes and robot dog standing in this zone start loading (js/model-files.js)
   for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) { l.intensity = k === z ? l.userData.base : 0; l.visible = k === z; }
   capLamps();   // low tier: trims to the nearest lamps straight away
-  const indoor = z === 'lab' || z === 'lab4' || z === 'abz' || z === 'us' || z === 'airport' || z === 'blr';
+  const indoor = z === 'lab' || z === 'lab4' || z === 'abz' || z === 'us' || z === 'airport' || z === 'blr' || z === 'cb3' || z === 'stairs';
   scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
   sun.intensity = indoor ? .42 : 1.1; hemi.intensity = indoor ? .6 : .6;
   hemi.color.set(indoor ? 0xf0dcc4 : 0xf2dfc6);
@@ -34,7 +34,7 @@ function travel(p) {
   // the heavy part (the destination's character atlases going to the GPU, 100-350 ms each the first time, and its model files arriving) waits until the screen is black: run alongside the fade it froze the picture mid-fade
   new Promise((r) => setTimeout(r, 480)).then(() => uploadSheets(p.to)).catch(() => {}).then(() => ModelFiles.settled(4000)).then(() => p.to === 'airport' && Promise.race([new Promise((r) => apWhenAssets(r)), new Promise((r) => setTimeout(r, 8000))])).then(async () => {
     const to = p.to;
-    if (p.at) { hero.x = p.at[0]; hero.y = p.at[1]; hero.dir = 'down'; }
+    if (p.at) { hero.x = p.at[0]; hero.y = p.at[1]; hero.dir = p.dir || 'down'; }
     else if (to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = AREAS[p.zone].retDir || (p.zone === 'lab' ? 'down' : p.zone === 'airport' ? 'right' : 'left'); }
     else { const a = AREAS[to], sp = a.spawn || [0, 4.6]; hero.x = a.cx + sp[0]; hero.y = a.cz + sp[1]; hero.dir = 'up'; }
     setZone(to); hero.zone = to; armed = false;
@@ -51,7 +51,7 @@ function travel(p) {
 
 // ================= camera =================
 const camTarget = new THREE.Vector3(), tmp = new THREE.Vector3();
-function snapCamera() { camTarget.set(hero.x, CAM_VIEWS[camView].y, hero.y); camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget); }
+function snapCamera() { camTarget.set(hero.x, CAM_VIEWS[camView].y + (TF.heroFloor[zone] ? hero.fy || 0 : 0), hero.y); camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget); }
 
 // V: ease between the two views (offset and field of view) instead of cutting; held cameras (a minigame's) and reduced motion cut at once
 function setCamView(i) {
@@ -126,7 +126,7 @@ function frame(now) {
     if (c.moving && Math.hypot(c.x - ox, c.y - oz) < c.speed * dt / 1000 * .4) c.stuck += dt; else c.stuck = 0;
   }
   chatterT -= dt;
-  if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone && !c.mute); if (here.length) { const bot = chatter.speaker(here), text = chatter.line(bot.name, zone === 'lab' || zone === 'lab4' || zone === 'abz' ? CHATTER_OFFICE : CHATTER); if (text) say(bot, text); } }
+  if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone && !c.mute); if (here.length) { const bot = chatter.speaker(here), text = chatter.line(bot.name, zone === 'lab' || zone === 'lab4' || zone === 'cb3' || zone === 'abz' ? CHATTER_OFFICE : CHATTER); if (text) say(bot, text); } }
   charLightsFrame();
   for (const c of chars) syncChar(c);
   // portals
@@ -150,7 +150,7 @@ function frame(now) {
   // camera follows with a little lag
   // the camera rides up with a jump (60% of the hop, eased by the same follow lag), so the leap reads as a leap and the landing settles
   const jumpY = Math.max(0, hero.prevAir || 0) * .6;
-  camTarget.lerp(tmp.set(hero.x, CAM_VIEWS[camView].y + jumpY, hero.y), 1 - Math.pow(.004, dt / 1000));
+  camTarget.lerp(tmp.set(hero.x, CAM_VIEWS[camView].y + jumpY + (TF.heroFloor[zone] ? hero.fy || 0 : 0), hero.y), 1 - Math.pow(.004, dt / 1000));
   camera.position.copy(camTarget).add(CAM_OFF); camera.lookAt(camTarget);
   sun.position.copy(camTarget).add(SUN_DIR); sun.target.position.copy(camTarget);
   final.u.focus.value = tmp.copy(camTarget).sub(camera.position).dot(camera.getWorldDirection(camDir));

@@ -162,7 +162,7 @@ function syncChar(c) {
   lightChar(c);
   const rc = c.rects[f.start + f.col];
   c.cell.value.set(rc[0] / c.atlas.w, 1 - (rc[1] + rc[3]) / c.atlas.h, rc[2] / c.atlas.w, rc[3] / c.atlas.h); c.box.value.set(rc[4], rc[5], rc[6], rc[7]);
-  c.fy = (c.fy || 0) + (floorAt(c.x, c.y) - (c.fy || 0)) * .4;   // stand on a deck or a step, easing up and down (the shoes were sunk into it)
+  const fl = c === hero && TF.heroFloor[zone] ? TF.heroFloor[zone]() : floorAt(c.x, c.y); c.fy = (c.fy || 0) + (fl - (c.fy || 0)) * .4;   // stand on a deck or a step, easing up and down (the shoes were sunk into it)
   c.g.position.set(c.x, c.fy, c.y);
   // a little life: lean into the direction of travel, breathe when still, squash on the beat of each step
   const vx = c.x - (c.px ?? c.x), vz = c.y - (c.py ?? c.y); c.px = c.x; c.py = c.y;

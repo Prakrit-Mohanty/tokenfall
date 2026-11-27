@@ -266,7 +266,8 @@ function tokenFountain(fx, fz) {
   const mount = (o) => { scene.remove(o); root.add(o); return o; };
   // basin: low step, wall, a rounded coping, then the inside wall down to the floor
   // stone like the paving: the basin is 24 stones round in courses .35 high (their joints line up with the paving's 24 wedges), the bowls and stem one carved block
-  const basinStone = marbleMaterial(), carvedStone = basinStone;   // polished white marble, so the fountain reads as a grand centrepiece, not more paving
+  const basinStone = marbleMaterial(), carvedStone = basinStone.clone();
+  carvedStone.side = THREE.DoubleSide; if (carvedStone.emissive) { carvedStone.emissive.set(0xfff4e6); carvedStone.emissiveIntensity = .22; }   // the bowls' undersides and the stem read as lit marble through the water, not a dark hole   // polished white marble, so the fountain reads as a grand centrepiece, not more paving
   mount(lathe([[3.72, 0], [3.72, .1], [3.56, .14], [3.5, .2], [3.5, .55], ...arc(3.3, .55, .2, 0, Math.PI), [3.1, .3], [2.95, .2], [0, .2]], basinStone));
   mount(waterDisc(3.13, .47));
   // pedestal, lower bowl, stem, upper bowl (one profile; the inner surfaces hold the bowl water)

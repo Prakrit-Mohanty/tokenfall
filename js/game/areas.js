@@ -9,6 +9,8 @@ const AREAS = {
   us: { cx: -300, cz: -300, name: 'Calfus US', sub: 'Pleasanton, California', color: 0x2ab3a6, spawn: [0, 2.2] },
   pune: { cx: 300, cz: 0, name: 'Pune', sub: 'Crescent Bay · ABZ', color: 0x7dff8a, ret: [15, 0], spawn: [4.2, 6.2] },   // on the strip outside Crescent Bay's tall wall, clear of its planter (crescent-bay.js)
   abz: { cx: 0, cz: 300, name: 'ABZ', sub: 'Calfus · ABZ Office', color: 0x9fd8ff, spawn: [7.4, 16.8] },
+  cb3: { cx: 300, cz: 300, name: 'Calfus HQ · 3rd Floor', sub: 'Crescent Bay · Floor 3', color: 0x3cc6ae, spawn: [-1.47, 10.9] },   // up the Crescent Bay lift (office-cb3.js)
+  stairs: { cx: 900, cz: 900, name: 'Fire Stairs', sub: 'Crescent Bay', color: 0x3cc6ae, spawn: [-3.1, -.6] },   // the stairwell, one landing per floor (stairwell.js)
   blr: { cx: 300, cz: -300, name: 'Calfus Bengaluru', sub: 'Bengaluru office', color: 0xb48ce6, spawn: [6.8, 4.4], retDir: 'down' },   // by train from the lobby's station (station.js, office-blr.js)
 };
 function areaShell(a, floorMat, groundMat, walls = true, wip = true, home = [0, 7.2], exit = { to: 'lobby', label: 'TokenFall Lobby' }) {

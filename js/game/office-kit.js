@@ -266,7 +266,7 @@ function room(x0, z0, x1, z1, front, name, lines, o = {}) {
     };
     const col = (t0, t1) => horiz ? colBox(a + t0, b - .12, a + t1, b + .12) : colBox(a - .12, b + t0, a + .12, b + t1);
     if (k === front) {
-      const hw = (o.doorW ?? 1.2) / 2, dm = o.doorAt ?? Math.min(len / 2 + .5, len - Math.min(.8, len * .15) - .65), d0 = dm - hw, d1 = dm + hw, e = Math.min(.8, len * .15, d0 - .05, len - d1 - .05);   // the end posts never cover a door near a corner
+      const hw = (o.doorW ?? 1.7) / 2, dm = o.doorAt ?? Math.min(len / 2 + .5, len - Math.min(.8, len * .15) - hw - .05), d0 = dm - hw, d1 = dm + hw, e = Math.min(.8, len * .15, d0 - .05, len - d1 - .05);   // the end posts never cover a door near a corner
       put(0, e, 0, H, WM, .2); put(len - e, len, 0, H, WM, .2); col(0, e); col(len - e, len);
       for (const [t0, t1] of [[e, d0], [d1, len - e]]) if (t1 - t0 > .05) { put(t0, t1, .1, H - .22, MAT.pane, .05, false); put(t0, t1, 0, .1, WM, .14); put(t0, t1, H - .12, .12, WM, .14); col(t0, t1); }
       put(d0, d1, H - .5, .5, WM, .2);
@@ -282,6 +282,7 @@ function room(x0, z0, x1, z1, front, name, lines, o = {}) {
     else { put(0, len, 0, H, WM, .2); col(0, len); }
   }
   g.add(signBoard(name, plate[0], plate[1], plate[2], 1.15, .36, plate[3], { size: 17, bg: PAL.brown, w: 160, h: 52 }));
+  if (o.bare) { const kz = KIT_ZONE; makeFader(compact(g), () => hero.zone === kz && hero.x > x0 - .6 && hero.x < x1 + .6 && hero.y < z1 && hero.y > z0 - 8); INTER.push({ x: door[0], z: door[1], r: 1.4, label: name, verb: 'Read', act: () => talk(name, lines) }); return g; }   // o.bare: the walls, glass, door and sign only; the caller furnishes it
   // inside: round table, four chairs, a TV on the wall facing the door
   const tx = (x0 + x1) / 2, tz = czr;
   const W = x1 - x0, D = z1 - z0;

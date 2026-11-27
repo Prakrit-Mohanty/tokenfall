@@ -188,10 +188,10 @@ function crescentBay(cx, cz) {
     eastM.map.repeat.set(D / 4, CB.FLOORS);   // vertical aluminium slats down the east side (the service alley's view of it)
     const roof = MAT.roofFlat, H = CB.FLOOR * CB.FLOORS, y0 = CB.BAND[2];
     const body = new THREE.Mesh(cbGeo(W, H, D), [eastM, gm(west), roof, P.soffit, gm(south), gm(north)]);
-    body.position.set(X(W / 2), y0 + H / 2, Z(-D / 2)); add(body);
+    body.position.set(X(W / 2), y0 + H / 2, Z(-D / 2)); add(body); body.userData.dyn = true; CBM.body = body;   // dyn: kept out of the static batch so it can fade (below)
     CBM.windows = [body.material[1], body.material[4], body.material[5]];
     // the slab under them all (the stilts' ceiling) and the band's own depth
-    slab(0, -D, W, 0, y0 - CB.SOFFIT, P.acp, CB.SOFFIT);
+    CBM.soffit = slab(0, -D, W, 0, y0 - CB.SOFFIT, P.acp, CB.SOFFIT); CBM.soffit.userData.dyn = true;
     // the grey band: two rows of panels on the module, just proud of the glass, round the front and both sides
     const band = cbOnce('band', () => cbStd({ map: canvasTex(1024, 40, (g) => {
       g.fillStyle = '#585b5c'; g.fillRect(0, 0, 1024, 40); g.fillStyle = '#7f8383';
@@ -362,7 +362,7 @@ function crescentBay(cx, cz) {
     soft(1.4, .02, .9, cbOnce('mat', () => cbStd({ color: 0x55565b, roughness: 1 })), mid, .03, lz0 - .7, { cast: false });   // the doormat
   }
 
-  // ---- the lobby: cream marble, oak walls with the big C, the lift in its marble core, the hackathon banner ----
+  // ---- the lobby: cream marble, oak walls with the big C, the lift in its marble core ----
   {
     const [c0, c1, cz0, cz1] = CB.CORE;
     const CW = CB.CW, az = (lz0 + cz0) / 2;   // the alcove south of the core, by the glass: its oak east wall faces you as you come in
@@ -374,12 +374,12 @@ function crescentBay(cx, cz) {
     face(.08, .2, cbOnce('call', () => cbStd({ color: 0x2b2d31, emissive: 0x9fe6ff, emissiveIntensity: .8 })), c0 - .07, 1.15, lz - .95, -Math.PI / 2);
     // the IGBC Gold plaque on the core's front
     face(.3, .3, cbOnce('igbc', () => cbSign(.3, .3, (g, w, h) => { g.fillStyle = '#8a6b2e'; g.beginPath(); g.arc(w / 2, h / 2, w / 2, 0, 7); g.fill(); g.fillStyle = '#e8cf8a'; g.beginPath(); g.arc(w / 2, h / 2, w * .4, 0, 7); g.fill(); g.fillStyle = '#2f6a8a'; g.beginPath(); g.arc(w / 2, h / 2, w * .2, 0, 7); g.fill(); g.fillStyle = '#5a4520'; g.font = '700 16px Arial'; g.textAlign = 'center'; g.fillText('IGBC · GOLD', w / 2, h * .86); }, 128)), CW - .35, 1.9, cz0 + .01);
-    // the big C: a black ring with the teal dot, on the oak of the alcove by the door, two white fluted planters under it; a second one over the banner at the back
+    // the big C: a black ring with the teal dot, on the oak of the alcove by the door, two white fluted planters under it; a second one on the back wall
     const cMat = cbOnce('bigC', () => { const t = canvasTex(256, 256, (g) => { g.clearRect(0, 0, 256, 256); g.strokeStyle = '#1e1d22'; g.lineWidth = 34; g.beginPath(); g.arc(122, 134, 92, Math.PI * .27, Math.PI * 1.86, false); g.stroke(); g.fillStyle = '#3cc6ae'; g.beginPath(); g.arc(196, 66, 26, 0, 7); g.fill(); }, { keep: true });
       return new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: .5, depthWrite: false }); });
     slab(CW, cz0, CW + .25, lz0, CB.SOFFIT, P.oak, 0, { s: .5 }); block(CW, cz0, lx1, lz0);
     face(1.1, 1.1, cMat, CW - .01, 2.15, az, -Math.PI / 2).renderOrder = 2;
-    face(1.0, 1.0, cMat, c0 - 1.3, 2.35, lz1 + .01).renderOrder = 2;   // and a second one on the back wall, over the banner
+    face(1.0, 1.0, cMat, c0 - 1.3, 2.35, lz1 + .01).renderOrder = 2;   // and a second one on the back wall
     const planter = cbOnce('planter', () => new THREE.CylinderGeometry(.27, .24, .5, 24));
     for (const dz of [-.5, .5]) { const p = new THREE.Mesh(planter, P.white); p.position.set(X(CW - .42), .25, Z(az + dz)); add(p); const l = add(new THREE.Mesh(jitterSphere(.36, 1), P.leaf)); l.position.set(X(CW - .42), .72, Z(az + dz)); colCirc(X(CW - .42), Z(az + dz), .3); }
     // black pots with aglaonema along the oak west wall and by the lift
@@ -388,25 +388,21 @@ function crescentBay(cx, cz) {
       const l = add(new THREE.Mesh(jitterSphere(.34, 1), MAT.leafA)); l.position.set(X(x), .78, Z(z)); l.scale.y = 1.25;
       colCirc(X(x), Z(z), .32);
     }
-    // the hackathon roll-up banner, a steel bin by the door
-    const banner = cbOnce('banner', () => cbSign(.8, 2, (g, w, h) => {
-      g.fillStyle = '#16181d'; g.fillRect(0, 0, w, h);
-      const sw = g.createLinearGradient(0, h * .3, w, h * .55); sw.addColorStop(0, 'rgba(60,200,170,0)'); sw.addColorStop(.6, 'rgba(60,200,170,.5)'); sw.addColorStop(1, 'rgba(60,200,170,0)'); g.fillStyle = sw; g.fillRect(0, h * .3, w, h * .3);
-      g.fillStyle = '#fff'; g.font = '600 15px Arial'; g.fillText('Calfus  ⊗  Aetherion', 14, 30); g.font = '700 13px Arial'; g.fillText('EP- H2 26', w - 80, 30);
-      g.fillStyle = '#5fe0c0'; g.font = '600 12px Arial'; g.fillText('● 36:00:00', 14, 64);
-      g.fillStyle = '#ffffff'; g.font = '800 30px Arial'; g.fillText('SCHRÖDINGER\'S', 14, 300); g.fillStyle = '#5fe0c0'; g.font = 'italic 800 46px Arial'; g.fillText('SPRINT', 14, 350);
-      g.fillStyle = '#fff'; g.font = '600 13px Arial'; g.fillText('Hackathon', 14, 372); g.fillText('From first line to enterprise-ready', 14, 410);
-      g.fillStyle = '#5fe0c0'; g.font = '800 34px Arial'; g.fillText('DECEMBER', 14, 520); g.fillText('4–5, 2026', 14, 558);
-      g.fillStyle = '#ddd'; g.font = '600 11px Arial'; g.fillText('NORTH AMERICA | INDIA | UK', 14, 600);
-    }, 256));
-    const bx = c0 - 1.15, bz = lz1 + .45;
-    face(.8, 2, banner, bx, 1.08, bz); soft(.86, .07, .22, P.steel, bx, 0, bz);
-    look(bx, bz + 1, 1.3, 'Schrödinger\'s Sprint', ['A roll-up banner: Calfus and Aetherion, Schrödinger\'s Sprint. A 36-hour hackathon, December 4 to 5, 2026.', '"Where bold ideas become real solutions. From first line to enterprise-ready." North America, India, UK.'], 'Read');
+    // a steel bin by the door
     { const b2 = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .6, 16), P.liftSteel); b2.position.set(X(20.6), .3, Z(lz0 - .55)); add(b2); colCirc(X(20.6), Z(lz0 - .55), .2); }
+    // the fire-exit door to the stairs in the back wall's west corner (left as you come in, the lift on your right): an oak-framed slatted door
+    // flush with the wall, steel hinges, a push bar and the green EXIT sign over it
+    { const d0 = lx0 + .3, d1 = lx0 + 1.35, dm = (d0 + d1) / 2, dz = lz1 + .015;
+      slab(d0 - .07, lz1, d1 + .07, dz + .02, 2.3, cbOnce('exitFrame', () => cbStd({ color: 0x6a4428, roughness: .6 })));
+      slab(d0, lz1, d1, dz + .04, 2.2, cbOnce('exitDoor', () => cbStd({ map: canvasTex(128, 256, (g) => { g.fillStyle = '#c9ad8a'; g.fillRect(0, 0, 128, 256); g.fillStyle = 'rgba(90,60,40,.28)'; for (let x = 0; x < 128; x += 4) g.fillRect(x, 0, 1.5, 256); }, { keep: true }), roughness: .7 })));
+      for (const y of [.35, 1.1, 1.85]) slab(d1 - .03, dz + .02, d1 + .01, dz + .06, .1, P.liftSteel, y);
+      slab(d0 + .15, dz + .04, d1 - .15, dz + .09, .05, P.liftSteel, 1.0);
+      face(.36, .14, cbOnce('exitSign', () => cbSign(.36, .14, (g, w, h) => { g.fillStyle = '#138a4a'; g.fillRect(0, 0, w, h); g.fillStyle = '#fff'; g.font = '700 26px Arial'; g.textAlign = 'center'; g.fillText('EXIT ⇢', w / 2, h * .72); }, 128)), dm, 2.45, lz1 + .03);
+      INTER.push({ x: X(dm), z: Z(lz1 + .9), r: 1.1, label: 'Fire Exit', verb: 'Take the stairs', act: () => STAIRS.enter('G', 'pune') }); }
     look(CW - 1, az, 1.2, 'The big C', ['The Calfus C, black on oak, its teal dot in the mouth of the letter.', 'Beside it on the marble, a brass plaque: IGBC Green New Building, Gold. 35 Crescent Bay.']);
-    // the lift: up to the HQ's second floor or its fourth (office-hq.js, office-hq4.js); one call point either side of the doors' middle
-    INTER.push({ x: X(c0 - .8), z: Z(lz - .45), r: 1.3, label: 'Lift · Floor 2', verb: 'Ride up', act: () => { if (!traveling) travel({ to: 'lab', zone: 'pune', label: 'Calfus HQ' }); } });
-    INTER.push({ x: X(c0 - .8), z: Z(lz + .45), r: 1.3, label: 'Lift · Floor 4', verb: 'Ride up', act: () => { if (!traveling) travel({ to: 'lab4', zone: 'pune', label: 'Calfus HQ' }); } });
+    // the lift: up to the HQ floor
+    // the lift: step in and pick a floor (lift-car.js)
+    INTER.push({ x: X(c0 - .8), z: Z(lz), r: 1.3, label: 'Lift', verb: 'Step in', act: () => LiftCar.enter('G', 'pune') });   // lift-car.js: pick a floor inside
     pointLight('pune', 0xffe6c4, 1.8, 10, X((lx0 + c0) / 2), 3.3, Z(-4.4)); pointLight('pune', 0xffe6c4, 1.4, 9, X((lx0 + c0) / 2), 3.3, Z(-8.2));
   }
 
@@ -584,7 +580,15 @@ function crescentBay(cx, cz) {
     scene.children.filter(lx).forEach((o) => { g.attach(o); fronts.push(o); });
     fronts.push(CBM.canopy); CBM.canopy.parent.remove(CBM.canopy); g.add(CBM.canopy);
     const under = () => { if (zone !== 'pune') return false; const lxh = hero.x - X(0), lzh = hero.y - Z(0); return lxh > -.5 && lxh < CB.CAN[1] && lzh < -3.2 && lzh > -D; };
-    makeFader(compact(g), under);   // one mesh per material (office-kit.js): the louvres, band and canopy fade as a handful of draws, not fifty
+    makeFader(compact(g), under);
+    // the three glass floors and the slab under them hide you whenever you are under the building (lobby, stilts, the two-wheeler strip): they fade too
+    const inside = () => { if (zone !== 'pune') return false; const lxh = hero.x - X(0), lzh = hero.y - Z(0); return lxh > -1.2 && lxh < CB.W + 1.2 && lzh < .4 && lzh > -D - 1; };
+    // see-through at 22% three storeys of dark glass still reads as a black wall, so these hide outright, with the lobby front's walls above head
+    // height (the header over the glass, the stone wall, the band) that stand between the camera and the lobby
+    const above = scene.children.filter((o) => o.isMesh && !o.userData.dyn && ((o.position.y > 2.9 && o.position.x > X(-1.5) && o.position.x < X(CB.W + 1.5) && o.position.z > Z(-D - 1.5) && o.position.z < Z(CB.CAN[2]) + .6)
+      || (o.position.y > 2.6 && o.position.z > Z(CB.LOB[2]) - .7 && o.position.z < Z(CB.CAN[2]) + .3 && o.position.x > X(CB.LOB[0]) - 1 && o.position.x < X(CB.LOB[1]) + 1)));   // everything over head height under and above the building (the lobby's ceilings, the sprinkler mains, the floors, band, windows, roof) and the lobby's front header
+    const hide = new THREE.Group(); hide.userData.dyn = true; scene.add(hide); above.forEach((o) => hide.attach(o));
+    life.push(() => { const h = !inside(); CBM.body.visible = h; CBM.soffit.visible = h; hide.visible = h; g.visible = h || !under(); });
   }
   // the windows light up at dusk, the wordmark and the canopy's downlights with them
   life.push(() => {
