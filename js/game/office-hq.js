@@ -51,9 +51,10 @@ function buildOffice(a) {
   colBox(X(-2.5), LZ - .1, X(1.3), SE);
   box(1.6, .02, .9, MAT.charcoal, LX, 0, LZ - .6, { cast: false });
   garlandV(LX - .85, LZ - .16, .9, 2.5, true); garlandV(LX + .85, LZ - .16, .9, 2.5, true);
-  ledSign(['LIFT · Ground'], '#f6e3b4', LX, 3.75, LZ - .05, 1.8, .34);
+  ledSign(['LIFT · Ground · 4'], '#f6e3b4', LX, 3.75, LZ - .05, 1.8, .34);
   const g = AREAS.pune;   // the lift takes you back down, out of the Calfus building's front doors
   portal(LX, LZ - 1.3, a.color, 'lab', 'pune', 'Ground Floor', { at: [g.cx + CB_ARRIVE[0], g.cz + CB_ARRIVE[1]] });
+  INTER.push({ x: LX + 1.3, z: LZ - .45, r: 1, label: 'Lift · Floor 4', verb: 'Ride up', act: () => { if (!traveling) travel({ to: 'lab4', zone: 'lab' }); } });   // office-hq4.js
   INTER.push({ x: EX, z: LZ - .7, r: 1, label: 'Electrical Duct', verb: 'Read', act: () => talk('Electrical Duct', ['AUTHORISED PERSONNEL ONLY.', 'Behind this door: the cables that keep every model in this office running.']) });
   // the fire-exit stairs, a closed block east of the lift with its door onto the waiting area
   const core = grp(), WX = X(1.44);

@@ -156,6 +156,7 @@ Promise.all([fontsReady, sheetReady]).then(() => {
   npcs = CharSelect.npcNames(NPC_NAMES.filter((n) => n !== 'gaurav'), look)   // Gaurav works in the US office now (below)
     .map(n => { const s = randomSpot(), c = makeChar(n, s.x, s.z, { speed: 2.2, look: CHARS[n] ? n : undefined }); c.wait = Math.random() * 3000; return c; });
   for (const [n, x, z] of [['rahul.k', -4, -8.4], ['meera_s', 3.4, -9], ['devansh', -4, 5.6]]) { const c = makeChar(n, x, -300 + z, { speed: 2.1, zone: 'lab' }); c.wait = Math.random() * 3000; npcs.push(c); }
+  for (const [n, x, z] of [['tanvi.p', -3.4, -6], ['omkar_s', 2, -4.4], ['neha.j', -.2, 10.9]]) { const c = makeChar(n, x, -600 + z, { speed: 2.1, zone: 'lab4' }); c.wait = Math.random() * 3000; npcs.push(c); }   // the fourth floor (office-hq4.js)
   for (const [n, x, z] of [['ananya.r', 288, 9.2], ['kabir_m', 296, 6.4], ['sneha.d', 318, 2]]) { const c = makeChar(n, x, z, { speed: 1.9, zone: 'pune' }); c.wait = Math.random() * 3000; npcs.push(c); }
   // the senior folk (Bigshot-npcs): three in the HQ, three at ABZ, and Baljeet, Salim, Brian, Rohit and Gaurav in the US office, each in their own sprite; they wander the floor like the others
   for (const [id, zone, x, z] of [['murali', 'lab', -2, -306], ['salim', 'us', -305, -296], ['amit', 'abz', 6, 293], ['jacintha', 'lab', 3, -312], ['kartik', 'lab', 1, -288.3],

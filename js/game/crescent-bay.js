@@ -404,8 +404,9 @@ function crescentBay(cx, cz) {
     look(bx, bz + 1, 1.3, 'Schrödinger\'s Sprint', ['A roll-up banner: Calfus and Aetherion, Schrödinger\'s Sprint. A 36-hour hackathon, December 4 to 5, 2026.', '"Where bold ideas become real solutions. From first line to enterprise-ready." North America, India, UK.'], 'Read');
     { const b2 = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .6, 16), P.liftSteel); b2.position.set(X(20.6), .3, Z(lz0 - .55)); add(b2); colCirc(X(20.6), Z(lz0 - .55), .2); }
     look(CW - 1, az, 1.2, 'The big C', ['The Calfus C, black on oak, its teal dot in the mouth of the letter.', 'Beside it on the marble, a brass plaque: IGBC Green New Building, Gold. 35 Crescent Bay.']);
-    // the lift: up to the HQ floor
-    INTER.push({ x: X(c0 - .8), z: Z(lz), r: 1.3, label: 'Lift', verb: 'Ride up', act: () => { if (!traveling) travel({ to: 'lab', zone: 'pune', label: 'Calfus HQ' }); } });
+    // the lift: up to the HQ's second floor or its fourth (office-hq.js, office-hq4.js); one call point either side of the doors' middle
+    INTER.push({ x: X(c0 - .8), z: Z(lz - .45), r: 1.3, label: 'Lift · Floor 2', verb: 'Ride up', act: () => { if (!traveling) travel({ to: 'lab', zone: 'pune', label: 'Calfus HQ' }); } });
+    INTER.push({ x: X(c0 - .8), z: Z(lz + .45), r: 1.3, label: 'Lift · Floor 4', verb: 'Ride up', act: () => { if (!traveling) travel({ to: 'lab4', zone: 'pune', label: 'Calfus HQ' }); } });
     pointLight('pune', 0xffe6c4, 1.8, 10, X((lx0 + c0) / 2), 3.3, Z(-4.4)); pointLight('pune', 0xffe6c4, 1.4, 9, X((lx0 + c0) / 2), 3.3, Z(-8.2));
   }
 

@@ -4,6 +4,7 @@
 // ================= the three areas (placeholders until the real maps arrive) =================
 const AREAS = {
   lab: { cx: 0, cz: -300, name: 'Calfus HQ', sub: 'Calfus · Floor 2', color: 0x5cd6ff, spawn: [-1.54, 10.7] },
+  lab4: { cx: 0, cz: -600, name: 'Calfus HQ', sub: 'Calfus · Floor 4', color: 0x5cd6ff, spawn: [-1.47, 10.3] },   // two floors up the same lift (office-hq4.js)
   airport: { cx: -300, cz: 0, name: 'Pune Airport', sub: 'Departures', color: 0xffb347, ret: [-15, 0], spawn: [0, 6] },
   us: { cx: -300, cz: -300, name: 'Calfus US', sub: 'Pleasanton, California', color: 0x2ab3a6, spawn: [0, 2.2] },
   pune: { cx: 300, cz: 0, name: 'Pune', sub: 'Crescent Bay · ABZ', color: 0x7dff8a, ret: [15, 0], spawn: [4.2, 6.2] },   // on the strip outside Crescent Bay's tall wall, clear of its planter (crescent-bay.js)

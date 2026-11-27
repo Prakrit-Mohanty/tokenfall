@@ -3,6 +3,8 @@
 
 // marigold garlands: every bead is collected here and drawn as one instanced mesh at the end of buildOffice
 const BEADS = [];
+// the zone the kit's lamps and room faders belong to: 'lab' by default, the 4th floor (office-hq4.js) sets it while it builds
+let KIT_ZONE = 'lab';
 function garlandV(x, z, y0, y1, pink) { return;   // the offices no longer have garlands
   for (let y = y0; y < y1; y += .075) BEADS.push([x + Math.sin(y * 9) * .012, y, z, pink]); }
 function garlandSwag(x0, x1, z, y, sag, loops) {
@@ -210,7 +212,7 @@ function chandelier(x, z, y = 3.25) {
     const s = new THREE.Mesh(shade, MAT.shade); s.position.set(sx, h + .02, sz); g.add(s);
     const c = new THREE.Mesh(cone, MAT.chrome); c.rotation.x = Math.PI; c.position.set(sx, h - .14, sz); g.add(c);
   }
-  pointLight('lab', 0xffcf94, 1.9, 10, x, y - .5, z);
+  pointLight(KIT_ZONE, 0xffcf94, 1.9, 10, x, y - .5, z);
   const pool = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 4.4), new THREE.MeshBasicMaterial({ map: TX.glow, transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false }));
   pool.rotation.x = -Math.PI / 2; pool.position.set(x, .03, z); pool.userData.dyn = true; scene.add(pool);   // warm light pool on the floor
 }
@@ -249,9 +251,11 @@ function deskCluster(cx, cz, cols, ns, o = {}) {
   if (ns) colBox(cx - hz, cz - hx, cx + hz, cz + hx); else colBox(cx - hx, cz - hz, cx + hx, cz + hz);
 }
 // walnut meeting room. `front` ('n', 'e' or 'w') gets the glass, door and garlands; the south wall is cut low so you can look in
-// o.table 'long' or 'round', o.seats per side, o.doorAt (distance of the door along the front), o.sMat for a full-height south wall, o.sGlass for a glass one
+// o.table 'long' or 'round', o.seats per side, o.doorAt (distance of the door along the front), o.sMat for a full-height south wall, o.sGlass for a glass one,
+// o.wall the walls' and frames' material (walnut by default), o.top the table top's, o.doorW the doorway's width (1.2),
+// o.table 'none' and o.tv false leave the room empty for o.dress(g) to furnish
 function room(x0, z0, x1, z1, front, name, lines, o = {}) {
-  const g = grp(), H = 3, czr = (z0 + z1) / 2;
+  const g = grp(), H = 3, czr = (z0 + z1) / 2, WM = o.wall || MAT.walnut, zn = KIT_ZONE;
   const sides = { n: [x0, z0, x1, z0], s: [x0, z1, x1, z1], w: [x0, z0, x0, z1], e: [x1, z0, x1, z1] };
   let door, plate;
   for (const k in sides) {
@@ -262,29 +266,29 @@ function room(x0, z0, x1, z1, front, name, lines, o = {}) {
     };
     const col = (t0, t1) => horiz ? colBox(a + t0, b - .12, a + t1, b + .12) : colBox(a - .12, b + t0, a + .12, b + t1);
     if (k === front) {
-      const dm = o.doorAt ?? Math.min(len / 2 + .5, len - Math.min(.8, len * .15) - .65), d0 = dm - .6, d1 = dm + .6, e = Math.min(.8, len * .15, d0 - .05);
-      put(0, e, 0, H, MAT.walnut, .2); put(len - e, len, 0, H, MAT.walnut, .2); col(0, e); col(len - e, len);
-      for (const [t0, t1] of [[e, d0], [d1, len - e]]) if (t1 - t0 > .05) { put(t0, t1, .1, H - .22, MAT.pane, .05, false); put(t0, t1, 0, .1, MAT.walnut, .14); put(t0, t1, H - .12, .12, MAT.walnut, .14); col(t0, t1); }
-      put(d0, d1, H - .5, .5, MAT.walnut, .2);
+      const hw = (o.doorW ?? 1.2) / 2, dm = o.doorAt ?? Math.min(len / 2 + .5, len - Math.min(.8, len * .15) - .65), d0 = dm - hw, d1 = dm + hw, e = Math.min(.8, len * .15, d0 - .05, len - d1 - .05);   // the end posts never cover a door near a corner
+      put(0, e, 0, H, WM, .2); put(len - e, len, 0, H, WM, .2); col(0, e); col(len - e, len);
+      for (const [t0, t1] of [[e, d0], [d1, len - e]]) if (t1 - t0 > .05) { put(t0, t1, .1, H - .22, MAT.pane, .05, false); put(t0, t1, 0, .1, WM, .14); put(t0, t1, H - .12, .12, WM, .14); col(t0, t1); }
+      put(d0, d1, H - .5, .5, WM, .2);
       const off = k === 'e' ? .14 : -.14;
       for (const t of [e, d0 - .08, d1 + .08, len - e]) horiz ? garlandV(a + t, b + off, .1, H - .15) : garlandV(a + off, b + t, .1, H - .15);
       door = horiz ? [a + dm, b - .9] : [a + (k === 'e' ? .9 : -.9), b + dm];
       plate = horiz ? [a + dm, H - .25, b + off * .8, 0] : [a + off * .8, H - .25, b + dm, Math.PI / 2];
     } else if (k === 's') {
-      if (o.sGlass) { put(0, len, .1, H - .22, MAT.pane, .05, false); put(0, len, 0, .1, MAT.walnut, .14); put(0, len, H - .12, .12, MAT.walnut, .14); }
-      else put(0, len, 0, o.sMat ? H : 1.1, o.sMat || MAT.walnut, .2);
+      if (o.sGlass) { put(0, len, .1, H - .22, MAT.pane, .05, false); put(0, len, 0, .1, WM, .14); put(0, len, H - .12, .12, WM, .14); }
+      else put(0, len, 0, o.sMat ? H : 1.1, o.sMat || WM, .2);
       col(0, len);
     }
-    else { put(0, len, 0, H, MAT.walnut, .2); col(0, len); }
+    else { put(0, len, 0, H, WM, .2); col(0, len); }
   }
   g.add(signBoard(name, plate[0], plate[1], plate[2], 1.15, .36, plate[3], { size: 17, bg: PAL.brown, w: 160, h: 52 }));
   // inside: round table, four chairs, a TV on the wall facing the door
   const tx = (x0 + x1) / 2, tz = czr;
   const W = x1 - x0, D = z1 - z0;
-  if (o.table ? o.table === 'long' : !o.small && Math.max(W, D) > 7 && Math.min(W, D) > 4.4) {
+  if (o.table === 'none') { /* the caller furnishes it, in o.dress */ } else if (o.table ? o.table === 'long' : !o.small && Math.max(W, D) > 7 && Math.min(W, D) > 4.4) {
     // conference room: long table down the long side of the room, chairs on both sides
     const along = o.along ?? W >= D, L = (along ? W : D) * (along === (W >= D) ? .58 : .75), n = o.seats ?? Math.floor(L / .9);
-    along ? box(L, .06, 1.4, MAT.walnut, tx, .72, tz, { p: g }) : box(1.4, .06, L, MAT.walnut, tx, .72, tz, { p: g });
+    along ? box(L, .06, 1.4, o.top || MAT.walnut, tx, .72, tz, { p: g }) : box(1.4, .06, L, o.top || MAT.walnut, tx, .72, tz, { p: g });
     for (const t of [-L / 2 + .4, L / 2 - .4]) along ? box(.1, .72, 1.1, MAT.charcoal, tx + t, 0, tz, { p: g }) : box(1.1, .72, .1, MAT.charcoal, tx, 0, tz + t, { p: g });
     for (let i = 0; i < n; i++) for (const sd of [-1, 1]) {
       const t = -L / 2 + (i + .5) * L / n;
@@ -293,7 +297,7 @@ function room(x0, z0, x1, z1, front, name, lines, o = {}) {
     along ? colBox(tx - L / 2 - .2, tz - 1.4, tx + L / 2 + .2, tz + 1.4) : colBox(tx - 1.4, tz - L / 2 - .2, tx + 1.4, tz + L / 2 + .2);
   } else {
     const tr = Math.min(.75, Math.min(W, D) / 2 - .65), cr = tr + .35;
-    const top = add(new THREE.Mesh(new THREE.CylinderGeometry(tr, tr, .05, 20), MAT.walnut), g); top.position.set(tx, .74, tz);
+    const top = add(new THREE.Mesh(new THREE.CylinderGeometry(tr, tr, .05, 20), o.top || MAT.walnut), g); top.position.set(tx, .74, tz);
     box(.12, .72, .12, MAT.charcoal, tx, 0, tz, { p: g });
     for (let i = 0; i < 4; i++) { const an = i * 1.57 + .6; box(.42, .45, .42, MAT.fabric, tx + Math.cos(an) * cr, 0, tz + Math.sin(an) * cr, { p: g }); }
     colCirc(tx, tz, cr + .2);
@@ -301,8 +305,9 @@ function room(x0, z0, x1, z1, front, name, lines, o = {}) {
   const slide = std(ledTex([name, 'AI literacy · 101'], '#e8f0ff', 256, 128), 0);
   const tv = new THREE.Mesh(new THREE.BoxGeometry(2, 1.12, .06), [MAT.charcoal, MAT.charcoal, MAT.charcoal, MAT.charcoal, slide, MAT.charcoal]);
   if (front === 'w') { tv.position.set(x1 - .15, 1.65, czr); tv.rotation.y = -Math.PI / 2; } else { tv.position.set(x0 + .15, 1.65, czr); tv.rotation.y = Math.PI / 2; }
-  g.add(tv);
-  makeFader(compact(g), () => hero.zone === 'lab' && hero.x > x0 - .6 && hero.x < x1 + .6 && hero.y < z1 && hero.y > z0 - 8);
+  if (o.tv !== false) g.add(tv);
+  if (o.dress) o.dress(g);   // the caller's own furniture, inside the room's group so it fades with it
+  makeFader(compact(g), () => hero.zone === zn && hero.x > x0 - .6 && hero.x < x1 + .6 && hero.y < z1 && hero.y > z0 - 8);
   INTER.push({ x: door[0], z: door[1], r: 1.4, label: name, verb: 'Read', act: () => talk(name, lines) });
 }
 function sofa(x, z, ry, s = 1, m = MAT.navy3) {

@@ -11,4 +11,6 @@ function buildAreas() {
   buildUS(AREAS.us);
   buildPune(AREAS.pune);
   buildBLR(AREAS.blr);   // the Bengaluru office, by train from the lobby (office-blr.js)
+  // the HQ's fourth floor (office-hq4.js), last and on side streams, so nothing built before or after it moves
+  const d0 = decorSeed, s0 = screenTurn; withSideRandom(() => buildOffice4(AREAS.lab4)); decorSeed = d0; screenTurn = s0;
 }

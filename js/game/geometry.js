@@ -158,7 +158,7 @@ const WALK = [];       // walkable rects [x0,z0,x1,z1]
 const FLOORS = [];     // raised floors [x0,z0,x1,z1,top], registered by box() (low slabs); where one is walkable, characters stand on it
 const INTER = [];      // interactables {x,z,r,label,verb,act}
 const PORTALS = [];
-const ZONE_LIGHTS = { lobby: [], lab: [], airport: [], us: [], pune: [], abz: [], bridge: [], blr: [] };
+const ZONE_LIGHTS = { lobby: [], lab: [], lab4: [], airport: [], us: [], pune: [], abz: [], bridge: [], blr: [] };
 const anim = [];       // per-frame callbacks
 anim.push(() => { const d = window.TokenFall && TokenFall.daylight, w = d ? d.state.warm : 0; PAVE_U.uWarm.value.set(Math.pow(1 + .07 * w, -.7), 1, Math.pow(1 - .12 * w, -.7)); });
 const FADERS = [];     // things that turn see-through when they would hide the player

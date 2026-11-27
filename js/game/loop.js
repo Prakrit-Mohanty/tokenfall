@@ -9,10 +9,11 @@ function setZone(z) {
   ModelFiles.enter(z);   // the cars, bikes and robot dog standing in this zone start loading (js/model-files.js)
   for (const k in ZONE_LIGHTS) for (const l of ZONE_LIGHTS[k]) { l.intensity = k === z ? l.userData.base : 0; l.visible = k === z; }
   capLamps();   // low tier: trims to the nearest lamps straight away
-  const indoor = z === 'lab' || z === 'abz' || z === 'us' || z === 'airport' || z === 'blr';
+  const indoor = z === 'lab' || z === 'lab4' || z === 'abz' || z === 'us' || z === 'airport' || z === 'blr';
   scene.fog.near = z === 'abz' ? 50 : 34; scene.fog.far = z === 'abz' ? 190 : 95;   // up on the 15th floor you can see the city below
   sun.intensity = indoor ? .42 : 1.1; hemi.intensity = indoor ? .6 : .6;
   hemi.color.set(indoor ? 0xf0dcc4 : 0xf2dfc6);
+  if (z === 'lab4') { sun.intensity = .3; hemi.intensity = .44; hemi.color.set(0xd9d6d0); }   // the HQ's fourth floor: open grey ceiling, a dimmer, cooler room than downstairs
   const dof = (z === 'lobby' && LOBBY.dof) || (z === 'pune' && PUNE_DOF) || DOF_DEFAULT;
   final.u.farStart.value = dof.farStart; final.u.farRange.value = dof.farRange; final.u.edgeBlur.value = dof.edgeBlur;
   TF.enter(prevZone, z);
@@ -125,7 +126,7 @@ function frame(now) {
     if (c.moving && Math.hypot(c.x - ox, c.y - oz) < c.speed * dt / 1000 * .4) c.stuck += dt; else c.stuck = 0;
   }
   chatterT -= dt;
-  if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone && !c.mute); if (here.length) { const bot = chatter.speaker(here), text = chatter.line(bot.name, zone === 'lab' || zone === 'abz' ? CHATTER_OFFICE : CHATTER); if (text) say(bot, text); } }
+  if (chatterT < 0) { chatterT = 6000 + Math.random() * 7000; const here = npcs.filter(c => c.zone === zone && !c.mute); if (here.length) { const bot = chatter.speaker(here), text = chatter.line(bot.name, zone === 'lab' || zone === 'lab4' || zone === 'abz' ? CHATTER_OFFICE : CHATTER); if (text) say(bot, text); } }
   charLightsFrame();
   for (const c of chars) syncChar(c);
   // portals

@@ -96,7 +96,7 @@
   const clock = (hour) => { const m = Math.round((((hour % 24) + 24) % 24) * 60) % 1440, h = Math.floor(m / 60), mm = m % 60; return ((h + 11) % 12 + 1) + ':' + String(mm).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM'); };
 
   // ---------------------------------------------------------------- the world (browser only)
-  const INDOOR = { lab: 1, abz: 1, kitchen: 1 };   // roofed places: their light comes from lamps; the sky only tints it
+  const INDOOR = { lab: 1, lab4: 1, abz: 1, kitchen: 1 };   // roofed places: their light comes from lamps; the sky only tints it
   const SPOT = { x: 20.9, z: -8.65 };              // the console, in front of the Token Brew wall just east of the robot barista's counter
 
   function install(TF) {
