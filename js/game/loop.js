@@ -29,7 +29,9 @@ function setZone(z) {
 function travel(p) {
   traveling = true; fadeEl.style.opacity = 1;
   ModelFiles.enter(p.to);   // start fetching the destination's models during the fade, not after it
-  Promise.all([new Promise((r) => setTimeout(r, 480)), uploadSheets(p.to).catch(() => {})]).then(async () => {
+  if (p.to === 'airport') apLoadAssets();   // the airport's 21 MB of real models: loaded and swapped in under the black, not a second after the reveal
+  // the heavy part (the destination's character atlases going to the GPU, 100-350 ms each the first time, and its model files arriving) waits until the screen is black: run alongside the fade it froze the picture mid-fade
+  new Promise((r) => setTimeout(r, 480)).then(() => uploadSheets(p.to)).catch(() => {}).then(() => ModelFiles.settled(4000)).then(() => p.to === 'airport' && Promise.race([new Promise((r) => apWhenAssets(r)), new Promise((r) => setTimeout(r, 8000))])).then(async () => {
     const to = p.to;
     if (p.at) { hero.x = p.at[0]; hero.y = p.at[1]; hero.dir = 'down'; }
     else if (to === 'lobby') { const r = AREAS[p.zone].ret; hero.x = r[0]; hero.y = r[1]; hero.dir = AREAS[p.zone].retDir || (p.zone === 'lab' ? 'down' : p.zone === 'airport' ? 'right' : 'left'); }

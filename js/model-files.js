@@ -4,6 +4,7 @@
 //   ModelFiles.parse(name, embedded)  -> Promise of the parsed glTF: from the embedded base64 when given, else assets/models/<name>.glb
 //   ModelFiles.when(object3d)         -> Promise that resolves once the zone the object stands in is entered (setZone) or travelled to
 //   ModelFiles.enter(zone)            -> called by setZone and travel: releases every model waiting in that zone
+//   ModelFiles.settled(maxMs)         -> Promise that resolves once no model is being fetched or parsed (or after maxMs): travel waits on it so the models are in before the screen is shown
 (function () {
   const EMBEDDED = location.protocol === 'file:';
   if (EMBEDDED) for (const f of ['js/models/cars.js?v=13', 'js/models/supercars.js?v=4', 'js/models/bikes.js?v=1', 'js/models/robodog.js?v=1', 'js/models/train.js?v=1']) document.write(`<script src="${f}"><\/script>`);
@@ -17,8 +18,11 @@
   function parse(name, embedded) {
     const bytes = embedded ? Promise.resolve().then(() => fromBase64(embedded))
       : fetch(`assets/models/${name}.glb`).then((r) => { if (!r.ok) throw new Error(`assets/models/${name}.glb: HTTP ${r.status}`); return r.arrayBuffer(); });
-    return bytes.then((buf) => new Promise((res, rej) => gltf().parse(buf, '', res, rej)));
+    busy++;
+    return bytes.then((buf) => new Promise((res, rej) => gltf().parse(buf, '', res, rej))).finally(() => busy--);
   }
+  let busy = 0;
+  const settled = (maxMs) => new Promise((r) => { const t0 = performance.now(), poll = () => (busy === 0 || performance.now() - t0 > maxMs ? r() : setTimeout(poll, 50)); poll(); });
 
   // zones: the nearest zone centre to where the object stands (zones sit 300+ apart: the lobby at the origin, the rest in AREAS)
   const waiting = [], at = new THREE.Vector3();
@@ -39,5 +43,5 @@
   }
   function enter(z) { current = z; release(z); }
 
-  window.ModelFiles = { embedded: EMBEDDED, parse, when, enter, zoneOf, get waiting() { return waiting.length; } };
+  window.ModelFiles = { embedded: EMBEDDED, parse, when, enter, settled, zoneOf, get waiting() { return waiting.length; } };
 })();
