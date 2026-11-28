@@ -249,10 +249,10 @@ function buildOffice4(a) {
     panel(x1 - .12, 1.25, cz + .9, Math.PI / 2, g); binAt(x1 - .3, z1 - .3, g);
     colCirc(cx, cz, 1.25); colBox(dx0 - .65, z0, dx0 + .65, dz0 + .35);
   } });
-  glassRoom(X(-1.9), Z(-1.1), X(1.4), Z(1.9), 'w', 'Lohagad', ['Lohagad.', 'Grey marble, tan leather chairs, a gold ginkgo leaf on the wall.', 'Today\'s slide: “Context windows: what a model can hold in mind at once.”'], { table: 'none', tv: false, sMat: greyPlaster, dress: (g) => {   // table north-south toward the two screens, the ginkgo pillar between two credenzas at the south end, felt on the east wall
+  glassRoom(X(-1.9), Z(-1.1), X(1.4), Z(1.9), 'w', 'Lohagad', ['Lohagad.', 'Grey marble, tan leather chairs, a gold ginkgo leaf on the wall.', 'Today\'s slide: “Context windows: what a model can hold in mind at once.”'], { table: 'none', tv: false, sMat: greyPlaster, dress: (g) => {   // table east-west as on the plan, the two screens along its north side, the ginkgo pillar between two credenzas at the south end, felt on the east wall
     const x0 = X(-1.9), x1 = X(1.4), z0 = Z(-1.1), z1 = Z(1.9), cx = (x0 + x1) / 2 + .15, cz = (z0 + z1) / 2 + .1;
-    table(cx, cz, 1.1, 2.4, greyMarble, g);
-    for (const dz of [-.75, 0, .75]) for (const sx of [-1, 1]) officeChair(cx + sx * .95, cz + dz, toward(cx + sx * .95, 0, cx, 0), tan, g);
+    table(cx, cz, 2.4, 1.1, greyMarble, g);
+    for (const dx of [-.75, 0, .75]) for (const sz of [-1, 1]) officeChair(cx + dx, cz + sz * .95, toward(0, cz + sz * .95, 0, cz), tan, g);
     for (const dx of [-.68, .68]) tv(cx + dx, 1.5, z0 + .14, 0, 1.32, offFaces, g); box(.8, .07, .08, MAT.charcoal, cx, 1.02, z0 + .17, { p: g });   // two screens side by side, the video bar under them
     box(.5, 3, .25, greyPlaster, cx, 0, z1 - .22, { p: g }); hang(ginkgo, .55, .75, cx, 1.65, z1 - .35, Math.PI, g);   // the pillar with the ginkgo
     credenza(cx - 1.05, z1 - .35, 1.1, Math.PI, g); credenza(cx + 1.05, z1 - .35, 1.1, Math.PI, g);
@@ -261,7 +261,7 @@ function buildOffice4(a) {
     easel(x1 - .55, cz + .55, toward(x1 - .55, cz + .55, cx, cz), g);   // in front of the felt panels
     { const gl = add(new THREE.Mesh(new THREE.SphereGeometry(.1, 12, 8), MAT.chrome), g); gl.position.set(cx + .72, .92, z1 - .35); box(.08, .1, .08, MAT.charcoal, cx + .72, .72, z1 - .35, { p: g }); }   // the globe on the credenza
     remote(cx - .2, cz - .5, .3, g); remote(cx + .25, cz + .6, -.2, g); panel(x0 + .45, 1.25, z0 + .13, 0, g); binAt(x0 + .3, z1 - .3, g);
-    colBox(cx - 1.2, cz - 1.4, cx + 1.2, cz + 1.4); colBox(cx - 1.65, z1 - .6, cx + 1.65, z1);
+    colBox(cx - 1.4, cz - 1.2, cx + 1.4, cz + 1.2); colBox(cx - 1.65, z1 - .6, cx + 1.65, z1);
   } });
 
   // ---- the main corridor running north ----
@@ -290,7 +290,7 @@ function buildOffice4(a) {
     colBox(cx - 1.75, cz - 1.4, cx + 1.75, cz + 1.4); colBox(x0, z0, x0 + 1.6, z0 + .5); colBox(x0, cz - 1.1, x0 + .7, cz + 1.1);
   } });
   box(L(2.1), .9, .4, MAT.white, X(-4.3), 0, Z(-10.5) - .3); colBox(X(-5.35), Z(-10.5) - .5, X(-3.25), Z(-10.5) - .1);   // storage
-  for (const z of [-5.75, -3.1, -.45, 2.2]) deskCluster(X(-5.2), Z(z), 3, false, { tight: true, pitch: 1.5 });
+  for (const z of [-5.75, -3.1, -.45, 2.2]) deskCluster(X(-5.2), Z(z), 3, false, { tight: true, pitch: 1.5, top: oakPale, leg: MAT.charcoal });   // pale oak tops on black frames, as in the photos (charcoal: the palette lifts anything darker to plum)
   for (let z = -6.4; z < 5; z += 2.2) deskPlant(X(-7.2) + .06, .55, Z(z));   // plants on the west window sill
   { // Cabin 1's back is a solid grey plaster wall running along x from the west windows to the pillar at its corner; the printer stands against it by the pillar,
     // the open bookshelf and an abstract further along, as in the photos. It fades with the cabin when it would hide you.
@@ -347,10 +347,12 @@ function buildOffice4(a) {
   for (const z of [-5.75, -3.1, -.45, 2.2]) ledLine(X(-5.2), Z(z), 4.2, false);
   for (const x of [4.55, 1.5]) for (const z of [-9.3, -6.1]) ledLine(X(x), Z(z), 2.8, true);
   // ---- north-east: four desk pods, two half rows by the corridor, tall storage, the phone booths in the corner ----
-  for (const x of [4.55, 1.5]) for (const z of [-9.3, -6.1]) deskCluster(X(x), Z(z), 2, true);
+  for (const x of [4.55, 1.5]) for (const z of [-9.3, -6.1]) deskCluster(X(x), Z(z), 2, true, { top: oakPale, leg: MAT.charcoal });
+  const xLegGeo = new THREE.BoxGeometry(.04, Math.hypot(.72, .5), .04);   // one bar of an X trestle: floor to top, across the desk's depth
   for (const zc of [-9.3, -6.1]) {   // a single row of desks, everyone facing the corridor
     const r = new THREE.Group(); r.position.set(X(-.95), 0, Z(zc)); r.rotation.y = Math.PI / 2; scene.add(r);
-    box(3.1, .05, .62, MAT.walnut, 0, .72, 0, { p: r }); for (const x of [-1.5, 0, 1.5]) box(.06, .72, .56, MAT.white, x, 0, 0, { p: r });
+    box(3.1, .05, .62, oakPale, 0, .72, 0, { p: r });   // pale oak on black X trestles, as in the photos
+    for (const x of [-1.5, 0, 1.5]) for (const lean of [-1, 1]) { const l = add(new THREE.Mesh(xLegGeo, MAT.charcoal), r); l.position.set(x, .36, 0); l.rotation.x = lean * Math.atan2(.5, .72); }
     for (const x of [-.75, .75]) { box(.6, .36, .04, MAT.charcoal, x, .9, -.2, { p: r }); box(.56, .32, .02, nextScreen(), x, .92, -.175, { p: r }); keyboardAt(x, .77, .1, 1, r); deskClutter(x + .4, .77, .15, r); chair(x, .8, 1, r); }
     colBox(X(-.95) - .35, Z(zc) - 1.6, X(-.95) + 1.1, Z(zc) + 1.6);
   }
@@ -420,19 +422,32 @@ function buildOffice4(a) {
   INTER.push({ x: SX + .4, z: BW - 1.6, r: 1.3, label: 'Collab Area', verb: 'Look', act: () => talk('Collab Area', ['The black leather sectional against the brick wall, two screens above it.', 'Friday demos happen here. So does Friday cricket on the big screen.']) });
   crystalChandelier(tx, tz);
 
-  // ---- the pantry: a galley along the east windows, open to the collab area: white brick tiles, the counter, the water dispenser, the bins ----
-  const PX = X(5.2), EW = X(7.2) - .15, CZ = Z(1.15), PS = Z(3.5);
-  box(.03, 1.3, L(4.4), whiteTile, PX + .015, .9, CZ, { s: 0 });
-  box(.6, .9, L(3.4), oakPale, PX + .3, 0, CZ - .5); box(.64, .05, L(3.4), MAT.white, PX + .32, .9, CZ - .5);
-  box(.38, .75, L(3.2), graphite, PX + .19, 1.75, CZ - .5);
-  for (const [z, h] of [[-1.6, .5], [-1.1, .42]]) { const u = add(new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, h, 12), MAT.steel)); u.position.set(PX + .3, .95 + h / 2, CZ + z); }
-  box(.4, .42, .35, MAT.charcoal, PX + .3, .95, CZ + .2);   // the coffee machine
-  for (let i = 0; i < 4; i++) { const c = add(new THREE.Mesh(new THREE.CylinderGeometry(.04, .035, .09, 8), MAT.white)); c.position.set(PX + .42, 1, CZ - .3 + i * .1); }
-  colBox(PX, CZ - .5 - L(1.7), PX + .65, CZ - .5 + L(1.7));
-  const DZ = PS - .5;   // the water dispenser at the far end
-  box(.38, 1.05, .38, MAT.white, PX + .3, 0, DZ);
-  const bottle = add(new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .48, 12), new THREE.MeshStandardMaterial({ color: 0x3a8fd6, transparent: true, opacity: .8, roughness: .2 }))); bottle.position.set(PX + .3, 1.3, DZ);
-  colBox(PX, DZ - .25, PX + .45, PS);
+  // ---- the pantry, as in the photos: a galley along the east windows, white brick tiles floor to ceiling on its west wall. From the collab end (north):
+  // the water dispenser on a blue tray with a spare bottle, a steel fridge, the counter (urns, kettle, jars) under a small dark cabinet, a black bar stool,
+  // the split AC high on the south wall; a granite strip under the windows, a duct and the red sprinkler pipe overhead; the bins and extinguisher by the brick pillar
+  const PX = X(5.2), EW = X(7.2) - .15, CZ = Z(1.15), PS = Z(3.5), PN = Z(-1) + .1, GX = PX + .3;   // GX: the line of things against the tiles
+  box(.03, 2.95, PS - PN, whiteTile, PX + .015, 0, (PN + PS) / 2, { s: 0 });
+  box(.5, .012, PS - PN, col(0x4f5056, .35), EW - .3, 0, (PN + PS) / 2, { cast: false });   // the granite strip under the windows
+  const steelGrey = col(0xa9adb3, .45), blue = col(0x2f78d4, .5),   // steelGrey: matte, so it reads grey like the photo, not mirror-dark
+   water = new THREE.MeshStandardMaterial({ color: 0x3a8fd6, transparent: true, opacity: .8, roughness: .2 });
+  const DZ = PN + .45;   // the dispenser, first thing in from the collab area
+  box(.5, .05, .5, blue, GX, 0, DZ); box(.36, 1.05, .36, MAT.white, GX, .05, DZ);
+  { const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.15, .15, .45, 14), water)); b.position.set(GX, 1.33, DZ);
+    const s2 = add(new THREE.Mesh(new THREE.CylinderGeometry(.15, .15, .45, 14), water)); s2.position.set(GX + .3, .225, DZ - .35); }   // and the spare on the floor
+  const FR = DZ + .7; box(.6, .95, .6, steelGrey, GX, 0, FR);   // the steel fridge
+  const K0 = FR + .35, K1 = PS - .9, KZ = (K0 + K1) / 2;   // the counter
+  box(.6, .88, K1 - K0, steelGrey, GX, 0, KZ); box(.64, .04, K1 - K0, MAT.white, GX + .02, .88, KZ);
+  box(.32, .42, .9, col(0x5a4232, .6), PX + .16, 1.65, KZ + .2);   // the small dark wall cabinet
+  for (const [z, h] of [[K0 + .2, .42], [K0 + .45, .36]]) { const u = add(new THREE.Mesh(new THREE.CylinderGeometry(.11, .11, h, 12), steelGrey)); u.position.set(GX, .92 + h / 2, z); }   // chai and coffee urns
+  { const k = add(new THREE.Mesh(new THREE.CylinderGeometry(.08, .1, .2, 12), steelGrey)); k.position.set(GX + .05, 1.02, K0 + .75); }   // the kettle
+  for (let i = 0; i < 3; i++) { const j = add(new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .14, 10), col(0xd99a3a, .4))); j.position.set(PX + .15, .99, K0 + 1 + i * .13); }   // jars of sugar and biscuits
+  colBox(PX, PN, PX + .65, K1);
+  { const sx = PX + .55, sz = PS - .45; const seat = add(new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .05, 14), MAT.charcoal)); seat.position.set(sx, .72, sz);   // the black bar stool
+    for (const [dx, dz] of [[-.11, -.11], [.11, -.11], [-.11, .11], [.11, .11]]) box(.025, .72, .025, MAT.charcoal, sx + dx, 0, sz + dz);
+    const ring = add(new THREE.Mesh(new THREE.TorusGeometry(.15, .012, 6, 18), MAT.charcoal)); ring.rotation.x = Math.PI / 2; ring.position.set(sx, .28, sz); colCirc(sx, sz, .2); }
+  box(.9, .3, .22, MAT.white, (PX + EW) / 2, 2.3, PS - .11);   // the split AC on the end wall
+  { const d = add(new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, PS - PN, 14), steelGrey)); d.rotation.x = Math.PI / 2; d.position.set(PX + .35, 2.85, (PN + PS) / 2);   // the duct
+    const sp = add(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, PS - PN, 8), col(0xc8251c, .5))); sp.rotation.x = Math.PI / 2; sp.position.set(PX + .8, 3, (PN + PS) / 2); }   // the sprinkler pipe
   for (const [z, lid] of [[0, 0x2f7de0], [.55, 0x2aa05a]]) {   // wet and dry waste by the window, and the extinguisher
     const b = add(new THREE.Mesh(new THREE.CylinderGeometry(.2, .18, .7, 14), MAT.chrome)); b.position.set(EW - .3, .35, Z(-.7) + z);
     const l = add(new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .03, 14), new THREE.MeshStandardMaterial({ color: lid }))); l.position.set(EW - .3, .71, Z(-.7) + z);
@@ -440,7 +455,7 @@ function buildOffice4(a) {
   { const f = add(new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, .5, 10), new THREE.MeshStandardMaterial({ color: 0xc8251c, roughness: .5 }))); f.position.set(EW - .25, .25, Z(-.7) + 1.05); }
   colBox(EW - .55, Z(-.7) - .25, EW, Z(-.7) + 1.2);
   pointLight(ZN, 0xffd6a0, 1, 7, (PX + EW) / 2, 2.6, CZ);
-  INTER.push({ x: (PX + EW) / 2, z: CZ, r: 1.5, label: 'Pantry', verb: 'Look', act: () => talk('Pantry', ['White brick tiles, two urns of chai and coffee, the water dispenser at the end.', 'Wet waste and dry waste by the window. The fourth floor actually sorts it.']) });
+  INTER.push({ x: (PX + EW) / 2, z: CZ, r: 1.5, label: 'Pantry', verb: 'Look', act: () => talk('Pantry', ['White brick tiles, the water dispenser as you walk in, the fridge, two urns of chai and coffee on the counter.', 'Wet waste and dry waste by the window. The fourth floor actually sorts it.']) });
 
   KIT_ZONE = 'lab'; MAT.charcoal = plum;
 }

@@ -225,14 +225,14 @@ function deskPlant(x, y, z, p) {
   const l = add(new THREE.Mesh(jitterSphere(.13, 1), MAT.leafA), p); l.position.set(x, y + .24, z);
 }
 // two rows of benching desks facing each other across a fabric screen, centred on (cx, cz);
-// ns = true turns the row to run north-south; o.pitch is the width per seat, o.tight uses real 60 cm desks
+// ns = true turns the row to run north-south; o.pitch is the width per seat, o.tight uses real 60 cm desks; o.top and o.leg the desk tops' and legs' materials (walnut, white)
 function deskCluster(cx, cz, cols, ns, o = {}) {
   const g = new THREE.Group(); g.position.set(cx, 0, cz); if (ns) g.rotation.y = Math.PI / 2; scene.add(g);
   const P = o.pitch ?? 1.6, len = cols * P, x0 = -len / 2 + P / 2, dd = o.tight ? .32 : .45, cz2 = o.tight ? .9 : 1.15;
   for (const side of [-1, 1]) {
     const dz = side * dd;
-    box(len, .05, o.tight ? .62 : .86, MAT.walnut, 0, .72, dz, { p: g });
-    for (let i = 0; i <= cols; i++) box(.06, .72, o.tight ? .56 : .8, MAT.white, x0 - P / 2 + i * P, 0, dz, { p: g });
+    box(len, .05, o.tight ? .62 : .86, o.top || MAT.walnut, 0, .72, dz, { p: g });
+    for (let i = 0; i <= cols; i++) box(.06, .72, o.tight ? .56 : .8, o.leg || MAT.white, x0 - P / 2 + i * P, 0, dz, { p: g });
     for (let i = 0; i < cols; i++) {
       const x = x0 + i * P;
       box(.42, .58, .5, MAT.white, x + .5, 0, dz, { p: g });
